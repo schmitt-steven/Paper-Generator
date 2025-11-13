@@ -1,0 +1,62 @@
+[
+  {
+    "label": "Q-learning and TD Methods",
+    "query": "abs:%28%28Q-learning+OR+temporal+difference+OR+TD%29+AND+%28reinforcement+learning+OR+RL%29%29",
+    "description": "Broad search for Q-learning variants and temporal difference methods in reinforcement learning"
+  },
+  {
+    "label": "Backward Propagation & Graph Methods",
+    "query": "abs:%28backward+propagation+OR+graph+based+OR+state+graph+OR+backwards+Q-learning%29+AND+%28reinforcement+learning+OR+RL%29",
+    "description": "Specific search for backward propagation and graph-based methods in RL"
+  },
+  {
+    "label": "Reward Propagation Alternatives",
+    "query": "%28abs:%28eligibility+traces+OR+experience+replay+OR+credit+assignment%29+AND+abs:%28reinforcement+learning+OR+RL%29%29",
+    "description": "Alternative approaches to reward propagation and credit assignment in sequential decision making"
+  },
+  {
+    "label": "Model-Free RL Surveys",
+    "query": "%28abs:survey+OR+review+OR+survey+paper+OR+tutorial%29+AND+%28model-free+reinforcement+learning+OR+Q-learning+OR+temporal+difference%29",
+    "description": "Survey and review papers on model-free reinforcement learning algorithms"
+  },
+  {
+    "label": "Episodic Tasks & Delayed Rewards",
+    "query": "%28abs:episodic+tasks+OR+delayed+rewards+OR+long+horizon%29+AND+%28reinforcement+learning+OR+RL+OR+sequential+decision+making%29",
+    "description": "Search for episodic tasks, delayed rewards, and planning in RL with temporal structure"
+  },
+  {
+    "label": "Efficient Q-Learning Methods",
+    "query": "%28abs:efficient+OR+fast+OR+reduced+computational+OR+computationally+efficient%29+AND+%28Q-learning+OR+temporal+difference+OR+model-free+RL%29",
+    "description": "Research on efficient Q-learning variants with reduced computational overhead"
+  },
+  {
+    "label": "Q-learning and SARSA in Delayed Reward Episodic Tasks",
+    "query": "abs%3A%28%22Q-learning%22+OR+%22SARSA%22%29+AND+%28%22episodic%22+OR+%22delayed+rewards%22+OR+%22sparse+rewards%22%29+AND+%28%22convergence%22+OR+%22performance%22+OR+%22efficiency%22%29",
+    "description": "Broad survey of Q-learning and SARSA performance in episodic tasks with delayed rewards, including convergence analysis and empirical comparisons."
+  },
+  {
+    "label": "Temporal Difference Methods and Credit Assignment",
+    "query": "abs%3A%28%22temporal+difference%22+OR+%22TD%28%CE%BB%29%22+OR+%22eligibility+traces%22%29+AND+%28%22credit+assignment%22+OR+%22experience+replay%22+OR+%22reward+propagation%22%29",
+    "description": "Specific focus on temporal difference methods like TD(λ) and eligibility traces, including their computational bottlenecks and credit assignment mechanisms."
+  },
+  {
+    "label": "Model-Free Backward Planning and Graph-Based RL",
+    "query": "abs%3A%28%22backward+planning%22+OR+%22model-free+planning%22+OR+%22graph-based+planning%22%29+AND+%28%22reward+propagation%22+OR+%22state+graph%22+OR+%22backwards+update%22%29",
+    "description": "Alternative approaches to backward propagation in reinforcement learning, including model-free planning and graph-based methods."
+  },
+  {
+    "label": "Theoretical Foundations of Recursive RL Methods",
+    "query": "abs%3A%28%22convergence+guarantees%22+OR+%22stability+properties%22+OR+%22Bellman+operator%22%29+AND+%28%22recursive+Q-learning%22+OR+%22backward+propagation%22+OR+%22iterative+value+updates%22%29",
+    "description": "Survey of theoretical convergence guarantees and stability properties for recursive or backward propagation methods in reinforcement learning."
+  },
+  {
+    "label": "Forward vs. Backward Propagation in RL",
+    "query": "%28abs%3A%28%22forward+planning%22+OR+%22backward+planning%22%29+AND+abs%3A%28%22Monte+Carlo+tree+search%22+OR+%22actor+critic%22%29%29+OR+%28abs%3A%28%22forward+propagation%22+OR+%22backwards+update%22%29+AND+abs%3A%28%22temporal+credit+assignment%22+OR+%22structured+TD%22%29%29",
+    "description": "Comparative analysis of forward vs. backward propagation methods in RL, including Monte Carlo tree search and actor-critic approaches."
+  },
+  {
+    "label": "Computational Trade-offs in RL Algorithms",
+    "query": "abs%3A%28%22trajectory+replay%22+OR+%22experience+buffer%22%29+AND+%28%22memory+usage%22+OR+%22runtime+performance%22+OR+%22sample+efficiency%22%29+AND+%28%22graph+structure%22+OR+%22backward+propagation%22%29",
+    "description": "Empirical comparison of computational trade-offs between full trajectory replay and graph-based backward propagation methods in terms of memory and speed."
+  }
+]

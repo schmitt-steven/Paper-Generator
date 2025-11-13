@@ -1,0 +1,2469 @@
+[
+  {
+    "id": "http://arxiv.org/abs/2507.09087v2",
+    "title": "Deep Reinforcement Learning with Gradient Eligibility Traces",
+    "published": "2025-07-12T00:12:05Z",
+    "updated": "2025-09-18T18:17:44Z",
+    "authors": [
+      "Esraa Elelimy",
+      "Brett Daley",
+      "Andrew Patterson",
+      "Marlos C. Machado",
+      "Adam White",
+      "Martha White"
+    ],
+    "summary": "Achieving fast and stable off-policy learning in deep reinforcement learning\n(RL) is challenging. Most existing methods rely on semi-gradient\ntemporal-difference (TD) methods for their simplicity and efficiency, but are\nconsequently susceptible to divergence. While more principled approaches like\nGradient TD (GTD) methods have strong convergence guarantees, they have rarely\nbeen used in deep RL. Recent work introduced the generalized Projected Bellman\nError ($\\overline{\\text{PBE}}$), enabling GTD methods to work efficiently with\nnonlinear function approximation. However, this work is limited to one-step\nmethods, which are slow at credit assignment and require a large number of\nsamples. In this paper, we extend the generalized $\\overline{\\text{PBE}}$\nobjective to support multistep credit assignment based on the $\\lambda$-return\nand derive three gradient-based methods that optimize this new objective. We\nprovide both a forward-view formulation compatible with experience replay and a\nbackward-view formulation compatible with streaming algorithms. Finally, we\nevaluate the proposed algorithms and show that they outperform both PPO and\nStreamQ in MuJoCo and MinAtar environments, respectively. Code available at\nhttps://github.com/esraaelelimy/gtd\\_algos",
+    "pdf_url": "http://arxiv.org/pdf/2507.09087v2",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI",
+      "stat.ML"
+    ],
+    "primary_category": "cs.LG",
+    "comment": null,
+    "journal_ref": "Reinforcement Learning Journal, 2025",
+    "citation_count": 1,
+    "bibtex": "@Article{Elelimy2025DeepRL,\n author = {Esraa Elelimy and Brett Daley and Andrew Patterson and Marlos C. Machado and Adam White and Martha White},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Deep Reinforcement Learning with Gradient Eligibility Traces},\n volume = {abs/2507.09087},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.9084346542302312,
+      "citation_score": 0.5109126984126984,
+      "recency_score": 0.950051765421076,
+      "final_score": 0.833091974185809
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2506.24005v1",
+    "title": "Provably Efficient and Agile Randomized Q-Learning",
+    "published": "2025-06-30T16:08:29Z",
+    "updated": "2025-06-30T16:08:29Z",
+    "authors": [
+      "He Wang",
+      "Xingyu Xu",
+      "Yuejie Chi"
+    ],
+    "summary": "While Bayesian-based exploration often demonstrates superior empirical\nperformance compared to bonus-based methods in model-based reinforcement\nlearning (RL), its theoretical understanding remains limited for model-free\nsettings. Existing provable algorithms either suffer from computational\nintractability or rely on stage-wise policy updates which reduce responsiveness\nand slow down the learning process. In this paper, we propose a novel variant\nof Q-learning algorithm, refereed to as RandomizedQ, which integrates\nsampling-based exploration with agile, step-wise, policy updates, for episodic\ntabular RL. We establish an $\\widetilde{O}(\\sqrt{H^5SAT})$ regret bound, where\n$S$ is the number of states, $A$ is the number of actions, $H$ is the episode\nlength, and $T$ is the total number of episodes. In addition, we present a\nlogarithmic regret bound under a mild positive sub-optimality condition on the\noptimal Q-function. Empirically, RandomizedQ exhibits outstanding performance\ncompared to existing Q-learning variants with both bonus-based and\nBayesian-based exploration on standard benchmarks.",
+    "pdf_url": "http://arxiv.org/pdf/2506.24005v1",
+    "doi": null,
+    "categories": [
+      "cs.LG"
+    ],
+    "primary_category": "cs.LG",
+    "comment": null,
+    "journal_ref": null,
+    "citation_count": 1,
+    "bibtex": "@Article{Wang2025ProvablyEA,\n author = {He Wang and Xingyu Xu and Yuejie Chi},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Provably Efficient and Agile Randomized Q-Learning},\n volume = {abs/2506.24005},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.9017983600656005,
+      "citation_score": 0.5019807923169267,
+      "recency_score": 0.9451065814656558,
+      "final_score": 0.8261656686558713
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/1909.05912v2",
+    "title": "Joint Inference of Reward Machines and Policies for Reinforcement\n  Learning",
+    "published": "2019-09-12T19:09:13Z",
+    "updated": "2022-02-08T20:02:19Z",
+    "authors": [
+      "Zhe Xu",
+      "Ivan Gavran",
+      "Yousef Ahmad",
+      "Rupak Majumdar",
+      "Daniel Neider",
+      "Ufuk Topcu",
+      "Bo Wu"
+    ],
+    "summary": "Incorporating high-level knowledge is an effective way to expedite\nreinforcement learning (RL), especially for complex tasks with sparse rewards.\nWe investigate an RL problem where the high-level knowledge is in the form of\nreward machines, i.e., a type of Mealy machine that encodes the reward\nfunctions. We focus on a setting in which this knowledge is a priori not\navailable to the learning agent. We develop an iterative algorithm that\nperforms joint inference of reward machines and policies for RL (more\nspecifically, q-learning). In each iteration, the algorithm maintains a\nhypothesis reward machine and a sample of RL episodes. It derives q-functions\nfrom the current hypothesis reward machine, and performs RL to update the\nq-functions. While performing RL, the algorithm updates the sample by adding RL\nepisodes along which the obtained rewards are inconsistent with the rewards\nbased on the current hypothesis reward machine. In the next iteration, the\nalgorithm infers a new hypothesis reward machine from the updated sample. Based\non an equivalence relationship we defined between states of reward machines, we\ntransfer the q-functions between the hypothesis reward machines in consecutive\niterations. We prove that the proposed algorithm converges almost surely to an\noptimal policy in the limit if a minimal reward machine can be inferred and the\nmaximal length of each RL episode is sufficiently long. The experiments show\nthat learning high-level knowledge in the form of reward machines can lead to\nfast convergence to optimal policies in RL, while standard RL methods such as\nq-learning and hierarchical RL methods fail to converge to optimal policies\nafter a substantial number of training steps in many tasks.",
+    "pdf_url": "http://arxiv.org/pdf/1909.05912v2",
+    "doi": null,
+    "categories": [
+      "cs.AI"
+    ],
+    "primary_category": "cs.AI",
+    "comment": "Fixed incorrect references in proof of Lemma 4",
+    "journal_ref": null,
+    "citation_count": 102,
+    "bibtex": "@Article{Xu2019JointIO,\n author = {Zhe Xu and I. Gavran and Yousef Ahmad and R. Majumdar and D. Neider and U. Topcu and Bo Wu},\n booktitle = {International Conference on Automated Planning and Scheduling},\n pages = {590-598},\n title = {Joint Inference of Reward Machines and Policies for Reinforcement Learning},\n year = {2019}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.9067170433596896,
+      "citation_score": 0.7665422440768886,
+      "recency_score": 0.34600311882655155,
+      "final_score": 0.8226106910498155
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2203.15845v3",
+    "title": "Topological Experience Replay",
+    "published": "2022-03-29T18:28:20Z",
+    "updated": "2023-06-26T21:12:17Z",
+    "authors": [
+      "Zhang-Wei Hong",
+      "Tao Chen",
+      "Yen-Chen Lin",
+      "Joni Pajarinen",
+      "Pulkit Agrawal"
+    ],
+    "summary": "State-of-the-art deep Q-learning methods update Q-values using state\ntransition tuples sampled from the experience replay buffer. This strategy\noften uniformly and randomly samples or prioritizes data sampling based on\nmeasures such as the temporal difference (TD) error. Such sampling strategies\ncan be inefficient at learning Q-function because a state's Q-value depends on\nthe Q-value of successor states. If the data sampling strategy ignores the\nprecision of the Q-value estimate of the next state, it can lead to useless and\noften incorrect updates to the Q-values. To mitigate this issue, we organize\nthe agent's experience into a graph that explicitly tracks the dependency\nbetween Q-values of states. Each edge in the graph represents a transition\nbetween two states by executing a single action. We perform value backups via a\nbreadth-first search starting from that expands vertices in the graph starting\nfrom the set of terminal states and successively moving backward. We\nempirically show that our method is substantially more data-efficient than\nseveral baselines on a diverse range of goal-reaching tasks. Notably, the\nproposed method also outperforms baselines that consume more batches of\ntraining experience and operates from high-dimensional observational data such\nas images.",
+    "pdf_url": "http://arxiv.org/pdf/2203.15845v3",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI"
+    ],
+    "primary_category": "cs.LG",
+    "comment": null,
+    "journal_ref": "Published at ICLR 2022",
+    "citation_count": 19,
+    "bibtex": "@Article{Hong2022TopologicalER,\n author = {Zhang-Wei Hong and Tao Chen and Yen-Chen Lin and J. Pajarinen and Pulkit Agrawal},\n booktitle = {International Conference on Learning Representations},\n journal = {ArXiv},\n title = {Topological Experience Replay},\n volume = {abs/2203.15845},\n year = {2022}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.9208031806306716,
+      "citation_score": 0.5658748361730014,
+      "recency_score": 0.5376438794391305,
+      "final_score": 0.8115015816199834
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2306.00867v1",
+    "title": "IQL-TD-MPC: Implicit Q-Learning for Hierarchical Model Predictive\n  Control",
+    "published": "2023-06-01T16:24:40Z",
+    "updated": "2023-06-01T16:24:40Z",
+    "authors": [
+      "Rohan Chitnis",
+      "Yingchen Xu",
+      "Bobak Hashemi",
+      "Lucas Lehnert",
+      "Urun Dogan",
+      "Zheqing Zhu",
+      "Olivier Delalleau"
+    ],
+    "summary": "Model-based reinforcement learning (RL) has shown great promise due to its\nsample efficiency, but still struggles with long-horizon sparse-reward tasks,\nespecially in offline settings where the agent learns from a fixed dataset. We\nhypothesize that model-based RL agents struggle in these environments due to a\nlack of long-term planning capabilities, and that planning in a temporally\nabstract model of the environment can alleviate this issue. In this paper, we\nmake two key contributions: 1) we introduce an offline model-based RL\nalgorithm, IQL-TD-MPC, that extends the state-of-the-art Temporal Difference\nLearning for Model Predictive Control (TD-MPC) with Implicit Q-Learning (IQL);\n2) we propose to use IQL-TD-MPC as a Manager in a hierarchical setting with any\noff-the-shelf offline RL algorithm as a Worker. More specifically, we pre-train\na temporally abstract IQL-TD-MPC Manager to predict \"intent embeddings\", which\nroughly correspond to subgoals, via planning. We empirically show that\naugmenting state representations with intent embeddings generated by an\nIQL-TD-MPC manager significantly improves off-the-shelf offline RL agents'\nperformance on some of the most challenging D4RL benchmark tasks. For instance,\nthe offline RL algorithms AWAC, TD3-BC, DT, and CQL all get zero or near-zero\nnormalized evaluation scores on the medium and large antmaze tasks, while our\nmodification gives an average score over 40.",
+    "pdf_url": "http://arxiv.org/pdf/2306.00867v1",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI"
+    ],
+    "primary_category": "cs.LG",
+    "comment": null,
+    "journal_ref": "Short version published at ICRA 2024\n  (https://tinyurl.com/icra24-iqltdmpc)",
+    "citation_count": 9,
+    "bibtex": "@Article{Chitnis2023IQLTDMPCIQ,\n author = {Rohan Chitnis and Yingchen Xu and B. Hashemi and Lucas Lehnert and Ürün Dogan and Zheqing Zhu and Olivier Delalleau},\n booktitle = {IEEE International Conference on Robotics and Automation},\n journal = {2024 IEEE International Conference on Robotics and Automation (ICRA)},\n pages = {9154-9160},\n title = {IQL-TD-MPC: Implicit Q-Learning for Hierarchical Model Predictive Control},\n year = {2023}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.9020459301639726,
+      "citation_score": 0.5211360312042906,
+      "recency_score": 0.659003160579043,
+      "final_score": 0.8015596734135432
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2207.07570v1",
+    "title": "The Nature of Temporal Difference Errors in Multi-step Distributional\n  Reinforcement Learning",
+    "published": "2022-07-15T16:19:23Z",
+    "updated": "2022-07-15T16:19:23Z",
+    "authors": [
+      "Yunhao Tang",
+      "Mark Rowland",
+      "Rémi Munos",
+      "Bernardo Ávila Pires",
+      "Will Dabney",
+      "Marc G. Bellemare"
+    ],
+    "summary": "We study the multi-step off-policy learning approach to distributional RL.\nDespite the apparent similarity between value-based RL and distributional RL,\nour study reveals intriguing and fundamental differences between the two cases\nin the multi-step setting. We identify a novel notion of path-dependent\ndistributional TD error, which is indispensable for principled multi-step\ndistributional RL. The distinction from the value-based case bears important\nimplications on concepts such as backward-view algorithms. Our work provides\nthe first theoretical guarantees on multi-step off-policy distributional RL\nalgorithms, including results that apply to the small number of existing\napproaches to multi-step distributional RL. In addition, we derive a novel\nalgorithm, Quantile Regression-Retrace, which leads to a deep RL agent\nQR-DQN-Retrace that shows empirical improvements over QR-DQN on the Atari-57\nbenchmark. Collectively, we shed light on how unique challenges in multi-step\ndistributional RL can be addressed both in theory and practice.",
+    "pdf_url": "http://arxiv.org/pdf/2207.07570v1",
+    "doi": null,
+    "categories": [
+      "cs.LG"
+    ],
+    "primary_category": "cs.LG",
+    "comment": null,
+    "journal_ref": null,
+    "citation_count": 12,
+    "bibtex": "@Article{Tang2022TheNO,\n author = {Yunhao Tang and Mark Rowland and R. Munos and B. '. Pires and Will Dabney and Marc G. Bellemare},\n booktitle = {Neural Information Processing Systems},\n journal = {ArXiv},\n title = {The Nature of Temporal Difference Errors in Multi-step Distributional Reinforcement Learning},\n volume = {abs/2207.07570},\n year = {2022}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.9111171400826616,
+      "citation_score": 0.5186428571428572,
+      "recency_score": 0.5659100893316474,
+      "final_score": 0.7981015784195993
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2410.06648v5",
+    "title": "Q-WSL: Optimizing Goal-Conditioned RL with Weighted Supervised Learning\n  via Dynamic Programming",
+    "published": "2024-10-09T08:00:12Z",
+    "updated": "2025-06-07T02:05:57Z",
+    "authors": [
+      "Xing Lei",
+      "Xuetao Zhang",
+      "Zifeng Zhuang",
+      "Donglin Wang"
+    ],
+    "summary": "A novel class of advanced algorithms, termed Goal-Conditioned Weighted\nSupervised Learning (GCWSL), has recently emerged to tackle the challenges\nposed by sparse rewards in goal-conditioned reinforcement learning (RL). GCWSL\nconsistently delivers strong performance across a diverse set of goal-reaching\ntasks due to its simplicity, effectiveness, and stability. However, GCWSL\nmethods lack a crucial capability known as trajectory stitching, which is\nessential for learning optimal policies when faced with unseen skills during\ntesting. This limitation becomes particularly pronounced when the replay buffer\nis predominantly filled with sub-optimal trajectories. In contrast, traditional\nTD-based RL methods, such as Q-learning, which utilize Dynamic Programming, do\nnot face this issue but often experience instability due to the inherent\ndifficulties in value function approximation. In this paper, we propose\nQ-learning Weighted Supervised Learning (Q-WSL), a novel framework designed to\novercome the limitations of GCWSL by incorporating the strengths of Dynamic\nProgramming found in Q-learning. Q-WSL leverages Dynamic Programming results to\noutput the optimal action of (state, goal) pairs across different trajectories\nwithin the replay buffer. This approach synergizes the strengths of both\nQ-learning and GCWSL, effectively mitigating their respective weaknesses and\nenhancing overall performance. Empirical evaluations on challenging\ngoal-reaching tasks demonstrate that Q-WSL surpasses other goal-conditioned\napproaches in terms of both performance and sample efficiency. Additionally,\nQ-WSL exhibits notable robustness in environments characterized by binary\nreward structures and environmental stochasticity.",
+    "pdf_url": "http://arxiv.org/pdf/2410.06648v5",
+    "doi": null,
+    "categories": [
+      "cs.LG"
+    ],
+    "primary_category": "cs.LG",
+    "comment": null,
+    "journal_ref": null,
+    "citation_count": 1,
+    "bibtex": "@Article{Lei2024QWSLOG,\n author = {Xing Lei and Xuetao Zhang and Zifeng Zhuang and Donglin Wang},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Q-WSL: Optimizing Goal-Conditioned RL with Weighted Supervised Learning via Dynamic Programming},\n volume = {abs/2410.06648},\n year = {2024}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.9075920905961998,
+      "citation_score": 0.33609374999999997,
+      "recency_score": 0.8334492877499146,
+      "final_score": 0.7858781421923313
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2312.05787v1",
+    "title": "Efficient Sparse-Reward Goal-Conditioned Reinforcement Learning with a\n  High Replay Ratio and Regularization",
+    "published": "2023-12-10T06:30:19Z",
+    "updated": "2023-12-10T06:30:19Z",
+    "authors": [
+      "Takuya Hiraoka"
+    ],
+    "summary": "Reinforcement learning (RL) methods with a high replay ratio (RR) and\nregularization have gained interest due to their superior sample efficiency.\nHowever, these methods have mainly been developed for dense-reward tasks. In\nthis paper, we aim to extend these RL methods to sparse-reward goal-conditioned\ntasks. We use Randomized Ensemble Double Q-learning (REDQ) (Chen et al., 2021),\nan RL method with a high RR and regularization. To apply REDQ to sparse-reward\ngoal-conditioned tasks, we make the following modifications to it: (i) using\nhindsight experience replay and (ii) bounding target Q-values. We evaluate REDQ\nwith these modifications on 12 sparse-reward goal-conditioned tasks of Robotics\n(Plappert et al., 2018), and show that it achieves about $2 \\times$ better\nsample efficiency than previous state-of-the-art (SoTA) RL methods.\nFurthermore, we reconsider the necessity of specific components of REDQ and\nsimplify it by removing unnecessary ones. The simplified REDQ with our\nmodifications achieves $\\sim 8 \\times$ better sample efficiency than the SoTA\nmethods in 4 Fetch tasks of Robotics.",
+    "pdf_url": "http://arxiv.org/pdf/2312.05787v1",
+    "doi": null,
+    "categories": [
+      "cs.LG"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "Source code:\n  https://github.com/TakuyaHiraoka/Efficient-SRGC-RL-with-a-High-RR-and-Regularization\n  Demo video:\n  https://drive.google.com/file/d/1UHd7JVPCwFLNFhy1QcycQfwU_nll_yII/view?usp=drive_link",
+    "journal_ref": null,
+    "citation_count": 1,
+    "bibtex": "@Article{Hiraoka2023EfficientSG,\n author = {Takuya Hiraoka},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Efficient Sparse-Reward Goal-Conditioned Reinforcement Learning with a High Replay Ratio and Regularization},\n volume = {abs/2312.05787},\n year = {2023}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.9036338780704318,
+      "citation_score": 0.3024709302325581,
+      "recency_score": 0.7215091843915282,
+      "final_score": 0.7651888191349666
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2404.15822v1",
+    "title": "Recursive Backwards Q-Learning in Deterministic Environments",
+    "published": "2024-04-24T11:54:53Z",
+    "updated": "2024-04-24T11:54:53Z",
+    "authors": [
+      "Jan Diekhoff",
+      "Jörn Fischer"
+    ],
+    "summary": "Reinforcement learning is a popular method of finding optimal solutions to\ncomplex problems. Algorithms like Q-learning excel at learning to solve\nstochastic problems without a model of their environment. However, they take\nlonger to solve deterministic problems than is necessary. Q-learning can be\nimproved to better solve deterministic problems by introducing such a\nmodel-based approach. This paper introduces the recursive backwards Q-learning\n(RBQL) agent, which explores and builds a model of the environment. After\nreaching a terminal state, it recursively propagates its value backwards\nthrough this model. This lets each state be evaluated to its optimal value\nwithout a lengthy learning process. In the example of finding the shortest path\nthrough a maze, this agent greatly outperforms a regular Q-learning agent.",
+    "pdf_url": "http://arxiv.org/pdf/2404.15822v1",
+    "doi": null,
+    "categories": [
+      "cs.AI",
+      "cs.LG"
+    ],
+    "primary_category": "cs.AI",
+    "comment": null,
+    "journal_ref": null,
+    "citation_count": 0,
+    "bibtex": "@Article{Diekhoff2024RecursiveBQ,\n author = {Jan Diekhoff and Jorn Fischer},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Recursive Backwards Q-Learning in Deterministic Environments},\n volume = {abs/2404.15822},\n year = {2024}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.9291482338448196,
+      "citation_score": 0.1,
+      "recency_score": 0.7695978060222196,
+      "final_score": 0.7473635442935956
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2507.11367v1",
+    "title": "Local Pairwise Distance Matching for Backpropagation-Free Reinforcement\n  Learning",
+    "published": "2025-07-15T14:39:41Z",
+    "updated": "2025-07-15T14:39:41Z",
+    "authors": [
+      "Daniel Tanneberg"
+    ],
+    "summary": "Training neural networks with reinforcement learning (RL) typically relies on\nbackpropagation (BP), necessitating storage of activations from the forward\npass for subsequent backward updates. Furthermore, backpropagating error\nsignals through multiple layers often leads to vanishing or exploding\ngradients, which can degrade learning performance and stability. We propose a\nnovel approach that trains each layer of the neural network using local signals\nduring the forward pass in RL settings. Our approach introduces local,\nlayer-wise losses leveraging the principle of matching pairwise distances from\nmulti-dimensional scaling, enhanced with optional reward-driven guidance. This\nmethod allows each hidden layer to be trained using local signals computed\nduring forward propagation, thus eliminating the need for backward passes and\nstoring intermediate activations. Our experiments, conducted with policy\ngradient methods across common RL benchmarks, demonstrate that this\nbackpropagation-free method achieves competitive performance compared to their\nclassical BP-based counterpart. Additionally, the proposed method enhances\nstability and consistency within and across runs, and improves performance\nespecially in challenging environments.",
+    "pdf_url": "http://arxiv.org/pdf/2507.11367v1",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI",
+      "stat.ML"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "accepted at the European Conference on Artificial Intelligence (ECAI\n  2025)",
+    "journal_ref": null,
+    "citation_count": 0,
+    "bibtex": "@Article{Tanneberg2025LocalPD,\n author = {Daniel Tanneberg},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Local Pairwise Distance Matching for Backpropagation-Free Reinforcement Learning},\n volume = {abs/2507.11367},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.9000409882115732,
+      "citation_score": 0.1,
+      "recency_score": 0.951404937012197,
+      "final_score": 0.7451691854493209
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/1810.09967v3",
+    "title": "Reconciling $λ$-Returns with Experience Replay",
+    "published": "2018-10-23T16:55:28Z",
+    "updated": "2020-01-13T19:05:20Z",
+    "authors": [
+      "Brett Daley",
+      "Christopher Amato"
+    ],
+    "summary": "Modern deep reinforcement learning methods have departed from the incremental\nlearning required for eligibility traces, rendering the implementation of the\n$\\lambda$-return difficult in this context. In particular, off-policy methods\nthat utilize experience replay remain problematic because their random sampling\nof minibatches is not conducive to the efficient calculation of\n$\\lambda$-returns. Yet replay-based methods are often the most sample\nefficient, and incorporating $\\lambda$-returns into them is a viable way to\nachieve new state-of-the-art performance. Towards this, we propose the first\nmethod to enable practical use of $\\lambda$-returns in arbitrary replay-based\nmethods without relying on other forms of decorrelation such as asynchronous\ngradient updates. By promoting short sequences of past transitions into a small\ncache within the replay memory, adjacent $\\lambda$-returns can be efficiently\nprecomputed by sharing Q-values. Computation is not wasted on experiences that\nare never sampled, and stored $\\lambda$-returns behave as stable\ntemporal-difference (TD) targets that replace the target network. Additionally,\nour method grants the unique ability to observe TD errors prior to sampling;\nfor the first time, transitions can be prioritized by their true significance\nrather than by a proxy to it. Furthermore, we propose the novel use of the TD\nerror to dynamically select $\\lambda$-values that facilitate faster learning.\nWe show that these innovations can enhance the performance of DQN when playing\nAtari 2600 games, even under partial observability. While our work specifically\nfocuses on $\\lambda$-returns, these ideas are applicable to any multi-step\nreturn estimator.",
+    "pdf_url": "http://arxiv.org/pdf/1810.09967v3",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "stat.ML"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "NeurIPS 2019 (Camera-Ready) Code available:\n  https://github.com/brett-daley/dqn-lambda",
+    "journal_ref": null,
+    "citation_count": 4,
+    "bibtex": "@Article{Daley2018ReconcilingW,\n author = {Brett Daley and Chris Amato},\n journal = {arXiv: Learning},\n title = {Reconciling $\\lambda$-Returns with Experience Replay},\n year = {2018}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.9086698263964734,
+      "citation_score": 0.30563842249121437,
+      "recency_score": 0.2967029206711537,
+      "final_score": 0.7268668550428896
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2112.12281v1",
+    "title": "Improving the Efficiency of Off-Policy Reinforcement Learning by\n  Accounting for Past Decisions",
+    "published": "2021-12-23T00:07:28Z",
+    "updated": "2021-12-23T00:07:28Z",
+    "authors": [
+      "Brett Daley",
+      "Christopher Amato"
+    ],
+    "summary": "Off-policy learning from multistep returns is crucial for sample-efficient\nreinforcement learning, particularly in the experience replay setting now\ncommonly used with deep neural networks. Classically, off-policy estimation\nbias is corrected in a per-decision manner: past temporal-difference errors are\nre-weighted by the instantaneous Importance Sampling (IS) ratio (via\neligibility traces) after each action. Many important off-policy algorithms\nsuch as Tree Backup and Retrace rely on this mechanism along with differing\nprotocols for truncating (\"cutting\") the ratios (\"traces\") to counteract the\nexcessive variance of the IS estimator. Unfortunately, cutting traces on a\nper-decision basis is not necessarily efficient; once a trace has been cut\naccording to local information, the effect cannot be reversed later,\npotentially resulting in the premature truncation of estimated returns and\nslower learning. In the interest of motivating efficient off-policy algorithms,\nwe propose a multistep operator that permits arbitrary past-dependent traces.\nWe prove that our operator is convergent for policy evaluation, and for optimal\ncontrol when targeting greedy-in-the-limit policies. Our theorems establish the\nfirst convergence guarantees for many existing algorithms including Truncated\nIS, Non-Markov Retrace, and history-dependent TD($\\lambda$). Our theoretical\nresults also provide guidance for the development of new algorithms that\njointly consider multiple past decisions for better credit assignment and\nfaster learning.",
+    "pdf_url": "http://arxiv.org/pdf/2112.12281v1",
+    "doi": null,
+    "categories": [
+      "cs.LG"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "12 pages, 0 figures",
+    "journal_ref": null,
+    "citation_count": 1,
+    "bibtex": "@Article{Daley2021ImprovingTE,\n author = {Brett Daley and Chris Amato},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Improving the Efficiency of Off-Policy Reinforcement Learning by Accounting for Past Decisions},\n volume = {abs/2112.12281},\n year = {2021}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.9011023568880974,
+      "citation_score": 0.20398576512455516,
+      "recency_score": 0.5134621763710437,
+      "final_score": 0.7229150204836835
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/1009.2566v1",
+    "title": "Reinforcement Learning by Comparing Immediate Reward",
+    "published": "2010-09-14T03:53:11Z",
+    "updated": "2010-09-14T03:53:11Z",
+    "authors": [
+      "Punit Pandey",
+      "Deepshikha Pandey",
+      "Shishir Kumar"
+    ],
+    "summary": "This paper introduces an approach to Reinforcement Learning Algorithm by\ncomparing their immediate rewards using a variation of Q-Learning algorithm.\nUnlike the conventional Q-Learning, the proposed algorithm compares current\nreward with immediate reward of past move and work accordingly. Relative reward\nbased Q-learning is an approach towards interactive learning. Q-Learning is a\nmodel free reinforcement learning method that used to learn the agents. It is\nobserved that under normal circumstances algorithm take more episodes to reach\noptimal Q-value due to its normal reward or sometime negative reward. In this\nnew form of algorithm agents select only those actions which have a higher\nimmediate reward signal in comparison to previous one. The contribution of this\narticle is the presentation of new Q-Learning Algorithm in order to maximize\nthe performance of algorithm and reduce the number of episode required to reach\noptimal Q-value. Effectiveness of proposed algorithm is simulated in a 20 x20\nGrid world deterministic environment and the result for the two forms of\nQ-Learning Algorithms is given.",
+    "pdf_url": "http://arxiv.org/pdf/1009.2566v1",
+    "doi": null,
+    "categories": [
+      "cs.LG"
+    ],
+    "primary_category": "cs.LG",
+    "comment": null,
+    "journal_ref": null,
+    "citation_count": 13,
+    "bibtex": "@Article{Pandey2010ReinforcementLB,\n author = {Punit Pandey and Deepshikha Pandey and Shishir Kumar},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Reinforcement Learning by Comparing Immediate Reward},\n volume = {abs/1009.2566},\n year = {2010}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.9012365227585568,
+      "citation_score": 0.3287778381314503,
+      "recency_score": 0.07278134515119494,
+      "final_score": 0.7038992680723993
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2007.06741v1",
+    "title": "Single-partition adaptive Q-learning",
+    "published": "2020-07-14T00:03:25Z",
+    "updated": "2020-07-14T00:03:25Z",
+    "authors": [
+      "João Pedro Araújo",
+      "Mário Figueiredo",
+      "Miguel Ayala Botto"
+    ],
+    "summary": "This paper introduces single-partition adaptive Q-learning (SPAQL), an\nalgorithm for model-free episodic reinforcement learning (RL), which adaptively\npartitions the state-action space of a Markov decision process (MDP), while\nsimultaneously learning a time-invariant policy (i. e., the mapping from states\nto actions does not depend explicitly on the episode time step) for maximizing\nthe cumulative reward. The trade-off between exploration and exploitation is\nhandled by using a mixture of upper confidence bounds (UCB) and Boltzmann\nexploration during training, with a temperature parameter that is automatically\ntuned as training progresses. The algorithm is an improvement over adaptive\nQ-learning (AQL). It converges faster to the optimal solution, while also using\nfewer arms. Tests on episodes with a large number of time steps show that SPAQL\nhas no problems scaling, unlike AQL. Based on this empirical evidence, we claim\nthat SPAQL may have a higher sample efficiency than AQL, thus being a relevant\ncontribution to the field of efficient model-free RL methods.",
+    "pdf_url": "http://arxiv.org/pdf/2007.06741v1",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "stat.ML",
+      "68T05",
+      "I.2.6"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "34 pages, 15 figures",
+    "journal_ref": null,
+    "citation_count": 2,
+    "bibtex": "@Article{Ara'ujo2020SinglepartitionAQ,\n author = {J. Ara'ujo and Mário A. T. Figueiredo and M. Botto},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Single-partition adaptive Q-learning},\n volume = {abs/2007.06741},\n year = {2020}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.9040342844754502,
+      "citation_score": 0.051242236024844734,
+      "recency_score": 0.39987418992662344,
+      "final_score": 0.6830598653304464
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2502.07978v1",
+    "title": "A Survey of In-Context Reinforcement Learning",
+    "published": "2025-02-11T21:52:19Z",
+    "updated": "2025-02-11T21:52:19Z",
+    "authors": [
+      "Amir Moeini",
+      "Jiuqi Wang",
+      "Jacob Beck",
+      "Ethan Blaser",
+      "Shimon Whiteson",
+      "Rohan Chandra",
+      "Shangtong Zhang"
+    ],
+    "summary": "Reinforcement learning (RL) agents typically optimize their policies by\nperforming expensive backward passes to update their network parameters.\nHowever, some agents can solve new tasks without updating any parameters by\nsimply conditioning on additional context such as their action-observation\nhistories. This paper surveys work on such behavior, known as in-context\nreinforcement learning.",
+    "pdf_url": "http://arxiv.org/pdf/2502.07978v1",
+    "doi": null,
+    "categories": [
+      "cs.LG"
+    ],
+    "primary_category": "cs.LG",
+    "comment": null,
+    "journal_ref": null,
+    "citation_count": 16,
+    "bibtex": "@Article{Moeini2025ASO,\n author = {Amir Moeini and Jiuqi Wang and Jacob Beck and Ethan Blaser and S. Whiteson and Rohan Chandra and Shangtong Zhang},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {A Survey of In-Context Reinforcement Learning},\n volume = {abs/2502.07978},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8600878633367716,
+      "citation_score": 0.8465116279069766,
+      "recency_score": 0.8847910051581929,
+      "final_score": 0.8598429304329547
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2303.04150v4",
+    "title": "Evolutionary Reinforcement Learning: A Survey",
+    "published": "2023-03-07T01:38:42Z",
+    "updated": "2023-08-30T01:47:53Z",
+    "authors": [
+      "Hui Bai",
+      "Ran Cheng",
+      "Yaochu Jin"
+    ],
+    "summary": "Reinforcement learning (RL) is a machine learning approach that trains agents\nto maximize cumulative rewards through interactions with environments. The\nintegration of RL with deep learning has recently resulted in impressive\nachievements in a wide range of challenging tasks, including board games,\narcade games, and robot control. Despite these successes, there remain several\ncrucial challenges, including brittle convergence properties caused by\nsensitive hyperparameters, difficulties in temporal credit assignment with long\ntime horizons and sparse rewards, a lack of diverse exploration, especially in\ncontinuous search space scenarios, difficulties in credit assignment in\nmulti-agent reinforcement learning, and conflicting objectives for rewards.\nEvolutionary computation (EC), which maintains a population of learning agents,\nhas demonstrated promising performance in addressing these limitations. This\narticle presents a comprehensive survey of state-of-the-art methods for\nintegrating EC into RL, referred to as evolutionary reinforcement learning\n(EvoRL). We categorize EvoRL methods according to key research fields in RL,\nincluding hyperparameter optimization, policy search, exploration, reward\nshaping, meta-RL, and multi-objective RL. We then discuss future research\ndirections in terms of efficient methods, benchmarks, and scalable platforms.\nThis survey serves as a resource for researchers and practitioners interested\nin the field of EvoRL, highlighting the important challenges and opportunities\nfor future research. With the help of this survey, researchers and\npractitioners can develop more efficient methods and tailored benchmarks for\nEvoRL, further advancing this promising cross-disciplinary research field.",
+    "pdf_url": "http://arxiv.org/pdf/2303.04150v4",
+    "doi": "10.34133/icomputing.0025",
+    "categories": [
+      "cs.NE",
+      "cs.AI",
+      "cs.LG"
+    ],
+    "primary_category": "cs.NE",
+    "comment": null,
+    "journal_ref": "INTELLIGENT COMPUTING, 21 Apr 2023",
+    "citation_count": 67,
+    "bibtex": "@Article{Bai2023EvolutionaryRL,\n author = {Hui Bai and Ran Cheng and Yaochu Jin},\n booktitle = {Intelligent Computing},\n journal = {ArXiv},\n title = {Evolutionary Reinforcement Learning: A Survey},\n volume = {abs/2303.04150},\n year = {2023}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8903332648598377,
+      "citation_score": 0.8533307453416148,
+      "recency_score": 0.6323560626155358,
+      "final_score": 0.8571350407317628
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.15110v2",
+    "title": "TDRM: Smooth Reward Models with Temporal Difference for LLM RL and\n  Inference",
+    "published": "2025-09-18T16:14:34Z",
+    "updated": "2025-09-29T10:46:05Z",
+    "authors": [
+      "Dan Zhang",
+      "Min Cai",
+      "Jonathan Light",
+      "Ziniu Hu",
+      "Yisong Yue",
+      "Jie Tang"
+    ],
+    "summary": "Reward models are central to both reinforcement learning (RL) with language\nmodels and inference-time verification. However, existing reward models often\nlack temporal consistency, leading to ineffective policy updates and unstable\nRL training. We introduce TDRM, a method for learning smoother and more\nreliable reward models by minimizing temporal differences (TD) for\ntraining-time reinforcement learning and inference-time verification.\nExperiments show that TD-trained process reward models (PRMs) improve\nperformance across Best-of-N (up to 6.6%) and tree-search (up to 23.7%)\nsettings. When combined with Reinforcement Learning with Verifiable Rewards\n(RLVR), TD-trained PRMs lead to more data-efficient RL -- achieving comparable\nperformance with just 2.5k data to what baseline methods require 50.1k data to\nattain -- and yield higher-quality language model policies in 8 model variants\n(5 series), e.g., Qwen2.5-(0.5B, 1,5B), GLM4-9B-0414, GLM-Z1-9B-0414,\nQwen2.5-Math-(1.5B, 7B), and DeepSeek-R1-Distill-Qwen-(1.5B, 7B). We release\nall code at https://github.com/THUDM/TDRM.",
+    "pdf_url": "http://arxiv.org/pdf/2509.15110v2",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.CL"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "10 figures, 7 tables",
+    "journal_ref": null,
+    "citation_count": 1,
+    "bibtex": "@Article{Zhang2025TDRMSR,\n author = {Dan Zhang and Min Cai and Jonathan Light and Ziniu Hu and Yisong Yue and Jie Tang},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {TDRM: Smooth Reward Models with Temporal Difference for LLM RL and Inference},\n volume = {abs/2509.15110},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8858811925928352,
+      "citation_score": 0.6818681318681319,
+      "recency_score": 0.9816672256416563,
+      "final_score": 0.8546571837527766
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2410.08048v1",
+    "title": "VerifierQ: Enhancing LLM Test Time Compute with Q-Learning-based\n  Verifiers",
+    "published": "2024-10-10T15:43:55Z",
+    "updated": "2024-10-10T15:43:55Z",
+    "authors": [
+      "Jianing Qi",
+      "Hao Tang",
+      "Zhigang Zhu"
+    ],
+    "summary": "Recent advancements in test time compute, particularly through the use of\nverifier models, have significantly enhanced the reasoning capabilities of\nLarge Language Models (LLMs). This generator-verifier approach closely\nresembles the actor-critic framework in reinforcement learning (RL). However,\ncurrent verifier models in LLMs often rely on supervised fine-tuning without\ntemporal difference learning such as Q-learning. This paper introduces\nVerifierQ, a novel approach that integrates Offline Q-learning into LLM\nverifier models. We address three key challenges in applying Q-learning to\nLLMs: (1) handling utterance-level Markov Decision Processes (MDPs), (2)\nmanaging large action spaces, and (3) mitigating overestimation bias. VerifierQ\nintroduces a modified Bellman update for bounded Q-values, incorporates\nImplicit Q-learning (IQL) for efficient action space management, and integrates\na novel Conservative Q-learning (CQL) formulation for balanced Q-value\nestimation. Our method enables parallel Q-value computation and improving\ntraining efficiency. While recent work has explored RL techniques like MCTS for\ngenerators, VerifierQ is among the first to investigate the verifier (critic)\naspect in LLMs through Q-learning. This integration of RL principles into\nverifier models complements existing advancements in generator techniques,\npotentially enabling more robust and adaptive reasoning in LLMs. Experimental\nresults on mathematical reasoning tasks demonstrate VerifierQ's superior\nperformance compared to traditional supervised fine-tuning approaches, with\nimprovements in efficiency, accuracy and robustness. By enhancing the synergy\nbetween generation and evaluation capabilities, VerifierQ contributes to the\nongoing evolution of AI systems in addressing complex cognitive tasks across\nvarious domains.",
+    "pdf_url": "http://arxiv.org/pdf/2410.08048v1",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.CL"
+    ],
+    "primary_category": "cs.LG",
+    "comment": null,
+    "journal_ref": null,
+    "citation_count": 11,
+    "bibtex": "@Article{Qi2024VerifierQEL,\n author = {Jianing Qi and Hao Tang and Zhigang Zhu},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {VerifierQ: Enhancing LLM Test Time Compute with Q-Learning-based Verifiers},\n volume = {abs/2410.08048},\n year = {2024}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8941070290082138,
+      "citation_score": 0.7051767015706806,
+      "recency_score": 0.8342404954052961,
+      "final_score": 0.8503343101604154
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2312.01072v2",
+    "title": "A Survey of Temporal Credit Assignment in Deep Reinforcement Learning",
+    "published": "2023-12-02T08:49:51Z",
+    "updated": "2024-07-04T09:32:18Z",
+    "authors": [
+      "Eduardo Pignatelli",
+      "Johan Ferret",
+      "Matthieu Geist",
+      "Thomas Mesnard",
+      "Hado van Hasselt",
+      "Olivier Pietquin",
+      "Laura Toni"
+    ],
+    "summary": "The Credit Assignment Problem (CAP) refers to the longstanding challenge of\nReinforcement Learning (RL) agents to associate actions with their long-term\nconsequences. Solving the CAP is a crucial step towards the successful\ndeployment of RL in the real world since most decision problems provide\nfeedback that is noisy, delayed, and with little or no information about the\ncauses. These conditions make it hard to distinguish serendipitous outcomes\nfrom those caused by informed decision-making. However, the mathematical nature\nof credit and the CAP remains poorly understood and defined. In this survey, we\nreview the state of the art of Temporal Credit Assignment (CA) in deep RL. We\npropose a unifying formalism for credit that enables equitable comparisons of\nstate-of-the-art algorithms and improves our understanding of the trade-offs\nbetween the various methods. We cast the CAP as the problem of learning the\ninfluence of an action over an outcome from a finite amount of experience. We\ndiscuss the challenges posed by delayed effects, transpositions, and a lack of\naction influence, and analyse how existing methods aim to address them.\nFinally, we survey the protocols to evaluate a credit assignment method and\nsuggest ways to diagnose the sources of struggle for different methods.\nOverall, this survey provides an overview of the field for new-entry\npractitioners and researchers, it offers a coherent perspective for scholars\nlooking to expedite the starting stages of a new study on the CAP, and it\nsuggests potential directions for future research.",
+    "pdf_url": "http://arxiv.org/pdf/2312.01072v2",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "56 pages, 2 figures, 4 tables",
+    "journal_ref": null,
+    "citation_count": 29,
+    "bibtex": "@Article{Pignatelli2023ASO,\n author = {Eduardo Pignatelli and Johan Ferret and Matthieu Geist and Thomas Mesnard and Hado van Hasselt and Laura Toni},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {A Survey of Temporal Credit Assignment in Deep Reinforcement Learning},\n volume = {abs/2312.01072},\n year = {2023}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8955040960131339,
+      "citation_score": 0.7521875,
+      "recency_score": 0.7187759103213145,
+      "final_score": 0.8491679582413251
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2106.12534v2",
+    "title": "Coarse-to-Fine Q-attention: Efficient Learning for Visual Robotic\n  Manipulation via Discretisation",
+    "published": "2021-06-23T16:57:16Z",
+    "updated": "2022-03-15T00:33:43Z",
+    "authors": [
+      "Stephen James",
+      "Kentaro Wada",
+      "Tristan Laidlow",
+      "Andrew J. Davison"
+    ],
+    "summary": "We present a coarse-to-fine discretisation method that enables the use of\ndiscrete reinforcement learning approaches in place of unstable and\ndata-inefficient actor-critic methods in continuous robotics domains. This\napproach builds on the recently released ARM algorithm, which replaces the\ncontinuous next-best pose agent with a discrete one, with coarse-to-fine\nQ-attention. Given a voxelised scene, coarse-to-fine Q-attention learns what\npart of the scene to 'zoom' into. When this 'zooming' behaviour is applied\niteratively, it results in a near-lossless discretisation of the translation\nspace, and allows the use of a discrete action, deep Q-learning method. We show\nthat our new coarse-to-fine algorithm achieves state-of-the-art performance on\nseveral difficult sparsely rewarded RLBench vision-based robotics tasks, and\ncan train real-world policies, tabula rasa, in a matter of minutes, with as\nlittle as 3 demonstrations.",
+    "pdf_url": "http://arxiv.org/pdf/2106.12534v2",
+    "doi": null,
+    "categories": [
+      "cs.RO",
+      "cs.AI",
+      "cs.CV",
+      "cs.LG"
+    ],
+    "primary_category": "cs.RO",
+    "comment": "Proceedings of the IEEE Conference on Computer Vision and Pattern\n  Recognition (CVPR 2022). Videos and code:\n  https://sites.google.com/view/c2f-q-attention",
+    "journal_ref": null,
+    "citation_count": 158,
+    "bibtex": "@Article{James2021CoarsetoFineQE,\n author = {Stephen James and Kentaro Wada and Tristan Laidlow and A. Davison},\n booktitle = {Computer Vision and Pattern Recognition},\n journal = {2022 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},\n pages = {13729-13738},\n title = {Coarse-to-Fine Q-attention: Efficient Learning for Visual Robotic Manipulation via Discretisation},\n year = {2021}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8743901435066184,
+      "citation_score": 0.9,
+      "recency_score": 0.4709865283954266,
+      "final_score": 0.8391717532941755
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2102.05815v1",
+    "title": "Representation Matters: Offline Pretraining for Sequential Decision\n  Making",
+    "published": "2021-02-11T02:38:12Z",
+    "updated": "2021-02-11T02:38:12Z",
+    "authors": [
+      "Mengjiao Yang",
+      "Ofir Nachum"
+    ],
+    "summary": "The recent success of supervised learning methods on ever larger offline\ndatasets has spurred interest in the reinforcement learning (RL) field to\ninvestigate whether the same paradigms can be translated to RL algorithms. This\nresearch area, known as offline RL, has largely focused on offline policy\noptimization, aiming to find a return-maximizing policy exclusively from\noffline data. In this paper, we consider a slightly different approach to\nincorporating offline data into sequential decision-making. We aim to answer\nthe question, what unsupervised objectives applied to offline datasets are able\nto learn state representations which elevate performance on downstream tasks,\nwhether those downstream tasks be online RL, imitation learning from expert\ndemonstrations, or even offline policy optimization based on the same offline\ndataset? Through a variety of experiments utilizing standard offline RL\ndatasets, we find that the use of pretraining with unsupervised learning\nobjectives can dramatically improve the performance of policy learning\nalgorithms that otherwise yield mediocre performance on their own. Extensive\nablations further provide insights into what components of these unsupervised\nobjectives -- e.g., reward prediction, continuous or discrete representations,\npretraining or finetuning -- are most important and in which settings.",
+    "pdf_url": "http://arxiv.org/pdf/2102.05815v1",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI"
+    ],
+    "primary_category": "cs.LG",
+    "comment": null,
+    "journal_ref": null,
+    "citation_count": 122,
+    "bibtex": "@Article{Yang2021RepresentationMO,\n author = {Mengjiao Yang and Ofir Nachum},\n booktitle = {International Conference on Machine Learning},\n journal = {ArXiv},\n title = {Representation Matters: Offline Pretraining for Sequential Decision Making},\n volume = {abs/2102.05815},\n year = {2021}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8899048551276194,
+      "citation_score": 0.8590726744186046,
+      "recency_score": 0.4421856651626365,
+      "final_score": 0.838966499989318
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2405.20692v1",
+    "title": "In-Context Decision Transformer: Reinforcement Learning via Hierarchical\n  Chain-of-Thought",
+    "published": "2024-05-31T08:38:25Z",
+    "updated": "2024-05-31T08:38:25Z",
+    "authors": [
+      "Sili Huang",
+      "Jifeng Hu",
+      "Hechang Chen",
+      "Lichao Sun",
+      "Bo Yang"
+    ],
+    "summary": "In-context learning is a promising approach for offline reinforcement\nlearning (RL) to handle online tasks, which can be achieved by providing task\nprompts. Recent works demonstrated that in-context RL could emerge with\nself-improvement in a trial-and-error manner when treating RL tasks as an\nacross-episodic sequential prediction problem. Despite the self-improvement not\nrequiring gradient updates, current works still suffer from high computational\ncosts when the across-episodic sequence increases with task horizons. To this\nend, we propose an In-context Decision Transformer (IDT) to achieve\nself-improvement in a high-level trial-and-error manner. Specifically, IDT is\ninspired by the efficient hierarchical structure of human decision-making and\nthus reconstructs the sequence to consist of high-level decisions instead of\nlow-level actions that interact with environments. As one high-level decision\ncan guide multi-step low-level actions, IDT naturally avoids excessively long\nsequences and solves online tasks more efficiently. Experimental results show\nthat IDT achieves state-of-the-art in long-horizon tasks over current\nin-context RL methods. In particular, the online evaluation time of our IDT is\n\\textbf{36$\\times$} times faster than baselines in the D4RL benchmark and\n\\textbf{27$\\times$} times faster in the Grid World benchmark.",
+    "pdf_url": "http://arxiv.org/pdf/2405.20692v1",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI"
+    ],
+    "primary_category": "cs.LG",
+    "comment": null,
+    "journal_ref": null,
+    "citation_count": 17,
+    "bibtex": "@Article{Huang2024InContextDT,\n author = {Sili Huang and Jifeng Hu and Hechang Chen and Lichao Sun and Bo Yang},\n booktitle = {International Conference on Machine Learning},\n journal = {ArXiv},\n title = {In-Context Decision Transformer: Reinforcement Learning via Hierarchical Chain-of-Thought},\n volume = {abs/2405.20692},\n year = {2024}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8798770440101433,
+      "citation_score": 0.7205679611650485,
+      "recency_score": 0.7832266235366495,
+      "final_score": 0.8383501853937749
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/1802.09081v2",
+    "title": "Temporal Difference Models: Model-Free Deep RL for Model-Based Control",
+    "published": "2018-02-25T21:14:44Z",
+    "updated": "2020-02-24T06:34:11Z",
+    "authors": [
+      "Vitchyr Pong",
+      "Shixiang Gu",
+      "Murtaza Dalal",
+      "Sergey Levine"
+    ],
+    "summary": "Model-free reinforcement learning (RL) is a powerful, general tool for\nlearning complex behaviors. However, its sample efficiency is often\nimpractically large for solving challenging real-world problems, even with\noff-policy algorithms such as Q-learning. A limiting factor in classic\nmodel-free RL is that the learning signal consists only of scalar rewards,\nignoring much of the rich information contained in state transition tuples.\nModel-based RL uses this information, by training a predictive model, but often\ndoes not achieve the same asymptotic performance as model-free RL due to model\nbias. We introduce temporal difference models (TDMs), a family of\ngoal-conditioned value functions that can be trained with model-free learning\nand used for model-based control. TDMs combine the benefits of model-free and\nmodel-based RL: they leverage the rich information in state transitions to\nlearn very efficiently, while still attaining asymptotic performance that\nexceeds that of direct model-based RL methods. Our experimental results show\nthat, on a range of continuous control tasks, TDMs provide a substantial\nimprovement in efficiency compared to state-of-the-art model-based and\nmodel-free methods.",
+    "pdf_url": "http://arxiv.org/pdf/1802.09081v2",
+    "doi": null,
+    "categories": [
+      "cs.LG"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "Appeared in ICLR 2018; typos corrected",
+    "journal_ref": null,
+    "citation_count": 247,
+    "bibtex": "@Article{Pong2018TemporalDM,\n author = {Vitchyr H. Pong and S. Gu and Murtaza Dalal and S. Levine},\n booktitle = {International Conference on Learning Representations},\n journal = {ArXiv},\n title = {Temporal Difference Models: Model-Free Deep RL for Model-Based Control},\n volume = {abs/1802.09081},\n year = {2018}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8899982209690188,
+      "citation_score": 0.9,
+      "recency_score": 0.2647715444805152,
+      "final_score": 0.8294759091263647
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2103.06257v2",
+    "title": "Maximum Entropy RL (Provably) Solves Some Robust RL Problems",
+    "published": "2021-03-10T18:45:48Z",
+    "updated": "2022-05-05T17:01:45Z",
+    "authors": [
+      "Benjamin Eysenbach",
+      "Sergey Levine"
+    ],
+    "summary": "Many potential applications of reinforcement learning (RL) require guarantees\nthat the agent will perform well in the face of disturbances to the dynamics or\nreward function. In this paper, we prove theoretically that maximum entropy\n(MaxEnt) RL maximizes a lower bound on a robust RL objective, and thus can be\nused to learn policies that are robust to some disturbances in the dynamics and\nthe reward function. While this capability of MaxEnt RL has been observed\nempirically in prior work, to the best of our knowledge our work provides the\nfirst rigorous proof and theoretical characterization of the MaxEnt RL robust\nset. While a number of prior robust RL algorithms have been designed to handle\nsimilar disturbances to the reward function or dynamics, these methods\ntypically require additional moving parts and hyperparameters on top of a base\nRL algorithm. In contrast, our results suggest that MaxEnt RL by itself is\nrobust to certain disturbances, without requiring any additional modifications.\nWhile this does not imply that MaxEnt RL is the best available robust RL\nmethod, MaxEnt RL is a simple robust RL method with appealing formal\nguarantees.",
+    "pdf_url": "http://arxiv.org/pdf/2103.06257v2",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.RO"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "Published at ICLR 2022. Blog post and videos:\n  https://bair.berkeley.edu/blog/2021/03/10/maxent-robust-rl/. arXiv admin\n  note: text overlap with arXiv:1910.01913",
+    "journal_ref": null,
+    "citation_count": 210,
+    "bibtex": "@Article{Eysenbach2021MaximumER,\n author = {Benjamin Eysenbach and S. Levine},\n booktitle = {International Conference on Learning Representations},\n journal = {ArXiv},\n title = {Maximum Entropy RL (Provably) Solves Some Robust RL Problems},\n volume = {abs/2103.06257},\n year = {2021}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8634288060218185,
+      "citation_score": 0.9,
+      "recency_score": 0.4480989083816442,
+      "final_score": 0.8292100550534374
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/1702.08887v3",
+    "title": "Stabilising Experience Replay for Deep Multi-Agent Reinforcement\n  Learning",
+    "published": "2017-02-28T17:56:41Z",
+    "updated": "2018-05-21T08:24:02Z",
+    "authors": [
+      "Jakob Foerster",
+      "Nantas Nardelli",
+      "Gregory Farquhar",
+      "Triantafyllos Afouras",
+      "Philip H. S. Torr",
+      "Pushmeet Kohli",
+      "Shimon Whiteson"
+    ],
+    "summary": "Many real-world problems, such as network packet routing and urban traffic\ncontrol, are naturally modeled as multi-agent reinforcement learning (RL)\nproblems. However, existing multi-agent RL methods typically scale poorly in\nthe problem size. Therefore, a key challenge is to translate the success of\ndeep learning on single-agent RL to the multi-agent setting. A major stumbling\nblock is that independent Q-learning, the most popular multi-agent RL method,\nintroduces nonstationarity that makes it incompatible with the experience\nreplay memory on which deep Q-learning relies. This paper proposes two methods\nthat address this problem: 1) using a multi-agent variant of importance\nsampling to naturally decay obsolete data and 2) conditioning each agent's\nvalue function on a fingerprint that disambiguates the age of the data sampled\nfrom the replay memory. Results on a challenging decentralised variant of\nStarCraft unit micromanagement confirm that these methods enable the successful\ncombination of experience replay with multi-agent RL.",
+    "pdf_url": "http://arxiv.org/pdf/1702.08887v3",
+    "doi": null,
+    "categories": [
+      "cs.AI",
+      "cs.LG",
+      "cs.MA"
+    ],
+    "primary_category": "cs.AI",
+    "comment": "Camera-ready version, International Conference of Machine Learning\n  2017; updated to fix print-breaking image",
+    "journal_ref": null,
+    "citation_count": 620,
+    "bibtex": "@Article{Foerster2017StabilisingER,\n author = {Jakob N. Foerster and Nantas Nardelli and Gregory Farquhar and Triantafyllos Afouras and Philip H. S. Torr and Pushmeet Kohli and S. Whiteson},\n booktitle = {International Conference on Machine Learning},\n pages = {1146-1155},\n title = {Stabilising Experience Replay for Deep Multi-Agent Reinforcement Learning},\n year = {2017}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8852475723071267,
+      "citation_score": 0.9,
+      "recency_score": 0.2229890063219348,
+      "final_score": 0.8219722012471822
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/1806.02450v2",
+    "title": "A Finite Time Analysis of Temporal Difference Learning With Linear\n  Function Approximation",
+    "published": "2018-06-06T22:57:08Z",
+    "updated": "2018-11-06T07:34:09Z",
+    "authors": [
+      "Jalaj Bhandari",
+      "Daniel Russo",
+      "Raghav Singal"
+    ],
+    "summary": "Temporal difference learning (TD) is a simple iterative algorithm used to\nestimate the value function corresponding to a given policy in a Markov\ndecision process. Although TD is one of the most widely used algorithms in\nreinforcement learning, its theoretical analysis has proved challenging and few\nguarantees on its statistical efficiency are available. In this work, we\nprovide a simple and explicit finite time analysis of temporal difference\nlearning with linear function approximation. Except for a few key insights, our\nanalysis mirrors standard techniques for analyzing stochastic gradient descent\nalgorithms, and therefore inherits the simplicity and elegance of that\nliterature. Final sections of the paper show how all of our main results extend\nto the study of TD learning with eligibility traces, known as TD($\\lambda$),\nand to Q-learning applied in high-dimensional optimal stopping problems.",
+    "pdf_url": "http://arxiv.org/pdf/1806.02450v2",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "stat.ML"
+    ],
+    "primary_category": "cs.LG",
+    "comment": null,
+    "journal_ref": null,
+    "citation_count": 363,
+    "bibtex": "@Article{Bhandari2018AFT,\n author = {Jalaj Bhandari and Daniel Russo and Raghav Singal},\n booktitle = {Annual Conference Computational Learning Theory},\n journal = {Oper. Res.},\n pages = {950-973},\n title = {A Finite Time Analysis of Temporal Difference Learning With Linear Function Approximation},\n volume = {69},\n year = {2018}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8770093538152479,
+      "citation_score": 0.9,
+      "recency_score": 0.2777676936784101,
+      "final_score": 0.8216833170385146
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/1810.06784v4",
+    "title": "ProMP: Proximal Meta-Policy Search",
+    "published": "2018-10-16T01:43:51Z",
+    "updated": "2022-02-11T12:46:43Z",
+    "authors": [
+      "Jonas Rothfuss",
+      "Dennis Lee",
+      "Ignasi Clavera",
+      "Tamim Asfour",
+      "Pieter Abbeel"
+    ],
+    "summary": "Credit assignment in Meta-reinforcement learning (Meta-RL) is still poorly\nunderstood. Existing methods either neglect credit assignment to pre-adaptation\nbehavior or implement it naively. This leads to poor sample-efficiency during\nmeta-training as well as ineffective task identification strategies. This paper\nprovides a theoretical analysis of credit assignment in gradient-based Meta-RL.\nBuilding on the gained insights we develop a novel meta-learning algorithm that\novercomes both the issue of poor credit assignment and previous difficulties in\nestimating meta-policy gradients. By controlling the statistical distance of\nboth pre-adaptation and adapted policies during meta-policy search, the\nproposed algorithm endows efficient and stable meta-learning. Our approach\nleads to superior pre-adaptation policy behavior and consistently outperforms\nprevious Meta-RL algorithms in sample-efficiency, wall-clock time, and\nasymptotic performance.",
+    "pdf_url": "http://arxiv.org/pdf/1810.06784v4",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "stat.ML"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "The first three authors contributed equally. Published at ICLR 2019",
+    "journal_ref": null,
+    "citation_count": 212,
+    "bibtex": "@Article{Rothfuss2018ProMPPM,\n author = {Jonas Rothfuss and Dennis Lee and I. Clavera and T. Asfour and P. Abbeel},\n booktitle = {International Conference on Learning Representations},\n journal = {ArXiv},\n title = {ProMP: Proximal Meta-Policy Search},\n volume = {abs/1810.06784},\n year = {2018}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8717647442426999,
+      "citation_score": 0.9,
+      "recency_score": 0.2955789288812071,
+      "final_score": 0.8197932138580106
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2402.00348v1",
+    "title": "ODICE: Revealing the Mystery of Distribution Correction Estimation via\n  Orthogonal-gradient Update",
+    "published": "2024-02-01T05:30:51Z",
+    "updated": "2024-02-01T05:30:51Z",
+    "authors": [
+      "Liyuan Mao",
+      "Haoran Xu",
+      "Weinan Zhang",
+      "Xianyuan Zhan"
+    ],
+    "summary": "In this study, we investigate the DIstribution Correction Estimation (DICE)\nmethods, an important line of work in offline reinforcement learning (RL) and\nimitation learning (IL). DICE-based methods impose state-action-level behavior\nconstraint, which is an ideal choice for offline learning. However, they\ntypically perform much worse than current state-of-the-art (SOTA) methods that\nsolely use action-level behavior constraint. After revisiting DICE-based\nmethods, we find there exist two gradient terms when learning the value\nfunction using true-gradient update: forward gradient (taken on the current\nstate) and backward gradient (taken on the next state). Using forward gradient\nbears a large similarity to many offline RL methods, and thus can be regarded\nas applying action-level constraint. However, directly adding the backward\ngradient may degenerate or cancel out its effect if these two gradients have\nconflicting directions. To resolve this issue, we propose a simple yet\neffective modification that projects the backward gradient onto the normal\nplane of the forward gradient, resulting in an orthogonal-gradient update, a\nnew learning rule for DICE-based methods. We conduct thorough theoretical\nanalyses and find that the projected backward gradient brings state-level\nbehavior regularization, which reveals the mystery of DICE-based methods: the\nvalue learning objective does try to impose state-action-level constraint, but\nneeds to be used in a corrected way. Through toy examples and extensive\nexperiments on complex offline RL and IL tasks, we demonstrate that DICE-based\nmethods using orthogonal-gradient updates (O-DICE) achieve SOTA performance and\ngreat robustness.",
+    "pdf_url": "http://arxiv.org/pdf/2402.00348v1",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "Spotlight @ ICLR 2024, first two authors contribute equally",
+    "journal_ref": null,
+    "citation_count": 17,
+    "bibtex": "@Article{Mao2024ODICERT,\n author = {Liyuan Mao and Haoran Xu and Weinan Zhang and Xianyuan Zhan},\n booktitle = {International Conference on Learning Representations},\n journal = {ArXiv},\n title = {ODICE: Revealing the Mystery of Distribution Correction Estimation via Orthogonal-gradient Update},\n volume = {abs/2402.00348},\n year = {2024}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8659220088000545,
+      "citation_score": 0.6936670416197975,
+      "recency_score": 0.7398815289007439,
+      "final_score": 0.818866967374072
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2502.15214v1",
+    "title": "The Evolving Landscape of LLM- and VLM-Integrated Reinforcement Learning",
+    "published": "2025-02-21T05:01:30Z",
+    "updated": "2025-02-21T05:01:30Z",
+    "authors": [
+      "Sheila Schoepp",
+      "Masoud Jafaripour",
+      "Yingyue Cao",
+      "Tianpei Yang",
+      "Fatemeh Abdollahi",
+      "Shadan Golestan",
+      "Zahin Sufiyan",
+      "Osmar R. Zaiane",
+      "Matthew E. Taylor"
+    ],
+    "summary": "Reinforcement learning (RL) has shown impressive results in sequential\ndecision-making tasks. Meanwhile, Large Language Models (LLMs) and\nVision-Language Models (VLMs) have emerged, exhibiting impressive capabilities\nin multimodal understanding and reasoning. These advances have led to a surge\nof research integrating LLMs and VLMs into RL. In this survey, we review\nrepresentative works in which LLMs and VLMs are used to overcome key challenges\nin RL, such as lack of prior knowledge, long-horizon planning, and reward\ndesign. We present a taxonomy that categorizes these LLM/VLM-assisted RL\napproaches into three roles: agent, planner, and reward. We conclude by\nexploring open problems, including grounding, bias mitigation, improved\nrepresentations, and action advice. By consolidating existing research and\nidentifying future directions, this survey establishes a framework for\nintegrating LLMs and VLMs into RL, advancing approaches that unify natural\nlanguage and visual understanding with sequential decision-making.",
+    "pdf_url": "http://arxiv.org/pdf/2502.15214v1",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI",
+      "cs.CL"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "9 pages, 4 figures",
+    "journal_ref": null,
+    "citation_count": 4,
+    "bibtex": "@Article{Schoepp2024TheEL,\n author = {Sheila Schoepp and Masoud Jafaripour and Yingyue Cao and Tianpei Yang and Fatemeh Abdollahi and Shadan Golestan and Zahin Sufiyan and Osmar R. Zaiane and Matthew E. Taylor},\n booktitle = {International Joint Conference on Artificial Intelligence},\n pages = {10641-10649},\n title = {The Evolving Landscape of LLM- and VLM-Integrated Reinforcement Learning},\n year = {2024}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8744527714240482,
+      "citation_score": 0.5819277108433735,
+      "recency_score": 0.8885770519795257,
+      "final_score": 0.8173601873634609
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2311.11423v1",
+    "title": "Offline Reinforcement Learning for Wireless Network Optimization with\n  Mixture Datasets",
+    "published": "2023-11-19T21:02:17Z",
+    "updated": "2023-11-19T21:02:17Z",
+    "authors": [
+      "Kun Yang",
+      "Cong Shen",
+      "Jing Yang",
+      "Shu-ping Yeh",
+      "Jerry Sydir"
+    ],
+    "summary": "The recent development of reinforcement learning (RL) has boosted the\nadoption of online RL for wireless radio resource management (RRM). However,\nonline RL algorithms require direct interactions with the environment, which\nmay be undesirable given the potential performance loss due to the unavoidable\nexploration in RL. In this work, we first investigate the use of \\emph{offline}\nRL algorithms in solving the RRM problem. We evaluate several state-of-the-art\noffline RL algorithms, including behavior constrained Q-learning (BCQ),\nconservative Q-learning (CQL), and implicit Q-learning (IQL), for a specific\nRRM problem that aims at maximizing a linear combination {of sum and}\n5-percentile rates via user scheduling. We observe that the performance of\noffline RL for the RRM problem depends critically on the behavior policy used\nfor data collection, and further propose a novel offline RL solution that\nleverages heterogeneous datasets collected by different behavior policies. We\nshow that with a proper mixture of the datasets, offline RL can produce a\nnear-optimal RL policy even when all involved behavior policies are highly\nsuboptimal.",
+    "pdf_url": "http://arxiv.org/pdf/2311.11423v1",
+    "doi": null,
+    "categories": [
+      "cs.IT",
+      "cs.LG",
+      "cs.NI",
+      "eess.SP",
+      "math.IT"
+    ],
+    "primary_category": "cs.IT",
+    "comment": "This paper is the camera ready version for Asilomar 2023",
+    "journal_ref": null,
+    "citation_count": 14,
+    "bibtex": "@Article{Yang2023OfflineRL,\n author = {Kun Yang and Cong Shen and Jing Yang and Shu-ping Yeh and J. Sydir},\n booktitle = {Asilomar Conference on Signals, Systems and Computers},\n journal = {2023 57th Asilomar Conference on Signals, Systems, and Computers},\n pages = {629-633},\n title = {Offline Reinforcement Learning for Wireless Network Optimization with Mixture Datasets},\n year = {2023}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8871760683455623,
+      "citation_score": 0.6206416464891041,
+      "recency_score": 0.7146954014326538,
+      "final_score": 0.8166211172829797
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2507.09127v1",
+    "title": "A Study of Value-Aware Eigenoptions",
+    "published": "2025-07-12T03:29:59Z",
+    "updated": "2025-07-12T03:29:59Z",
+    "authors": [
+      "Harshil Kotamreddy",
+      "Marlos C. Machado"
+    ],
+    "summary": "Options, which impose an inductive bias toward temporal and hierarchical\nstructure, offer a powerful framework for reinforcement learning (RL). While\neffective in sequential decision-making, they are often handcrafted rather than\nlearned. Among approaches for discovering options, eigenoptions have shown\nstrong performance in exploration, but their role in credit assignment remains\nunderexplored. In this paper, we investigate whether eigenoptions can\naccelerate credit assignment in model-free RL, evaluating them in tabular and\npixel-based gridworlds. We find that pre-specified eigenoptions aid not only\nexploration but also credit assignment, whereas online discovery can bias the\nagent's experience too strongly and hinder learning. In the context of deep RL,\nwe also propose a method for learning option-values under non-linear function\napproximation, highlighting the impact of termination conditions on\nperformance. Our findings reveal both the promise and complexity of using\neigenoptions, and options more broadly, to simultaneously support credit\nassignment and exploration in reinforcement learning.",
+    "pdf_url": "http://arxiv.org/pdf/2507.09127v1",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "stat.ML"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "Presented at the RLC Workshop on Inductive Biases in Reinforcement\n  Learning 2025",
+    "journal_ref": null,
+    "citation_count": null,
+    "bibtex": null,
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8871545951173612,
+      "citation_score": 0.5,
+      "recency_score": 0.950051765421076,
+      "final_score": 0.8160133931242604
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2507.10174v1",
+    "title": "Should We Ever Prefer Decision Transformer for Offline Reinforcement\n  Learning?",
+    "published": "2025-07-14T11:36:31Z",
+    "updated": "2025-07-14T11:36:31Z",
+    "authors": [
+      "Yumi Omori",
+      "Zixuan Dong",
+      "Keith Ross"
+    ],
+    "summary": "In recent years, extensive work has explored the application of the\nTransformer architecture to reinforcement learning problems. Among these,\nDecision Transformer (DT) has gained particular attention in the context of\noffline reinforcement learning due to its ability to frame return-conditioned\npolicy learning as a sequence modeling task. Most recently, Bhargava et al.\n(2024) provided a systematic comparison of DT with more conventional MLP-based\noffline RL algorithms, including Behavior Cloning (BC) and Conservative\nQ-Learning (CQL), and claimed that DT exhibits superior performance in\nsparse-reward and low-quality data settings.\n  In this paper, through experimentation on robotic manipulation tasks\n(Robomimic) and locomotion benchmarks (D4RL), we show that MLP-based Filtered\nBehavior Cloning (FBC) achieves competitive or superior performance compared to\nDT in sparse-reward environments. FBC simply filters out low-performing\ntrajectories from the dataset and then performs ordinary behavior cloning on\nthe filtered dataset. FBC is not only very straightforward, but it also\nrequires less training data and is computationally more efficient. The results\ntherefore suggest that DT is not preferable for sparse-reward environments.\nFrom prior work, arguably, DT is also not preferable for dense-reward\nenvironments. Thus, we pose the question: Is DT ever preferable?",
+    "pdf_url": "http://arxiv.org/pdf/2507.10174v1",
+    "doi": null,
+    "categories": [
+      "cs.AI",
+      "cs.LG"
+    ],
+    "primary_category": "cs.AI",
+    "comment": "Accepted by RLBrew: Ingredients for Developing Generalist Agents\n  workshop (RLC 2025)",
+    "journal_ref": null,
+    "citation_count": 1,
+    "bibtex": "@Article{Omori2025ShouldWE,\n author = {Yumi Omori and Zixuan Dong and Keith Ross},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Should We Ever Prefer Decision Transformer for Offline Reinforcement Learning?},\n volume = {abs/2507.10174},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8829496876540794,
+      "citation_score": 0.5127358490566037,
+      "recency_score": 0.9509536658016491,
+      "final_score": 0.8157073177493412
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2106.02757v2",
+    "title": "Heuristic-Guided Reinforcement Learning",
+    "published": "2021-06-05T00:04:09Z",
+    "updated": "2021-11-22T17:42:43Z",
+    "authors": [
+      "Ching-An Cheng",
+      "Andrey Kolobov",
+      "Adith Swaminathan"
+    ],
+    "summary": "We provide a framework for accelerating reinforcement learning (RL)\nalgorithms by heuristics constructed from domain knowledge or offline data.\nTabula rasa RL algorithms require environment interactions or computation that\nscales with the horizon of the sequential decision-making task. Using our\nframework, we show how heuristic-guided RL induces a much shorter-horizon\nsubproblem that provably solves the original task. Our framework can be viewed\nas a horizon-based regularization for controlling bias and variance in RL under\na finite interaction budget. On the theoretical side, we characterize\nproperties of a good heuristic and its impact on RL acceleration. In\nparticular, we introduce the novel concept of an improvable heuristic, a\nheuristic that allows an RL agent to extrapolate beyond its prior knowledge. On\nthe empirical side, we instantiate our framework to accelerate several\nstate-of-the-art algorithms in simulated robotic control tasks and procedurally\ngenerated games. Our framework complements the rich literature on warm-starting\nRL with expert demonstrations or exploratory datasets, and introduces a\nprincipled method for injecting prior knowledge into RL.",
+    "pdf_url": "http://arxiv.org/pdf/2106.02757v2",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI"
+    ],
+    "primary_category": "cs.LG",
+    "comment": null,
+    "journal_ref": null,
+    "citation_count": 65,
+    "bibtex": "@Article{Cheng2021HeuristicGuidedRL,\n author = {Ching-An Cheng and A. Kolobov and Adith Swaminathan},\n booktitle = {Neural Information Processing Systems},\n pages = {13550-13563},\n title = {Heuristic-Guided Reinforcement Learning},\n year = {2021}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8845449813247505,
+      "citation_score": 0.7478284557907845,
+      "recency_score": 0.4667600234106339,
+      "final_score": 0.8154231804265456
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/1810.07862v1",
+    "title": "Applications of Deep Reinforcement Learning in Communications and\n  Networking: A Survey",
+    "published": "2018-10-18T01:47:19Z",
+    "updated": "2018-10-18T01:47:19Z",
+    "authors": [
+      "Nguyen Cong Luong",
+      "Dinh Thai Hoang",
+      "Shimin Gong",
+      "Dusit Niyato",
+      "Ping Wang",
+      "Ying-Chang Liang",
+      "Dong In Kim"
+    ],
+    "summary": "This paper presents a comprehensive literature review on applications of deep\nreinforcement learning in communications and networking. Modern networks, e.g.,\nInternet of Things (IoT) and Unmanned Aerial Vehicle (UAV) networks, become\nmore decentralized and autonomous. In such networks, network entities need to\nmake decisions locally to maximize the network performance under uncertainty of\nnetwork environment. Reinforcement learning has been efficiently used to enable\nthe network entities to obtain the optimal policy including, e.g., decisions or\nactions, given their states when the state and action spaces are small.\nHowever, in complex and large-scale networks, the state and action spaces are\nusually large, and the reinforcement learning may not be able to find the\noptimal policy in reasonable time. Therefore, deep reinforcement learning, a\ncombination of reinforcement learning with deep learning, has been developed to\novercome the shortcomings. In this survey, we first give a tutorial of deep\nreinforcement learning from fundamental concepts to advanced models. Then, we\nreview deep reinforcement learning approaches proposed to address emerging\nissues in communications and networking. The issues include dynamic network\naccess, data rate control, wireless caching, data offloading, network security,\nand connectivity preservation which are all important to next generation\nnetworks such as 5G and beyond. Furthermore, we present applications of deep\nreinforcement learning for traffic routing, resource sharing, and data\ncollection. Finally, we highlight important challenges, open issues, and future\nresearch directions of applying deep reinforcement learning.",
+    "pdf_url": "http://arxiv.org/pdf/1810.07862v1",
+    "doi": null,
+    "categories": [
+      "cs.NI",
+      "cs.LG"
+    ],
+    "primary_category": "cs.NI",
+    "comment": "37 pages, 13 figures, 6 tables, 174 reference papers",
+    "journal_ref": null,
+    "citation_count": 1524,
+    "bibtex": "@Article{Luong2018ApplicationsOD,\n author = {Nguyen Cong Luong and D. Hoang and Shimin Gong and Dusist Niyato and Ping Wang and Ying-Chang Liang and Dong In Kim},\n booktitle = {IEEE Communications Surveys and Tutorials},\n journal = {IEEE Communications Surveys & Tutorials},\n pages = {3133-3174},\n title = {Applications of Deep Reinforcement Learning in Communications and Networking: A Survey},\n volume = {21},\n year = {2018}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8649984892309723,
+      "citation_score": 0.9,
+      "recency_score": 0.2958595270108566,
+      "final_score": 0.8150848951627663
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2111.13485v2",
+    "title": "Learning Long-Term Reward Redistribution via Randomized Return\n  Decomposition",
+    "published": "2021-11-26T13:23:36Z",
+    "updated": "2022-03-17T07:01:28Z",
+    "authors": [
+      "Zhizhou Ren",
+      "Ruihan Guo",
+      "Yuan Zhou",
+      "Jian Peng"
+    ],
+    "summary": "Many practical applications of reinforcement learning require agents to learn\nfrom sparse and delayed rewards. It challenges the ability of agents to\nattribute their actions to future outcomes. In this paper, we consider the\nproblem formulation of episodic reinforcement learning with trajectory\nfeedback. It refers to an extreme delay of reward signals, in which the agent\ncan only obtain one reward signal at the end of each trajectory. A popular\nparadigm for this problem setting is learning with a designed auxiliary dense\nreward function, namely proxy reward, instead of sparse environmental signals.\nBased on this framework, this paper proposes a novel reward redistribution\nalgorithm, randomized return decomposition (RRD), to learn a proxy reward\nfunction for episodic reinforcement learning. We establish a surrogate problem\nby Monte-Carlo sampling that scales up least-squares-based reward\nredistribution to long-horizon problems. We analyze our surrogate loss function\nby connection with existing methods in the literature, which illustrates the\nalgorithmic properties of our approach. In experiments, we extensively evaluate\nour proposed method on a variety of benchmark tasks with episodic rewards and\ndemonstrate substantial improvement over baseline algorithms.",
+    "pdf_url": "http://arxiv.org/pdf/2111.13485v2",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI",
+      "stat.ML"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "Tenth International Conference on Learning Representations (ICLR 2022\n  Spotlight)",
+    "journal_ref": null,
+    "citation_count": 41,
+    "bibtex": "@Article{Ren2021LearningLR,\n author = {Zhizhou Ren and Ruihan Guo and Yuanshuo Zhou and Jian Peng},\n booktitle = {International Conference on Learning Representations},\n journal = {ArXiv},\n title = {Learning Long-Term Reward Redistribution via Randomized Return Decomposition},\n volume = {abs/2111.13485},\n year = {2021}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8905633351451179,
+      "citation_score": 0.7045757681564245,
+      "recency_score": 0.5069268264709962,
+      "final_score": 0.815002170879967
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2507.18867v1",
+    "title": "Learning Individual Intrinsic Reward in Multi-Agent Reinforcement\n  Learning via Incorporating Generalized Human Expertise",
+    "published": "2025-07-25T00:59:10Z",
+    "updated": "2025-07-25T00:59:10Z",
+    "authors": [
+      "Xuefei Wu",
+      "Xiao Yin",
+      "Yuanyang Zhu",
+      "Chunlin Chen"
+    ],
+    "summary": "Efficient exploration in multi-agent reinforcement learning (MARL) is a\nchallenging problem when receiving only a team reward, especially in\nenvironments with sparse rewards. A powerful method to mitigate this issue\ninvolves crafting dense individual rewards to guide the agents toward efficient\nexploration. However, individual rewards generally rely on manually engineered\nshaping-reward functions that lack high-order intelligence, thus it behaves\nineffectively than humans regarding learning and generalization in complex\nproblems. To tackle these issues, we combine the above two paradigms and\npropose a novel framework, LIGHT (Learning Individual Intrinsic reward via\nIncorporating Generalized Human experTise), which can integrate human knowledge\ninto MARL algorithms in an end-to-end manner. LIGHT guides each agent to avoid\nunnecessary exploration by considering both individual action distribution and\nhuman expertise preference distribution. Then, LIGHT designs individual\nintrinsic rewards for each agent based on actionable representational\ntransformation relevant to Q-learning so that the agents align their action\npreferences with the human expertise while maximizing the joint action value.\nExperimental results demonstrate the superiority of our method over\nrepresentative baselines regarding performance and better knowledge reusability\nacross different sparse-reward tasks on challenging scenarios.",
+    "pdf_url": "http://arxiv.org/pdf/2507.18867v1",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI",
+      "cs.MA"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "IEEE International Conference on Systems, Man, and Cybernetics",
+    "journal_ref": null,
+    "citation_count": 1,
+    "bibtex": "@Article{Wu2025LearningII,\n author = {Xuefei Wu and Xiao Yin and Yuanyang Zhu and Chunlin Chen},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Learning Individual Intrinsic Reward in Multi-Agent Reinforcement Learning via Incorporating Generalized Human Expertise},\n volume = {abs/2507.18867},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8758508535862057,
+      "citation_score": 0.5241353383458647,
+      "recency_score": 0.9559294440923658,
+      "final_score": 0.8135156095887535
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2408.14785v1",
+    "title": "Unsupervised-to-Online Reinforcement Learning",
+    "published": "2024-08-27T05:23:45Z",
+    "updated": "2024-08-27T05:23:45Z",
+    "authors": [
+      "Junsu Kim",
+      "Seohong Park",
+      "Sergey Levine"
+    ],
+    "summary": "Offline-to-online reinforcement learning (RL), a framework that trains a\npolicy with offline RL and then further fine-tunes it with online RL, has been\nconsidered a promising recipe for data-driven decision-making. While sensible,\nthis framework has drawbacks: it requires domain-specific offline RL\npre-training for each task, and is often brittle in practice. In this work, we\npropose unsupervised-to-online RL (U2O RL), which replaces domain-specific\nsupervised offline RL with unsupervised offline RL, as a better alternative to\noffline-to-online RL. U2O RL not only enables reusing a single pre-trained\nmodel for multiple downstream tasks, but also learns better representations,\nwhich often result in even better performance and stability than supervised\noffline-to-online RL. To instantiate U2O RL in practice, we propose a general\nrecipe for U2O RL to bridge task-agnostic unsupervised offline skill-based\npolicy pre-training and supervised online fine-tuning. Throughout our\nexperiments in nine state-based and pixel-based environments, we empirically\ndemonstrate that U2O RL achieves strong performance that matches or even\noutperforms previous offline-to-online RL approaches, while being able to reuse\na single pre-trained model for a number of different downstream tasks.",
+    "pdf_url": "http://arxiv.org/pdf/2408.14785v1",
+    "doi": null,
+    "categories": [
+      "cs.LG"
+    ],
+    "primary_category": "cs.LG",
+    "comment": null,
+    "journal_ref": null,
+    "citation_count": 8,
+    "bibtex": "@Article{Kim2024UnsupervisedtoOnlineRL,\n author = {Junsu Kim and Seohong Park and Sergey Levine},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Unsupervised-to-Online Reinforcement Learning},\n volume = {abs/2408.14785},\n year = {2024}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8687167472867554,
+      "citation_score": 0.6098026095684176,
+      "recency_score": 0.8166186539852276,
+      "final_score": 0.8117241104129351
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2502.10732v1",
+    "title": "Rule-Bottleneck Reinforcement Learning: Joint Explanation and Decision\n  Optimization for Resource Allocation with Language Agents",
+    "published": "2025-02-15T09:01:31Z",
+    "updated": "2025-02-15T09:01:31Z",
+    "authors": [
+      "Mauricio Tec",
+      "Guojun Xiong",
+      "Haichuan Wang",
+      "Francesca Dominici",
+      "Milind Tambe"
+    ],
+    "summary": "Deep Reinforcement Learning (RL) is remarkably effective in addressing\nsequential resource allocation problems in domains such as healthcare, public\npolicy, and resource management. However, deep RL policies often lack\ntransparency and adaptability, challenging their deployment alongside human\ndecision-makers. In contrast, Language Agents, powered by large language models\n(LLMs), provide human-understandable reasoning but may struggle with effective\ndecision making. To bridge this gap, we propose Rule-Bottleneck Reinforcement\nLearning (RBRL), a novel framework that jointly optimizes decision and\nexplanations. At each step, RBRL generates candidate rules with an LLM, selects\namong them using an attention-based RL policy, and determines the environment\naction with an explanation via chain-of-thought reasoning. The RL rule\nselection is optimized using the environment rewards and an explainability\nmetric judged by the LLM. Evaluations in real-world scenarios highlight RBRL's\ncompetitive performance with deep RL and efficiency gains over LLM fine-tuning.\nA survey further confirms the enhanced quality of its explanations.",
+    "pdf_url": "http://arxiv.org/pdf/2502.10732v1",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI"
+    ],
+    "primary_category": "cs.LG",
+    "comment": null,
+    "journal_ref": null,
+    "citation_count": 3,
+    "bibtex": "@Article{Tec2025RuleBottleneckRL,\n author = {M. Tec and Guojun Xiong and Haichuan Wang and Francesca Dominici and Milind Tambe},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Rule-Bottleneck Reinforcement Learning: Joint Explanation and Decision Optimization for Resource Allocation with Language Agents},\n volume = {abs/2502.10732},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.877070433374575,
+      "citation_score": 0.5370588235294118,
+      "recency_score": 0.8860512249649827,
+      "final_score": 0.8099661905645832
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2401.16249v2",
+    "title": "Molecular dynamics simulations of heat transport using machine-learned\n  potentials: A mini review and tutorial on GPUMD with neuroevolution\n  potentials",
+    "published": "2024-01-29T15:52:11Z",
+    "updated": "2024-04-24T18:24:50Z",
+    "authors": [
+      "Haikuan Dong",
+      "Yongbo Shi",
+      "Penghua Ying",
+      "Ke Xu",
+      "Ting Liang",
+      "Yanzhou Wang",
+      "Zezhu Zeng",
+      "Xin Wu",
+      "Wenjiang Zhou",
+      "Shiyun Xiong",
+      "Shunda Chen",
+      "Zheyong Fan"
+    ],
+    "summary": "Molecular dynamics (MD) simulations play an important role in understanding\nand engineering heat transport properties of complex materials. An essential\nrequirement for reliably predicting heat transport properties is the use of\naccurate and efficient interatomic potentials. Recently, machine-learned\npotentials (MLPs) have shown great promise in providing the required accuracy\nfor a broad range of materials. In this mini review and tutorial, we delve into\nthe fundamentals of heat transport, explore pertinent MD simulation methods,\nand survey the applications of MLPs in MD simulations of heat transport.\nFurthermore, we provide a step-by-step tutorial on developing MLPs for highly\nefficient and predictive heat transport simulations, utilizing the\nneuroevolution potentials (NEPs) as implemented in the GPUMD package. Our aim\nwith this mini review and tutorial is to empower researchers with valuable\ninsights into cutting-edge methodologies that can significantly enhance the\naccuracy and efficiency of MD simulations for heat transport studies.",
+    "pdf_url": "http://arxiv.org/pdf/2401.16249v2",
+    "doi": "10.1063/5.0200833",
+    "categories": [
+      "cond-mat.mtrl-sci",
+      "cond-mat.stat-mech",
+      "physics.comp-ph"
+    ],
+    "primary_category": "cond-mat.mtrl-sci",
+    "comment": "25 pages, 9 figures. This paper is part of the special topic, Machine\n  Learning for Thermal Transport",
+    "journal_ref": "J. Appl. Phys. 135, 161101 (2024)",
+    "citation_count": 46,
+    "bibtex": "@Article{None,\n booktitle = {Journal of Applied Physics},\n journal = {Journal of Applied Physics},\n title = {Molecular dynamics simulations of heat transport using machine-learned potentials: A mini-review and tutorial on GPUMD with neuroevolution potentials},\n year = {2024}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8031655953222137,
+      "citation_score": 0.8637598116169545,
+      "recency_score": 0.7391798128692567,
+      "final_score": 0.8088858603358662
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2506.02522v1",
+    "title": "Think Twice, Act Once: A Co-Evolution Framework of LLM and RL for\n  Large-Scale Decision Making",
+    "published": "2025-06-03T06:52:37Z",
+    "updated": "2025-06-03T06:52:37Z",
+    "authors": [
+      "Xu Wan",
+      "Wenyue Xu",
+      "Chao Yang",
+      "Mingyang Sun"
+    ],
+    "summary": "Recent advancements in Large Language Models (LLMs) and Reinforcement\nLearning (RL) have shown significant promise in decision-making tasks.\nNevertheless, for large-scale industrial decision problems, both approaches\nface distinct challenges: LLMs lack real-time long-sequence decision-making\ncapabilities, while RL struggles with sample efficiency in vast action spaces.\nTo bridge this gap, we propose Agents Co-Evolution (ACE), a synergistic\nframework between LLMs and RL agents for large-scale decision-making scenarios.\nACE introduces a dual-role trajectory refinement mechanism where LLMs act as\nboth Policy Actor and Value Critic during RL's training: the Actor refines\nsuboptimal actions via multi-step reasoning and environment validation, while\nthe Critic performs temporal credit assignment through trajectory-level reward\nshaping. Concurrently, RL agent enhances LLMs' task-specific decision-making\nwith high-quality fine-tuning datasets generated via prioritized experience\nreplay. Through extensive experiments across multiple power grid operation\nchallenges with action spaces exceeding 60K discrete actions, ACE demonstrates\nsuperior performance over existing RL methods and LLM-based methods.",
+    "pdf_url": "http://arxiv.org/pdf/2506.02522v1",
+    "doi": null,
+    "categories": [
+      "cs.AI"
+    ],
+    "primary_category": "cs.AI",
+    "comment": null,
+    "journal_ref": null,
+    "citation_count": 2,
+    "bibtex": "@Article{Wan2025ThinkTA,\n author = {Xu Wan and Wenyue Xu and Chao Yang and Mingyang Sun},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Think Twice, Act Once: A Co-Evolution Framework of LLM and RL for Large-Scale Decision Making},\n volume = {abs/2506.02522},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8615678003834683,
+      "citation_score": 0.556268221574344,
+      "recency_score": 0.9326346807768654,
+      "final_score": 0.8076145726609831
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2102.03861v1",
+    "title": "Dynamic Movement Primitives in Robotics: A Tutorial Survey",
+    "published": "2021-02-07T17:43:51Z",
+    "updated": "2021-02-07T17:43:51Z",
+    "authors": [
+      "Matteo Saveriano",
+      "Fares J. Abu-Dakka",
+      "Aljaz Kramberger",
+      "Luka Peternel"
+    ],
+    "summary": "Biological systems, including human beings, have the innate ability to\nperform complex tasks in versatile and agile manner. Researchers in\nsensorimotor control have tried to understand and formally define this innate\nproperty. The idea, supported by several experimental findings, that biological\nsystems are able to combine and adapt basic units of motion into complex tasks\nfinally lead to the formulation of the motor primitives theory. In this\nrespect, Dynamic Movement Primitives (DMPs) represent an elegant mathematical\nformulation of the motor primitives as stable dynamical systems, and are well\nsuited to generate motor commands for artificial systems like robots. In the\nlast decades, DMPs have inspired researchers in different robotic fields\nincluding imitation and reinforcement learning, optimal control,physical\ninteraction, and human-robot co-working, resulting a considerable amount of\npublished papers. The goal of this tutorial survey is two-fold. On one side, we\npresent the existing DMPs formulations in rigorous mathematical terms,and\ndiscuss advantages and limitations of each approach as well as practical\nimplementation details. In the tutorial vein, we also search for existing\nimplementations of presented approaches and release several others. On the\nother side, we provide a systematic and comprehensive review of existing\nliterature and categorize state of the art work on DMP. The paper concludes\nwith a discussion on the limitations of DMPs and an outline of possible\nresearch directions.",
+    "pdf_url": "http://arxiv.org/pdf/2102.03861v1",
+    "doi": "10.1177/02783649231201196",
+    "categories": [
+      "cs.RO"
+    ],
+    "primary_category": "cs.RO",
+    "comment": "43 pages, 21 figures, 5 tables",
+    "journal_ref": null,
+    "citation_count": 207,
+    "bibtex": "@Article{Saveriano2021DynamicMP,\n author = {Matteo Saveriano and Fares J. Abu-Dakka and Aljaz Kramberger and L. Peternel},\n booktitle = {Int. J. Robotics Res.},\n journal = {The International Journal of Robotics Research},\n pages = {1133 - 1184},\n title = {Dynamic movement primitives in robotics: A tutorial survey},\n volume = {42},\n year = {2021}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8319751896975988,
+      "citation_score": 0.9,
+      "recency_score": 0.4415567499060287,
+      "final_score": 0.8065383077789221
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2303.16563v2",
+    "title": "Skill Reinforcement Learning and Planning for Open-World Long-Horizon\n  Tasks",
+    "published": "2023-03-29T09:45:50Z",
+    "updated": "2023-12-04T14:53:15Z",
+    "authors": [
+      "Haoqi Yuan",
+      "Chi Zhang",
+      "Hongcheng Wang",
+      "Feiyang Xie",
+      "Penglin Cai",
+      "Hao Dong",
+      "Zongqing Lu"
+    ],
+    "summary": "We study building multi-task agents in open-world environments. Without human\ndemonstrations, learning to accomplish long-horizon tasks in a large open-world\nenvironment with reinforcement learning (RL) is extremely inefficient. To\ntackle this challenge, we convert the multi-task learning problem into learning\nbasic skills and planning over the skills. Using the popular open-world game\nMinecraft as the testbed, we propose three types of fine-grained basic skills,\nand use RL with intrinsic rewards to acquire skills. A novel Finding-skill that\nperforms exploration to find diverse items provides better initialization for\nother skills, improving the sample efficiency for skill learning. In skill\nplanning, we leverage the prior knowledge in Large Language Models to find the\nrelationships between skills and build a skill graph. When the agent is solving\na task, our skill search algorithm walks on the skill graph and generates the\nproper skill plans for the agent. In experiments, our method accomplishes 40\ndiverse Minecraft tasks, where many tasks require sequentially executing for\nmore than 10 skills. Our method outperforms baselines by a large margin and is\nthe most sample-efficient demonstration-free RL method to solve Minecraft Tech\nTree tasks. The project's website and code can be found at\nhttps://sites.google.com/view/plan4mc.",
+    "pdf_url": "http://arxiv.org/pdf/2303.16563v2",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "24 pages, presented in Foundation Models for Decision Making Workshop\n  at NeurIPS 2023",
+    "journal_ref": null,
+    "citation_count": 24,
+    "bibtex": "@Inproceedings{Yuan2023SkillRL,\n author = {Haoqi Yuan and Chi Zhang and Hongchen Wang and Feiyang Xie and Penglin Cai and Hao Dong and Zongqing Lu},\n title = {Skill Reinforcement Learning and Planning for Open-World Long-Horizon Tasks},\n year = {2023}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8650342072693586,
+      "citation_score": 0.6796004842615013,
+      "recency_score": 0.6389908661261238,
+      "final_score": 0.8053431285534636
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2403.01112v2",
+    "title": "Efficient Episodic Memory Utilization of Cooperative Multi-Agent\n  Reinforcement Learning",
+    "published": "2024-03-02T07:37:05Z",
+    "updated": "2024-03-07T13:40:04Z",
+    "authors": [
+      "Hyungho Na",
+      "Yunkyeong Seo",
+      "Il-chul Moon"
+    ],
+    "summary": "In cooperative multi-agent reinforcement learning (MARL), agents aim to\nachieve a common goal, such as defeating enemies or scoring a goal. Existing\nMARL algorithms are effective but still require significant learning time and\noften get trapped in local optima by complex tasks, subsequently failing to\ndiscover a goal-reaching policy. To address this, we introduce Efficient\nepisodic Memory Utilization (EMU) for MARL, with two primary objectives: (a)\naccelerating reinforcement learning by leveraging semantically coherent memory\nfrom an episodic buffer and (b) selectively promoting desirable transitions to\nprevent local convergence. To achieve (a), EMU incorporates a trainable\nencoder/decoder structure alongside MARL, creating coherent memory embeddings\nthat facilitate exploratory memory recall. To achieve (b), EMU introduces a\nnovel reward structure called episodic incentive based on the desirability of\nstates. This reward improves the TD target in Q-learning and acts as an\nadditional incentive for desirable transitions. We provide theoretical support\nfor the proposed incentive and demonstrate the effectiveness of EMU compared to\nconventional episodic control. The proposed method is evaluated in StarCraft II\nand Google Research Football, and empirical results indicate further\nperformance improvement over state-of-the-art methods.",
+    "pdf_url": "http://arxiv.org/pdf/2403.01112v2",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.MA"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "Accepted at ICLR 2024",
+    "journal_ref": null,
+    "citation_count": 9,
+    "bibtex": "@Article{Na2024EfficientEM,\n author = {Hyungho Na and Yunkyeong Seo and Il-Chul Moon},\n booktitle = {International Conference on Learning Representations},\n journal = {ArXiv},\n title = {Efficient Episodic Memory Utilization of Cooperative Multi-Agent Reinforcement Learning},\n volume = {abs/2403.01112},\n year = {2024}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8788384892678033,
+      "citation_score": 0.5695277449822904,
+      "recency_score": 0.7504875627285618,
+      "final_score": 0.8041412477567766
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/1711.05715v2",
+    "title": "BBQ-Networks: Efficient Exploration in Deep Reinforcement Learning for\n  Task-Oriented Dialogue Systems",
+    "published": "2017-11-15T18:23:48Z",
+    "updated": "2017-11-20T04:22:45Z",
+    "authors": [
+      "Zachary Lipton",
+      "Xiujun Li",
+      "Jianfeng Gao",
+      "Lihong Li",
+      "Faisal Ahmed",
+      "Li Deng"
+    ],
+    "summary": "We present a new algorithm that significantly improves the efficiency of\nexploration for deep Q-learning agents in dialogue systems. Our agents explore\nvia Thompson sampling, drawing Monte Carlo samples from a Bayes-by-Backprop\nneural network. Our algorithm learns much faster than common exploration\nstrategies such as \\epsilon-greedy, Boltzmann, bootstrapping, and\nintrinsic-reward-based ones. Additionally, we show that spiking the replay\nbuffer with experiences from just a few successful episodes can make Q-learning\nfeasible when it might otherwise fail.",
+    "pdf_url": "http://arxiv.org/pdf/1711.05715v2",
+    "doi": null,
+    "categories": [
+      "cs.AI",
+      "cs.CL",
+      "cs.LG"
+    ],
+    "primary_category": "cs.AI",
+    "comment": "Duplicate of article already in the arXiv: arXiv:1608.05081",
+    "journal_ref": null,
+    "citation_count": 173,
+    "bibtex": "@Article{Lipton2016BBQNetworksEE,\n author = {Zachary Chase Lipton and Xiujun Li and Jianfeng Gao and Lihong Li and Faisal Ahmed and L. Deng},\n booktitle = {AAAI Conference on Artificial Intelligence},\n pages = {5237-5244},\n title = {BBQ-Networks: Efficient Exploration in Deep Reinforcement Learning for Task-Oriented Dialogue Systems},\n year = {2016}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8761345145434836,
+      "citation_score": 0.8176653461935928,
+      "recency_score": 0.25226374623618664,
+      "final_score": 0.8020536040427757
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2409.09869v1",
+    "title": "Critic as Lyapunov function (CALF): a model-free, stability-ensuring\n  agent",
+    "published": "2024-09-15T21:27:44Z",
+    "updated": "2024-09-15T21:27:44Z",
+    "authors": [
+      "Pavel Osinenko",
+      "Grigory Yaremenko",
+      "Roman Zashchitin",
+      "Anton Bolychev",
+      "Sinan Ibrahim",
+      "Dmitrii Dobriborsci"
+    ],
+    "summary": "This work presents and showcases a novel reinforcement learning agent called\nCritic As Lyapunov Function (CALF) which is model-free and ensures online\nenvironment, in other words, dynamical system stabilization. Online means that\nin each learning episode, the said environment is stabilized. This, as\ndemonstrated in a case study with a mobile robot simulator, greatly improves\nthe overall learning performance. The base actor-critic scheme of CALF is\nanalogous to SARSA. The latter did not show any success in reaching the target\nin our studies. However, a modified version thereof, called SARSA-m here, did\nsucceed in some learning scenarios. Still, CALF greatly outperformed the said\napproach. CALF was also demonstrated to improve a nominal stabilizer provided\nto it. In summary, the presented agent may be considered a viable approach to\nfusing classical control with reinforcement learning. Its concurrent approaches\nare mostly either offline or model-based, like, for instance, those that fuse\nmodel-predictive control into the agent.",
+    "pdf_url": "http://arxiv.org/pdf/2409.09869v1",
+    "doi": null,
+    "categories": [
+      "cs.RO",
+      "cs.AI",
+      "math.OC"
+    ],
+    "primary_category": "cs.RO",
+    "comment": "IEEE Conference on Decision and Control. Accepted for publication in\n  proceedings of the conference",
+    "journal_ref": null,
+    "citation_count": 7,
+    "bibtex": "@Article{Osinenko2024CriticAL,\n author = {Pavel Osinenko and Grigory Yaremenko and Roman Zashchitin and Anton Bolychev and Sinan Ibrahim and Dmitrii Dobriborsci},\n booktitle = {IEEE Conference on Decision and Control},\n journal = {2024 IEEE 63rd Conference on Decision and Control (CDC)},\n pages = {2517-2524},\n title = {Critic as Lyapunov function (CALF): a model-free, stability-ensuring agent},\n year = {2024}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8529923853375895,
+      "citation_score": 0.5937697437697438,
+      "recency_score": 0.8244041556930455,
+      "final_score": 0.798289034059566
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2106.07704v4",
+    "title": "Efficient (Soft) Q-Learning for Text Generation with Limited Good Data",
+    "published": "2021-06-14T18:48:40Z",
+    "updated": "2022-10-22T13:32:13Z",
+    "authors": [
+      "Han Guo",
+      "Bowen Tan",
+      "Zhengzhong Liu",
+      "Eric P. Xing",
+      "Zhiting Hu"
+    ],
+    "summary": "Maximum likelihood estimation (MLE) is the predominant algorithm for training\ntext generation models. This paradigm relies on direct supervision examples,\nwhich is not applicable to many emerging applications, such as generating\nadversarial attacks or generating prompts to control language models.\nReinforcement learning (RL) on the other hand offers a more flexible solution\nby allowing users to plug in arbitrary task metrics as reward. Yet previous RL\nalgorithms for text generation, such as policy gradient (on-policy RL) and\nQ-learning (off-policy RL), are often notoriously inefficient or unstable to\ntrain due to the large sequence space and the sparse reward received only at\nthe end of sequences. In this paper, we introduce a new RL formulation for text\ngeneration from the soft Q-learning (SQL) perspective. It enables us to draw\nfrom the latest RL advances, such as path consistency learning, to combine the\nbest of on-/off-policy updates, and learn effectively from sparse reward. We\napply the approach to a wide range of novel text generation tasks, including\nlearning from noisy/negative examples, adversarial attacks, and prompt\ngeneration. Experiments show our approach consistently outperforms both\ntask-specialized algorithms and the previous RL methods.",
+    "pdf_url": "http://arxiv.org/pdf/2106.07704v4",
+    "doi": null,
+    "categories": [
+      "cs.CL",
+      "cs.LG"
+    ],
+    "primary_category": "cs.CL",
+    "comment": "Code available at\n  https://github.com/HanGuo97/soft-Q-learning-for-text-generation",
+    "journal_ref": null,
+    "citation_count": 36,
+    "bibtex": "@Article{Guo2021EfficientQ,\n author = {Han Guo and Bowen Tan and Zhengzhong Liu and Eric P. Xing and Zhiting Hu},\n booktitle = {Conference on Empirical Methods in Natural Language Processing},\n pages = {6969-6991},\n title = {Efficient (Soft) Q-Learning for Text Generation with Limited Good Data},\n year = {2021}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8876441291623403,
+      "citation_score": 0.6496777658431794,
+      "recency_score": 0.4689797502046668,
+      "final_score": 0.7981844186027407
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2411.03604v1",
+    "title": "Temporal-Difference Learning Using Distributed Error Signals",
+    "published": "2024-11-06T01:49:13Z",
+    "updated": "2024-11-06T01:49:13Z",
+    "authors": [
+      "Jonas Guan",
+      "Shon Eduard Verch",
+      "Claas Voelcker",
+      "Ethan C. Jackson",
+      "Nicolas Papernot",
+      "William A. Cunningham"
+    ],
+    "summary": "A computational problem in biological reward-based learning is how credit\nassignment is performed in the nucleus accumbens (NAc). Much research suggests\nthat NAc dopamine encodes temporal-difference (TD) errors for learning value\npredictions. However, dopamine is synchronously distributed in regionally\nhomogeneous concentrations, which does not support explicit credit assignment\n(like used by backpropagation). It is unclear whether distributed errors alone\nare sufficient for synapses to make coordinated updates to learn complex,\nnonlinear reward-based learning tasks. We design a new deep Q-learning\nalgorithm, Artificial Dopamine, to computationally demonstrate that\nsynchronously distributed, per-layer TD errors may be sufficient to learn\nsurprisingly complex RL tasks. We empirically evaluate our algorithm on\nMinAtar, the DeepMind Control Suite, and classic control tasks, and show it\noften achieves comparable performance to deep RL algorithms that use\nbackpropagation.",
+    "pdf_url": "http://arxiv.org/pdf/2411.03604v1",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.NE"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "10 pages, to be published at NeurIPS 2024",
+    "journal_ref": null,
+    "citation_count": 3,
+    "bibtex": "@Article{Guan2024TemporalDifferenceLU,\n author = {Jonas Guan and S. Verch and C. Voelcker and Ethan C. Jackson and Nicolas Papernot and William A. Cunningham},\n booktitle = {Neural Information Processing Systems},\n journal = {ArXiv},\n title = {Temporal-Difference Learning Using Distributed Error Signals},\n volume = {abs/2411.03604},\n year = {2024}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8760264276473904,
+      "citation_score": 0.5022271268057785,
+      "recency_score": 0.8445948058828039,
+      "final_score": 0.7981234053026094
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2301.00944v3",
+    "title": "Temporal Difference Learning with Compressed Updates: Error-Feedback\n  meets Reinforcement Learning",
+    "published": "2023-01-03T04:09:38Z",
+    "updated": "2024-06-04T15:40:42Z",
+    "authors": [
+      "Aritra Mitra",
+      "George J. Pappas",
+      "Hamed Hassani"
+    ],
+    "summary": "In large-scale distributed machine learning, recent works have studied the\neffects of compressing gradients in stochastic optimization to alleviate the\ncommunication bottleneck. These works have collectively revealed that\nstochastic gradient descent (SGD) is robust to structured perturbations such as\nquantization, sparsification, and delays. Perhaps surprisingly, despite the\nsurge of interest in multi-agent reinforcement learning, almost nothing is\nknown about the analogous question: Are common reinforcement learning (RL)\nalgorithms also robust to similar perturbations? We investigate this question\nby studying a variant of the classical temporal difference (TD) learning\nalgorithm with a perturbed update direction, where a general compression\noperator is used to model the perturbation. Our work makes three important\ntechnical contributions. First, we prove that compressed TD algorithms, coupled\nwith an error-feedback mechanism used widely in optimization, exhibit the same\nnon-asymptotic theoretical guarantees as their SGD counterparts. Second, we\nshow that our analysis framework extends seamlessly to nonlinear stochastic\napproximation schemes that subsume Q-learning. Third, we prove that for\nmulti-agent TD learning, one can achieve linear convergence speedups with\nrespect to the number of agents while communicating just $\\tilde{O}(1)$ bits\nper iteration. Notably, these are the first finite-time results in RL that\naccount for general compression operators and error-feedback in tandem with\nlinear function approximation and Markovian sampling. Our proofs hinge on the\nconstruction of novel Lyapunov functions that capture the dynamics of a memory\nvariable introduced by error-feedback.",
+    "pdf_url": "http://arxiv.org/pdf/2301.00944v3",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI",
+      "cs.SY",
+      "eess.SY",
+      "math.OC"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "Accepted to Transactions on Machine Learning Research",
+    "journal_ref": null,
+    "citation_count": 13,
+    "bibtex": "@Article{Mitra2023TemporalDL,\n author = {A. Mitra and George Pappas and Hamed Hassani},\n booktitle = {Trans. Mach. Learn. Res.},\n journal = {Trans. Mach. Learn. Res.},\n title = {Temporal Difference Learning with Compressed Updates: Error-Feedback meets Reinforcement Learning},\n volume = {2024},\n year = {2023}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8957705670308781,
+      "citation_score": 0.5461266139108705,
+      "recency_score": 0.6137350511555844,
+      "final_score": 0.7976382248193471
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2305.17250v1",
+    "title": "Self-Supervised Reinforcement Learning that Transfers using Random\n  Features",
+    "published": "2023-05-26T20:37:06Z",
+    "updated": "2023-05-26T20:37:06Z",
+    "authors": [
+      "Boyuan Chen",
+      "Chuning Zhu",
+      "Pulkit Agrawal",
+      "Kaiqing Zhang",
+      "Abhishek Gupta"
+    ],
+    "summary": "Model-free reinforcement learning algorithms have exhibited great potential\nin solving single-task sequential decision-making problems with\nhigh-dimensional observations and long horizons, but are known to be hard to\ngeneralize across tasks. Model-based RL, on the other hand, learns\ntask-agnostic models of the world that naturally enables transfer across\ndifferent reward functions, but struggles to scale to complex environments due\nto the compounding error. To get the best of both worlds, we propose a\nself-supervised reinforcement learning method that enables the transfer of\nbehaviors across tasks with different rewards, while circumventing the\nchallenges of model-based RL. In particular, we show self-supervised\npre-training of model-free reinforcement learning with a number of random\nfeatures as rewards allows implicit modeling of long-horizon environment\ndynamics. Then, planning techniques like model-predictive control using these\nimplicit models enable fast adaptation to problems with new reward functions.\nOur method is self-supervised in that it can be trained on offline datasets\nwithout reward labels, but can then be quickly deployed on new tasks. We\nvalidate that our proposed method enables transfer across tasks on a variety of\nmanipulation and locomotion domains in simulation, opening the door to\ngeneralist decision-making agents.",
+    "pdf_url": "http://arxiv.org/pdf/2305.17250v1",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI"
+    ],
+    "primary_category": "cs.LG",
+    "comment": null,
+    "journal_ref": null,
+    "citation_count": 11,
+    "bibtex": "@Article{Chen2023SelfSupervisedRL,\n author = {Boyuan Chen and Chuning Zhu and Pulkit Agrawal and K. Zhang and Abhishek Gupta},\n booktitle = {Neural Information Processing Systems},\n journal = {ArXiv},\n title = {Self-Supervised Reinforcement Learning that Transfers using Random Features},\n volume = {abs/2305.17250},\n year = {2023}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8864465189929378,
+      "citation_score": 0.5439951573849878,
+      "recency_score": 0.65712990942772,
+      "final_score": 0.7950245857148259
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2312.10303v2",
+    "title": "Online Restless Multi-Armed Bandits with Long-Term Fairness Constraints",
+    "published": "2023-12-16T03:35:56Z",
+    "updated": "2023-12-22T01:40:28Z",
+    "authors": [
+      "Shufan Wang",
+      "Guojun Xiong",
+      "Jian Li"
+    ],
+    "summary": "Restless multi-armed bandits (RMAB) have been widely used to model sequential\ndecision making problems with constraints. The decision maker (DM) aims to\nmaximize the expected total reward over an infinite horizon under an\n\"instantaneous activation constraint\" that at most B arms can be activated at\nany decision epoch, where the state of each arm evolves stochastically\naccording to a Markov decision process (MDP). However, this basic model fails\nto provide any fairness guarantee among arms. In this paper, we introduce\nRMAB-F, a new RMAB model with \"long-term fairness constraints\", where the\nobjective now is to maximize the long term reward while a minimum long-term\nactivation fraction for each arm must be satisfied. For the online RMAB-F\nsetting (i.e., the underlying MDPs associated with each arm are unknown to the\nDM), we develop a novel reinforcement learning (RL) algorithm named Fair-UCRL.\nWe prove that Fair-UCRL ensures probabilistic sublinear bounds on both the\nreward regret and the fairness violation regret. Compared with off-the-shelf RL\nmethods, our Fair-UCRL is much more computationally efficient since it contains\na novel exploitation that leverages a low-complexity index policy for making\ndecisions. Experimental results further demonstrate the effectiveness of our\nFair-UCRL.",
+    "pdf_url": "http://arxiv.org/pdf/2312.10303v2",
+    "doi": null,
+    "categories": [
+      "cs.LG"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "AAAI 2024",
+    "journal_ref": null,
+    "citation_count": 8,
+    "bibtex": "@Article{Wang2023OnlineRM,\n author = {Shu-Fan Wang and Guojun Xiong and Jian Li},\n booktitle = {AAAI Conference on Artificial Intelligence},\n pages = {15616-15624},\n title = {Online Restless Multi-Armed Bandits with Long-Term Fairness Constraints},\n year = {2023}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.875561300517346,
+      "citation_score": 0.5366987850858819,
+      "recency_score": 0.7235659586928662,
+      "final_score": 0.7925892632486052
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2307.08171v1",
+    "title": "Credit Assignment: Challenges and Opportunities in Developing Human-like\n  AI Agents",
+    "published": "2023-07-16T23:11:26Z",
+    "updated": "2023-07-16T23:11:26Z",
+    "authors": [
+      "Thuy Ngoc Nguyen",
+      "Chase McDonald",
+      "Cleotilde Gonzalez"
+    ],
+    "summary": "Temporal credit assignment is crucial for learning and skill development in\nnatural and artificial intelligence. While computational methods like the TD\napproach in reinforcement learning have been proposed, it's unclear if they\naccurately represent how humans handle feedback delays. Cognitive models intend\nto represent the mental steps by which humans solve problems and perform a\nnumber of tasks, but limited research in cognitive science has addressed the\ncredit assignment problem in humans and cognitive models. Our research uses a\ncognitive model based on a theory of decisions from experience, Instance-Based\nLearning Theory (IBLT), to test different credit assignment mechanisms in a\ngoal-seeking navigation task with varying levels of decision complexity.\nInstance-Based Learning (IBL) models simulate the process of making sequential\nchoices with different credit assignment mechanisms, including a new IBL-TD\nmodel that combines the IBL decision mechanism with the TD approach. We found\nthat (1) An IBL model that gives equal credit assignment to all decisions is\nable to match human performance better than other models, including IBL-TD and\nQ-learning; (2) IBL-TD and Q-learning models underperform compared to humans\ninitially, but eventually, they outperform humans; (3) humans are influenced by\ndecision complexity, while models are not. Our study provides insights into the\nchallenges of capturing human behavior and the potential opportunities to use\nthese models in future AI systems to support human activities.",
+    "pdf_url": "http://arxiv.org/pdf/2307.08171v1",
+    "doi": null,
+    "categories": [
+      "cs.AI",
+      "cs.HC"
+    ],
+    "primary_category": "cs.AI",
+    "comment": "11 figures; 3 tables",
+    "journal_ref": null,
+    "citation_count": 10,
+    "bibtex": "@Article{Nguyen2023CreditAC,\n author = {T. Nguyen and Chase McDonald and Cleotilde González},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Credit Assignment: Challenges and Opportunities in Developing Human-like AI Agents},\n volume = {abs/2307.08171},\n year = {2023}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8788074960957892,
+      "citation_score": 0.5394141829393628,
+      "recency_score": 0.6732238119618827,
+      "final_score": 0.7903704650511133
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2006.16471v4",
+    "title": "Object Detection Under Rainy Conditions for Autonomous Vehicles: A\n  Review of State-of-the-Art and Emerging Techniques",
+    "published": "2020-06-30T02:05:10Z",
+    "updated": "2021-02-12T02:16:15Z",
+    "authors": [
+      "Mazin Hnewa",
+      "Hayder Radha"
+    ],
+    "summary": "Advanced automotive active-safety systems, in general, and autonomous\nvehicles, in particular, rely heavily on visual data to classify and localize\nobjects such as pedestrians, traffic signs and lights, and other nearby cars,\nto assist the corresponding vehicles maneuver safely in their environments.\nHowever, the performance of object detection methods could degrade rather\nsignificantly under challenging weather scenarios including rainy conditions.\nDespite major advancements in the development of deraining approaches, the\nimpact of rain on object detection has largely been understudied, especially in\nthe context of autonomous driving. The main objective of this paper is to\npresent a tutorial on state-of-the-art and emerging techniques that represent\nleading candidates for mitigating the influence of rainy conditions on an\nautonomous vehicle's ability to detect objects. Our goal includes surveying and\nanalyzing the performance of object detection methods trained and tested using\nvisual data captured under clear and rainy conditions. Moreover, we survey and\nevaluate the efficacy and limitations of leading deraining approaches,\ndeep-learning based domain adaptation, and image translation frameworks that\nare being considered for addressing the problem of object detection under rainy\nconditions. Experimental results of a variety of the surveyed techniques are\npresented as part of this tutorial.",
+    "pdf_url": "http://arxiv.org/pdf/2006.16471v4",
+    "doi": "10.1109/MSP.2020.2984801",
+    "categories": [
+      "cs.CV"
+    ],
+    "primary_category": "cs.CV",
+    "comment": null,
+    "journal_ref": "IEEE Signal Processing Magazine, vol. 38, no. 1, pp. 53-67, Jan.\n  2021",
+    "citation_count": 157,
+    "bibtex": "@Article{Hnewa2020ObjectDU,\n author = {Mazin Hnewa and H. Radha},\n booktitle = {IEEE Signal Processing Magazine},\n journal = {IEEE Signal Processing Magazine},\n pages = {53-67},\n title = {Object Detection Under Rainy Conditions for Autonomous Vehicles: A Review of State-of-the-Art and Emerging Techniques},\n volume = {38},\n year = {2020}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8158999858992295,
+      "citation_score": 0.8946775436793422,
+      "recency_score": 0.3972269997302469,
+      "final_score": 0.7897881988383537
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2410.11324v1",
+    "title": "Diffusion-Based Offline RL for Improved Decision-Making in Augmented ARC\n  Task",
+    "published": "2024-10-15T06:48:27Z",
+    "updated": "2024-10-15T06:48:27Z",
+    "authors": [
+      "Yunho Kim",
+      "Jaehyun Park",
+      "Heejun Kim",
+      "Sejin Kim",
+      "Byung-Jun Lee",
+      "Sundong Kim"
+    ],
+    "summary": "Effective long-term strategies enable AI systems to navigate complex\nenvironments by making sequential decisions over extended horizons. Similarly,\nreinforcement learning (RL) agents optimize decisions across sequences to\nmaximize rewards, even without immediate feedback. To verify that Latent\nDiffusion-Constrained Q-learning (LDCQ), a prominent diffusion-based offline RL\nmethod, demonstrates strong reasoning abilities in multi-step decision-making,\nwe aimed to evaluate its performance on the Abstraction and Reasoning Corpus\n(ARC). However, applying offline RL methodologies to enhance strategic\nreasoning in AI for solving tasks in ARC is challenging due to the lack of\nsufficient experience data in the ARC training set. To address this limitation,\nwe introduce an augmented offline RL dataset for ARC, called Synthesized\nOffline Learning Data for Abstraction and Reasoning (SOLAR), along with the\nSOLAR-Generator, which generates diverse trajectory data based on predefined\nrules. SOLAR enables the application of offline RL methods by offering\nsufficient experience data. We synthesized SOLAR for a simple task and used it\nto train an agent with the LDCQ method. Our experiments demonstrate the\neffectiveness of the offline RL approach on a simple ARC task, showing the\nagent's ability to make multi-step sequential decisions and correctly identify\nanswer states. These results highlight the potential of the offline RL approach\nto enhance AI's strategic reasoning capabilities.",
+    "pdf_url": "http://arxiv.org/pdf/2410.11324v1",
+    "doi": null,
+    "categories": [
+      "cs.AI",
+      "cs.CV",
+      "cs.LG"
+    ],
+    "primary_category": "cs.AI",
+    "comment": "Preprint, Under review. Comments welcome",
+    "journal_ref": null,
+    "citation_count": 2,
+    "bibtex": "@Article{Kim2024DiffusionBasedOR,\n author = {Yunho Kim and Jaehyun Park and Heejun Kim and Sejin Kim and Byung-Jun Lee and Sundong Kim},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Diffusion-Based Offline RL for Improved Decision-Making in Augmented ARC Task},\n volume = {abs/2410.11324},\n year = {2024}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8895138494374344,
+      "citation_score": 0.41460317460317464,
+      "recency_score": 0.8358251647499532,
+      "final_score": 0.7891628460018343
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2210.13623v3",
+    "title": "Reinforcement Learning and Bandits for Speech and Language Processing:\n  Tutorial, Review and Outlook",
+    "published": "2022-10-24T21:49:12Z",
+    "updated": "2023-10-19T13:15:48Z",
+    "authors": [
+      "Baihan Lin"
+    ],
+    "summary": "In recent years, reinforcement learning and bandits have transformed a wide\nrange of real-world applications including healthcare, finance, recommendation\nsystems, robotics, and last but not least, the speech and natural language\nprocessing. While most speech and language applications of reinforcement\nlearning algorithms are centered around improving the training of deep neural\nnetworks with its flexible optimization properties, there are still many\ngrounds to explore to utilize the benefits of reinforcement learning, such as\nits reward-driven adaptability, state representations, temporal structures and\ngeneralizability. In this survey, we present an overview of recent advancements\nof reinforcement learning and bandits, and discuss how they can be effectively\nemployed to solve speech and natural language processing problems with models\nthat are adaptive, interactive and scalable.",
+    "pdf_url": "http://arxiv.org/pdf/2210.13623v3",
+    "doi": null,
+    "categories": [
+      "cs.AI",
+      "cs.CL",
+      "cs.LG",
+      "cs.SD",
+      "eess.AS"
+    ],
+    "primary_category": "cs.AI",
+    "comment": "To appear in Expert Systems with Applications. Accompanying\n  INTERSPEECH 2022 Tutorial on the same topic. Including latest advancements in\n  large language models (LLMs)",
+    "journal_ref": null,
+    "citation_count": 28,
+    "bibtex": "@Article{Lin2022ReinforcementLA,\n author = {Baihan Lin},\n booktitle = {Expert systems with applications},\n journal = {Expert Syst. Appl.},\n pages = {122254},\n title = {Reinforcement Learning and Bandits for Speech and Language Processing: Tutorial, Review and Outlook},\n volume = {238},\n year = {2022}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8480260231080088,
+      "citation_score": 0.6801637852593267,
+      "recency_score": 0.5936874396809004,
+      "final_score": 0.7890197171955614
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2403.16933v3",
+    "title": "Backpropagation through space, time, and the brain",
+    "published": "2024-03-25T16:57:02Z",
+    "updated": "2025-05-05T14:43:33Z",
+    "authors": [
+      "Benjamin Ellenberger",
+      "Paul Haider",
+      "Jakob Jordan",
+      "Kevin Max",
+      "Ismael Jaras",
+      "Laura Kriener",
+      "Federico Benitez",
+      "Mihai A. Petrovici"
+    ],
+    "summary": "How physical networks of neurons, bound by spatio-temporal locality\nconstraints, can perform efficient credit assignment, remains, to a large\nextent, an open question. In machine learning, the answer is almost universally\ngiven by the error backpropagation algorithm, through both space and time.\nHowever, this algorithm is well-known to rely on biologically implausible\nassumptions, in particular with respect to spatio-temporal (non-)locality.\nAlternative forward-propagation models such as real-time recurrent learning\nonly partially solve the locality problem, but only at the cost of scaling, due\nto prohibitive storage requirements. We introduce Generalized Latent\nEquilibrium (GLE), a computational framework for fully local spatio-temporal\ncredit assignment in physical, dynamical networks of neurons. We start by\ndefining an energy based on neuron-local mismatches, from which we derive both\nneuronal dynamics via stationarity and parameter dynamics via gradient descent.\nThe resulting dynamics can be interpreted as a real-time, biologically\nplausible approximation of backpropagation through space and time in deep\ncortical networks with continuous-time neuronal dynamics and continuously\nactive, local synaptic plasticity. In particular, GLE exploits the morphology\nof dendritic trees to enable more complex information storage and processing in\nsingle neurons, as well as the ability of biological neurons to phase-shift\ntheir output rate with respect to their membrane potential, which is essential\nin both directions of information propagation. For the forward computation, it\nenables the mapping of time-continuous inputs to neuronal space, effectively\nperforming a spatio-temporal convolution. For the backward computation, it\npermits the temporal inversion of feedback signals, which consequently\napproximate the adjoint variables necessary for useful parameter updates.",
+    "pdf_url": "http://arxiv.org/pdf/2403.16933v3",
+    "doi": null,
+    "categories": [
+      "q-bio.NC",
+      "cs.AI",
+      "cs.LG",
+      "cs.NE",
+      "eess.SP"
+    ],
+    "primary_category": "q-bio.NC",
+    "comment": "First authorship shared by Benjamin Ellenberger and Paul Haider",
+    "journal_ref": null,
+    "citation_count": 9,
+    "bibtex": "@Article{Ellenberger2024BackpropagationTS,\n author = {B. Ellenberger and Paul Haider and Jakob Jordan and Kevin Max and Ismael Jaras and Laura Kriener and Federico Benitez and Mihai A. Petrovici},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Backpropagation through space, time, and the brain},\n volume = {abs/2403.16933},\n year = {2024}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8530275602688198,
+      "citation_score": 0.5759404966806,
+      "recency_score": 0.7590817508907788,
+      "final_score": 0.7882155666133718
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2506.17702v1",
+    "title": "Lower Bounds for Conjunctive Query Evaluation",
+    "published": "2025-06-21T12:29:29Z",
+    "updated": "2025-06-21T12:29:29Z",
+    "authors": [
+      "Stefan Mengel"
+    ],
+    "summary": "In this tutorial, we will survey known results on the complexity of\nconjunctive query evaluation in different settings, ranging from Boolean\nqueries over counting to more complex models like enumeration and direct\naccess. A particular focus will be on showing how different relatively recent\nhypotheses from complexity theory connect to query answering and allow showing\nthat known algorithms in several cases can likely not be improved.",
+    "pdf_url": "http://arxiv.org/pdf/2506.17702v1",
+    "doi": null,
+    "categories": [
+      "cs.DB",
+      "cs.CC"
+    ],
+    "primary_category": "cs.DB",
+    "comment": "paper for the tutorial at PODS 2025",
+    "journal_ref": null,
+    "citation_count": 2,
+    "bibtex": "@Article{Mengel2025LowerBF,\n author = {Stefan Mengel},\n booktitle = {PODS Companion},\n journal = {Companion of the 44th Symposium on Principles of Database Systems},\n title = {Lower Bounds for Conjunctive Query Evaluation},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8243430762012581,
+      "citation_score": 0.5760797342192691,
+      "recency_score": 0.9406333000474695,
+      "final_score": 0.7863194301894815
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/1106.0221v1",
+    "title": "Evolutionary Algorithms for Reinforcement Learning",
+    "published": "2011-06-01T16:16:14Z",
+    "updated": "2011-06-01T16:16:14Z",
+    "authors": [
+      "J. J. Grefenstette",
+      "D. E. Moriarty",
+      "A. C. Schultz"
+    ],
+    "summary": "There are two distinct approaches to solving reinforcement learning problems,\nnamely, searching in value function space and searching in policy space.\nTemporal difference methods and evolutionary algorithms are well-known examples\nof these approaches. Kaelbling, Littman and Moore recently provided an\ninformative survey of temporal difference methods. This article focuses on the\napplication of evolutionary algorithms to the reinforcement learning problem,\nemphasizing alternative policy representations, credit assignment methods, and\nproblem-specific genetic operators. Strengths and weaknesses of the\nevolutionary approach to reinforcement learning are presented, along with a\nsurvey of representative applications.",
+    "pdf_url": "http://arxiv.org/pdf/1106.0221v1",
+    "doi": "10.1613/jair.613",
+    "categories": [
+      "cs.LG",
+      "cs.AI",
+      "cs.NE"
+    ],
+    "primary_category": "cs.LG",
+    "comment": null,
+    "journal_ref": "Journal Of Artificial Intelligence Research, Volume 11, pages\n  241-276, 1999",
+    "citation_count": 415,
+    "bibtex": "@Article{Moriarty1999EvolutionaryAF,\n author = {David E. Moriarty and A. Schultz and J. Grefenstette},\n booktitle = {Journal of Artificial Intelligence Research},\n journal = {J. Artif. Intell. Res.},\n pages = {241-276},\n title = {Evolutionary Algorithms for Reinforcement Learning},\n volume = {11},\n year = {1999}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8568857212525021,
+      "citation_score": 0.8880629988597492,
+      "recency_score": 0.08237539507238037,
+      "final_score": 0.7856701441559393
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2210.11579v1",
+    "title": "Model-based Lifelong Reinforcement Learning with Bayesian Exploration",
+    "published": "2022-10-20T20:40:47Z",
+    "updated": "2022-10-20T20:40:47Z",
+    "authors": [
+      "Haotian Fu",
+      "Shangqun Yu",
+      "Michael Littman",
+      "George Konidaris"
+    ],
+    "summary": "We propose a model-based lifelong reinforcement-learning approach that\nestimates a hierarchical Bayesian posterior distilling the common structure\nshared across different tasks. The learned posterior combined with a\nsample-based Bayesian exploration procedure increases the sample efficiency of\nlearning across a family of related tasks. We first derive an analysis of the\nrelationship between the sample complexity and the initialization quality of\nthe posterior in the finite MDP setting. We next scale the approach to\ncontinuous-state domains by introducing a Variational Bayesian Lifelong\nReinforcement Learning algorithm that can be combined with recent model-based\ndeep RL methods, and that exhibits backward transfer. Experimental results on\nseveral challenging domains show that our algorithms achieve both better\nforward and backward transfer performance than state-of-the-art lifelong RL\nmethods.",
+    "pdf_url": "http://arxiv.org/pdf/2210.11579v1",
+    "doi": null,
+    "categories": [
+      "cs.LG"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "Accepted to NeurIPS 2022",
+    "journal_ref": null,
+    "citation_count": 14,
+    "bibtex": "@Article{Fu2022ModelbasedLR,\n author = {Haotian Fu and Shangqun Yu and Michael S. Littman and G. Konidaris},\n booktitle = {Neural Information Processing Systems},\n journal = {ArXiv},\n title = {Model-based Lifelong Reinforcement Learning with Bayesian Exploration},\n volume = {abs/2210.11579},\n year = {2022}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8793301338041644,
+      "citation_score": 0.546742649915814,
+      "recency_score": 0.5925618474809435,
+      "final_score": 0.7841358083941722
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2201.05000v1",
+    "title": "Automated Reinforcement Learning: An Overview",
+    "published": "2022-01-13T14:28:06Z",
+    "updated": "2022-01-13T14:28:06Z",
+    "authors": [
+      "Reza Refaei Afshar",
+      "Yingqian Zhang",
+      "Joaquin Vanschoren",
+      "Uzay Kaymak"
+    ],
+    "summary": "Reinforcement Learning and recently Deep Reinforcement Learning are popular\nmethods for solving sequential decision making problems modeled as Markov\nDecision Processes. RL modeling of a problem and selecting algorithms and\nhyper-parameters require careful considerations as different configurations may\nentail completely different performances. These considerations are mainly the\ntask of RL experts; however, RL is progressively becoming popular in other\nfields where the researchers and system designers are not RL experts. Besides,\nmany modeling decisions, such as defining state and action space, size of\nbatches and frequency of batch updating, and number of timesteps are typically\nmade manually. For these reasons, automating different components of RL\nframework is of great importance and it has attracted much attention in recent\nyears. Automated RL provides a framework in which different components of RL\nincluding MDP modeling, algorithm selection and hyper-parameter optimization\nare modeled and defined automatically. In this article, we explore the\nliterature and present recent work that can be used in automated RL. Moreover,\nwe discuss the challenges, open questions and research directions in AutoRL.",
+    "pdf_url": "http://arxiv.org/pdf/2201.05000v1",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI"
+    ],
+    "primary_category": "cs.LG",
+    "comment": null,
+    "journal_ref": null,
+    "citation_count": 16,
+    "bibtex": "@Article{Afshar2022AutomatedRL,\n author = {Reza Refaei Afshar and Yingqian Zhang and J. Vanschoren and U. Kaymak},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Automated Reinforcement Learning: An Overview},\n volume = {abs/2201.05000},\n year = {2022}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8852963200328114,
+      "citation_score": 0.5349298100743187,
+      "recency_score": 0.5186034208162099,
+      "final_score": 0.7785537281194528
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2111.14629v1",
+    "title": "Improving Zero-shot Generalization in Offline Reinforcement Learning\n  using Generalized Similarity Functions",
+    "published": "2021-11-29T15:42:54Z",
+    "updated": "2021-11-29T15:42:54Z",
+    "authors": [
+      "Bogdan Mazoure",
+      "Ilya Kostrikov",
+      "Ofir Nachum",
+      "Jonathan Tompson"
+    ],
+    "summary": "Reinforcement learning (RL) agents are widely used for solving complex\nsequential decision making tasks, but still exhibit difficulty in generalizing\nto scenarios not seen during training. While prior online approaches\ndemonstrated that using additional signals beyond the reward function can lead\nto better generalization capabilities in RL agents, i.e. using self-supervised\nlearning (SSL), they struggle in the offline RL setting, i.e. learning from a\nstatic dataset. We show that performance of online algorithms for\ngeneralization in RL can be hindered in the offline setting due to poor\nestimation of similarity between observations. We propose a new\ntheoretically-motivated framework called Generalized Similarity Functions\n(GSF), which uses contrastive learning to train an offline RL agent to\naggregate observations based on the similarity of their expected future\nbehavior, where we quantify this similarity using \\emph{generalized value\nfunctions}. We show that GSF is general enough to recover existing SSL\nobjectives while also improving zero-shot generalization performance on a\ncomplex offline RL benchmark, offline Procgen.",
+    "pdf_url": "http://arxiv.org/pdf/2111.14629v1",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "Offline RL workshop at NeurIPS 2021",
+    "journal_ref": null,
+    "citation_count": 24,
+    "bibtex": "@Article{Mazoure2021ImprovingZG,\n author = {Bogdan Mazoure and Ilya Kostrikov and Ofir Nachum and Jonathan Tompson},\n booktitle = {Neural Information Processing Systems},\n journal = {ArXiv},\n title = {Improving Zero-shot Generalization in Offline Reinforcement Learning using Generalized Similarity Functions},\n volume = {abs/2111.14629},\n year = {2021}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8691096621723395,
+      "citation_score": 0.5896758703481393,
+      "recency_score": 0.5078897519179353,
+      "final_score": 0.777100912782059
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2403.03141v1",
+    "title": "Language Guided Exploration for RL Agents in Text Environments",
+    "published": "2024-03-05T17:26:41Z",
+    "updated": "2024-03-05T17:26:41Z",
+    "authors": [
+      "Hitesh Golchha",
+      "Sahil Yerawar",
+      "Dhruvesh Patel",
+      "Soham Dan",
+      "Keerthiram Murugesan"
+    ],
+    "summary": "Real-world sequential decision making is characterized by sparse rewards and\nlarge decision spaces, posing significant difficulty for experiential learning\nsystems like $\\textit{tabula rasa}$ reinforcement learning (RL) agents. Large\nLanguage Models (LLMs), with a wealth of world knowledge, can help RL agents\nlearn quickly and adapt to distribution shifts. In this work, we introduce\nLanguage Guided Exploration (LGE) framework, which uses a pre-trained language\nmodel (called GUIDE ) to provide decision-level guidance to an RL agent (called\nEXPLORER). We observe that on ScienceWorld (Wang et al.,2022), a challenging\ntext environment, LGE outperforms vanilla RL agents significantly and also\noutperforms other sophisticated methods like Behaviour Cloning and Text\nDecision Transformer.",
+    "pdf_url": "http://arxiv.org/pdf/2403.03141v1",
+    "doi": null,
+    "categories": [
+      "cs.CL"
+    ],
+    "primary_category": "cs.CL",
+    "comment": null,
+    "journal_ref": null,
+    "citation_count": 7,
+    "bibtex": "@Article{Golchha2024LanguageGE,\n author = {Hitesh Golchha and Sahil Yerawar and Dhruvesh Patel and Soham Dan and K. Murugesan},\n booktitle = {NAACL-HLT},\n pages = {93-102},\n title = {Language Guided Exploration for RL Agents in Text Environments},\n year = {2024}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8488817365100865,
+      "citation_score": 0.5358331352507726,
+      "recency_score": 0.7519131404135968,
+      "final_score": 0.7765751566485748
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2205.10032v1",
+    "title": "Survey on Fair Reinforcement Learning: Theory and Practice",
+    "published": "2022-05-20T09:07:28Z",
+    "updated": "2022-05-20T09:07:28Z",
+    "authors": [
+      "Pratik Gajane",
+      "Akrati Saxena",
+      "Maryam Tavakol",
+      "George Fletcher",
+      "Mykola Pechenizkiy"
+    ],
+    "summary": "Fairness-aware learning aims at satisfying various fairness constraints in\naddition to the usual performance criteria via data-driven machine learning\ntechniques. Most of the research in fairness-aware learning employs the setting\nof fair-supervised learning. However, many dynamic real-world applications can\nbe better modeled using sequential decision-making problems and fair\nreinforcement learning provides a more suitable alternative for addressing\nthese problems. In this article, we provide an extensive overview of fairness\napproaches that have been implemented via a reinforcement learning (RL)\nframework. We discuss various practical applications in which RL methods have\nbeen applied to achieve a fair solution with high accuracy. We further include\nvarious facets of the theory of fair reinforcement learning, organizing them\ninto single-agent RL, multi-agent RL, long-term fairness via RL, and offline\nlearning. Moreover, we highlight a few major issues to explore in order to\nadvance the field of fair-RL, namely - i) correcting societal biases, ii)\nfeasibility of group fairness or individual fairness, and iii) explainability\nin RL. Our work is beneficial for both researchers and practitioners as we\ndiscuss articles providing mathematical guarantees as well as articles with\nempirical studies on real-world problems.",
+    "pdf_url": "http://arxiv.org/pdf/2205.10032v1",
+    "doi": null,
+    "categories": [
+      "cs.LG"
+    ],
+    "primary_category": "cs.LG",
+    "comment": null,
+    "journal_ref": null,
+    "citation_count": 18,
+    "bibtex": "@Article{Gajane2022SurveyOF,\n author = {Pratik Gajane and A. Saxena and M. Tavakol and George Fletcher and Mykola Pechenizkiy},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Survey on Fair Reinforcement Learning: Theory and Practice},\n volume = {abs/2205.10032},\n year = {2022}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8666038862763645,
+      "citation_score": 0.5637231503579953,
+      "recency_score": 0.5508114252617183,
+      "final_score": 0.774448492991226
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/1905.03949v2",
+    "title": "Sensing, Computing, and Communication for Energy Harvesting IoTs: A\n  Survey",
+    "published": "2019-05-10T05:42:57Z",
+    "updated": "2019-12-24T00:47:58Z",
+    "authors": [
+      "Dong Ma",
+      "Guohao Lan",
+      "Mahbub Hassan",
+      "Wen Hu",
+      "Sajal K. Das"
+    ],
+    "summary": "With the growing number of deployments of Internet of Things (IoT)\ninfrastructure for a wide variety of applications, the battery maintenance has\nbecome a major limitation for the sustainability of such infrastructure. To\novercome this problem, energy harvesting offers a viable alternative to\nautonomously power IoT devices, resulting in a number of battery-less energy\nharvesting IoTs (or EH-IoTs) appearing in the market in recent years. Standards\nactivities are also underway, which involve wireless protocol design suitable\nfor EH-IoTs as well as testing procedures for various energy harvesting\nmethods. Despite the early commercial and standards activities, IoT sensing,\ncomputing and communications under unpredictable power supply still face\nsignificant research challenges. This paper systematically surveys recent\nadvances in EH-IoTs from several perspectives. First, it reviews the recent\ncommercial developments for EH-IoT in terms of both products and services,\nfollowed by initial standards activities in this space. Then it surveys methods\nthat enable the use of energy harvesting hardware as a proxy for conventional\nsensors to detect contexts in energy efficient manner. Next it reviews the\nadvancements in efficient checkpointing and timekeeping for intermittently\npowered IoT devices. We also survey recent research in novel wireless\ncommunication techniques for EH-IoTs, such as the applications of reinforcement\nlearning to optimize power allocations on-the-fly under unpredictable energy\nproductions, and packet-less IoT communications and backscatter communication\ntechniques for energy impoverished environments. The paper is concluded with a\ndiscussion of future research directions.",
+    "pdf_url": "http://arxiv.org/pdf/1905.03949v2",
+    "doi": "10.1109/COMST.2019.2962526",
+    "categories": [
+      "eess.SP",
+      "cs.NI"
+    ],
+    "primary_category": "eess.SP",
+    "comment": "Accpeted for publication in IEEE Communications Surveys & Tutorials\n  (2019)",
+    "journal_ref": null,
+    "citation_count": 107,
+    "bibtex": "@Article{Ma2019SensingCA,\n author = {Dong Ma and Guohao Lan and M. Hassan and Wen Hu and Sajal K. Das},\n booktitle = {IEEE Communications Surveys and Tutorials},\n journal = {IEEE Communications Surveys & Tutorials},\n pages = {1222-1250},\n title = {Sensing, Computing, and Communications for Energy Harvesting IoTs: A Survey},\n volume = {22},\n year = {2019}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8331974202547674,
+      "citation_score": 0.7653903935674988,
+      "recency_score": 0.3259256155002156,
+      "final_score": 0.7689088344418584
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2310.08091v2",
+    "title": "Discerning Temporal Difference Learning",
+    "published": "2023-10-12T07:38:10Z",
+    "updated": "2024-02-10T14:27:29Z",
+    "authors": [
+      "Jianfei Ma"
+    ],
+    "summary": "Temporal difference learning (TD) is a foundational concept in reinforcement\nlearning (RL), aimed at efficiently assessing a policy's value function.\nTD($\\lambda$), a potent variant, incorporates a memory trace to distribute the\nprediction error into the historical context. However, this approach often\nneglects the significance of historical states and the relative importance of\npropagating the TD error, influenced by challenges such as visitation imbalance\nor outcome noise. To address this, we propose a novel TD algorithm named\ndiscerning TD learning (DTD), which allows flexible emphasis\nfunctions$-$predetermined or adapted during training$-$to allocate efforts\neffectively across states. We establish the convergence properties of our\nmethod within a specific class of emphasis functions and showcase its promising\npotential for adaptation to deep RL contexts. Empirical results underscore that\nemploying a judicious emphasis function not only improves value estimation but\nalso expedites learning across diverse scenarios.",
+    "pdf_url": "http://arxiv.org/pdf/2310.08091v2",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI"
+    ],
+    "primary_category": "cs.LG",
+    "comment": null,
+    "journal_ref": null,
+    "citation_count": 1,
+    "bibtex": "@Article{Ma2023DiscerningTD,\n author = {Jianfei Ma},\n booktitle = {AAAI Conference on Artificial Intelligence},\n journal = {ArXiv},\n title = {Discerning Temporal Difference Learning},\n volume = {abs/2310.08091},\n year = {2023}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8888797894194951,
+      "citation_score": 0.29558232931726913,
+      "recency_score": 0.7015930519032431,
+      "final_score": 0.7514916236474247
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/1803.03939v1",
+    "title": "50 Years of Permutation, Spatial and Index Modulation: From Classic RF\n  to Visible Light Communications and Data Storage",
+    "published": "2018-03-11T10:52:09Z",
+    "updated": "2018-03-11T10:52:09Z",
+    "authors": [
+      "Naoki Ishikawa",
+      "Shinya Sugiura",
+      "Lajos Hanzo"
+    ],
+    "summary": "In this treatise, we provide an interdisciplinary survey on spatial\nmodulation (SM), where multiple-input multiple-output microwave and visible\nlight, as well as single and multicarrier communications are considered.\nSpecifically, we first review the permutation modulation (PM) concept, which\nwas originally proposed by Slepian in 1965. The PM concept has been applied to\na wide range of applications, including wired and wireless communications and\ndata storage. By introducing a three-dimensional signal representation, which\nconsists of spatial, temporal and frequency axes, the hybrid PM concept is\nshown to be equivalent to the recently proposed SM family. In contrast to other\nsurvey papers, this treatise aims for celebrating the hitherto overlooked\nstudies, including papers and patents that date back to the 1960s, before the\ninvention of SM. We also provide simulation results that demonstrate the pros\nand cons of PM-aided low-complexity schemes over conventional multiplexing\nschemes.",
+    "pdf_url": "http://arxiv.org/pdf/1803.03939v1",
+    "doi": null,
+    "categories": [
+      "eess.SP"
+    ],
+    "primary_category": "eess.SP",
+    "comment": "34 pages, 28 figures, 10 tables, accepted for publication in IEEE\n  Communications Surveys & Tutorials",
+    "journal_ref": null,
+    "citation_count": 152,
+    "bibtex": "@Article{Ishikawa201850YO,\n author = {Naoki Ishikawa and S. Sugiura and L. Hanzo},\n booktitle = {IEEE Communications Surveys and Tutorials},\n journal = {IEEE Communications Surveys & Tutorials},\n pages = {1905-1938},\n title = {50 Years of Permutation, Spatial and Index Modulation: From Classic RF to Visible Light Communications and Data Storage},\n volume = {20},\n year = {2018}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8045516558385089,
+      "citation_score": 0.799131994261119,
+      "recency_score": 0.2664096047593336,
+      "final_score": 0.7496535184151133
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2508.05960v1",
+    "title": "Mildly Conservative Regularized Evaluation for Offline Reinforcement\n  Learning",
+    "published": "2025-08-08T02:48:26Z",
+    "updated": "2025-08-08T02:48:26Z",
+    "authors": [
+      "Haohui Chen",
+      "Zhiyong Chen"
+    ],
+    "summary": "Offline reinforcement learning (RL) seeks to learn optimal policies from\nstatic datasets without further environment interaction. A key challenge is the\ndistribution shift between the learned and behavior policies, leading to\nout-of-distribution (OOD) actions and overestimation. To prevent gross\noverestimation, the value function must remain conservative; however, excessive\nconservatism may hinder performance improvement. To address this, we propose\nthe mildly conservative regularized evaluation (MCRE) framework, which balances\nconservatism and performance by combining temporal difference (TD) error with a\nbehavior cloning term in the Bellman backup. Building on this, we develop the\nmildly conservative regularized Q-learning (MCRQ) algorithm, which integrates\nMCRE into an off-policy actor-critic framework. Experiments show that MCRQ\noutperforms strong baselines and state-of-the-art offline RL algorithms on\nbenchmark datasets.",
+    "pdf_url": "http://arxiv.org/pdf/2508.05960v1",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI"
+    ],
+    "primary_category": "cs.LG",
+    "comment": null,
+    "journal_ref": null,
+    "citation_count": 0,
+    "bibtex": "@Article{Chen2025MildlyCR,\n author = {Haohui Chen and Zhiyong Chen},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Mildly Conservative Regularized Evaluation for Offline Reinforcement Learning},\n volume = {abs/2508.05960},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8977663661566639,
+      "citation_score": 0.1,
+      "recency_score": 0.9622999250882385,
+      "final_score": 0.7446664488184886
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2509.22613v1",
+    "title": "Benefits and Pitfalls of Reinforcement Learning for Language Model\n  Planning: A Theoretical Perspective",
+    "published": "2025-09-26T17:39:48Z",
+    "updated": "2025-09-26T17:39:48Z",
+    "authors": [
+      "Siwei Wang",
+      "Yifei Shen",
+      "Haoran Sun",
+      "Shi Feng",
+      "Shang-Hua Teng",
+      "Li Dong",
+      "Yaru Hao",
+      "Wei Chen"
+    ],
+    "summary": "Recent reinforcement learning (RL) methods have substantially enhanced the\nplanning capabilities of Large Language Models (LLMs), yet the theoretical\nbasis for their effectiveness remains elusive. In this work, we investigate\nRL's benefits and limitations through a tractable graph-based abstraction,\nfocusing on policy gradient (PG) and Q-learning methods. Our theoretical\nanalyses reveal that supervised fine-tuning (SFT) may introduce\nco-occurrence-based spurious solutions, whereas RL achieves correct planning\nprimarily through exploration, underscoring exploration's role in enabling\nbetter generalization. However, we also show that PG suffers from diversity\ncollapse, where output diversity decreases during training and persists even\nafter perfect accuracy is attained. By contrast, Q-learning provides two key\nadvantages: off-policy learning and diversity preservation at convergence. We\nfurther demonstrate that careful reward design is necessary to prevent reward\nhacking in Q-learning. Finally, applying our framework to the real-world\nplanning benchmark Blocksworld, we confirm that these behaviors manifest in\npractice.",
+    "pdf_url": "http://arxiv.org/pdf/2509.22613v1",
+    "doi": null,
+    "categories": [
+      "cs.AI",
+      "cs.CL",
+      "cs.LG",
+      "stat.ML"
+    ],
+    "primary_category": "cs.AI",
+    "comment": null,
+    "journal_ref": null,
+    "citation_count": 0,
+    "bibtex": "@Article{Wang2025BenefitsAP,\n author = {Siwei Wang and Yifei Shen and Haoran Sun and Shi Feng and Shang-Hua Teng and Li Dong and Y. Hao and Wei Chen},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Benefits and Pitfalls of Reinforcement Learning for Language Model Planning: A Theoretical Perspective},\n volume = {abs/2509.22613},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8861881093189644,
+      "citation_score": 0.1,
+      "recency_score": 0.9854001909996989,
+      "final_score": 0.738871695623245
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2507.00275v1",
+    "title": "Double Q-learning for Value-based Deep Reinforcement Learning, Revisited",
+    "published": "2025-06-30T21:32:46Z",
+    "updated": "2025-06-30T21:32:46Z",
+    "authors": [
+      "Prabhat Nagarajan",
+      "Martha White",
+      "Marlos C. Machado"
+    ],
+    "summary": "Overestimation is pervasive in reinforcement learning (RL), including in\nQ-learning, which forms the algorithmic basis for many value-based deep RL\nalgorithms. Double Q-learning is an algorithm introduced to address\nQ-learning's overestimation by training two Q-functions and using both to\nde-correlate action-selection and action-evaluation in bootstrap targets.\nShortly after Q-learning was adapted to deep RL in the form of deep Q-networks\n(DQN), Double Q-learning was adapted to deep RL in the form of Double DQN.\nHowever, Double DQN only loosely adapts Double Q-learning, forgoing the\ntraining of two different Q-functions that bootstrap off one another. In this\npaper, we study algorithms that adapt this core idea of Double Q-learning for\nvalue-based deep RL. We term such algorithms Deep Double Q-learning (DDQL). Our\naim is to understand whether DDQL exhibits less overestimation than Double DQN\nand whether performant instantiations of DDQL exist. We answer both questions\naffirmatively, demonstrating that DDQL reduces overestimation and outperforms\nDouble DQN in aggregate across 57 Atari 2600 games, without requiring\nadditional hyperparameters. We also study several aspects of DDQL, including\nits network architecture, replay ratio, and minibatch sampling strategy.",
+    "pdf_url": "http://arxiv.org/pdf/2507.00275v1",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "44 pages",
+    "journal_ref": null,
+    "citation_count": 0,
+    "bibtex": "@Article{Nagarajan2025DoubleQF,\n author = {P. Nagarajan and Martha White and Marlos C. Machado},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Double Q-learning for Value-based Deep Reinforcement Learning, Revisited},\n volume = {abs/2507.00275},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.889401913141177,
+      "citation_score": 0.1,
+      "recency_score": 0.9451065814656558,
+      "final_score": 0.7370919973453894
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2505.01361v2",
+    "title": "Stabilizing Temporal Difference Learning via Implicit Stochastic\n  Recursion",
+    "published": "2025-05-02T15:57:54Z",
+    "updated": "2025-06-22T22:31:04Z",
+    "authors": [
+      "Hwanwoo Kim",
+      "Panos Toulis",
+      "Eric Laber"
+    ],
+    "summary": "Temporal difference (TD) learning is a foundational algorithm in\nreinforcement learning (RL). For nearly forty years, TD learning has served as\na workhorse for applied RL as well as a building block for more complex and\nspecialized algorithms. However, despite its widespread use, TD procedures are\ngenerally sensitive to step size specification. A poor choice of step size can\ndramatically increase variance and slow convergence in both on-policy and\noff-policy evaluation tasks. In practice, researchers use trial and error to\nidentify stable step sizes, but these approaches tend to be ad hoc and\ninefficient. As an alternative, we propose implicit TD algorithms that\nreformulate TD updates into fixed point equations. Such updates are more stable\nand less sensitive to step size without sacrificing computational efficiency.\nMoreover, we derive asymptotic convergence guarantees and finite-time error\nbounds for our proposed implicit TD algorithms, which include implicit TD(0),\nTD($\\lambda$), and TD with gradient correction (TDC). Our results show that\nimplicit TD algorithms are applicable to a much broader range of step sizes,\nand thus provide a robust and versatile framework for policy evaluation and\nvalue approximation in modern RL tasks. We demonstrate these benefits\nempirically through extensive numerical examples spanning both on-policy and\noff-policy tasks.",
+    "pdf_url": "http://arxiv.org/pdf/2505.01361v2",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "math.PR",
+      "stat.ML"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "A substantial amount of content has been added regarding the theory\n  and numerical experiments of the implicit version of temporal difference\n  learning with gradient correction (TDC), which is newly proposed in this\n  manuscript",
+    "journal_ref": null,
+    "citation_count": 0,
+    "bibtex": "@Inproceedings{Kim2025StabilizingTD,\n author = {Hwanwoo Kim and Panos Toulis and Eric Laber},\n title = {Stabilizing Temporal Difference Learning via Implicit Stochastic Recursion},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8802921798096366,
+      "citation_score": 0.1,
+      "recency_score": 0.9190183925704664,
+      "final_score": 0.7281063651237922
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2411.14783v4",
+    "title": "Segmenting Action-Value Functions Over Time-Scales in SARSA via\n  TD($Δ$)",
+    "published": "2024-11-22T07:52:28Z",
+    "updated": "2025-09-04T07:01:56Z",
+    "authors": [
+      "Mahammad Humayoo"
+    ],
+    "summary": "In numerous episodic reinforcement learning (RL) environments, SARSA-based\nmethodologies are employed to enhance policies aimed at maximizing returns over\nlong horizons. Traditional SARSA algorithms face challenges in achieving an\noptimal balance between bias and variation, primarily due to their dependence\non a single, constant discount factor ($\\eta$). This investigation enhances the\ntemporal difference decomposition method, TD($\\Delta$), by applying it to the\nSARSA algorithm, now designated as SARSA($\\Delta$). SARSA is a widely used\non-policy RL method that enhances action-value functions via temporal\ndifference updates. By splitting the action-value function down into components\nthat are linked to specific discount factors, SARSA($\\Delta$) makes learning\neasier across a range of time scales. This analysis makes learning more\neffective and ensures consistency, particularly in situations where\nlong-horizon improvement is needed. The results of this research show that the\nsuggested strategy works to lower bias in SARSA's updates and speed up\nconvergence in both deterministic and stochastic settings, even in dense reward\nAtari environments. Experimental results from a variety of benchmark settings\nshow that the proposed SARSA($\\Delta$) outperforms existing TD learning\ntechniques in both tabular and deep RL environments.",
+    "pdf_url": "http://arxiv.org/pdf/2411.14783v4",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "F.2.2, I.2.7"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "25 pages. arXiv admin note: text overlap with arXiv:2411.14019",
+    "journal_ref": null,
+    "citation_count": 0,
+    "bibtex": "@Inproceedings{Humayoo2024SegmentingAF,\n author = {Mahammad Humayoo},\n title = {Segmenting Action-Value Functions Over Time-Scales in SARSA via TD($\\Delta$)},\n year = {2024}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.888644259981844,
+      "citation_score": 0.1,
+      "recency_score": 0.8510304649221961,
+      "final_score": 0.7271540284795104
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2501.19133v1",
+    "title": "Decorrelated Soft Actor-Critic for Efficient Deep Reinforcement Learning",
+    "published": "2025-01-31T13:38:57Z",
+    "updated": "2025-01-31T13:38:57Z",
+    "authors": [
+      "Burcu Küçükoğlu",
+      "Sander Dalm",
+      "Marcel van Gerven"
+    ],
+    "summary": "The effectiveness of credit assignment in reinforcement learning (RL) when\ndealing with high-dimensional data is influenced by the success of\nrepresentation learning via deep neural networks, and has implications for the\nsample efficiency of deep RL algorithms. Input decorrelation has been\npreviously introduced as a method to speed up optimization in neural networks,\nand has proven impactful in both efficient deep learning and as a method for\neffective representation learning for deep RL algorithms. We propose a novel\napproach to online decorrelation in deep RL based on the decorrelated\nbackpropagation algorithm that seamlessly integrates the decorrelation process\ninto the RL training pipeline. Decorrelation matrices are added to each layer,\nwhich are updated using a separate decorrelation learning rule that minimizes\nthe total decorrelation loss across all layers, in parallel to minimizing the\nusual RL loss. We used our approach in combination with the soft actor-critic\n(SAC) method, which we refer to as decorrelated soft actor-critic (DSAC).\nExperiments on the Atari 100k benchmark with DSAC shows, compared to the\nregular SAC baseline, faster training in five out of the seven games tested and\nimproved reward performance in two games with around 50% reduction in\nwall-clock time, while maintaining performance levels on the other games. These\nresults demonstrate the positive impact of network-wide decorrelation in deep\nRL for speeding up its sample efficiency through more effective credit\nassignment.",
+    "pdf_url": "http://arxiv.org/pdf/2501.19133v1",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI"
+    ],
+    "primary_category": "cs.LG",
+    "comment": null,
+    "journal_ref": null,
+    "citation_count": 0,
+    "bibtex": "@Article{Küçükoğlu2025DecorrelatedSA,\n author = {Burcu Küçükoğlu and Sander Dalm and M. Gerven},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Decorrelated Soft Actor-Critic for Efficient Deep Reinforcement Learning},\n volume = {abs/2501.19133},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8825950279593457,
+      "citation_score": 0.1,
+      "recency_score": 0.8797680244081268,
+      "final_score": 0.7257933220123547
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2502.04864v1",
+    "title": "$TAR^2$: Temporal-Agent Reward Redistribution for Optimal Policy\n  Preservation in Multi-Agent Reinforcement Learning",
+    "published": "2025-02-07T12:07:57Z",
+    "updated": "2025-02-07T12:07:57Z",
+    "authors": [
+      "Aditya Kapoor",
+      "Kale-ab Tessera",
+      "Mayank Baranwal",
+      "Harshad Khadilkar",
+      "Stefano Albrecht",
+      "Mingfei Sun"
+    ],
+    "summary": "In cooperative multi-agent reinforcement learning (MARL), learning effective\npolicies is challenging when global rewards are sparse and delayed. This\ndifficulty arises from the need to assign credit across both agents and time\nsteps, a problem that existing methods often fail to address in episodic,\nlong-horizon tasks. We propose Temporal-Agent Reward Redistribution $TAR^2$, a\nnovel approach that decomposes sparse global rewards into agent-specific,\ntime-step-specific components, thereby providing more frequent and accurate\nfeedback for policy learning. Theoretically, we show that $TAR^2$ (i) aligns\nwith potential-based reward shaping, preserving the same optimal policies as\nthe original environment, and (ii) maintains policy gradient update directions\nidentical to those under the original sparse reward, ensuring unbiased credit\nsignals. Empirical results on two challenging benchmarks, SMACLite and Google\nResearch Football, demonstrate that $TAR^2$ significantly stabilizes and\naccelerates convergence, outperforming strong baselines like AREL and STAS in\nboth learning speed and final performance. These findings establish $TAR^2$ as\na principled and practical solution for agent-temporal credit assignment in\nsparse-reward multi-agent systems.",
+    "pdf_url": "http://arxiv.org/pdf/2502.04864v1",
+    "doi": null,
+    "categories": [
+      "cs.MA",
+      "cs.AI",
+      "cs.LG",
+      "cs.RO"
+    ],
+    "primary_category": "cs.MA",
+    "comment": "23 pages, 5 figures, 4 tables",
+    "journal_ref": null,
+    "citation_count": 0,
+    "bibtex": "@Article{Kapoor2025TAR2TR,\n author = {Aditya Kapoor and K. Tessera and Mayank Baranwal and H. Khadilkar and Stefano V. Albrecht and Mingfei Sun},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {TAR2: Temporal-Agent Reward Redistribution for Optimal Policy Preservation in Multi-Agent Reinforcement Learning},\n volume = {abs/2502.04864},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8799233751934691,
+      "citation_score": 0.1,
+      "recency_score": 0.8826946206549209,
+      "final_score": 0.7242158247009205
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2404.00686v2",
+    "title": "Utilizing Maximum Mean Discrepancy Barycenter for Propagating the\n  Uncertainty of Value Functions in Reinforcement Learning",
+    "published": "2024-03-31T13:41:56Z",
+    "updated": "2024-04-03T14:32:17Z",
+    "authors": [
+      "Srinjoy Roy",
+      "Swagatam Das"
+    ],
+    "summary": "Accounting for the uncertainty of value functions boosts exploration in\nReinforcement Learning (RL). Our work introduces Maximum Mean Discrepancy\nQ-Learning (MMD-QL) to improve Wasserstein Q-Learning (WQL) for uncertainty\npropagation during Temporal Difference (TD) updates. MMD-QL uses the MMD\nbarycenter for this purpose, as MMD provides a tighter estimate of closeness\nbetween probability measures than the Wasserstein distance. Firstly, we\nestablish that MMD-QL is Probably Approximately Correct in MDP (PAC-MDP) under\nthe average loss metric. Concerning the accumulated rewards, experiments on\ntabular environments show that MMD-QL outperforms WQL and other algorithms.\nSecondly, we incorporate deep networks into MMD-QL to create MMD Q-Network\n(MMD-QN). Making reasonable assumptions, we analyze the convergence rates of\nMMD-QN using function approximation. Empirical results on challenging Atari\ngames demonstrate that MMD-QN performs well compared to benchmark deep RL\nalgorithms, highlighting its effectiveness in handling large state-action\nspaces.",
+    "pdf_url": "http://arxiv.org/pdf/2404.00686v2",
+    "doi": null,
+    "categories": [
+      "cs.LG"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "We found some flaws in our analysis and we are in the process of\n  rectifying those",
+    "journal_ref": null,
+    "citation_count": 0,
+    "bibtex": "@Article{Roy2024UtilizingMM,\n author = {Srinjoy Roy and Swagatam Das},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Utilizing Maximum Mean Discrepancy Barycenter for Propagating the Uncertainty of Value Functions in Reinforcement Learning},\n volume = {abs/2404.00686},\n year = {2024}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8939633277848364,
+      "citation_score": 0.1,
+      "recency_score": 0.7608845569598849,
+      "final_score": 0.721862785145374
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2106.11086v1",
+    "title": "Analytically Tractable Bayesian Deep Q-Learning",
+    "published": "2021-06-21T13:11:52Z",
+    "updated": "2021-06-21T13:11:52Z",
+    "authors": [
+      "Luong Ha",
+      "Nguyen",
+      "James-A. Goulet"
+    ],
+    "summary": "Reinforcement learning (RL) has gained increasing interest since the\ndemonstration it was able to reach human performance on video game benchmarks\nusing deep Q-learning (DQN). The current consensus for training neural networks\non such complex environments is to rely on gradient-based optimization.\nAlthough alternative Bayesian deep learning methods exist, most of them still\nrely on gradient-based optimization, and they typically do not scale on\nbenchmarks such as the Atari game environment. Moreover none of these\napproaches allow performing the analytical inference for the weights and biases\ndefining the neural network. In this paper, we present how we can adapt the\ntemporal difference Q-learning framework to make it compatible with the\ntractable approximate Gaussian inference (TAGI), which allows learning the\nparameters of a neural network using a closed-form analytical method.\nThroughout the experiments with on- and off-policy reinforcement learning\napproaches, we demonstrate that TAGI can reach a performance comparable to\nbackpropagation-trained networks while using fewer hyperparameters, and without\nrelying on gradient-based optimization.",
+    "pdf_url": "http://arxiv.org/pdf/2106.11086v1",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "stat.ML"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "19 pages, 4 figures",
+    "journal_ref": null,
+    "citation_count": 2,
+    "bibtex": "@Article{Nguyen2021AnalyticallyTB,\n author = {L. Nguyen and J. Goulet},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Analytically Tractable Bayesian Deep Q-Learning},\n volume = {abs/2106.11086},\n year = {2021}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8893017152550391,
+      "citation_score": 0.08377358490566039,
+      "recency_score": 0.47031665002373474,
+      "final_score": 0.6862975826620328
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2104.06163v1",
+    "title": "Reward Shaping with Dynamic Trajectory Aggregation",
+    "published": "2021-04-13T13:07:48Z",
+    "updated": "2021-04-13T13:07:48Z",
+    "authors": [
+      "Takato Okudo",
+      "Seiji Yamada"
+    ],
+    "summary": "Reinforcement learning, which acquires a policy maximizing long-term rewards,\nhas been actively studied. Unfortunately, this learning type is too slow and\ndifficult to use in practical situations because the state-action space becomes\nhuge in real environments. The essential factor for learning efficiency is\nrewards. Potential-based reward shaping is a basic method for enriching\nrewards. This method is required to define a specific real-value function\ncalled a potential function for every domain. It is often difficult to\nrepresent the potential function directly. SARSA-RS learns the potential\nfunction and acquires it. However, SARSA-RS can only be applied to the simple\nenvironment. The bottleneck of this method is the aggregation of states to make\nabstract states since it is almost impossible for designers to build an\naggregation function for all states. We propose a trajectory aggregation that\nuses subgoal series. This method dynamically aggregates states in an episode\nduring trial and error with only the subgoal series and subgoal identification\nfunction. It makes designer effort minimal and the application to environments\nwith high-dimensional observations possible. We obtained subgoal series from\nparticipants for experiments. We conducted the experiments in three domains,\nfour-rooms(discrete states and discrete actions), pinball(continuous and\ndiscrete), and picking(both continuous). We compared our method with a baseline\nreinforcement learning algorithm and other subgoal-based methods, including\nrandom subgoal and naive subgoal-based reward shaping. As a result, our reward\nshaping outperformed all other methods in learning efficiency.",
+    "pdf_url": "http://arxiv.org/pdf/2104.06163v1",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "accepted by The International Joint Conference on Neural\n  Networks(IJCNN2021)",
+    "journal_ref": null,
+    "citation_count": 2,
+    "bibtex": "@Article{Okudo2021RewardSW,\n author = {Takato Okudo and S. Yamada},\n booktitle = {IEEE International Joint Conference on Neural Network},\n journal = {2021 International Joint Conference on Neural Networks (IJCNN)},\n pages = {1-9},\n title = {Reward Shaping with Dynamic Trajectory Aggregation},\n year = {2021}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8875983287154051,
+      "citation_score": 0.07613019891500905,
+      "recency_score": 0.4551696868253018,
+      "final_score": 0.6820618385663156
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/cs/9501103v1",
+    "title": "Truncating Temporal Differences: On the Efficient Implementation of\n  TD(lambda) for Reinforcement Learning",
+    "published": "1995-01-01T00:00:00Z",
+    "updated": "1995-01-01T00:00:00Z",
+    "authors": [
+      "P. Cichosz"
+    ],
+    "summary": "Temporal difference (TD) methods constitute a class of methods for learning\npredictions in multi-step prediction problems, parameterized by a recency\nfactor lambda. Currently the most important application of these methods is to\ntemporal credit assignment in reinforcement learning. Well known reinforcement\nlearning algorithms, such as AHC or Q-learning, may be viewed as instances of\nTD learning. This paper examines the issues of the efficient and general\nimplementation of TD(lambda) for arbitrary lambda, for use with reinforcement\nlearning algorithms optimizing the discounted sum of rewards. The traditional\napproach, based on eligibility traces, is argued to suffer from both\ninefficiency and lack of generality. The TTD (Truncated Temporal Differences)\nprocedure is proposed as an alternative, that indeed only approximates\nTD(lambda), but requires very little computation per action and can be used\nwith arbitrary function representation methods. The idea from which it is\nderived is fairly simple and not new, but probably unexplored so far.\nEncouraging experimental results are presented, suggesting that using lambda\n&gt 0 with the TTD procedure allows one to obtain a significant learning\nspeedup at essentially the same cost as usual TD(0) learning.",
+    "pdf_url": "http://arxiv.org/pdf/cs/9501103v1",
+    "doi": null,
+    "categories": [
+      "cs.AI"
+    ],
+    "primary_category": "cs.AI",
+    "comment": "See http://www.jair.org/ for any accompanying files",
+    "journal_ref": "Journal of Artificial Intelligence Research, Vol 2, (1995),\n  287-318",
+    "citation_count": null,
+    "bibtex": null,
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8914646662066601,
+      "citation_score": 0.2,
+      "recency_score": 0.00479025761371829,
+      "final_score": 0.6645042921060339
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/2006.08906v1",
+    "title": "META-Learning Eligibility Traces for More Sample Efficient Temporal\n  Difference Learning",
+    "published": "2020-06-16T03:41:07Z",
+    "updated": "2020-06-16T03:41:07Z",
+    "authors": [
+      "Mingde Zhao"
+    ],
+    "summary": "Temporal-Difference (TD) learning is a standard and very successful\nreinforcement learning approach, at the core of both algorithms that learn the\nvalue of a given policy, as well as algorithms which learn how to improve\npolicies. TD-learning with eligibility traces provides a way to do temporal\ncredit assignment, i.e. decide which portion of a reward should be assigned to\npredecessor states that occurred at different previous times, controlled by a\nparameter $\\lambda$. However, tuning this parameter can be time-consuming, and\nnot tuning it can lead to inefficient learning. To improve the sample\nefficiency of TD-learning, we propose a meta-learning method for adjusting the\neligibility trace parameter, in a state-dependent manner. The adaptation is\nachieved with the help of auxiliary learners that learn distributional\ninformation about the update targets online, incurring roughly the same\ncomputational complexity per step as the usual value learner. Our approach can\nbe used both in on-policy and off-policy learning. We prove that, under some\nassumptions, the proposed method improves the overall quality of the update\ntargets, by minimizing the overall target error. This method can be viewed as a\nplugin which can also be used to assist prediction with function approximation\nby meta-learning feature (observation)-based $\\lambda$ online, or even in the\ncontrol case to assist policy improvement. Our empirical evaluation\ndemonstrates significant performance improvements, as well as improved\nrobustness of the proposed algorithm to learning rate variation.",
+    "pdf_url": "http://arxiv.org/pdf/2006.08906v1",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI",
+      "stat.ML"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "A thesis submitted to McGill University in partial fulfillment of the\n  requirements of the degree of Master of Computer Science",
+    "journal_ref": null,
+    "citation_count": 0,
+    "bibtex": "@Article{Zhao2020METALearningET,\n author = {Mingde Zhao},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {META-Learning Eligibility Traces for More Sample Efficient Temporal Difference Learning},\n volume = {abs/2006.08906},\n year = {2020}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8856119862313027,
+      "citation_score": 0.0,
+      "recency_score": 0.39459733408562264,
+      "final_score": 0.6593881237704741
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/1711.01569v1",
+    "title": "Double Q($σ$) and Q($σ, λ$): Unifying Reinforcement\n  Learning Control Algorithms",
+    "published": "2017-11-05T12:05:31Z",
+    "updated": "2017-11-05T12:05:31Z",
+    "authors": [
+      "Markus Dumke"
+    ],
+    "summary": "Temporal-difference (TD) learning is an important field in reinforcement\nlearning. Sarsa and Q-Learning are among the most used TD algorithms. The\nQ($\\sigma$) algorithm (Sutton and Barto (2017)) unifies both. This paper\nextends the Q($\\sigma$) algorithm to an online multi-step algorithm Q($\\sigma,\n\\lambda$) using eligibility traces and introduces Double Q($\\sigma$) as the\nextension of Q($\\sigma$) to double learning. Experiments suggest that the new\nQ($\\sigma, \\lambda$) algorithm can outperform the classical TD control methods\nSarsa($\\lambda$), Q($\\lambda$) and Q($\\sigma$).",
+    "pdf_url": "http://arxiv.org/pdf/1711.01569v1",
+    "doi": null,
+    "categories": [
+      "cs.AI",
+      "cs.LG",
+      "stat.ML"
+    ],
+    "primary_category": "cs.AI",
+    "comment": null,
+    "journal_ref": null,
+    "citation_count": 3,
+    "bibtex": "@Article{Dumke2017DoubleQA,\n author = {M. Dumke},\n journal = {arXiv: Artificial Intelligence},\n title = {Double Q($\\sigma$) and Q($\\sigma, \\lambda$): Unifying Reinforcement Learning Control Algorithms},\n year = {2017}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8809356015720653,
+      "citation_score": 0.05041180507892934,
+      "recency_score": 0.25095066975359254,
+      "final_score": 0.6518323490915907
+    }
+  },
+  {
+    "id": "http://arxiv.org/abs/1904.11439v6",
+    "title": "META-Learning State-based Eligibility Traces for More Sample-Efficient\n  Policy Evaluation",
+    "published": "2019-04-25T16:32:21Z",
+    "updated": "2020-05-16T18:15:11Z",
+    "authors": [
+      "Mingde Zhao",
+      "Sitao Luan",
+      "Ian Porada",
+      "Xiao-Wen Chang",
+      "Doina Precup"
+    ],
+    "summary": "Temporal-Difference (TD) learning is a standard and very successful\nreinforcement learning approach, at the core of both algorithms that learn the\nvalue of a given policy, as well as algorithms which learn how to improve\npolicies. TD-learning with eligibility traces provides a way to boost sample\nefficiency by temporal credit assignment, i.e. deciding which portion of a\nreward should be assigned to predecessor states that occurred at different\nprevious times, controlled by a parameter $\\lambda$. However, tuning this\nparameter can be time-consuming, and not tuning it can lead to inefficient\nlearning. For better sample efficiency of TD-learning, we propose a\nmeta-learning method for adjusting the eligibility trace parameter, in a\nstate-dependent manner. The adaptation is achieved with the help of auxiliary\nlearners that learn distributional information about the update targets online,\nincurring roughly the same computational complexity per step as the usual value\nlearner. Our approach can be used both in on-policy and off-policy learning. We\nprove that, under some assumptions, the proposed method improves the overall\nquality of the update targets, by minimizing the overall target error. This\nmethod can be viewed as a plugin to assist prediction with function\napproximation by meta-learning feature (observation)-based $\\lambda$ online, or\neven in the control case to assist policy improvement. Our empirical evaluation\ndemonstrates significant performance improvements, as well as improved\nrobustness of the proposed algorithm to learning rate variation.",
+    "pdf_url": "http://arxiv.org/pdf/1904.11439v6",
+    "doi": null,
+    "categories": [
+      "cs.LG",
+      "cs.AI"
+    ],
+    "primary_category": "cs.LG",
+    "comment": "Accepted by AAMAS 2020",
+    "journal_ref": null,
+    "citation_count": 0,
+    "bibtex": "@Inproceedings{Zhao2019FasterAM,\n author = {Mingde Zhao and Ian Porada and Sitao Luan and X. Chang and Doina Precup},\n title = {Faster and More Accurate Trace-based Policy Evaluation via Overall Target Error Meta-Optimization},\n year = {2019}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.8806521464314226,
+      "citation_score": 0.0,
+      "recency_score": 0.32376796913084505,
+      "final_score": 0.6488332994150803
+    }
+  }
+]

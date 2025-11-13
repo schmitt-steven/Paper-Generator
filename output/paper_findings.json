@@ -1,0 +1,364 @@
+[
+  {
+    "paper_id": "2507.09087v2",
+    "title": "Deep Reinforcement Learning with Gradient Eligibility Traces",
+    "methods_used": [
+      "Q(λ)",
+      "StreamQ",
+      "PPO",
+      "GQ2(λ)",
+      "QC(λ)",
+      "QRC(λ)"
+    ],
+    "test_setup": "MuJoCo and MinAtar environments, with experiments repeated for 30 seeds in all environments",
+    "main_limitations": "Most existing deep RL methods rely on semi-gradient TD methods that are susceptible to divergence, while principled GTD methods, though having strong convergence guarantees, have rarely been used in deep RL. Previous work enabling GTD with nonlinear function approximation was limited to one-step methods, which are slow at credit assignment and require many samples."
+  },
+  {
+    "paper_id": "1909.05912v2",
+    "title": "Joint Inference of Reward Machines and Policies for Reinforcement\n  Learning",
+    "methods_used": [
+      "Q-learning",
+      "reward machines",
+      "RPNI-RM",
+      "JIRP",
+      "QAS",
+      "HRL"
+    ],
+    "test_setup": "The method was evaluated in simulation environments including a vehicle scenario, an office world scenario, and a Minecraft world scenario, using cumulative rewards as the performance metric.",
+    "main_limitations": "The theoretical convergence guarantee of the algorithm fails when using Optimization 3 (polynomial time learning algorithm for inferring reward machines), although in practice the policies still often converge to optimal ones."
+  },
+  {
+    "paper_id": "2203.15845v3",
+    "title": "Topological Experience Replay",
+    "methods_used": [
+      "Q-learning",
+      "DQN",
+      "Topological Experience Replay (TER)"
+    ],
+    "test_setup": "goal-reaching tasks in high-dimensional state spaces such as images, with evaluation on diverse environments including cyclical MDPs",
+    "main_limitations": "The method requires knowledge of predecessors of a state for reverse sweep, which is often unknown in high-dimensional state spaces, though this is overcome by building a graph from the replay buffer."
+  },
+  {
+    "paper_id": "2207.07570v1",
+    "title": "The Nature of Temporal Difference Errors in Multi-step Distributional\n  Reinforcement Learning",
+    "methods_used": [
+      "Quantile Regression-Retrace",
+      "QR-DQN-Retrace",
+      "QR-DQN"
+    ],
+    "test_setup": "Atari-57 benchmark",
+    "main_limitations": "The paper identifies fundamental differences between value-based and distributional RL in the multi-step setting, highlighting that existing approaches struggle with path-dependent distributional TD errors, which are essential for principled multi-step distributional RL."
+  },
+  {
+    "paper_id": "2410.06648v5",
+    "title": "Q-WSL: Optimizing Goal-Conditioned RL with Weighted Supervised Learning\n  via Dynamic Programming",
+    "methods_used": [
+      "Q-WSL",
+      "Q-learning",
+      "GCWSL",
+      "DDPG",
+      "DDPG+HER",
+      "Actionable Models",
+      "MHER",
+      "GCSL",
+      "WGCSL",
+      "GoFar"
+    ],
+    "test_setup": "goal-reaching tasks in robotics environments (e.g., FetchSlide, FetchPickAndPlace, HandReach)",
+    "main_limitations": "GCWSL methods lack the capability of trajectory stitching, which is essential for learning optimal policies when faced with unseen skills during testing, especially when the replay buffer is predominantly filled with sub-optimal trajectories"
+  },
+  {
+    "paper_id": "2404.15822v1",
+    "title": "Recursive Backwards Q-Learning in Deterministic Environments",
+    "methods_used": [
+      "Q-learning",
+      "recursive backwards Q-learning (RBQL)"
+    ],
+    "test_setup": "gridworld maze navigation for finding the shortest path",
+    "main_limitations": "The method is designed for deterministic, episodic tasks with a single terminal state as the only source of positive rewards, limiting its applicability to more general reinforcement learning problems."
+  },
+  {
+    "paper_id": "1810.09967v3",
+    "title": "Reconciling $λ$-Returns with Experience Replay",
+    "methods_used": [
+      "DQN",
+      "Q(λ)",
+      "Peng's Q(λ)",
+      "Tree Backup",
+      "Q*(λ)",
+      "Retrace(λ)"
+    ],
+    "test_setup": "Atari 2600 games using OpenAI Gym interface to the Arcade Learning Environment with raw frame pixels as observations, trained for 10 million timesteps and evaluated by averaging scores over 100 completed episodes",
+    "main_limitations": "The main limitation is that while the proposed method enables efficient integration of λ-returns into off-policy methods with experience replay, it requires periodic refreshing of a cache to keep λ-returns updated, which introduces additional complexity in implementation."
+  },
+  {
+    "paper_id": "2502.07978v1",
+    "title": "A Survey of In-Context Reinforcement Learning",
+    "methods_used": [
+      "Reinforcement Learning (RL)",
+      "In-Context Reinforcement Learning (ICRL)",
+      "Neural networks",
+      "Transformers",
+      "State Space Models (SSMs)",
+      "xLSTM",
+      "S5",
+      "Hierarchical structures"
+    ],
+    "test_setup": "empirical and theoretical analyses, including evaluation on various environments and datasets for policy evaluation and control tasks",
+    "main_limitations": "The inference time of Transformers is quadratic with respect to input length, which limits efficiency for long contexts; some methods also struggle with processing cross-episode context effectively."
+  },
+  {
+    "paper_id": "2303.04150v4",
+    "title": "Evolutionary Reinforcement Learning: A Survey",
+    "methods_used": [
+      "Genetic Algorithms (GAs)",
+      "Evolution Strategies (ESs)",
+      "Genetic Programming (GP)",
+      "Sarsa(λ)",
+      "Population-based training (PBT)",
+      "Novelty Search (NS)"
+    ],
+    "test_setup": "simulation environments, mobile robotics tasks such as maze navigation and robot arm control, sim-to-real robotic tasks, pole balancing tasks, mountain car tasks",
+    "main_limitations": "brittle convergence properties caused by sensitive hyperparameters, difficulties in temporal credit assignment with long time horizons and sparse rewards, lack of diverse exploration especially in continuous search space scenarios, difficulties in credit assignment in multi-agent reinforcement learning, and conflicting objectives for rewards"
+  },
+  {
+    "paper_id": "2509.15110v2",
+    "title": "TDRM: Smooth Reward Models with Temporal Difference for LLM RL and\n  Inference",
+    "methods_used": [
+      "TDRM",
+      "Temporal Difference (TD) regularization",
+      "Best-of-N",
+      "tree-search",
+      "Reinforcement Learning with Verifiable Rewards (RLVR)",
+      "Process Reward Models (PRMs)",
+      "Outcome Reward Models (ORMs)",
+      "Generalist Reward Modeling (GRM)"
+    ],
+    "test_setup": "The method was evaluated in two scenarios: inference-time verification and training-time online reinforcement learning, using benchmark datasets and model variants such as Qwen2.5, GLM4, GLM-Z1, Qwen2.5-Math, and DeepSeek-R1-Distill-Qwen.",
+    "main_limitations": "Existing reward models lack temporal consistency, leading to ineffective policy updates and unstable RL training."
+  },
+  {
+    "paper_id": "2410.08048v1",
+    "title": "VerifierQ: Enhancing LLM Test Time Compute with Q-Learning-based\n  Verifiers",
+    "methods_used": [
+      "Q-learning",
+      "Offline Q-learning",
+      "Implicit Q-learning (IQL)",
+      "Conservative Q-learning (CQL)"
+    ],
+    "test_setup": "mathematical reasoning tasks on GSM8K and MATH datasets",
+    "main_limitations": "The paper does not explicitly mention any specific main limitations of VerifierQ in the provided content."
+  },
+  {
+    "paper_id": "2312.01072v2",
+    "title": "A Survey of Temporal Credit Assignment in Deep Reinforcement Learning",
+    "methods_used": [],
+    "test_setup": "evaluation protocols, metrics, and tasks for assessing credit assignment methods in reinforcement learning",
+    "main_limitations": "The mathematical nature of credit and the Credit Assignment Problem (CAP) remains poorly understood and defined, making it difficult to distinguish serendipitous outcomes from those caused by informed decision-making. Additionally, existing methods struggle with delayed effects, transpositions, and a lack of action influence."
+  },
+  {
+    "paper_id": "2106.12534v2",
+    "title": "Coarse-to-Fine Q-attention: Efficient Learning for Visual Robotic\n  Manipulation via Discretisation",
+    "methods_used": [
+      "Q-learning",
+      "DQN",
+      "ARM",
+      "Coarse-to-Fine Q-attention"
+    ],
+    "test_setup": "The method was evaluated in simulation environments using RLBench benchmark tasks and validated on real-world robotic manipulation tasks using a Franka Emika Panda robot with a RGB-D camera, trained from scratch with minimal demonstrations.",
+    "main_limitations": "The method relies on voxelised scene representations and requires 3 demonstrations for real-world training, which may limit its applicability in scenarios without such prior knowledge or demonstration availability."
+  },
+  {
+    "paper_id": "2405.20692v1",
+    "title": "In-Context Decision Transformer: Reinforcement Learning via Hierarchical\n  Chain-of-Thought",
+    "methods_used": [
+      "In-context Decision Transformer (IDT)"
+    ],
+    "test_setup": "benchmark datasets (D4RL and Grid World)",
+    "main_limitations": "Current in-context RL methods suffer from high computational costs when task horizons increase, limiting their efficiency in long-horizon tasks."
+  },
+  {
+    "paper_id": "1802.09081v2",
+    "title": "Temporal Difference Models: Model-Free Deep RL for Model-Based Control",
+    "methods_used": [
+      "Q-learning",
+      "DDPG",
+      "HER",
+      "Nagabandi et al. (2017) method",
+      "Temporal Difference Models (TDMs)"
+    ],
+    "test_setup": "simulated robotic control tasks including arm reaching, arm pushing, planar cheetah locomotion, and quadrupedal ant navigation",
+    "main_limitations": "The main limitation mentioned is that model-free RL suffers from poor sample efficiency for real-world problems, while traditional model-based RL often fails to achieve the same asymptotic performance as model-free methods due to model bias."
+  },
+  {
+    "paper_id": "2103.06257v2",
+    "title": "Maximum Entropy RL (Provably) Solves Some Robust RL Problems",
+    "methods_used": [
+      "Maximum Entropy RL (MaxEnt RL)",
+      "standard RL"
+    ],
+    "test_setup": "experimental evaluation on a manipulation task with obstacles, comparing performance of MaxEnt RL and standard RL in both original and perturbed environments",
+    "main_limitations": "MaxEnt RL requires choosing a hyperparameter (the entropy coefficient) and is not necessarily the ideal approach to robustness; while it provides formal guarantees and robustness to certain disturbances, it may not outperform more complex adversarial robust RL methods designed specifically for robustness."
+  },
+  {
+    "paper_id": "2506.24005v1",
+    "title": "Provably Efficient and Agile Randomized Q-Learning",
+    "methods_used": [
+      "Q-learning",
+      "RandomizedQ",
+      "Bayesian-based exploration",
+      "bonus-based methods",
+      "model-based RL",
+      "model-free RL"
+    ],
+    "test_setup": "standard benchmarks",
+    "main_limitations": "Existing provable algorithms either suffer from computational intractability or rely on stage-wise policy updates which reduce responsiveness and slow down the learning process."
+  },
+  {
+    "paper_id": "1702.08887v3",
+    "title": "Stabilising Experience Replay for Deep Multi-Agent Reinforcement\n  Learning",
+    "methods_used": [
+      "importance sampling",
+      "value function conditioning"
+    ],
+    "test_setup": "a challenging decentralised variant of StarCraft unit micromanagement",
+    "main_limitations": "Independent Q-learning introduces nonstationarity that makes it incompatible with experience replay memory, and previous work either limited experience replay to short buffers or disabled it altogether, which hurts sample efficiency and stability."
+  },
+  {
+    "paper_id": "1806.02450v2",
+    "title": "A Finite Time Analysis of Temporal Difference Learning With Linear\n  Function Approximation",
+    "methods_used": [
+      "Temporal Difference Learning",
+      "Q-learning",
+      "TD(0)",
+      "TD(λ)",
+      "Stochastic Gradient Descent",
+      "Projected Bellman Equation"
+    ],
+    "test_setup": "Theoretical analysis with finite-time bounds and asymptotic guarantees, including extensions to TD with eligibility traces and Q-learning for optimal stopping problems.",
+    "main_limitations": "The paper focuses on TD(0) and TD(λ) with linear function approximation, and while it provides finite-time analysis under i.i.d. noise assumptions, its results are most comparable to prior work that assumes i.i.d. observation noise, limiting applicability to more complex or realistic Markovian noise models without further extensions."
+  },
+  {
+    "paper_id": "2402.00348v1",
+    "title": "ODICE: Revealing the Mystery of Distribution Correction Estimation via\n  Orthogonal-gradient Update",
+    "methods_used": [
+      "DICE",
+      "O-DICE",
+      "Q-learning",
+      "DQN"
+    ],
+    "test_setup": "benchmark offline RL datasets, offline IL tasks, and extensive experiments on complex offline RL and IL tasks",
+    "main_limitations": "The method suffers from a double sampling issue due to the backward gradient term on the next state, especially in stochastic environments, and has two hyperparameters to tune, although one of them (η) is not highly sensitive in practice."
+  },
+  {
+    "paper_id": "2502.15214v1",
+    "title": "The Evolving Landscape of LLM- and VLM-Integrated Reinforcement Learning",
+    "methods_used": [
+      "Q-learning",
+      "DQN",
+      "LLM as proxy reward model",
+      "Preference-based RL",
+      "RL with sub-goals",
+      "Sim2Real transfer",
+      "In-context learning",
+      "Memory integration",
+      "Self-reflection",
+      "Structured experience retrieval",
+      "Lightweight fine-tuning",
+      "Advanced memory mechanisms"
+    ],
+    "test_setup": "simulation environments, real-world robotics, gridworld navigation, Atari games, benchmark datasets, theoretical analysis, and ad-hoc teamwork scenarios with unseen teammates",
+    "main_limitations": "Parametric agents face scalability and computational challenges in dynamic environments, while non-parametric agents struggle with long-term planning and complex modelling."
+  },
+  {
+    "paper_id": "2311.11423v1",
+    "title": "Offline Reinforcement Learning for Wireless Network Optimization with\n  Mixture Datasets",
+    "methods_used": [
+      "behavior constrained Q-learning (BCQ)",
+      "conservative Q-learning (CQL)",
+      "implicit Q-learning (IQL)"
+    ],
+    "test_setup": "evaluated several state-of-the-art offline RL algorithms in a wireless user scheduling problem using simulation environments with heterogeneous datasets collected by different behavior policies",
+    "main_limitations": "The performance of offline RL is largely constrained by the quality of the behavior policy used to collect the dataset, and traditional offline RL methods cannot update policies through interaction with the environment, leading to potential distributional shift issues."
+  },
+  {
+    "paper_id": "2507.11367v1",
+    "title": "Local Pairwise Distance Matching for Backpropagation-Free Reinforcement\n  Learning",
+    "methods_used": [
+      "REINFORCE",
+      "PPO",
+      "backpropagation-free pairwise distance matching"
+    ],
+    "test_setup": "common RL benchmark environments using gymnasium and mujoco, evaluated with policy gradient algorithms including REINFORCE with and without baseline, and PPO across discrete and continuous action spaces",
+    "main_limitations": "The method is evaluated primarily on standard RL benchmarks and may not generalize to all types of neural network architectures or reinforcement learning tasks beyond those tested."
+  },
+  {
+    "paper_id": "2508.05960v1",
+    "title": "Mildly Conservative Regularized Evaluation for Offline Reinforcement\n  Learning",
+    "methods_used": [
+      "Mildly Conservative Regularized Evaluation (MCRE)",
+      "Mildly Conservative Regularized Q-learning (MCRQ)",
+      "BCQ",
+      "TD3_BC",
+      "CQL",
+      "IQL",
+      "BEAR",
+      "UWAC",
+      "BC",
+      "CDC",
+      "AWAC",
+      "OneStep",
+      "PBRL",
+      "f-DVL",
+      "CGDT",
+      "DD",
+      "DStitch",
+      "ODC",
+      "CSVE",
+      "ACT",
+      "MISA",
+      "O-DICE",
+      "MOAC",
+      "ORL-RC"
+    ],
+    "test_setup": "Benchmark datasets from D4RL on MuJoCo tasks (HalfCheetah, Hopper, Walker2d) with multiple dataset categories (random, medium, medium-replay, medium-expert, expert)",
+    "main_limitations": "Distribution shift between learned and behavior policies leading to out-of-distribution actions and overestimation; excessive conservatism may hinder performance improvement."
+  },
+  {
+    "paper_id": "2112.12281v1",
+    "title": "Improving the Efficiency of Off-Policy Reinforcement Learning by\n  Accounting for Past Decisions",
+    "methods_used": [
+      "Tree Backup",
+      "Retrace",
+      "Truncated IS",
+      "Non-Markov Retrace",
+      "history-dependent TD(λ)"
+    ],
+    "test_setup": "theoretical analysis",
+    "main_limitations": "Cutting traces on a per-decision basis is not necessarily efficient; once a trace has been cut according to local information, the effect cannot be reversed later, potentially resulting in the premature truncation of estimated returns and slower learning."
+  },
+  {
+    "paper_id": "2007.06741v1",
+    "title": "Single-partition adaptive Q-learning",
+    "methods_used": [
+      "single-partition adaptive Q-learning",
+      "adaptive Q-learning",
+      "upper confidence bounds",
+      "Boltzmann exploration"
+    ],
+    "test_setup": "episodic reinforcement learning with large number of time steps",
+    "main_limitations": "The paper does not explicitly mention any specific limitations of the SPAQL algorithm beyond the general challenge of balancing exploration and exploitation in reinforcement learning."
+  },
+  {
+    "paper_id": "9501103v1",
+    "title": "Truncating Temporal Differences: On the Efficient Implementation of\n  TD(lambda) for Reinforcement Learning",
+    "methods_used": [
+      "TD(lambda)",
+      "Q-learning",
+      "AHC",
+      "TD(0)"
+    ],
+    "test_setup": "The TTD procedure was tested on a car parking problem using experimental design with varying TTD parameters (lambda and m) and learning rates, evaluated through simulation environments.",
+    "main_limitations": "The traditional approach based on eligibility traces suffers from both inefficiency and lack of generality."
+  }
+]

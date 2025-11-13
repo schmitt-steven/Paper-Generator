@@ -1,0 +1,47 @@
+{
+  "paper_concept_file": "output/paper_concept.md",
+  "num_papers_analyzed": 27,
+  "limitations": [
+    {
+      "limitation": "Independent Q-learning introduces nonstationarity that makes it incompatible with experience replay memory, and previous work either limited experience replay to short buffers or disabled it altogether, which hurts sample efficiency and stability.",
+      "score": 0.5842813044514522
+    },
+    {
+      "limitation": "Most existing deep RL methods rely on semi-gradient TD methods that are susceptible to divergence, while principled GTD methods, though having strong convergence guarantees, have rarely been used in deep RL. Previous work enabling GTD with nonlinear function approximation was limited to one-step methods, which are slow at credit assignment and require many samples.",
+      "score": 0.5814697713062811
+    },
+    {
+      "limitation": "The paper identifies fundamental differences between value-based and distributional RL in the multi-step setting, highlighting that existing approaches struggle with path-dependent distributional TD errors, which are essential for principled multi-step distributional RL.",
+      "score": 0.5805611662973591
+    },
+    {
+      "limitation": "brittle convergence properties caused by sensitive hyperparameters, difficulties in temporal credit assignment with long time horizons and sparse rewards, lack of diverse exploration especially in continuous search space scenarios, difficulties in credit assignment in multi-agent reinforcement learning, and conflicting objectives for rewards",
+      "score": 0.5780732981351571
+    },
+    {
+      "limitation": "The method requires knowledge of predecessors of a state for reverse sweep, which is often unknown in high-dimensional state spaces, though this is overcome by building a graph from the replay buffer.",
+      "score": 0.5691528536216036
+    },
+    {
+      "limitation": "The performance of offline RL is largely constrained by the quality of the behavior policy used to collect the dataset, and traditional offline RL methods cannot update policies through interaction with the environment, leading to potential distributional shift issues.",
+      "score": 0.5691175269431425
+    },
+    {
+      "limitation": "Existing reward models lack temporal consistency, leading to ineffective policy updates and unstable RL training.",
+      "score": 0.5680800313275141
+    },
+    {
+      "limitation": "The main limitation is that while the proposed method enables efficient integration of λ-returns into off-policy methods with experience replay, it requires periodic refreshing of a cache to keep λ-returns updated, which introduces additional complexity in implementation.",
+      "score": 0.5679809233007204
+    },
+    {
+      "limitation": "Existing provable algorithms either suffer from computational intractability or rely on stage-wise policy updates which reduce responsiveness and slow down the learning process.",
+      "score": 0.5669301325196914
+    },
+    {
+      "limitation": "The paper does not explicitly mention any specific limitations of the SPAQL algorithm beyond the general challenge of balancing exploration and exploitation in reinforcement learning.",
+      "score": 0.5659806179368843
+    }
+  ]
+}
+

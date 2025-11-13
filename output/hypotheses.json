@@ -1,0 +1,46 @@
+{
+  "paper_concept_file": "output/paper_concept.md",
+  "num_papers_analyzed": 27,
+  "hypotheses": [
+    {
+      "id": "hyp_001",
+      "description": "Integrating a backward state graph and breadth-first reward propagation in Recursive Backwards Q-Learning improves convergence stability compared to standard Q-learning when dealing with episodic tasks that have delayed or sparse rewards.",
+      "rationale": "Standard Q-learning suffers from brittle convergence properties in environments with long time horizons and sparse rewards due to its reliance on full trajectory replay, which introduces nonstationarity. RBQL addresses this by avoiding full episode reprocessing and using a structured backward propagation mechanism that assigns credit more effectively through temporal dependencies.",
+      "method_combination": "BackwardStateGraph + Breadth-First Reward Propagation + Q-learning update rule",
+      "expected_improvement": "Improved convergence stability and reduced sensitivity to hyperparameters during training",
+      "baseline_to_beat": "Standard Q-learning with full trajectory replay"
+    },
+    {
+      "id": "hyp_002",
+      "description": "Recursive Backwards Q-Learning demonstrates superior sample efficiency over SARSA and TD(λ) in environments where transitions are temporally ordered and rewards are delayed, because it avoids full trajectory tracking while still leveraging historical state-action pairs for credit assignment.",
+      "rationale": "While SARSA and TD(λ) use eligibility traces or experience replay for temporal credit assignment, they do not inherently structure updates based on the sequential order of states. RBQL's backward propagation mechanism allows it to assign rewards more accurately without needing full trajectory tracking, thereby improving sample efficiency in delayed reward settings.",
+      "method_combination": "BackwardStateGraph + Breadth-First Search + Temporal Difference Update with Discount Based on Path Length",
+      "expected_improvement": "Better sample efficiency due to reduced computational overhead during reward propagation",
+      "baseline_to_beat": "SARSA with eligibility traces or TD(λ) methods"
+    },
+    {
+      "id": "hyp_003",
+      "description": "The use of recursive backwards Q-learning with a graph-based predecessor lookup structure reduces redundant computation overhead compared to vanilla Q-learning by avoiding repeated updates across all visited states during each episode.",
+      "rationale": "Vanilla Q-learning requires full-scan updates over all visited states, leading to redundant computations. RBQL introduces a novel graph structure that enables efficient predecessor retrieval and structured backward propagation, minimizing unnecessary recomputation and reducing memory usage in large state spaces.",
+      "method_combination": "BackwardStateGraph + Breadth-First Reward Propagation + Q-learning Update with Backward Discounting",
+      "expected_improvement": "Reduced computational overhead and improved learning efficiency in long-horizon episodic tasks",
+      "baseline_to_beat": "Vanilla Q-learning with deterministic update rule"
+    },
+    {
+      "id": "hyp_004",
+      "description": "Recursive Backwards Q-Learning outperforms traditional model-free methods in terms of reward signal assignment accuracy when rewards are sparse or delayed, due to its ability to propagate rewards through the state graph in a structured, backward fashion.",
+      "rationale": "Existing model-free approaches like standard Q-learning or SARSA struggle with credit assignment in sparse and delayed reward environments. RBQL's backward propagation mechanism, combined with the use of a graph to represent predecessors, enables better temporal credit assignment by propagating rewards from terminal points back through visited states.",
+      "method_combination": "BackwardStateGraph + Breadth-First Search + Bellman Equation with Backward Discounting",
+      "expected_improvement": "Enhanced credit assignment in sparse and delayed reward scenarios",
+      "baseline_to_beat": "Model-free planning algorithms without explicit backward propagation"
+    },
+    {
+      "id": "hyp_005",
+      "description": "Introducing breadth-first reward propagation in Recursive Backwards Q-Learning leads to faster convergence rates than standard Q-learning in episodic domains where sequential dependencies are strong, because the algorithm leverages historical transitions more efficiently.",
+      "rationale": "Standard Q-learning converges slowly in episodic tasks due to its reliance on immediate reward feedback and full trajectory updates. RBQL enhances convergence by structuring updates using a backward traversal of the state space, which aligns reward propagation more closely with actual temporal dependencies in the environment.",
+      "method_combination": "BackwardStateGraph + Breadth-First Search + Temporal Difference Update with Path-Based Discounting",
+      "expected_improvement": "Faster convergence rate through improved temporal structure in state updates",
+      "baseline_to_beat": "Standard Q-learning without backward state graph or structured update"
+    }
+  ]
+}
