@@ -1,0 +1,218 @@
+import os
+from pathlib import Path
+from dataclasses import dataclass
+from typing import List
+import lmstudio as lms
+from lmstudio import BaseModel
+
+
+@dataclass
+class UserCode:
+    """Stores analysis results for a code file"""
+    file_path: str
+    file_name: str
+    file_content: str
+    summary: str = ""
+    novel_concepts: str = ""
+    research_relevance: str = ""
+    important_snippets: List['CodeSnippet'] = None
+    
+    def __post_init__(self):
+        if self.important_snippets is None:
+            self.important_snippets = []
+
+
+class CodeSnippet(BaseModel):
+    """Represents an important code snippet extracted from a file"""
+    code: str
+    explanation: str
+    importance_reasoning: str
+
+
+class UserCodeAnalysisResult(BaseModel):
+    """Structured response format used by the LLM"""
+    summary: str
+    novel_concepts: str
+    research_relevance: str
+
+
+class SnippetExtractionResult(BaseModel):
+    """Structured response format for snippet extraction"""
+    snippets: List[CodeSnippet]
+    
+
+class CodeAnalyzer:
+    """Encapsulates code file loading and LLM-based analysis methods."""
+
+    # Supported languages
+    LANGUAGE_MAP = {
+        '.py': 'python',
+        ".ipynb": 'jupyter notebook',
+        '.js': 'javascript',
+        '.java': 'java',
+        '.cpp': 'cpp',
+        '.c': 'c',
+        '.ts': 'typescript',
+        '.go': 'go',
+        '.rs': 'rust',
+        '.rb': 'ruby',
+    }
+
+    def __init__(self, model_name: str = "qwen/qwen3-coder-30b"):
+        self.model = lms.llm(model_name)
+
+    def load_code_files(self, folder_path: str, extensions: List[str] = LANGUAGE_MAP.keys()) -> List[UserCode]:
+        code_files = []
+        folder = Path(folder_path)
+
+        if not folder.exists():
+            raise ValueError(f"Folder not found: {folder_path}")
+
+        for file_path in folder.rglob('*'):
+            if file_path.is_file() and file_path.suffix in extensions:
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    code_files.append(UserCode(
+                        file_path=str(file_path),
+                        file_name=file_path.name,
+                        file_content=content
+                    ))
+                except Exception as e:
+                    print(f"Error reading {file_path}: {e}")
+
+
+        print(f"Loaded {len(code_files)} code file(s)")
+
+        return code_files
+
+    def analyze_code_file(self, code_analysis: UserCode) -> UserCode:
+        """Analyze a code file using a single structured LLM call."""
+
+        prompt = f"""You are an expert in code analysis and scientific literature.
+        
+        Task:
+        Analyze the following code file and provide a structured analysis.
+
+        Instructions:
+        Provide your analysis as a CodeAnalysisResult with the following fields:
+        1. summary: Technical description of what the code does and how it works in a few sentences.
+        2. novel_concepts: What makes this code truly novel or innovative? If nothing is novel, use an empty string.
+        3. research_relevance: Based on the novel concepts above, what is the research potential? 
+        Otherwise, explain specific academic value in a few sentences. If no research potential, use an empty string.
+
+        Code file: {code_analysis.file_name}
+        Code file content:
+        ```
+        {code_analysis.file_content}
+        ```
+        """
+
+        result = self.model.respond(
+            prompt, 
+            response_format=UserCodeAnalysisResult
+        ).parsed
+
+        code_analysis.summary = result['summary']
+        code_analysis.novel_concepts = result['novel_concepts']
+        code_analysis.research_relevance = result['research_relevance']
+
+        print(f"Completed analyzing {code_analysis.file_name}")
+        return code_analysis
+
+    def extract_important_snippets(self, code_analysis: UserCode) -> UserCode:
+        """Extract important code snippets from a file that has novel concepts."""
+                
+        prompt = f"""You are an expert in code analysis and scientific research.
+
+        Task:
+        Extract the most important code snippets from this file that demonstrate the novel concepts identified earlier.
+
+        Novel Concepts Identified:
+        {code_analysis.novel_concepts}
+
+        Instructions:
+        1. Extract only the most important code snippet(s) that best demonstrate the novel/research-worthy aspects
+        2. Copy the code EXACTLY as it appears (verbatim)
+        3. For each snippet provide:
+        - code: The exact code (function, class, or relevant block)
+        - explanation: What this code does (2-3 sentences)
+        - importance_reasoning: Why this specific code is important for research (1-2 sentences)
+        4. Prioritize:
+        - Core algorithmic implementations
+        - Novel data structures or patterns
+        - Key architectural decisions
+        5. If the file is very long, focus on the most critical snippets
+
+        Code file: {code_analysis.file_name}
+        Code file content:
+        ```
+        {code_analysis.file_content}
+        ```
+        """
+
+        result = self.model.respond(
+            prompt,
+            response_format=SnippetExtractionResult,
+        ).parsed
+
+        # Convert dict results to CodeSnippet objects
+        code_analysis.important_snippets = [
+            CodeSnippet(**snippet) for snippet in result['snippets']
+        ]
+
+        print(f"Extracted {len(code_analysis.important_snippets)} code snippet(s)")
+        return code_analysis
+
+    def analyze_all_files(self, code_files: List[UserCode]) -> List[UserCode]:
+        """
+        Analyze all code files and extract important code snippets from files
+        that have novel concepts.
+        """
+        analyzed_files = []
+        for code_file in code_files:
+            analyzed = self.analyze_code_file(code_file)
+            
+            # Extract snippets only if novel concepts were found
+            if analyzed.novel_concepts.strip():
+                analyzed = self.extract_important_snippets(analyzed)
+            
+            analyzed_files.append(analyzed)
+        return analyzed_files
+    
+
+    @staticmethod
+    def get_analysis_report(analyzed_files: List[UserCode]) -> str:
+        report = ["=== Code Analysis Report ===\n"]
+        
+        for analysis in analyzed_files:
+            report.extend([
+                f"File: {analysis.file_name}",
+                f"Summary:\n{analysis.summary}"
+            ])
+            if analysis.novel_concepts:
+                report.append(f"Novel Concepts:\n{analysis.novel_concepts}")
+                
+            if analysis.research_relevance:
+                report.append(f"Research Relevance:\n{analysis.research_relevance}")
+            
+            if analysis.important_snippets:
+                report.append(f"\nImportant Code Snippets ({len(analysis.important_snippets)}):")
+                for i, snippet in enumerate(analysis.important_snippets, 1):
+                    report.extend([
+                        f"\n  Snippet {i}:",
+                        f"  Importance: {snippet.importance_reasoning}",
+                        f"  Explanation: {snippet.explanation}",
+                        f"  Code:\n```\n{snippet.code}\n```"
+                    ])
+            
+            report.append("==== End of Code Analysis Report ====" + "\n")
+
+        return "\n".join(report)
+
+
+if __name__ == "__main__":
+    code_analyzer = CodeAnalyzer(model_name="qwen/qwen3-coder-30b")
+    code_files = code_analyzer.load_code_files("user_files")
+    analyzed_files = code_analyzer.analyze_all_files(code_files)
+    print(code_analyzer.get_analysis_report(analyzed_files))
