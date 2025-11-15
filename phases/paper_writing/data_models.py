@@ -5,7 +5,7 @@ from enum import Enum
 from typing import List
 
 from lmstudio import BaseModel
-from phases.literature_review.arxiv_api import Paper
+from phases.paper_search.arxiv_api import Paper
 
 
 class Section(str, Enum):
@@ -13,6 +13,7 @@ class Section(str, Enum):
 
     ABSTRACT = "Abstract"
     INTRODUCTION = "Introduction"
+    RELATED_WORK = "Related Work"
     METHODS = "Methods"
     RESULTS = "Results"
     DISCUSSION = "Discussion"
@@ -25,6 +26,7 @@ class PaperDraft:
     title: str
     abstract: str
     introduction: str
+    related_work: str
     methods: str
     results: str
     discussion: str
@@ -37,7 +39,6 @@ class PaperChunk:
 
     chunk_id: str
     paper: Paper
-    section_type: Section
     chunk_text: str
     chunk_index: int
     embedding: List[float] = field(default_factory=list)

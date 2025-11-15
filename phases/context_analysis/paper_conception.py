@@ -1,9 +1,10 @@
 from dataclasses import dataclass
+import textwrap
 import lmstudio as lms
 from typing import List
 from phases.context_analysis.user_code_analysis import CodeAnalyzer, UserCode, CodeSnippet
 from phases.context_analysis.user_notes_analysis import NotesAnalyzer, UserNotes 
-from utils.file_utils import save_to_markdown 
+from utils.file_utils import save_markdown_to_file 
 
 
 @dataclass
@@ -43,100 +44,100 @@ class PaperConception:
         
         code_snippets_section = self._format_code_snippets_section()
         
-        prompt = f"""
-        You are a critical research advisor with expertise in academic rigor, novelty assessment, and peer review standards.
+        prompt = textwrap.dedent(f"""\
+            You are a critical research advisor with expertise in academic rigor, novelty assessment, and peer review standards.
 
-        TASK:
-        Generate a rigorous paper concept that identifies core ideas, gaps, and research direction.
-        Be CRITICAL and DEMANDING. Do not accept vague claims or weak differentiation.
+            TASK:
+            Generate a rigorous paper concept that identifies core ideas, gaps, and research direction.
+            Be CRITICAL and DEMANDING. Do not accept vague claims or weak differentiation.
 
-        CRITICAL SECTIONS (in order):
-        1. Paper Specifications
-        2. Research Topic
-        3. Research Field
-        4. Problem Statement
-        5. Motivation
-        6. Novelty & Differentiation
-        7. Methodology & Implementation (High-Level)
-        8. Expected Contribution
-        
-        Note: We are at the CONCEPT stage - no need for detailed proofs, experimental designs, or final paper titles yet.
+            CRITICAL SECTIONS (in order):
+            1. Paper Specifications
+            2. Research Topic
+            3. Research Field
+            4. Problem Statement
+            5. Motivation
+            6. Novelty & Differentiation
+            7. Methodology & Implementation (High-Level)
+            8. Expected Contribution
+            
+            Note: We are at the CONCEPT stage - no need for detailed proofs, experimental designs, or final paper titles yet.
 
-        STRICT REQUIREMENTS FOR EACH SECTION:
+            STRICT REQUIREMENTS FOR EACH SECTION:
 
-        1. PAPER SPECIFICATIONS
-        - Extract all metadata (type, length, audience, style, figures/tables)
-        - If missing specific items, state: "[Missing: specific item name - needed for X reason]"
+            1. PAPER SPECIFICATIONS
+            - Extract all metadata (type, length, audience, style, figures/tables)
+            - If missing specific items, state: "[Missing: specific item name - needed for X reason]"
 
-        2. RESEARCH TOPIC
-        - Briefly describe the general topic/area of research (1-2 sentences)
-        - This is NOT the final paper title, just the subject matter
+            2. RESEARCH TOPIC
+            - Briefly describe the general topic/area of research (1-2 sentences)
+            - This is NOT the final paper title, just the subject matter
 
-        3. RESEARCH FIELD
-        - Identify the primary field and relevant subfields
-        - State standard terminology if applicable
+            3. RESEARCH FIELD
+            - Identify the primary field and relevant subfields
+            - State standard terminology if applicable
 
-        4. PROBLEM STATEMENT
-        - Must be SPECIFIC, not generic (e.g., "scalability issues" or "efficiency problems" are too vague)
-        - Must quantify inefficiencies or failure modes with concrete examples
-        - Must clearly scope the problem domain and constraints
-        - If vague or missing, state: "[Missing: quantifiable problem definition - current description too broad]"
+            4. PROBLEM STATEMENT
+            - Must be SPECIFIC, not generic (e.g., "scalability issues" or "efficiency problems" are too vague)
+            - Must quantify inefficiencies or failure modes with concrete examples
+            - Must clearly scope the problem domain and constraints
+            - If vague or missing, state: "[Missing: quantifiable problem definition - current description too broad]"
 
-        5. MOTIVATION
-        - Why is this problem important to solve?
-        - What are the implications or applications?
+            5. MOTIVATION
+            - Why is this problem important to solve?
+            - What are the implications or applications?
 
-        6. NOVELTY & DIFFERENTIATION
-        **CRITICAL: This is where most papers fail.**
-        - Explicitly compare to existing methods in the field
-        - State: "This differs from [Method X] because [specific technical difference]"
-        - If code/notes don't differentiate from existing work, state: "[Missing: differentiation from existing methods - must explain specific advantages]"
-        - Do NOT claim novelty without clear differentiation from prior art
+            6. NOVELTY & DIFFERENTIATION
+            **CRITICAL: This is where most papers fail.**
+            - Explicitly compare to existing methods in the field
+            - State: "This differs from [Method X] because [specific technical difference]"
+            - If code/notes don't differentiate from existing work, state: "[Missing: differentiation from existing methods - must explain specific advantages]"
+            - Do NOT claim novelty without clear differentiation from prior art
 
-        7. METHODOLOGY & IMPLEMENTATION (High-Level)
-        - Describe the approach at a high level
-        - Reference CODE SNIPPETS below for key implementation insights
-        - Identify if mathematical formulation is present or missing
-        - If critical details missing, state: "[Missing: X - needed for Y]"
+            7. METHODOLOGY & IMPLEMENTATION (High-Level)
+            - Describe the approach at a high level
+            - Reference CODE SNIPPETS below for key implementation insights
+            - Identify if mathematical formulation is present or missing
+            - If critical details missing, state: "[Missing: X - needed for Y]"
 
-        8. EXPECTED CONTRIBUTION
-        - Must be concrete and measurable
-        - Avoid vague claims like "improves efficiency"
-        - State specific advantages with conditions (e.g., "faster convergence in sparse reward settings")
+            8. EXPECTED CONTRIBUTION
+            - Must be concrete and measurable
+            - Avoid vague claims like "improves efficiency"
+            - State specific advantages with conditions (e.g., "faster convergence in sparse reward settings")
 
-        CRITICAL INSTRUCTIONS:
-        - **Be BRUTAL**: If information is vague, mark it as insufficient
-        - **Demand precision**: Generic claims → demand specific examples and scope
-        - **Require differentiation**: Always compare to existing methods in the field
-        - **Specify gaps**: Don't just write "[Missing information]" - write "[Missing: X because Y]"
-        - **NO INVENTED DATA**: Do NOT make up percentages, specific metrics, or quantitative results
-        - Use qualitative comparisons: "faster", "more accurate", "scales better" instead of "20% faster"
-        - When writing Novelty, ask: "How is this different from existing state-of-the-art methods?"
-        - Extract domain/field from the notes/code and tailor analysis accordingly
-        - Focus on CONCEPT quality, not full paper details
+            CRITICAL INSTRUCTIONS:
+            - **Be BRUTAL**: If information is vague, mark it as insufficient
+            - **Demand precision**: Generic claims → demand specific examples and scope
+            - **Require differentiation**: Always compare to existing methods in the field
+            - **Specify gaps**: Don't just write "[Missing information]" - write "[Missing: X because Y]"
+            - **NO INVENTED DATA**: Do NOT make up percentages, specific metrics, or quantitative results
+            - Use qualitative comparisons: "faster", "more accurate", "scales better" instead of "20% faster"
+            - When writing Novelty, ask: "How is this different from existing state-of-the-art methods?"
+            - Extract domain/field from the notes/code and tailor analysis accordingly
+            - Focus on CONCEPT quality, not full paper details
 
-        OUTPUT FORMAT:
-        - Use ## for section headings (e.g., "## 1. Paper Specifications")
-        - Use ### for subsections if needed
-        - Do NOT use horizontal rules (---) between sections
-        - Use bullet points (-) for lists
-        - Keep formatting clean and consistent
+            OUTPUT FORMAT:
+            - Use ## for section headings (e.g., "## 1. Paper Specifications")
+            - Use ### for subsections if needed
+            - Do NOT use horizontal rules (---) between sections
+            - Use bullet points (-) for lists
+            - Keep formatting clean and consistent
 
-        ═══════════════════════════════════════════════════════════════
-        USER NOTES ANALYSIS
-        ═══════════════════════════════════════════════════════════════
-        {NotesAnalyzer.get_analysis_report(self.user_notes)}
+            ═══════════════════════════════════════════════════════════════
+            USER NOTES ANALYSIS
+            ═══════════════════════════════════════════════════════════════
+            {NotesAnalyzer.get_analysis_report(self.user_notes)}
 
-        ═══════════════════════════════════════════════════════════════
-        FULL CODE ANALYSIS
-        ═══════════════════════════════════════════════════════════════
-        {CodeAnalyzer.get_analysis_report(self.user_code)}
+            ═══════════════════════════════════════════════════════════════
+            FULL CODE ANALYSIS
+            ═══════════════════════════════════════════════════════════════
+            {CodeAnalyzer.get_analysis_report(self.user_code)}
 
-        ═══════════════════════════════════════════════════════════════
-        CODE SNIPPETS (Priority Information - Use These in Methodology)
-        ═══════════════════════════════════════════════════════════════
-        {code_snippets_section}
-        """
+            ═══════════════════════════════════════════════════════════════
+            CODE SNIPPETS (Priority Information - Use These in Methodology)
+            ═══════════════════════════════════════════════════════════════
+            {code_snippets_section}
+        """)
 
         result = self.model.respond(prompt)
         
@@ -154,56 +155,57 @@ class PaperConception:
         a high-quality academic paper. These questions will guide literature search.
         """
         
-        prompt = f"""You are a strategic research advisor who prioritizes questions for maximum research impact.
+        prompt = textwrap.dedent(f"""\
+            You are a strategic research advisor who prioritizes questions for maximum research impact.
 
-        TASK:
-        Generate a FOCUSED list of literature search questions to understand the research landscape and strengthen differentiation.
-        Prioritize questions that address critical gaps in understanding the field and prior work.
+            TASK:
+            Generate a FOCUSED list of literature search questions to understand the research landscape and strengthen differentiation.
+            Prioritize questions that address critical gaps in understanding the field and prior work.
 
-        ANALYSIS APPROACH:
-        1. Identify the MOST CRITICAL gaps in understanding the field and related work
-        2. Focus on: (a) existing methods/prior art, (b) how this work differs, (c) key concepts to understand
-        3. Questions should guide literature search to establish novelty and context
+            ANALYSIS APPROACH:
+            1. Identify the MOST CRITICAL gaps in understanding the field and related work
+            2. Focus on: (a) existing methods/prior art, (b) how this work differs, (c) key concepts to understand
+            3. Questions should guide literature search to establish novelty and context
 
-        QUESTION PRIORITIES:
+            QUESTION PRIORITIES:
 
-        **Priority 1: Related Work & Prior Art**
-        - What existing methods in this field address similar problems?
-        - What are the standard/state-of-the-art approaches?
-        - What are their key strengths and limitations?
-        Focus: 4-6 questions to map the research landscape
+            **Priority 1: Related Work & Prior Art**
+            - What existing methods in this field address similar problems?
+            - What are the standard/state-of-the-art approaches?
+            - What are their key strengths and limitations?
+            Focus: 4-6 questions to map the research landscape
 
-        **Priority 2: Differentiation & Positioning**
-        - How does this approach differ technically from each major baseline?
-        - What are the specific advantages/disadvantages vs. existing methods?
-        - Where does this fit in the taxonomy of approaches?
-        Focus: 2-4 questions to establish clear differentiation
+            **Priority 2: Differentiation & Positioning**
+            - How does this approach differ technically from each major baseline?
+            - What are the specific advantages/disadvantages vs. existing methods?
+            - Where does this fit in the taxonomy of approaches?
+            Focus: 2-4 questions to establish clear differentiation
 
-        **Priority 3: Key Concepts & Background**
-        - What theoretical frameworks or mathematical tools are relevant?
-        - What domain-specific knowledge is needed to understand the approach?
-        - What terminology and definitions are standard in this field?
-        Focus: 2-3 questions on foundational understanding
+            **Priority 3: Key Concepts & Background**
+            - What theoretical frameworks or mathematical tools are relevant?
+            - What domain-specific knowledge is needed to understand the approach?
+            - What terminology and definitions are standard in this field?
+            Focus: 2-3 questions on foundational understanding
 
-        CRITICAL INSTRUCTIONS:
-        - Maximum 10 questions total - quality over quantity
-        - Group questions by priority (label each group)
-        - Be SPECIFIC (e.g., "How does Method X differ from Method Y in aspect Z?" not "What is Method Y?")
-        - Focus on what's needed to establish novelty and write a strong related work section
-        - Every question should have clear literature search targets
-        - Adapt questions to the specific research domain identified in the paper concept
+            CRITICAL INSTRUCTIONS:
+            - Maximum 10 questions total - quality over quantity
+            - Group questions by priority (label each group)
+            - Be SPECIFIC (e.g., "How does Method X differ from Method Y in aspect Z?" not "What is Method Y?")
+            - Focus on what's needed to establish novelty and write a strong related work section
+            - Every question should have clear literature search targets
+            - Adapt questions to the specific research domain identified in the paper concept
 
-        PAPER CONCEPT TO ANALYZE:
-        {concept.description}
+            PAPER CONCEPT TO ANALYZE:
+            {concept.description}
 
-        CODE SNIPPETS AVAILABLE:
-        {self._format_code_snippets_section()}
+            CODE SNIPPETS AVAILABLE:
+            {self._format_code_snippets_section()}
 
-        OUTPUT FORMAT:
-        1. [question]
-        2. [question]
-        ...
-        """
+            OUTPUT FORMAT:
+            1. [question]
+            2. [question]
+            ...
+        """)
 
         result = self.model.respond(prompt)
         
@@ -220,6 +222,9 @@ class PaperConception:
         
         concept = self.generate_core_information()
         concept = self.identify_open_questions(concept)
+        
+        # Automatically save
+        self.save_paper_concept(concept, filename="paper_concept.md", output_dir="output")
         
         return concept
 
@@ -260,7 +265,7 @@ class PaperConception:
             ])
         
         full_content = "\n".join(content_parts)        
-        file_path = save_to_markdown(full_content, filename, output_dir)
+        file_path = save_markdown_to_file(full_content, filename, output_dir)
         print(f"Paper concept saved to: {file_path}")
         
         return file_path

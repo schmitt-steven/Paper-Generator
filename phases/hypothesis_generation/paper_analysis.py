@@ -1,9 +1,10 @@
 import re
 import json
 import os
+import textwrap
 import lmstudio as lms
 from typing import List
-from phases.literature_review.arxiv_api import Paper
+from phases.paper_search.arxiv_api import Paper
 from phases.hypothesis_generation.hypothesis_models import PaperFindings, FindingsExtractionResult
 from utils.file_utils import preprocess_markdown
 
@@ -29,6 +30,10 @@ class PaperAnalyzer:
             print(f"  [{i}/{total}] Processing {paper_id}...")
             finding = self.extract_paper_findings(paper)
             findings.append(finding)
+        
+        # Automatically save
+        PaperAnalyzer.save_findings(findings, filepath="output/paper_findings.json")
+        
         return findings
     
     def extract_paper_findings(self, paper: Paper) -> PaperFindings:
@@ -52,18 +57,20 @@ class PaperAnalyzer:
                 main_limitations=""
             )
         
-        prompt = f"""Extract key information from this research paper.
-        Paper Title: {paper.title}
+        prompt = textwrap.dedent(f"""\
+            Extract key information from this research paper.
+            Paper Title: {paper.title}
 
-        Paper Content:
-        {key_sections[:10000]}
+            Paper Content:
+            {key_sections[:10000]}
 
-        Extract ONLY the following (be concise and accurate):
-        1. methods_used: List of method names mentioned (e.g., ["Q-learning", "DQN"])
-        2. test_setup: Single string describing HOW the method was tested/evaluated (e.g., "simulation environments", "gridworld navigation", "Atari games", "real-world robotics", "theoretical analysis", "benchmark datasets")
-        3. main_limitations: Single string describing the key limitation(s) mentioned (combine multiple limitations into one coherent string)
+            Extract ONLY the following (be concise and accurate):
+            1. methods_used: List of method names mentioned (e.g., ["Q-learning", "DQN"])
+            2. test_setup: Single string describing HOW the method was tested/evaluated (e.g., "simulation environments", "gridworld navigation", "Atari games", "real-world robotics", "theoretical analysis", "benchmark datasets")
+            3. main_limitations: Single string describing the key limitation(s) mentioned (combine multiple limitations into one coherent string)
 
-        If a field has no information, use empty list for lists or empty string for strings. DO NOT HALLUCINATE OR MAKE UP DATA."""
+            If a field has no information, use empty list for lists or empty string for strings. DO NOT HALLUCINATE OR MAKE UP DATA.
+        """)
 
         try:
             result = self.model.respond(

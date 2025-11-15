@@ -1,3 +1,4 @@
+import textwrap
 import lmstudio as lms
 from pathlib import Path
 from dataclasses import dataclass
@@ -75,57 +76,57 @@ class NotesAnalyzer:
     def analyze_user_note(self, user_notes: UserNotes) -> UserNotes:
         """Analyze a document to extract research-relevant information using structured LLM analysis."""
 
-        prompt = f"""You are an expert research analyst helping to analyze documents for automated research paper generation.
-        <task>
-        Analyze the following document and extract relevant information in a structured format.
-        First, provide a brief summary covering the main topic and key points of the entire document.
-        Put this summary in the field named `summary` in the structured response.
+        prompt = textwrap.dedent(f"""\
+            You are an expert research analyst helping to analyze documents for automated research paper generation.
+            <task>
+            Analyze the following document and extract relevant information in a structured format.
+            First, provide a brief summary covering the main topic and key points of the entire document.
+            Put this summary in the field named `summary` in the structured response.
 
-        Then for each field below, COPY EXACT VERBATIM passages from the document (do NOT summarize or paraphrase).
-        IMPORTANT: Extract ALL relevant information from the document. If information doesn't fit into any field, place it in the CLOSEST matching field.
-        </task>
+            Then for each field below, COPY EXACT VERBATIM passages from the document (do NOT summarize or paraphrase).
+            IMPORTANT: Extract ALL relevant information from the document. If information doesn't fit into any field, place it in the CLOSEST matching field.
+            </task>
 
-        <analysis_framework>
-        The structured response must contain the following fields:
-        1. key_findings: Copy exact quotes about main discoveries, results, conclusions, or insights.
-        - What is being researched? is there a research question or hypothesis?
-        - What problems does it solve?
-        - What are the important takeaways?
-        - If no significant findings, use an empty string.
+            <analysis_framework>
+            The structured response must contain the following fields:
+            1. key_findings: Copy exact quotes about main discoveries, results, conclusions, or insights.
+            - What is being researched? is there a research question or hypothesis?
+            - What problems does it solve?
+            - What are the important takeaways?
+            - If no significant findings, use an empty string.
 
-        2. methodologies: Copy exact descriptions of approaches, algorithms, techniques, or experimental methods.
-        - How were things implemented or tested?
-        - What frameworks or tools were used?
-        - If no methodologies, use an empty string."
+            2. methodologies: Copy exact descriptions of approaches, algorithms, techniques, or experimental methods.
+            - How were things implemented or tested?
+            - What frameworks or tools were used?
+            - If no methodologies, use an empty string."
 
-        3. technical_details: Copy exact implementation specifics, parameters, formulas, or specifications.
-        - Important parameters, configurations, or design choices
-        - Mathematical formulations if present
-        - If minimal technical content, use an empty string.
+            3. technical_details: Copy exact implementation specifics, parameters, formulas, or specifications.
+            - Important parameters, configurations, or design choices
+            - Mathematical formulations if present
+            - If minimal technical content, use an empty string.
 
-        4. data_and_results: Copy exact datasets used, experimental results, performance metrics, or quantitative findings.
-        - What data was analyzed?
-        - What were the outcomes or measurements?
-        - If no data/results, use an empty string.
+            4. data_and_results: Copy exact datasets used, experimental results, performance metrics, or quantitative findings.
+            - What data was analyzed?
+            - What were the outcomes or measurements?
+            - If no data/results, use an empty string.
 
-        5. related_work: Copy exact references, related work, or external sources mentioned.
-        - Author names, paper titles, or sources referenced
-        - If no citations, use an empty string.
-        </analysis_framework>
+            5. related_work: Copy exact references, related work, or external sources mentioned.
+            - Author names, paper titles, or sources referenced
+            - If no citations, use an empty string.
+            </analysis_framework>
 
-        <document_information>
-        Document: {user_notes.file_name}
-        Content:
-        ```
-        {user_notes.file_content}
-        ```
-        </document_information>
-        """
+            <document_information>
+            Document: {user_notes.file_name}
+            Content:
+            ```
+            {user_notes.file_content}
+            ```
+            </document_information>
+        """)
 
         result = self.model.respond(
             prompt,
-            response_format=NotesAnalysisResult,
-            config={'max_tokens': 1000},
+            response_format=NotesAnalysisResult
         ).parsed
         
         analysis = NotesAnalysisResult(**result)        

@@ -1,8 +1,9 @@
+import textwrap
 import lmstudio as lms
 from typing import Dict, List, Optional, Sequence
 
 from phases.context_analysis.paper_conception import PaperConcept
-from phases.experimentation.experiment_state import ExperimentResult
+from phases.experimentation.experiment_state import ExperimentResult, Plot
 from phases.paper_writing.data_models import Evidence, PaperDraft, Section
 
 
@@ -22,12 +23,13 @@ class PaperWriter:
         """Generate all paper sections using provided evidence."""
 
         sections = {}
-        # Generate sections in order: Methods, Results, Discussion, Introduction, Conclusion, Abstract
+        # Generate sections in order: Methods, Results, Discussion, Introduction, Related Work, Conclusion, Abstract
         for section_type in (
             Section.METHODS,
             Section.RESULTS,
             Section.DISCUSSION,
             Section.INTRODUCTION,
+            Section.RELATED_WORK,
             Section.CONCLUSION,
             Section.ABSTRACT,
         ):
@@ -37,6 +39,7 @@ class PaperWriter:
                 context=context,
                 experiment=experiment,
                 evidence=evidence,
+                previous_sections=sections,
             )
 
         # Generate title after all sections are complete, using abstract, introduction, and conclusion
@@ -51,6 +54,7 @@ class PaperWriter:
             title=title,
             abstract=sections[Section.ABSTRACT],
             introduction=sections[Section.INTRODUCTION],
+            related_work=sections[Section.RELATED_WORK],
             methods=sections[Section.METHODS],
             results=sections[Section.RESULTS],
             discussion=sections[Section.DISCUSSION],
@@ -63,17 +67,16 @@ class PaperWriter:
         context: PaperConcept,
         experiment: Optional[ExperimentResult],
         evidence: Sequence[Evidence],
-        temperature: float = 0.35,
-        max_tokens: int = 900,
+        previous_sections: Optional[Dict[Section, str]] = None,
+        temperature: float = 0.5,
     ) -> str:
         """Generate a single section given context and evidence."""
 
-        prompt = self._build_section_prompt(section_type, context, experiment, evidence)
+        prompt = self._build_section_prompt(section_type, context, experiment, evidence, previous_sections)
         response = self.model.respond(
             prompt,
             config={
                 "temperature": temperature,
-                "maxTokens": max_tokens,
             },
         )
         return self._extract_response_text(response)
@@ -84,35 +87,54 @@ class PaperWriter:
         context: PaperConcept,
         experiment: Optional[ExperimentResult],
         evidence: Sequence[Evidence],
+        previous_sections: Optional[Dict[Section, str]] = None,
     ) -> str:
         """Create the generation prompt for a specific section."""
 
-        guidelines = self.get_section_guidelines(section_type)
+        guidelines = self.get_section_guidelines(section_type, experiment)
         context_block = self._format_context(context, experiment)
         evidence_block = self._format_evidence_for_prompt(evidence)
+        previous_sections_block = self._format_previous_sections(section_type, previous_sections or {})
+        
+        prompt = textwrap.dedent(f"""\
+            [ROLE]
+            You are an expert academic writer.
 
-        return f"""[ROLE]
-You are an expert academic writer tasked with drafting a section of a research paper.
-Write in a formal academic tone and integrate evidence smoothly with indirect citations (e.g., (smith2024reinforcement)). Ensure the narrative is cohesive and original.
+            [TASK]
+            Write the complete {section_type.value} section of the paper based on the provided context.
 
-[SECTION TYPE]
-{section_type.value}
+            [SECTION TYPE]
+            {section_type.value}
 
-[SECTION GUIDELINES]
-{guidelines}
+            [RESEARCH CONTEXT]
+            {context_block}
 
-[RESEARCH CONTEXT]
-{context_block}
+            [PREVIOUS SECTIONS]
+            {previous_sections_block if previous_sections_block else ''}
 
-[EVIDENCE]
-{evidence_block if evidence_block else 'No evidence available.'}
+            [EVIDENCE]
+            {evidence_block if evidence_block else 'No evidence available.'}
 
-[REQUIREMENTS]
-- Emphasize the most relevant evidence for the section objectives.
-- Refer to evidence using the provided citation keys in parentheses.
-- Do not fabricate data or citations.
-- Maintain logical flow and avoid bullet lists unless necessary.
-"""
+            [SECTION GUIDELINES]
+            {guidelines}
+
+           [WRITING REQUIREMENTS — STRICT]
+            - Produce a cohesive, original, publication-quality academic narrative.
+            - Use citations strictly via the provided keys in parentheses, placed immediately before final punctuation.
+            - Combine multiple supporting evidence items using semicolons within a single set of parentheses.
+            - Never fabricate evidence, results, or citations.
+            - Integrate and build upon previous sections to ensure full narrative coherence.
+
+            [GENERATION RULES — DO NOT VIOLATE]
+            - Do NOT reference the guidelines or instructions.
+            - Do NOT comment on the evidence structure.
+            - Output ONLY the final written section.
+
+            [FINAL PRIORITY]
+            Your output must strictly follow the requirements and produce a polished academic section.
+        """)
+        
+        return prompt
 
     @staticmethod
     def _format_evidence_for_prompt(evidence: Sequence[Evidence]) -> str:
@@ -121,8 +143,7 @@ Write in a formal academic tone and integrate evidence smoothly with indirect ci
             citation_key = getattr(item.chunk.paper, "citation_key", "unknown")
             source_info = (
                 f"{item.chunk.paper.title} "
-                f"({citation_key}; {item.chunk.paper.published or 'n.d.'}; "
-                f"{item.chunk.section_type.value})"
+                f"({citation_key}; {item.chunk.paper.published or 'n.d.'})"
             )
             lines.append(f"{idx}. Summary: {item.summary}")
             lines.append(f"   Source: {source_info}")
@@ -131,6 +152,60 @@ Write in a formal academic tone and integrate evidence smoothly with indirect ci
             )
             lines.append("")
         return "\n".join(lines).strip()
+
+    @staticmethod
+    def _format_plots_for_prompt(plots: List[Plot]) -> str:
+        """Format plots as figure references for Results section."""
+        if not plots:
+            return ""
+        
+        lines = []
+        for idx, plot in enumerate(plots, 1):
+            lines.append(f"Figure {idx}:")
+            lines.append(f"  Filename: {plot.filename}")
+            lines.append(f"  Caption: {plot.caption}")
+            lines.append("")
+        return "\n".join(lines).strip()
+
+    @staticmethod
+    def _format_previous_sections(
+        section_type: Section,
+        previous_sections: Dict[Section, str],
+    ) -> str:
+        """Format relevant previous sections as context for the current section."""
+        
+        # Define which previous sections each section should see
+        section_dependencies = {
+            Section.RESULTS: [Section.METHODS],
+            Section.DISCUSSION: [Section.RESULTS, Section.METHODS],
+            Section.CONCLUSION: [Section.METHODS,Section.RESULTS, Section.DISCUSSION],
+            Section.ABSTRACT: [
+                Section.METHODS,
+                Section.RESULTS,
+                Section.DISCUSSION,
+                Section.INTRODUCTION,
+                Section.RELATED_WORK,
+                Section.CONCLUSION,
+            ],
+        }
+        
+        relevant_sections = section_dependencies.get(section_type, [])
+        if not relevant_sections or not previous_sections:
+            return ""
+        
+        parts = []
+        for prev_section in relevant_sections:
+            if prev_section in previous_sections:
+                section_text = previous_sections[prev_section]
+                # Truncate very long sections to avoid token limits
+                if len(section_text) > 4000:
+                    section_text = section_text[:4000] + "..."
+                parts.append(f"{prev_section.value}:\n{section_text}")
+        
+        if not parts:
+            return ""
+        
+        return "\n\n".join(parts)
 
     @staticmethod
     def _format_context(
@@ -161,8 +236,11 @@ Write in a formal academic tone and integrate evidence smoothly with indirect ci
         ]
         return "\n\n".join(formatted)
 
-    @staticmethod
-    def get_section_guidelines(section_type: Section) -> str:
+    def get_section_guidelines(
+        self,
+        section_type: Section,
+        experiment: Optional[ExperimentResult] = None,
+    ) -> str:
         """
         Specifies writing guidelines for each paper section.
         These guidelines are combined with more context and evidence in _build_section_prompt().
@@ -172,14 +250,17 @@ Write in a formal academic tone and integrate evidence smoothly with indirect ci
             """Summarize the purpose, methodology, key findings, and implications succinctly.
             Include major contributions and outcomes in 3-5 sentences.""",
             Section.INTRODUCTION: 
-            """Establish context and related work leading to the research gap.
-            Clarify the hypothesis and motivation derived from open questions.""",
+            """Establish context and motivation for the research.
+            Introduce the problem and hypothesis derived from open questions.""",
+            Section.RELATED_WORK:
+            """Review existing work in the field and position this research relative to prior contributions.
+            Identify gaps, limitations, and how this work addresses them.
+            Organize by themes or approaches, comparing and contrasting related methods.""",
             Section.METHODS: 
             """Detail the experimental setup, methodology, and implementation choices.
             Contrast the approach with comparable methods or baselines.""",
             Section.RESULTS: 
-            """Present experimental outcomes with relevant metrics or observations.
-            Compare results against expected improvements or baselines.""",
+            self._get_results_guidelines(experiment),
             Section.DISCUSSION: 
             """Interpret findings, discuss limitations, and relate to prior work.
             Highlight implications and potential future directions.""",
@@ -189,6 +270,37 @@ Write in a formal academic tone and integrate evidence smoothly with indirect ci
         }
 
         return section_guidelines.get(section_type, "")
+
+    def _get_results_guidelines(self, experiment: Optional[ExperimentResult]) -> str:
+        """Get Results section guidelines, including figure integration if plots are available."""
+        section_guidelines = """Present experimental outcomes with relevant metrics or observations.
+        Compare results against expected improvements or baselines if available.
+        Never fabricate data or results.
+        """
+
+        if experiment and experiment.plots:
+            plots_block = self._format_plots_for_prompt(experiment.plots)
+            section_guidelines += textwrap.dedent(f"""
+                [FIGURE INTEGRATION]
+                The following figures were generated from the experiment. You MUST integrate all of them into your Results section.
+
+                {plots_block}
+
+                For each figure:
+                1. Reference it naturally in the text (e.g., "As shown in Figure 1..." or "Figure 2 demonstrates...")
+                2. Include the markdown image syntax: ![Brief alt text](filename.png)
+                3. Add a visible caption line immediately below: *Figure N: Full caption text*
+                4. Use the exact caption text provided above for each figure
+                5. Place figures at appropriate points in the narrative where they support your discussion
+
+                Example:
+                As shown in Figure 1, our method...
+
+                ![Figure 1](output/experiments/experiment_hyp_001/learning_curves.png)
+                *Figure 1: Learning curves comparing the ...*
+            """)
+
+        return section_guidelines
 
     def generate_title(
         self,
@@ -201,26 +313,27 @@ Write in a formal academic tone and integrate evidence smoothly with indirect ci
     ) -> str:
         """Generate a paper title based on abstract, introduction, and conclusion."""
 
-        prompt = f"""[ROLE]
-You are an expert academic writer tasked with creating a concise, informative paper title.
-The title should:
-- Be clear and descriptive of the main contribution
-- Use standard academic title formatting (title case)
-- Be concise (typically 8-15 words)
-- Capture the key innovation or finding
-- Avoid unnecessary words like 'A Study of' or 'An Investigation into'
+        prompt = textwrap.dedent(f"""\
+            [ROLE]
+            You are an expert academic writer.
+            
+            [TASK]
+            Create a concise, informative paper title based on the abstract and conclusion.
 
-[ABSTRACT]
-{abstract}
+            [REQUIREMENTS]
+            - Be clear, concise and descriptive
+            - Use standard academic title formatting (title case)
+            - Avoid unnecessary words like 'A Study of' or 'An Investigation into'
+            - ONLY output the title text, without quotes, additional text or formatting
 
-[INTRODUCTION] (key excerpts)
-{introduction[:1000]}
+            [ABSTRACT]
+            {abstract}
 
-[CONCLUSION] (key excerpts)
-{conclusion[:1000]}
+            [CONCLUSION]
+            {conclusion}
 
-Generate only the title text, without quotes or additional formatting.
-"""
+            Now generate only the title text.
+        """)
         response = self.model.respond(
             prompt,
             config={

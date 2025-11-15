@@ -1,4 +1,4 @@
-from phases.literature_review.arxiv_api import Paper
+from phases.paper_search.arxiv_api import Paper
 from typing import List
 import numpy as np
 from datetime import datetime

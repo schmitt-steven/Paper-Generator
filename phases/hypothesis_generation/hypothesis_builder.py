@@ -1,4 +1,5 @@
 import json
+import textwrap
 import lmstudio as lms
 import numpy as np
 from typing import List, Tuple
@@ -110,34 +111,36 @@ class HypothesisBuilder:
         # Get available code snippets
         code_snippets = self.paper_concept.code_snippets if self.paper_concept.code_snippets else "No code provided"
         
-        prompt = f"""You are a research hypothesis generator.
-        Task: Generate {n_hypotheses} testable research hypotheses.
+        prompt = textwrap.dedent(f"""\
+            You are a research hypothesis generator.
+            Task: Generate {n_hypotheses} testable research hypotheses.
 
-        REQUIREMENTS for each hypothesis:
-        1. Can be tested programmatically!
-        2. Is testable and measurable with clear success criteria
-        3. Does NOT suggest incompatible method combinations (e.g., don't mix deterministic with stochastic)
-        4. Focuses on realistic improvements - DO NOT include specific percentages, multipliers, or numeric improvements
-        5. Use qualitative descriptions instead (e.g., "improved convergence", "better sample efficiency", "reduced memory usage")
+            REQUIREMENTS for each hypothesis:
+            1. Can be tested programmatically!
+            2. Is testable and measurable with clear success criteria
+            3. Does NOT suggest incompatible method combinations (e.g., don't mix deterministic with stochastic)
+            4. Focuses on realistic improvements - DO NOT include specific percentages, multipliers, or numeric improvements
+            5. Use qualitative descriptions instead (e.g., "improved convergence", "better sample efficiency", "reduced memory usage")
 
-        For each hypothesis provide:
-        - id: unique identifier (e.g., "hyp_001")
-        - description: Clear, testable statement (NO percentages or specific numbers unless preliminary results exist)
-        - rationale: Why this hypothesis addresses the limitation (reference literature limitations)
-        - method_combination: What methods/approaches to combine
-        - expected_improvement: Qualitative improvement expected (avoid percentages)
-        - baseline_to_beat: What baseline to compare against (if applicable)
+            For each hypothesis provide:
+            - id: unique identifier (e.g., "hyp_001")
+            - description: Clear, testable statement (NO percentages or specific numbers unless preliminary results exist)
+            - rationale: Why this hypothesis addresses the limitation (reference literature limitations)
+            - method_combination: What methods/approaches to combine
+            - expected_improvement: Qualitative improvement expected (avoid percentages)
+            - baseline_to_beat: What baseline to compare against (if applicable)
 
-        Research Context:
-        {self.paper_concept.description}
+            Research Context:
+            {self.paper_concept.description}
 
-        User provided implementations/code:
-        {code_snippets}
+            User provided implementations/code:
+            {code_snippets}
 
-        Some found research limitations (that could be inspiration, only use if it is relevant to the paper concept):
-        {limitations_text}
+            Some found research limitations (that could be inspiration, only use if it is relevant to the paper concept):
+            {limitations_text}
 
-        Generate exactly the {n_hypotheses} hypotheses now."""
+            Generate exactly the {n_hypotheses} hypotheses now.
+        """)
 
         try:
             # Generate hypotheses using structured response
@@ -169,7 +172,13 @@ class HypothesisBuilder:
             valid_hypotheses = self.validate_hypotheses(hypotheses)
             
             # Return top N valid
-            return valid_hypotheses[:n_hypotheses]
+            final_hypotheses = valid_hypotheses[:n_hypotheses]
+            
+            # Automatically save
+            if final_hypotheses:
+                self.save_hypotheses(final_hypotheses, filepath="output/hypotheses.json")
+            
+            return final_hypotheses
         
         except Exception as e:
             print(f"Error generating hypotheses: {e}")
@@ -266,37 +275,39 @@ class HypothesisBuilder:
             for h in hypotheses
         ])
         
-        prompt = f"""You are selecting the most feasible and best hypotheses for experimental testing.
+        prompt = textwrap.dedent(f"""\
+            You are selecting the most feasible and best hypotheses for experimental testing.
 
-        CRITICAL REQUIREMENT: Each selected hypothesis MUST be testable via Python code! 
+            CRITICAL REQUIREMENT: Each selected hypothesis MUST be testable via Python code! 
 
-        A hypothesis is testable via Python code if:
-        - It can be implemented and tested programmatically
-        - It has clear, measurable success criteria
-        - It has a baseline to compare against (unless explicitly stated as exploratory)
-        - The expected improvement can be quantified through code execution
-        - It does NOT require human evaluation, surveys, or manual analysis
-        - It does NOT require proprietary data or external APIs that cannot be simulated
+            A hypothesis is testable via Python code if:
+            - It can be implemented and tested programmatically
+            - It has clear, measurable success criteria
+            - It has a baseline to compare against (unless explicitly stated as exploratory)
+            - The expected improvement can be quantified through code execution
+            - It does NOT require human evaluation, surveys, or manual analysis
+            - It does NOT require proprietary data or external APIs that cannot be simulated
 
-        Selection Criteria (in order of importance):
-        1. TESTABILITY VIA PYTHON CODE (MOST IMPORTANT - reject if not testable programmatically!)
-        2. Clear baseline to beat (measurability)
-        3. Scientific rigor and potential impact
-        4. Alignment with the paper concept
+            Selection Criteria (in order of importance):
+            1. TESTABILITY VIA PYTHON CODE (MOST IMPORTANT - reject if not testable programmatically!)
+            2. Clear baseline to beat (measurability)
+            3. Scientific rigor and potential impact
+            4. Alignment with the paper concept
 
-        Instructions:
-        - You MUST select EXACTLY {max_n} hypothesis/hypotheses (or fewer if not enough are feasible)
-        - Do NOT select more than {max_n} hypotheses - this is a strict limit
-        - Select the {max_n} hypotheses that are MOST FEASIBLE to test via Python code
-        - If fewer than {max_n} hypotheses are feasible to test programmatically, select only the feasible ones
-        - Prioritize hypotheses that can be tested with clear metrics and comparisons
-        - Return ONLY the ID(s) of selected hypothesis/hypotheses
+            Instructions:
+            - You MUST select EXACTLY {max_n} hypothesis/hypotheses (or fewer if not enough are feasible)
+            - Do NOT select more than {max_n} hypotheses - this is a strict limit
+            - Select the {max_n} hypotheses that are MOST FEASIBLE to test via Python code
+            - If fewer than {max_n} hypotheses are feasible to test programmatically, select only the feasible ones
+            - Prioritize hypotheses that can be tested with clear metrics and comparisons
+            - Return ONLY the ID(s) of selected hypothesis/hypotheses
 
-        Paper concept:
-        {self.paper_concept.description}
+            Paper concept:
+            {self.paper_concept.description}
 
-        Hypotheses to choose from:
-        {hypotheses_text}"""
+            Hypotheses to choose from:
+            {hypotheses_text}
+        """)
 
         try:
             result = self.model.respond(

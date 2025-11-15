@@ -1,11 +1,12 @@
 import lmstudio as lms
 import os
+import textwrap
 import traceback
 import re
 import json
 from dataclasses import asdict, is_dataclass
 from typing import Optional, Tuple, List
-from pydantic import BaseModel
+from lmstudio import BaseModel
 from phases.context_analysis.paper_conception import PaperConcept
 from phases.hypothesis_generation.hypothesis_models import Hypothesis
 from phases.experimentation.experiment_state import (
@@ -60,29 +61,31 @@ class ExperimentRunner:
                 code_snippets_section = f"\n\nAvailable Code Snippets (use only if helpful):\n{paper_concept.code_snippets}"
             
             # System prompt for all chunks
-            system_prompt = f"""You are an expert at writing scientific experiment code in Python.
+            system_prompt = textwrap.dedent(f"""\
+                You are an expert at writing scientific experiment code in Python.
 
-            Task: Generate experiment code in logical chunks to test a given hypothesis.
+                Task: Generate experiment code in logical chunks to test a given hypothesis.
 
-            Requirements for ALL code:
-            - Write clean, concise Python code
-            - Save plots to plots/ directory (create with os.makedirs if needed)
-            - Save results to JSON in current directory
-            - Print concise, meaningful output (~100-200 lines max)
-            - Output ONLY Python code, NO markdown formatting
+                Requirements for ALL code:
+                - Write clean, concise Python code
+                - Save plots to plots/ directory (create with os.makedirs if needed)
+                - Save results to JSON in current directory
+                - Print concise, meaningful output (~100-200 lines max)
+                - Output ONLY Python code, NO markdown formatting
 
-            Important: Code MUST complete in under 5 minutes. Reduce iterations, computations, or parameter combinations if needed. Optimize loops and maintain scientific validity.
+                Important: Code MUST complete in under 5 minutes. Reduce iterations, computations, or parameter combinations if needed. Optimize loops and maintain scientific validity.
 
-            Hypothesis: {hypothesis.description}
-            Rationale: {hypothesis.rationale}
-            Expected Improvement: {hypothesis.expected_improvement}
-            Baseline: {hypothesis.baseline_to_beat}
+                Hypothesis: {hypothesis.description}
+                Rationale: {hypothesis.rationale}
+                Expected Improvement: {hypothesis.expected_improvement}
+                Baseline: {hypothesis.baseline_to_beat}
 
-            Provided code snippets (only process if helpful):
-            {code_snippets_section}
+                Provided code snippets (only process if helpful):
+                {code_snippets_section}
 
-            Experimental Plan:
-            {experimental_plan}"""
+                Experimental Plan:
+                {experimental_plan}
+            """)
 
             chat = lms.Chat(system_prompt)
             current_code = ""
@@ -263,33 +266,37 @@ class ExperimentRunner:
             # Build user message with context
             attempt_context = "" 
             if fix_attempt > 1:
-                attempt_context = f"""Note: This is fix attempt {fix_attempt}/{max_attempts}.\n
-                Previous attempts failed. Please analyze the root cause carefully.
-                
-                Critical: Read the ENTIRE code file. Compare how similar classes/methods handle the same operations.
-                Look for inconsistencies in data type handling, index calculations, or state conversions.
-                The error message tells you WHERE it fails - trace back to find WHY it fails."""
+                attempt_context = textwrap.dedent(f"""\
+                    Note: This is fix attempt {fix_attempt}/{max_attempts}.
+                    Previous attempts failed. Please analyze the root cause carefully.
+                    
+                    Critical: Read the ENTIRE code file. Compare how similar classes/methods handle the same operations.
+                    Look for inconsistencies in data type handling, index calculations, or state conversions.
+                    The error message tells you WHERE it fails - trace back to find WHY it fails.
+                """)
             
             # Truncate long outputs to avoid context truncation
             stdout_preview = stdout[:1000] if len(stdout) > 2000 else stdout
             stderr_preview = stderr[:1000] if len(stderr) > 2000 else stderr
             
-            user_message = f"""Fix the errors in this Python code.
+            user_message = textwrap.dedent(f"""\
+                Fix the errors in this Python code.
 
-            {attempt_context}
+                {attempt_context}
 
-            Code to fix:
-            ```python
-            {broken_code}
-            ```
+                Code to fix:
+                ```python
+                {broken_code}
+                ```
 
-            Error Message: {error_message}
-            STDOUT: {stdout_preview}
-            STDERR: {stderr_preview}
+                Error Message: {error_message}
+                STDOUT: {stdout_preview}
+                STDERR: {stderr_preview}
 
-            Analyze the error carefully and fix all faulty parts of the code.
-            
-            IMPORTANT: Output the COMPLETE fixed Python code file from start to finish. Do not truncate or omit any parts."""
+                Analyze the error carefully and fix all faulty parts of the code.
+                
+                IMPORTANT: Output the COMPLETE fixed Python code file from start to finish. Do not truncate or omit any parts.
+            """)
 
             print(f"Fixing experiment code (attempt {fix_attempt}/{max_attempts}): {code_file_path}")
             chat.add_user_message(user_message)
@@ -343,44 +350,48 @@ class ExperimentRunner:
         plot_count = len(execution_result.plot_files)
         result_file_count = len(execution_result.result_files)
         
-        system_prompt = f"""You are an expert at validating scientific experiments. 
-        Task: Evaluate whether an experiment's results are valid and meaningful based on the experimental plan and hypothesis.
+        system_prompt = textwrap.dedent(f"""\
+            You are an expert at validating scientific experiments. 
+            Task: Evaluate whether an experiment's results are valid and meaningful based on the experimental plan and hypothesis.
 
-        Evaluate experiments by checking:
-        1. Did the experiment actually test the hypothesis?
-        2. Were the expected outputs generated (plots, JSON results)?
-        3. Are the results meaningful and complete?
-        4. Are the algorithms and experiment logic correct and complete?
-        5. Are there any obvious issues that make the experiment invalid?"""
+            Evaluate experiments by checking:
+            1. Did the experiment actually test the hypothesis?
+            2. Were the expected outputs generated (plots, JSON results)?
+            3. Are the results meaningful and complete?
+            4. Are the algorithms and experiment logic correct and complete?
+            5. Are there any obvious issues that make the experiment invalid?
+        """)
                 
         # User message with execution results and code
-        validation_prompt = f"""Evaluate whether this experiment produced valid and meaningful results.
+        validation_prompt = textwrap.dedent(f"""\
+            Evaluate whether this experiment produced valid and meaningful results.
 
-        Hypothesis:
-        Description: {hypothesis.description}
-        Rationale: {hypothesis.rationale}
-        Expected Improvement: {hypothesis.expected_improvement}
-        Baseline to Beat: {hypothesis.baseline_to_beat or "N/A"}
+            Hypothesis:
+            Description: {hypothesis.description}
+            Rationale: {hypothesis.rationale}
+            Expected Improvement: {hypothesis.expected_improvement}
+            Baseline to Beat: {hypothesis.baseline_to_beat or "N/A"}
 
-        Experimental Plan:
-        {experimental_plan}
+            Experimental Plan:
+            {experimental_plan}
 
-        Execution Results:
-        - Return Code: {execution_result.return_code}
-        - Generated Plots: {plot_count} file(s) {f"({', '.join([os.path.basename(p) for p in execution_result.plot_files])})" if execution_result.plot_files else ""}
-        - Generated JSON results: {result_file_count} file(s)
+            Execution Results:
+            - Return Code: {execution_result.return_code}
+            - Generated Plots: {plot_count} file(s) {f"({', '.join([os.path.basename(p) for p in execution_result.plot_files])})" if execution_result.plot_files else ""}
+            - Generated JSON results: {result_file_count} file(s)
 
-        Code that was executed:
-        ```python
-        {code_content}
-        ```
+            Code that was executed:
+            ```python
+            {code_content}
+            ```
 
-        STDOUT Output:
-        {stdout_summary}
+            STDOUT Output:
+            {stdout_summary}
 
-        Provide a structured evaluation with:
-        - reasoning: Detailed explanation of why results are valid or invalid
-        - If invalid: concisely describe specific issues that need to be addressed in a few sentences."""
+            Provide a structured evaluation with:
+            - reasoning: Detailed explanation of why results are valid or invalid
+            - If invalid: concisely describe specific issues that need to be addressed in a few sentences.
+        """)
         
         try:
             chat = lms.Chat(system_prompt)
@@ -435,34 +446,36 @@ class ExperimentRunner:
             if validation_result.issues:
                 feedback_text += f"\n\nIssues identified:\n{validation_result.issues}"
             
-            prompt = f"""You are an expert at improving scientific experiment code.
+            prompt = textwrap.dedent(f"""\
+                You are an expert at improving scientific experiment code.
 
-            Task: Improve the given experiment code based on validation feedback.
+                Task: Improve the given experiment code based on validation feedback.
 
-            Requirements:
-            1. Address all issues identified in the validation feedback as well as possible.
-            2. Ensure the code actually tests the hypothesis as described in the experimental plan
-            3. Ensure plots are saved to "plots/" directory (relative to execution directory) - create this directory if needed using os.makedirs("plots", exist_ok=True)
-            4. Save detailed results/metrics to JSON file in the current directory (do NOT create an "output" directory - the code already runs from the output directory)
-            5. Ensure stdout output is concise and meaningful - key metrics, conclusions and results only, avoid loop spam
-            6. Make sure the experiment is complete and meaningful (e.g., not too short, collects proper metrics, etc.)
-            7. Preserve any working, valid parts of the code
+                Requirements:
+                1. Address all issues identified in the validation feedback as well as possible.
+                2. Ensure the code actually tests the hypothesis as described in the experimental plan
+                3. Ensure plots are saved to "plots/" directory (relative to execution directory) - create this directory if needed using os.makedirs("plots", exist_ok=True)
+                4. Save detailed results/metrics to JSON file in the current directory (do NOT create an "output" directory - the code already runs from the output directory)
+                5. Ensure stdout output is concise and meaningful - key metrics, conclusions and results only, avoid loop spam
+                6. Make sure the experiment is complete and meaningful (e.g., not too short, collects proper metrics, etc.)
+                7. Preserve any working, valid parts of the code
 
-            Hypothesis:
-            Description: {hypothesis.description}
-            Rationale: {hypothesis.rationale}
-            Expected Improvement: {hypothesis.expected_improvement}
-            Baseline to Beat: {hypothesis.baseline_to_beat or "N/A"}
+                Hypothesis:
+                Description: {hypothesis.description}
+                Rationale: {hypothesis.rationale}
+                Expected Improvement: {hypothesis.expected_improvement}
+                Baseline to Beat: {hypothesis.baseline_to_beat or "N/A"}
 
-            Current Code:
-            ```python
-            {current_code}
-            ```
+                Current Code:
+                ```python
+                {current_code}
+                ```
 
-            Validation Feedback:
-            {feedback_text}
+                Validation Feedback:
+                {feedback_text}
 
-            Output ONLY the improved Python code, NO further markdown or explanations. Your answer will be saved to a code file."""
+                Output ONLY the improved Python code, NO further markdown or explanations. Your answer will be saved to a code file.
+            """)
 
             result = self.model.respond(prompt, config={"temperature": 0.3})
             improved_code = result.content
@@ -532,23 +545,25 @@ class ExperimentRunner:
                 plots.append(Plot(filename=plot_file, caption=f"Figure showing results for hypothesis: {hypothesis.description}"))
                 continue
             
-            user_message = f"""Generate a caption for this scientific plot.
+            user_message = textwrap.dedent(f"""\
+                Generate a caption for this scientific plot.
 
-            Tested hypothesis:
-            Description: {hypothesis.description}
-            Rationale: {hypothesis.rationale}
-            Expected Improvement: {hypothesis.expected_improvement}
-            Baseline to Beat: {hypothesis.baseline_to_beat or "N/A"}
+                Tested hypothesis:
+                Description: {hypothesis.description}
+                Rationale: {hypothesis.rationale}
+                Expected Improvement: {hypothesis.expected_improvement}
+                Baseline to Beat: {hypothesis.baseline_to_beat or "N/A"}
 
-            Experimental Plan:
-            {experimental_plan}
+                Experimental Plan:
+                {experimental_plan}
 
-            Code Execution Output:
-            {stdout[:1000] if len(stdout) > 1000 else stdout}
+                Code Execution Output:
+                {stdout[:1000] if len(stdout) > 1000 else stdout}
 
-            Plot Filename: {filename}
+                Plot Filename: {filename}
 
-            Now generate a professional scientific figure caption for this plot. Output ONLY the caption text, no additional formatting or explanations."""
+                Now generate a professional scientific figure caption for this plot. Output ONLY the caption text, no additional formatting or explanations.
+            """)
                         
             try:
                 chat = lms.Chat(system_prompt)
@@ -571,36 +586,37 @@ class ExperimentRunner:
     ) -> str:
         """Generate a detailed experimental plan for testing a hypothesis."""
 
-        prompt = f"""Task: Create a detailed, concise experimental plan for testing a given hypothesis.
-        The plan will be used to generate the experiment code in Python.
+        prompt = textwrap.dedent(f"""\
+            Task: Create a detailed, concise experimental plan for testing a given hypothesis.
+            The plan will be used to generate the experiment code in Python.
 
-        Include:
-        - Objective and success criteria
-        - Required mathematical formulas/technical details
-        - Experimental setup
-        - Metrics to measure
-        - Implementation approach
-        - Output requirements: 
-          * Detailed results/metrics stored in JSON file
-          * Concise, meaningful output to stdout (key metrics, conclusions)
-          * Plot(s) for visualization
+            Include:
+            - Objective and success criteria
+            - Required mathematical formulas/technical details
+            - Experimental setup
+            - Metrics to measure
+            - Implementation approach
+            - Output requirements: 
+              * Detailed results/metrics stored in JSON file
+              * Concise, meaningful output to stdout (key metrics, conclusions)
+              * Plot(s) for visualization
 
-        Important: Experiment MUST complete in under 5 minutes. Use reasonable parameter ranges and reduce iterations/computations/parameter combinations if needed.
+            Important: Experiment MUST complete in under 5 minutes. Use reasonable parameter ranges and reduce iterations/computations/parameter combinations if needed.
 
-        Research Context:
-        {paper_concept.description}
+            Research Context:
+            {paper_concept.description}
 
-        Code snippets (only use if helpful):
-        {paper_concept.code_snippets if paper_concept.code_snippets else "No code snippets provided"}
+            Code snippets (only use if helpful):
+            {paper_concept.code_snippets if paper_concept.code_snippets else "No code snippets provided"}
 
-        Hypothesis:
-        Description: {hypothesis.description}
-        Rationale: {hypothesis.rationale}
-        Expected Improvement: {hypothesis.expected_improvement}
-        Baseline to Beat: {hypothesis.baseline_to_beat or "N/A"}
+            Hypothesis:
+            Description: {hypothesis.description}
+            Rationale: {hypothesis.rationale}
+            Expected Improvement: {hypothesis.expected_improvement}
+            Baseline to Beat: {hypothesis.baseline_to_beat or "N/A"}
 
-        Be specific and actionable. Only use information actually present in the research context.
-        """
+            Be specific and actionable. Only use information actually present in the research context.
+        """)
 
         try:
             result = self.model.respond(prompt, config={"temperature": 0.5})
@@ -959,24 +975,26 @@ class ExperimentRunner:
                         plot_captions_text += f"{i}. {os.path.basename(plot.filename)}: {plot.caption}\n"
                 
                 # Build context for verdict determination
-                verdict_prompt = f"""You are evaluating the results of a scientific experiment to test a hypothesis.
+                verdict_prompt = textwrap.dedent(f"""\
+                    You are evaluating the results of a scientific experiment to test a hypothesis.
 
-                Hypothesis:
-                Description: {hypothesis.description}
-                Rationale: {hypothesis.rationale}
-                Expected Improvement: {hypothesis.expected_improvement}
-                Baseline to Beat: {hypothesis.baseline_to_beat or "N/A"}
+                    Hypothesis:
+                    Description: {hypothesis.description}
+                    Rationale: {hypothesis.rationale}
+                    Expected Improvement: {hypothesis.expected_improvement}
+                    Baseline to Beat: {hypothesis.baseline_to_beat or "N/A"}
 
-                STDOUT:
-                {stdout_summary}
+                    STDOUT:
+                    {stdout_summary}
 
-                Plot captions:
-                {plot_captions_text}
+                    Plot captions:
+                    {plot_captions_text}
 
-                Based on the execution results and generated plots, provide:
-                1. A concise reasoning about whether the hypothesis is proven, disproven, or inconclusive
-                2. Your concise analysis of the results and observations of the experiment
-                Then determine the verdict with a single word: 'proven', 'disproven', or 'inconclusive'."""
+                    Based on the execution results and generated plots, provide:
+                    1. A concise reasoning about whether the hypothesis is proven, disproven, or inconclusive
+                    2. Your concise analysis of the results and observations of the experiment
+                    Then determine the verdict with a single word: 'proven', 'disproven', or 'inconclusive'.
+                """)
                 
                 try:
                     result = self.model.respond(verdict_prompt, response_format=VerdictResult)

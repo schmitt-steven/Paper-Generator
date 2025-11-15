@@ -1,0 +1,100 @@
+%% !TeX program = lualatex
+
+%\listfiles
+% **************************
+% 1. Language
+% This template supports English only. The language is set in docinfo.tex
+% via \newcommand{\hsmasprache}{en}
+%
+% 2. Citation Style
+% Depending on the desired citation style, please adjust the settings
+% in hma.cls at \RequirePackage[backend=biber... as explained there.
+% Note: If you choose footnotes as citation style or generally work
+% -------  with footnotes, please note that footnotes in figure captions
+%          and table captions do not work.
+%          See https://texfaq.org/FAQ-ftncapt
+%          and https://texfaq.org/FAQ-footintab
+%          It is advisable to avoid footnotes at these places and
+%          simply add sources using \parancite.
+%
+% 3. Single-sided or Double-sided Printing
+% The template determines whether single-sided or double-sided printing
+% is used based on the submission format (papier / digital). If you want
+% to override this, you must insert the following line in the file preamble.tex
+% \KOMAoptions{twoside=true} for double-sided printing
+% \KOMAoptions{twoside=false} for single-sided printing
+% directly before \usepackage{xcolor}. In principle, you should leave
+% the suggested format as is.
+%
+% 4. Hyphenation
+% LaTeX performs automatic hyphenation. However, words that already contain
+% a hyphen are not hyphenated, e.g., data-protection-regulation. If you want
+% LaTeX to continue hyphenating correctly, you can use "= for the hyphen
+% in the word, e.g., data"=protection-regulation.
+% If hyphenation has not occurred for another reason, so that the word extends
+% beyond the right margin, or if you want an additional hyphenation point,
+% you can help LaTeX by specifying additional hyphenation points. This is done
+% using "- as a character, e.g., state"-treaty.
+%
+% 5. Footnote Numbering
+% LaTeX starts footnote numbering at 1 again in each chapter. In this template,
+% continuous footnote numbering across the entire work is implemented.
+% *******************************************************************
+
+
+% Import document settings and information
+\input{docinfo}
+
+% Import preamble
+\input{preamble}
+
+
+% Abstract of your work
+\input{abstract}
+
+
+% Bibliography database
+\addbibresource{literature.bib}   % Include BibLaTeX file with literature sources
+
+
+% Beginning of document
+\begin{document}
+
+
+% Load files with abbreviations, term explanations (glossary), symbols
+% Abbreviations are enabled by default
+\input{chapters/abbreviations}
+% Glossary and symbols support commented out for now
+% \input{chapters/glossary}
+% \input{chapters/symbols}
+
+\pagestyle{headings}
+
+\mainmatter
+
+%% Your content files are inserted into the document at this point
+\input{chapters/introduction}
+\input{chapters/related_work}
+\input{chapters/methods}
+\input{chapters/results}
+\input{chapters/discussion}
+\input{chapters/conclusion}
+\newpage
+
+% Roman page numbers in "backmatter"
+\pagenumbering{roman}
+\setcounter{page}{\value{frontmatterpage}}
+
+% Glossary support commented out for now
+% \ifglossar
+%   % Print glossary
+%   \printglossary[style=altlist, nonumberlist, title=\hsmaglossary]
+% \fi
+
+% Generate bibliography
+\printbibliography
+
+% Index commented out for now (requires manual \index{} commands in text)
+% \printindex
+
+\end{document}

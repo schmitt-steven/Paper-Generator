@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import heapq
+import textwrap
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Sequence, Set, Tuple
 
@@ -146,27 +147,25 @@ class EvidenceGatherer:
         published = chunk.paper.published or "Unknown year"
         excerpt = self._truncate_chunk(chunk.chunk_text)
 
-        return f'''[ROLE]
-        You are assisting with academic literature review. Summarize the following paper chunk in the context of the research query. Follow these rules:
-        - Use ~3 sentences.
-        - Emphasize why the chunk is relevant to the query.
-        - Do not quote verbatim; paraphrase.
-        - Mention the key idea and its relation to the query.
+        return textwrap.dedent(f"""\
+            [ROLE]
+            You are assisting with academic literature review. Summarize the following paper chunk in the context of the research query. Follow these rules:
+            - Use ~3 sentences.
+            - Emphasize why the chunk is relevant to the query.
+            - Do not quote verbatim; paraphrase.
+            - Mention the key idea and its relation to the query.
 
-        [QUERY]
-        {query}
+            [QUERY]
+            {query}
 
-        [PAPER]
-        {chunk.paper.title} ({authors}, {published})
+            [PAPER]
+            {chunk.paper.title} ({authors}, {published})
 
-        [SECTION]
-        {chunk.section_type.value}
-
-        [CHUNK]
-        """
-        {excerpt}
-        """
-        '''
+            [CHUNK]
+            \"\"\"
+            {excerpt}
+            \"\"\"
+        """)
 
     @staticmethod
     def _truncate_chunk(chunk_text: str, max_chars: int = 3500) -> str:
@@ -178,26 +177,24 @@ class EvidenceGatherer:
         authors = ", ".join(chunk.paper.authors) if chunk.paper.authors else "Unknown authors"
         published = chunk.paper.published or "Unknown year"
 
-        return f"""[ROLE]
-        You are rating the relevance of evidence for academic writing.
-        Rate how well the evidence summary supports the research query for the target section.
-        Provide a score between 0 and 1, where 1 indicates highly relevant and 0 indicates not relevant.
+        return textwrap.dedent(f"""\
+            [ROLE]
+            You are rating the relevance of evidence for academic writing.
+            Rate how well the evidence summary supports the research query for the target section.
+            Provide a score between 0 and 1, where 1 indicates highly relevant and 0 indicates not relevant.
 
-        [TARGET SECTION]
-        {target_section.value}
+            [TARGET SECTION]
+            {target_section.value}
 
-        [QUERY]
-        {query}
+            [QUERY]
+            {query}
 
-        [PAPER]
-        {chunk.paper.title} ({authors}, {published})
+            [PAPER]
+            {chunk.paper.title} ({authors}, {published})
 
-        [CHUNK SOURCE SECTION]
-        {chunk.section_type.value}
-
-        [EVIDENCE SUMMARY]
-        {summary}
-        """
+            [EVIDENCE SUMMARY]
+            {summary}
+        """)
 
     @staticmethod
     def _clamp_score(score: float) -> float:
@@ -360,33 +357,34 @@ class EvidenceGatherer:
         context_text = self._format_section_context(context, experiment)
         evidence_text = self._format_evidence_for_prompt(initial_evidence)
 
-        return f"""[ROLE]
-        You are an autonomous research assistant tasked with gathering evidence for an academic paper section.
-        Decide whether additional searches are required, and call tools only when necessary.
-        Focus on filling remaining gaps needed to draft a rigorous section of an academic paper.
+        return textwrap.dedent(f"""\
+            [ROLE]
+            You are an autonomous research assistant tasked with gathering evidence for an academic paper section.
+            Decide whether additional searches are required, and call tools only when necessary.
+            Focus on filling remaining gaps needed to draft a rigorous section of an academic paper.
 
-        [SECTION TYPE]
-        {section_type.value}
+            [SECTION TYPE]
+            {section_type.value}
 
-        [SECTION OBJECTIVES]
-        {objectives}
+            [SECTION OBJECTIVES]
+            {objectives}
 
-        [RESEARCH CONTEXT]
-        {context_text}
+            [RESEARCH CONTEXT]
+            {context_text}
 
-        [CURRENT EVIDENCE] ({len(initial_evidence)} items)
-        {evidence_text or 'No evidence yet.'}
+            [CURRENT EVIDENCE] ({len(initial_evidence)} items)
+            {evidence_text or 'No evidence yet.'}
 
-        [AVAILABLE TOOL]
-        search_evidence(query: str): retrieve additional literature evidence related to the query.
-        Use this when additional supporting material is required.
+            [AVAILABLE TOOL]
+            search_evidence(query: str): retrieve additional literature evidence related to the query.
+            Use this when additional supporting material is required.
 
-        [RESPONSIBILITIES]
-        - Review existing evidence and identify missing aspects.
-        - Formulate focused queries when additional evidence is needed.
-        - Avoid redundant searches—do not repeat queries that were already covered.
-        - When done searching, respond with ONLY "done" to indicate evidence gathering is complete.
-        """
+            [RESPONSIBILITIES]
+            - Review existing evidence and identify missing aspects.
+            - Formulate focused queries when additional evidence is needed.
+            - Avoid redundant searches—do not repeat queries that were already covered.
+            - When done searching, respond with ONLY "done" to indicate evidence gathering is complete.
+        """)
 
     @staticmethod
     def _format_evidence_for_prompt(evidence: Sequence[Evidence]) -> str:
@@ -396,7 +394,7 @@ class EvidenceGatherer:
             authors = ", ".join(item.chunk.paper.authors) if item.chunk.paper.authors else "Unknown authors"
             line_header = (
                 f"{idx}. {item.chunk.paper.title} "
-                f"({authors}; {citation_key}; {item.chunk.section_type.value})"
+                f"({authors}; {citation_key})"
             )
             score_line = (
                 f"   Scores → vector: {item.vector_score:.3f}, "
@@ -441,8 +439,12 @@ class EvidenceGatherer:
             """Capture the overarching motivation and key findings.
              Highlight the methodology and main results succinctly.""",
             Section.INTRODUCTION: 
-            """Establish background and related work.
+            """Establish background and motivation.
             Clarify the gap the paper addresses and its hypothesis.""",
+            Section.RELATED_WORK:
+            """Review and synthesize existing work in the field.
+            Position this research relative to prior contributions, identify gaps, and compare approaches.
+            Organize by themes, methods, or chronological development.""",
             Section.METHODS: 
             """Describe the experimental setup and methodology.
             Reference comparable techniques or baselines.""",
@@ -467,7 +469,7 @@ class EvidenceGatherer:
 
         lines = ["[RETRIEVED EVIDENCE]"]
         for idx, item in enumerate(evidence, 1):
-            lines.append(f"{idx}. {item.chunk.paper.title} ({item.chunk.section_type.value})")
+            lines.append(f"{idx}. {item.chunk.paper.title}")
             lines.append(
                 f"   Scores → vector: {item.vector_score:.3f}, "
                 f"llm: {item.llm_score:.3f}, combined: {item.combined_score:.3f}"

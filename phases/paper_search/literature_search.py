@@ -1,6 +1,7 @@
-from phases.literature_review.arxiv_api import ArxivAPI, Paper, RankingScores
+from phases.paper_search.arxiv_api import ArxivAPI, Paper, RankingScores
 from typing import List
 from dataclasses import asdict
+import textwrap
 import lmstudio as lms
 from lmstudio import BaseModel
 import time
@@ -72,9 +73,11 @@ class LiteratureSearch:
         
         print("Generating search queries, this could take a while...")
         for i, context in enumerate(contexts, 1):
-            user_message = f"""RESEARCH CONTEXT:
-            {context}
-            Now generate the search queries."""
+            user_message = textwrap.dedent(f"""\
+                RESEARCH CONTEXT:
+                {context}
+                Now generate the search queries.
+            """)
 
             chat.add_user_message(user_message)
             
@@ -93,6 +96,10 @@ class LiteratureSearch:
             all_search_queries.extend(search_queries)
         
         print(f"Generated {len(all_search_queries)} search queries.")
+        
+        # Automatically save
+        self.save_search_queries(all_search_queries, filename="search_queries.json", output_dir="output")
+        
         return all_search_queries
     
 
@@ -193,6 +200,9 @@ class LiteratureSearch:
         # Remove duplicates
         unique_papers = self.remove_duplicates(all_papers)
         print(f"Papers found: {len(all_papers)}, unique papers: {len(unique_papers)}")
+        
+        # Automatically save
+        self.save_papers(unique_papers, filename="papers.json", output_dir="output")
         
         return unique_papers
 

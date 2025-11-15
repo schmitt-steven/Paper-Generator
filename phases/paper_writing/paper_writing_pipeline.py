@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import json
 import os
+import textwrap
 from typing import Dict, List, Optional, Sequence
 
 from phases.context_analysis.paper_conception import PaperConcept
 from phases.experimentation.experiment_state import ExperimentResult
-from phases.literature_review.arxiv_api import Paper
+from phases.paper_search.arxiv_api import Paper
 from phases.paper_writing.evidence_gatherer import EvidenceGatherer
 from phases.paper_writing.data_models import Evidence, PaperChunk, PaperDraft, Section
 from phases.paper_writing.paper_indexer import PaperIndexer
@@ -45,7 +46,7 @@ class PaperWritingPipeline:
         self._indexed_corpus = self.indexer.index_papers(papers)
         return self._indexed_corpus
 
-    def generate_paper(
+    def write_paper(
         self,
         context: PaperConcept,
         experiment: ExperimentResult,
@@ -64,12 +65,13 @@ class PaperWritingPipeline:
 
         evidence_by_section: Dict[Section, Sequence[Evidence]] = {}
         prompts_by_section: Dict[str, str] = {}
-        # Generate sections in order: Methods -> Results -> Discussion -> Introduction -> Conclusion -> Abstract
+        # Generate sections in order: Methods -> Results -> Discussion -> Introduction -> Related Work -> Conclusion -> Abstract
         for section_type in (
             Section.METHODS,
             Section.RESULTS,
             Section.DISCUSSION,
             Section.INTRODUCTION,
+            Section.RELATED_WORK,
             Section.CONCLUSION,
             Section.ABSTRACT,
         ):
@@ -91,11 +93,14 @@ class PaperWritingPipeline:
         # Automatically save prompts to output directory
         self._save_prompts(prompts_by_section)
 
-        return self.writer.generate_paper_sections(
+        paper_draft = self.writer.generate_paper_sections(
             context=context,
             experiment=experiment,
             evidence_by_section=evidence_by_section,
         )
+        self._save_paper_draft(paper_draft)
+
+        return paper_draft
 
     @staticmethod
     def _save_prompts(
@@ -118,6 +123,54 @@ class PaperWritingPipeline:
             json.dump(output_data, f, indent=2, ensure_ascii=False)
 
         print(f"[PaperWritingPipeline] Saved prompts to {output_path}")
+
+    @staticmethod
+    def _save_paper_draft(
+        paper_draft: PaperDraft,
+        output_dir: str = "output",
+        filename: str = "paper_draft.md",
+    ) -> None:
+        """Save the paper draft as a markdown file."""
+
+        os.makedirs(output_dir, exist_ok=True)
+        output_path = os.path.join(output_dir, filename)
+
+        markdown_content = textwrap.dedent(f"""\
+            # {paper_draft.title}
+
+            ## Abstract
+
+            {paper_draft.abstract}
+
+            ## Introduction
+
+            {paper_draft.introduction}
+
+            ## Related Work
+
+            {paper_draft.related_work}
+
+            ## Methods
+
+            {paper_draft.methods}
+
+            ## Results
+
+            {paper_draft.results}
+
+            ## Discussion
+
+            {paper_draft.discussion}
+
+            ## Conclusion
+
+            {paper_draft.conclusion}
+        """)
+
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(markdown_content)
+
+        print(f"[PaperWritingPipeline] Saved paper draft to {output_path}")
 
     def reset_index(self) -> None:
         """Reset the cached indexed corpus."""
