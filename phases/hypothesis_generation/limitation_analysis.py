@@ -119,7 +119,18 @@ class LimitationAnalyzer:
         
         scored_limitations = [(limitation, self.score_limitation(limitation)) for limitation in self.common_limitations.keys()]
         scored_limitations.sort(key=lambda x: x[1], reverse=True)
-        return scored_limitations[:n]
+        top_limitations = scored_limitations[:n]
+        
+        # Automatically save
+        if top_limitations:
+            self.save_limitations(
+                top_limitations,
+                filepath="output/limitations.json",
+                paper_concept_file="output/paper_concept.md",
+                num_papers_analyzed=len(self.findings)
+            )
+        
+        return top_limitations
     
     def print_limitations(self, n: int = 10, show_scores: bool = True):
         """

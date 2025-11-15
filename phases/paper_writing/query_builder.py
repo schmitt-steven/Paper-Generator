@@ -21,6 +21,7 @@ class QueryBuilder:
         builder_map = {
             Section.ABSTRACT: self._build_abstract_queries,
             Section.INTRODUCTION: self._build_introduction_queries,
+            Section.RELATED_WORK: self._build_related_work_queries,
             Section.METHODS: self._build_methods_queries,
             Section.RESULTS: self._build_results_queries,
             Section.DISCUSSION: self._build_discussion_queries,
@@ -72,6 +73,24 @@ class QueryBuilder:
         )
 
         return [base_query, differentiation_query]
+
+    def _build_related_work_queries(
+        self,
+        context: PaperConcept,
+        experiment: Optional[ExperimentResult],
+    ) -> List[str]:
+        return [
+            self._combine_segments(
+                ("Research domain", context.description),
+                ("Method combination", self._safe_get(experiment, "hypothesis.method_combination")),
+                ("Baseline approaches", self._safe_get(experiment, "hypothesis.baseline_to_beat")),
+            ),
+            self._combine_segments(
+                ("Research gap", context.open_questions),
+                ("Expected improvement", self._safe_get(experiment, "hypothesis.expected_improvement")),
+                ("Key techniques", context.code_snippets),
+            ),
+        ]
 
     def _build_methods_queries(
         self,

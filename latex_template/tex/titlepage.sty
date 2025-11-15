@@ -1,0 +1,210 @@
+% *******************************************************************
+% No changes should be necessary in this file.
+% All settings are made in docinfo.tex and thesis.tex.
+% *******************************************************************
+
+
+
+% Command to generate the title page
+\def\titlepg{%
+	\thispagestyle{empty}
+
+	\begin{tikzpicture}[remember picture,overlay]
+
+	%Logo
+	\node[inner sep=0pt, xshift=18mm, yshift=0cm] (logo) at (0,0)
+	{\includegraphics[width=48mm]{hsma-logo.pdf}};
+
+
+	%Title (English only)
+	\node[anchor=north, minimum width=128mm, text width=128mm, align=center, xshift=\hsmafenster] (title)
+	at ([yshift=-62mm]current page.north) {\Large\sffamily\textbf{\hsmatitelen}\\[4mm]
+	};
+
+
+	%Authors (supports multiple authors)
+	\node[anchor=north, minimum width=128mm, text width=128mm, align=center,xshift=\hsmafenster] (autor)
+	at ([yshift=-103mm]current page.north) {\large\sffamily{\hsmaauthors}
+	};
+
+
+	%Submission Date
+	\node[anchor=north, minimum width=\paperwidth, text width=\paperwidth, align=center] (date)
+	at ([yshift=-130mm]current page.north) {
+		\large
+		\textsf{\hsmadatum}
+	};
+
+
+	%Supervisors
+	\node[anchor=north, minimum width=\paperwidth, text width=\paperwidth, align=center] (supervisors)
+	at ([yshift=-155mm]current page.north) {
+		\large\sffamily
+		\hsmasupervisors
+	};
+\end{tikzpicture}
+}
+
+
+% Bibliographic information
+% \def\bibinfo{% Bibliographic Information (English only)
+% 	\thispagestyle{empty}
+%
+% 	\newcommand{\hsmabiben}{\begin{small}\textbf{\hsmaauthorsbib}: \\ \hsmatitelen \ / \hsmaauthors. \ -- \\ \hsmaort, \hsmajahr. \ztotpages{} pages. \end{small}}
+%
+% 	\noindent\hsmabiben
+% }
+
+
+
+% Signature page
+% \def\signaturepage{%
+% 	% Declaration of Authenticity
+% 	\thispagestyle{empty}
+%
+% 	\textsf{\LARGE\textbf{Declaration}}
+%
+% 	\vspace{0.5cm}
+% 	\textit{I confirm that the submitted work is original and was written by me without further assistance. Appropriate credit has been given where reference has been made to the work of others.}
+%
+% 	\vspace{0.75cm}
+% 	\hsmaort, \hsmadatum \\
+%
+% 	\ifpapier
+% 		% Paper - space for signature
+% 		\vspace{1.2cm}
+% 	\else
+% 		% Digital - signature image
+% 		\includegraphics[width=6cm]{images/unterschrift.png}
+% 	\fi%
+%
+% 	%Author Names
+% 	\hsmaauthors
+%
+% 	%License or Restriction Notice
+% 	\vspace*{\fill}
+% 	\ifhslicense
+% 		I agree that my work may be published, i.e. that the work may be stored electronically, converted into other formats, made publicly available and distributed via the Internet.
+%
+% 	\fi
+% 	\ifcclicense
+% 		\vspace{0.5cm}
+% 		\doclicenseThis%
+% 	\fi
+% 	\ifsperrvermerk
+% 		This work is based on internal and confidential data.
+%
+% 		This work may not be made available to third parties, with the exception of the supervising lecturers and authorized members of the examination board, without the express consent of the author. Reproduction and publication of the work without express permission -- even in excerpts -- is not permitted.
+% 	\fi
+% }
+
+
+\def\abstractpage{%
+	\thispagestyle{plain}
+	% Abstract (English only)
+	\textsf{\LARGE\textbf{\hsmaabstracttitleen}}
+
+	\vspace*{0.75cm}
+	\textsf{\textbf{\textit{\hsmatitelen}}}\\
+
+	\vspace*{0.25cm}
+
+	\hsmaabstracten
+}
+
+
+\def\sethyp{
+	% Data for PDF document
+	\hypersetup{
+		pdftitle={\hsmatitelen},                        % Title of the document (English)
+		pdfauthor={\hsmaauthors},                       % Authors
+		pdfsubject={Academic Paper},                    % Generic subject
+		pdfkeywords={\hsmatitelen}                      % Keywords
+	}
+}
+
+
+
+
+
+
+
+%		\node[fill=blue,anchor=north,minimum height=4cm, minimum width=\paperwidth] (names)
+%		at ([yshift=4cm]current page.south) {
+%			\begin{tabular}{r l}
+	%				A & B
+	%			\end{tabular}
+%		};
+%
+%
+%		\node[fill=red,anchor=south, minimum width=\paperwidth] (names)
+%		at ([yshift=8cm]current page.south) {
+%			\begin{tabular}{r l}
+	%				one & two
+	%			\end{tabular}
+%		};
+
+
+
+%	\definecolor{c1}{RGB}{62, 97, 127}
+%	\definecolor{c2}{RGB}{104, 182, 182}
+%	\definecolor{c3}{RGB}{107, 190, 190}
+%	\definecolor{c4}{RGB}{100, 172, 174}
+%
+%	\begin{tikzpicture}[overlay,remember picture,font=\sffamily\bfseries]
+%		\draw[very thick,c4,name path=big arc] ([xshift=-2mm]current page.north) arc(150:285:11)
+%		coordinate[pos=0.225] (x0);
+%		\begin{scope}
+	%			\clip ([xshift=-2mm]current page.north) arc(150:285:11) --(current page.north
+	%			east);
+	%			\fill[c4!50,opacity=0.25] ([xshift=4.55cm]x0) circle (4.55);
+	%			\fill[c4!50,opacity=0.25] ([xshift=3.4cm]x0) circle (3.4);
+	%			\fill[c4!50,opacity=0.25] ([xshift=2.25cm]x0) circle (2.25);
+	%			\draw[very thick,c4!50] (x0) arc(-90:30:6.5);
+	%			\draw[very thick,c4] (x0) arc(90:-30:8.75);
+	%			\draw[very thick,c4!50,name path=arc1] (x0) arc(90:-90:4.675);
+	%			\draw[very thick,c4!50] (x0) arc(90:-90:2.875);
+	%			\path[name intersections={of=big arc and arc1,by=x1}];
+	%			\draw[very thick,c4,name path=arc2] (x1) arc(135:-20:4.75);
+	%			\draw[very thick,c4!50] (x1) arc(135:-20:8.75);
+	%			\path[name intersections={of=big arc and arc2,by={aux,x2}}];
+	%			\draw[very thick,c4!50] (x2) arc(180:50:2.25);
+	%		\end{scope}
+%		\path[decoration={text along path,text color=c4,
+	%			raise = -2.8ex,
+	%			text  along path,
+	%			text = {|\sffamily\bfseries|02/18/2019},
+	%			text align = center,
+	%		},
+%		decorate
+%		] ([xshift=-2mm]current page.north) arc(150:245:11);
+%		%
+%		\begin{scope}
+	%			\path[clip,postaction={fill=c3}]
+	%			([xshift=2cm,yshift=-8cm]current page.center) rectangle ++ (4.2,7.7);
+	%			\fill[c2] ([xshift=0.5cm,yshift=-8cm]current page.center)
+	%			([xshift=0.5cm,yshift=-8cm]current page.center)  arc(180:60:2)
+	%			|- ++ (-3,6) --cycle;
+	%			\draw[very thick,c4] ([xshift=-1.5cm,yshift=-8cm]current page.center)
+	%			arc(180:0:2);
+	%			\draw[very thick,c4] ([xshift=0.5cm,yshift=-8cm]current page.center)
+	%			arc(180:0:2);
+	%			\draw[very thick,c4] ([xshift=2.5cm,yshift=-8cm]current page.center)
+	%			arc(180:0:2);
+	%			\draw[very thick,c4] ([xshift=4.5cm,yshift=-8cm]current page.center)
+	%			arc(180:0:2);
+	%			\fill[red] ([xshift=2.5cm,yshift=-8cm]current page.center) +(60:2) circle(1.5mm)
+	%			node[above right=2mm]{$\displaystyle\rho=\frac{1+\sqrt{-3}}{2}$};
+	%		\end{scope}
+%		%
+%		\fill[c1] ([xshift=2cm,yshift=-8cm]current page.center) rectangle ++ (-12.7,7.7);
+%		\node[text=white,anchor=west,scale=5,inner sep=0pt] at
+%		([xshift=-8cm,yshift=-3.25cm]current page.center) {Some text};
+%		\node[text=white,anchor=west,scale=2.5,inner sep=0pt] at
+%		([xshift=-8cm,yshift=-6cm]current page.center) {Some text};
+%		%
+%		\draw[gray,line width=5mm]
+%		([xshift=2mm,yshift=-1mm]current page.south west) rectangle ([xshift=-2mm,yshift=1mm]current
+%		page.north east);
+%	\end{tikzpicture}
+

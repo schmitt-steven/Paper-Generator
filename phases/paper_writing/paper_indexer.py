@@ -5,8 +5,8 @@ from typing import Iterable, List, Sequence
 
 import lmstudio as lms
 
-from phases.literature_review.arxiv_api import Paper
-from phases.paper_writing.data_models import PaperChunk, Section
+from phases.paper_search.arxiv_api import Paper
+from phases.paper_writing.data_models import PaperChunk
 from utils.file_utils import preprocess_markdown
 
 
@@ -54,7 +54,6 @@ class PaperIndexer:
                 PaperChunk(
                     chunk_id=chunk_id,
                     paper=paper,
-                    section_type=Section.INTRODUCTION,  # Default value, not used for filtering
                     chunk_text=chunk_text,
                     chunk_index=chunk_idx,
                     embedding=list(embedding),

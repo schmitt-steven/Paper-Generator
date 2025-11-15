@@ -1,4 +1,4 @@
-from phases.literature_review.arxiv_api import Paper, RankingScores
+from phases.paper_search.arxiv_api import Paper, RankingScores
 from typing import List, Tuple, Dict
 import lmstudio as lms
 import numpy as np

@@ -1,4 +1,5 @@
 import os
+import textwrap
 from pathlib import Path
 from dataclasses import dataclass
 from typing import List
@@ -89,24 +90,25 @@ class CodeAnalyzer:
     def analyze_code_file(self, code_analysis: UserCode) -> UserCode:
         """Analyze a code file using a single structured LLM call."""
 
-        prompt = f"""You are an expert in code analysis and scientific literature.
-        
-        Task:
-        Analyze the following code file and provide a structured analysis.
+        prompt = textwrap.dedent(f"""\
+            You are an expert in code analysis and scientific literature.
+            
+            Task:
+            Analyze the following code file and provide a structured analysis.
 
-        Instructions:
-        Provide your analysis as a CodeAnalysisResult with the following fields:
-        1. summary: Technical description of what the code does and how it works in a few sentences.
-        2. novel_concepts: What makes this code truly novel or innovative? If nothing is novel, use an empty string.
-        3. research_relevance: Based on the novel concepts above, what is the research potential? 
-        Otherwise, explain specific academic value in a few sentences. If no research potential, use an empty string.
+            Instructions:
+            Provide your analysis as a CodeAnalysisResult with the following fields:
+            1. summary: Technical description of what the code does and how it works in a few sentences.
+            2. novel_concepts: What makes this code truly novel or innovative? If nothing is novel, use an empty string.
+            3. research_relevance: Based on the novel concepts above, what is the research potential? 
+            Otherwise, explain specific academic value in a few sentences. If no research potential, use an empty string.
 
-        Code file: {code_analysis.file_name}
-        Code file content:
-        ```
-        {code_analysis.file_content}
-        ```
-        """
+            Code file: {code_analysis.file_name}
+            Code file content:
+            ```
+            {code_analysis.file_content}
+            ```
+        """)
 
         result = self.model.respond(
             prompt, 
@@ -123,33 +125,34 @@ class CodeAnalyzer:
     def extract_important_snippets(self, code_analysis: UserCode) -> UserCode:
         """Extract important code snippets from a file that has novel concepts."""
                 
-        prompt = f"""You are an expert in code analysis and scientific research.
+        prompt = textwrap.dedent(f"""\
+            You are an expert in code analysis and scientific research.
 
-        Task:
-        Extract the most important code snippets from this file that demonstrate the novel concepts identified earlier.
+            Task:
+            Extract the most important code snippets from this file that demonstrate the novel concepts identified earlier.
 
-        Novel Concepts Identified:
-        {code_analysis.novel_concepts}
+            Novel Concepts Identified:
+            {code_analysis.novel_concepts}
 
-        Instructions:
-        1. Extract only the most important code snippet(s) that best demonstrate the novel/research-worthy aspects
-        2. Copy the code EXACTLY as it appears (verbatim)
-        3. For each snippet provide:
-        - code: The exact code (function, class, or relevant block)
-        - explanation: What this code does (2-3 sentences)
-        - importance_reasoning: Why this specific code is important for research (1-2 sentences)
-        4. Prioritize:
-        - Core algorithmic implementations
-        - Novel data structures or patterns
-        - Key architectural decisions
-        5. If the file is very long, focus on the most critical snippets
+            Instructions:
+            1. Extract only the most important code snippet(s) that best demonstrate the novel/research-worthy aspects
+            2. Copy the code EXACTLY as it appears (verbatim)
+            3. For each snippet provide:
+            - code: The exact code (function, class, or relevant block)
+            - explanation: What this code does (2-3 sentences)
+            - importance_reasoning: Why this specific code is important for research (1-2 sentences)
+            4. Prioritize:
+            - Core algorithmic implementations
+            - Novel data structures or patterns
+            - Key architectural decisions
+            5. If the file is very long, focus on the most critical snippets
 
-        Code file: {code_analysis.file_name}
-        Code file content:
-        ```
-        {code_analysis.file_content}
-        ```
-        """
+            Code file: {code_analysis.file_name}
+            Code file content:
+            ```
+            {code_analysis.file_content}
+            ```
+        """)
 
         result = self.model.respond(
             prompt,

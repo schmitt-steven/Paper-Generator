@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 
 
-def save_to_markdown(content: str, filename: str, output_dir: str = None) -> str:
+def save_markdown_to_file(content: str, filename: str, output_dir: str = None) -> str:
     """Save markdown content to a file."""
     
     if output_dir:
