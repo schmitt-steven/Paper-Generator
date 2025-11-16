@@ -1,6 +1,6 @@
 # Paper Generator
 
-Automated academic paper generation pipeline using local language and embedding models.
+Automatic academic paper generator using local language and embedding models.
 
 ## Requirements
 
@@ -30,13 +30,14 @@ You could also run the code with just two local models:
 - one multimodal language model that supports tool use
 - one embedding model
 
-**Required:**\
-Under Developer → Server Settings:\
-**Disable** "Only keep last JIT loaded models"
 
-**Recommendation:**\
+**Recommendations:**
+
+Under Developer → Server Settings:\
+**Enable** "Only keep last JIT loaded models"
+
 Under App Settings → Developer → Local LLM Service (headless):\
-Turn on "Enable Local LLM Service"
+**Enable** "Enable Local LLM Service"
 
 ## Installation Commands for macOS
 
@@ -54,7 +55,9 @@ brew install --cask mactex
 
 ## Usage
 
-Adjust `settings.py` first, then run:\
+First, put your files (notes, code, ...) related to the paper/topic into the `user_files/` folder.
+
+Adjust `settings.py`, then run:\
 `python3 paper_generator.py`
 
 All generated files are saved to output/
@@ -62,7 +65,7 @@ All generated files are saved to output/
 
 ## TODOs
 
-- Switch from Arxiv API to SemanticScholar API (more papers, more metadata, embeddings of abstracts,...)
+- Switch from Arxiv API to SemanticScholar API (more papers, more metadata, embeddings of abstracts, ...)
 - Add review/improvement loop to the paper writing process
 
 

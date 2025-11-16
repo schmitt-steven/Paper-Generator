@@ -1,0 +1,22 @@
+# LaTeX temporary files
+*.aux
+*.log
+*.out
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+*.toc
+*.lof
+*.lot
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.pdf
+*.dvi
+*.ps
+
+# Compiled output directories (managed by Makefile)
+../temp/
+../result/
+

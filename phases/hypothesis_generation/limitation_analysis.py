@@ -1,4 +1,3 @@
-import lmstudio as lms
 import numpy as np
 import json
 import os
@@ -6,13 +5,15 @@ from typing import List, Tuple
 from collections import Counter
 from phases.context_analysis.paper_conception import PaperConcept
 from phases.hypothesis_generation.hypothesis_models import PaperFindings
+from utils.lazy_model_loader import LazyEmbeddingMixin
 
 
-class LimitationAnalyzer:
+class LimitationAnalyzer(LazyEmbeddingMixin):
     """Analyzes literature to identify research limitations and opportunities"""
     
     def __init__(self, embedding_model_name: str = "text-embedding-embeddinggemma-300m", similarity_threshold: float = 0.85):
-        self.embedding_model = lms.embedding_model(embedding_model_name)
+        self.embedding_model_name = embedding_model_name
+        self._embedding_model = None  # Lazy-loaded via LazyEmbeddingMixin
         self.similarity_threshold = similarity_threshold  # Threshold for clustering similar limitations
     
     @staticmethod

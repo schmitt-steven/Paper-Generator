@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 import textwrap
-import lmstudio as lms
 from typing import List
 from phases.context_analysis.user_code_analysis import CodeAnalyzer, UserCode, CodeSnippet
 from phases.context_analysis.user_notes_analysis import NotesAnalyzer, UserNotes 
 from utils.file_utils import save_markdown_to_file 
+from utils.lazy_model_loader import LazyModelMixin
 
 
 @dataclass
@@ -14,10 +14,11 @@ class PaperConcept():
     code_snippets: str = ""  # Markdown-formatted code snippets section (as text)
     open_questions: str = ""
 
-class PaperConception:
+class PaperConception(LazyModelMixin):
 
     def __init__(self, model_name, user_code: List[UserCode], user_notes: List[UserNotes]):
-        self.model = lms.llm(model_name)
+        self.model_name = model_name
+        self._model = None  # Lazy-loaded via LazyModelMixin
         self.user_code = user_code
         self.user_notes = user_notes
 

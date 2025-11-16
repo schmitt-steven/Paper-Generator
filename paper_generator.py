@@ -234,15 +234,20 @@ class PaperGenerator:
         # Step 9/11: Write Paper              #
         #######################################
         # TODO: Test specialized embedding and writing model (Specter; LLMs from CycleResearcher paper)
-        # TODO: Check again how embeddings in literature review are computed
-        # TODO: Check scoring in evidence gatherer
-        # TODO: Implement function to save and load paper draft
 
         if Settings.LOAD_PAPER_DRAFT:
-            # Load existing paper draft (if available)
-            # Note: PaperWritingPipeline doesn't have a load method, so this would need to be implemented
-            print(f"\n[PaperGenerator] Skipping paper writing (mode: load)")
-            return
+            print(f"\n[PaperGenerator] Loading existing paper draft...")
+            try:
+                paper_draft = PaperWritingPipeline.load_paper_draft("output/paper_draft.md")
+                print(f"  Paper draft loaded successfully")
+                print(f"  Title: {paper_draft.title}")
+            except FileNotFoundError:
+                print(f"  Paper draft file not found.")
+                return
+            except Exception as e:
+                print(f"  Error loading paper draft: {e}")
+                traceback.print_exc()
+                return
         else:
             if experiment_result and papers_with_markdown:
                 paper_writing_pipeline = PaperWritingPipeline(

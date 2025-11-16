@@ -1,9 +1,9 @@
 import textwrap
-import lmstudio as lms
 from pathlib import Path
 from dataclasses import dataclass
 from typing import List
 from lmstudio import BaseModel
+from utils.lazy_model_loader import LazyModelMixin
 
 
 
@@ -31,7 +31,7 @@ class NotesAnalysisResult(BaseModel):
     related_work: str
 
 
-class NotesAnalyzer:
+class NotesAnalyzer(LazyModelMixin):
     """Analyzes documents to extract research-relevant information"""
 
     SUPPORTED_EXTENSIONS = {
@@ -44,7 +44,8 @@ class NotesAnalyzer:
     }
 
     def __init__(self, model_name: str = "qwen/qwen3-coder-30b"):
-        self.model = lms.llm(model_name)
+        self.model_name = model_name
+        self._model = None  # Lazy-loaded via LazyModelMixin
 
     def load_user_notes(self, folder_path: str, extensions: List[str] = None) -> List[UserNotes]:
         """Load documents from the specified folder."""

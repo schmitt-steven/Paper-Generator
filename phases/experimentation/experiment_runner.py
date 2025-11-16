@@ -1,4 +1,3 @@
-import lmstudio as lms
 import os
 import textwrap
 import traceback
@@ -15,9 +14,10 @@ from phases.experimentation.experiment_state import (
 )
 from phases.experimentation.code_executor import CodeExecutor
 from phases.experimentation.results_manager import ResultsManager
+from utils.lazy_model_loader import LazyModelMixin
 
 
-class ExperimentRunner:
+class ExperimentRunner(LazyModelMixin):
     """Conducts experiments to test hypotheses."""
     
     def __init__(
@@ -26,12 +26,22 @@ class ExperimentRunner:
         vision_model_name: Optional[str] = None,
         base_output_dir: str = "output/experiments"
     ):
-        self.model = lms.llm(model_name)
-        self.vision_model = lms.llm(vision_model_name) if vision_model_name else self.model
+        self.model_name = model_name
+        self._model = None  # Lazy-loaded via LazyModelMixin
+        self.vision_model_name = vision_model_name or model_name
+        self._vision_model = None  # Lazy-loaded separately
         self.executor = CodeExecutor()
         self.results_manager = ResultsManager(base_output_dir)
         self.base_output_dir = base_output_dir        
         os.makedirs(base_output_dir, exist_ok=True)
+    
+    @property
+    def vision_model(self):
+        """Lazy-load the vision model on first access."""
+        if self._vision_model is None:
+            import lmstudio as lms
+            self._vision_model = lms.llm(self.vision_model_name)
+        return self._vision_model
     
     def _remove_markdown_formatting(self, code_content: str) -> str:
         """Remove markdown code block markers from code content."""

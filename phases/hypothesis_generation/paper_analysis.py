@@ -2,18 +2,19 @@ import re
 import json
 import os
 import textwrap
-import lmstudio as lms
 from typing import List
 from phases.paper_search.arxiv_api import Paper
 from phases.hypothesis_generation.hypothesis_models import PaperFindings, FindingsExtractionResult
 from utils.file_utils import preprocess_markdown
+from utils.lazy_model_loader import LazyModelMixin
 
 
-class PaperAnalyzer:
+class PaperAnalyzer(LazyModelMixin):
     """Analyzes papers to extract key findings using section-aware extraction"""
     
     def __init__(self, model_name: str):
-        self.model = lms.llm(model_name)
+        self.model_name = model_name
+        self._model = None  # Lazy-loaded via LazyModelMixin
 
     def extract_findings(self, papers: List[Paper]) -> List[PaperFindings]:
         """

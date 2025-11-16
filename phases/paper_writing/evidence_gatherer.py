@@ -5,12 +5,12 @@ import textwrap
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Sequence, Set, Tuple
 
-import lmstudio as lms
 import numpy as np
 
 from phases.context_analysis.paper_conception import PaperConcept
 from phases.experimentation.experiment_state import ExperimentResult
 from phases.paper_writing.data_models import Evidence, PaperChunk, Section, ScoreResult
+from utils.lazy_model_loader import LazyModelMixin, LazyEmbeddingMixin
 
 
 @dataclass
@@ -19,7 +19,7 @@ class _NormalizedChunk:
     vector: np.ndarray
 
 
-class EvidenceGatherer:
+class EvidenceGatherer(LazyModelMixin, LazyEmbeddingMixin):
     """Retrieves and scores evidence chunks for a given query."""
 
     def __init__(
@@ -28,14 +28,18 @@ class EvidenceGatherer:
         embedding_model_name: str,
         indexed_corpus: Sequence[PaperChunk],
     ) -> None:
-        self.llm_model_name = llm_model_name
+        self.model_name = llm_model_name  # For LazyModelMixin
+        self._model = None  # Lazy-loaded via LazyModelMixin (accessed as self.model)
         self.embedding_model_name = embedding_model_name
-
-        self.llm_model = lms.llm(llm_model_name)
-        self.embedding_model = lms.embedding_model(embedding_model_name)
+        self._embedding_model = None  # Lazy-loaded via LazyEmbeddingMixin
 
         self.indexed_corpus = list(indexed_corpus)
         self._normalized_chunks = self._normalize_corpus(indexed_corpus)
+    
+    @property
+    def llm_model(self):
+        """Alias for model property (for backward compatibility)."""
+        return self.model
 
     def search_evidence(
         self,
