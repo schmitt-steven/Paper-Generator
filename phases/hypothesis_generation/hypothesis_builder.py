@@ -1,18 +1,20 @@
 import json
 import textwrap
-import lmstudio as lms
 import numpy as np
 from typing import List, Tuple
 from phases.context_analysis.paper_conception import PaperConcept
 from phases.hypothesis_generation.hypothesis_models import Hypothesis, HypothesesList, HypothesesResult, SelectedHypotheses
+from utils.lazy_model_loader import LazyModelMixin, LazyEmbeddingMixin
 
 
-class HypothesisBuilder:
+class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
     """Generates and validates research hypotheses"""
     
     def __init__(self, model_name: str, embedding_model_name: str, paper_concept: PaperConcept, top_limitations: List[Tuple[str, float]], num_papers_analyzed: int):
-        self.model = lms.llm(model_name)
-        self.embedding_model = lms.embedding_model(embedding_model_name)
+        self.model_name = model_name
+        self._model = None  # Lazy-loaded via LazyModelMixin
+        self.embedding_model_name = embedding_model_name
+        self._embedding_model = None  # Lazy-loaded via LazyEmbeddingMixin
         self.paper_concept = paper_concept
         self.top_limitations = top_limitations
         self.num_papers_analyzed = num_papers_analyzed

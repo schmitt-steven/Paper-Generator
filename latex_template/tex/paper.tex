@@ -1,0 +1,65 @@
+%% !TeX program = pdflatex
+
+\documentclass[conference,compsoc,final,a4paper]{IEEEtran}
+\usepackage[utf8]{inputenx}
+
+%% Please set the title and author of the paper here
+\newcommand{\dokumententitel}[0]{Paper Title}
+
+\input{preamble} % Load additional settings from another file
+
+\begin{document}
+
+% Document title
+\title{\dokumententitel}
+
+% Author names - This section will be populated by the paper generator
+\author{
+  \IEEEauthorblockN{Author Name}
+  \IEEEauthorblockA{
+    Affiliation Name
+    }
+}
+
+% Generate title
+\maketitle
+\thispagestyle{plain}
+\pagestyle{plain}
+
+% Document content begins here
+% ----------------------------------------------------------------------------------------------------------
+
+% Abstract
+\begin{abstract}
+\input{abstract}
+\end{abstract}
+
+% Generate table of contents
+{\small\tableofcontents}
+
+% Sections
+% -------------------------------------------------------
+\input{chapters/introduction}
+\input{chapters/related_work}
+\input{chapters/methods}
+\input{chapters/results}
+\input{chapters/discussion}
+\input{chapters/conclusion}
+
+% --------------------------------------------------------------------
+% Abbreviations
+\section*{Abbreviations}
+\addcontentsline{toc}{section}{Abbreviations}
+
+% The longest abbreviation is written in square brackets
+% at \begin{acronym} to prevent ugly line breaks
+% You must sort the abbreviations alphabetically yourself!
+\begin{acronym}[IEEE]
+\input{chapters/abbreviations}
+\end{acronym}
+
+% Bibliography
+\addcontentsline{toc}{section}{References}
+\printbibliography
+
+\end{document}

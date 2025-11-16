@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import textwrap
 from typing import Dict, List, Optional, Sequence
 
@@ -171,6 +172,44 @@ class PaperWritingPipeline:
             f.write(markdown_content)
 
         print(f"[PaperWritingPipeline] Saved paper draft to {output_path}")
+
+    @staticmethod
+    def load_paper_draft(
+        filepath: str = "output/paper_draft.md",
+    ) -> PaperDraft:
+        """Load a paper draft from a markdown file."""
+        
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f"Paper draft file not found: {filepath}")
+        
+        with open(filepath, "r", encoding="utf-8") as f:
+            content = f.read()
+        
+        # Extract title (first # header)
+        title_match = re.search(r'^#\s+(.+)$', content, re.MULTILINE)
+        if not title_match:
+            raise ValueError("Could not find title in paper draft file")
+        title = title_match.group(1).strip()
+        
+        # Extract sections using regex
+        # Pattern matches: ## Section Name followed by content until next ## or end
+        section_pattern = r'##\s+(\w+(?:\s+\w+)*)\s*\n\n(.*?)(?=\n##\s+|$)'
+        sections = {}
+        
+        for match in re.finditer(section_pattern, content, re.DOTALL):
+            section_name = match.group(1).strip()
+            section_content = match.group(2).strip()
+            sections[section_name.lower().replace(' ', '_')] = section_content
+        
+        # Build PaperDraft with extracted sections
+        draft_data = {'title': title}
+        for field_name in ['abstract', 'introduction', 'related_work', 'methods', 'results', 'discussion', 'conclusion']:
+            draft_data[field_name] = sections.get(field_name, '')
+        
+        paper_draft = PaperDraft(**draft_data)
+        print(f"[PaperWritingPipeline] Loaded paper draft from {filepath}")
+        
+        return paper_draft
 
     def reset_index(self) -> None:
         """Reset the cached indexed corpus."""

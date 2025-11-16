@@ -1,18 +1,19 @@
 import textwrap
-import lmstudio as lms
 from typing import Dict, List, Optional, Sequence
 
 from phases.context_analysis.paper_conception import PaperConcept
 from phases.experimentation.experiment_state import ExperimentResult, Plot
 from phases.paper_writing.data_models import Evidence, PaperDraft, Section
+from utils.lazy_model_loader import LazyModelMixin
+from settings import Settings
 
 
-class PaperWriter:
+class PaperWriter(LazyModelMixin):
     """Generates research paper sections using a LLM."""
     
     def __init__(self, model_name: str):
         self.model_name = model_name
-        self.model = lms.llm(model_name)
+        self._model = None  # Lazy-loaded via LazyModelMixin
     
     def generate_paper_sections(
         self,
@@ -22,33 +23,31 @@ class PaperWriter:
     ) -> PaperDraft:
         """Generate all paper sections using provided evidence."""
 
+        section_order = (
+            Section.METHODS, Section.RESULTS, Section.DISCUSSION,
+            Section.INTRODUCTION, Section.RELATED_WORK, Section.CONCLUSION, Section.ABSTRACT
+        )
+        
         sections = {}
-        # Generate sections in order: Methods, Results, Discussion, Introduction, Related Work, Conclusion, Abstract
-        for section_type in (
-            Section.METHODS,
-            Section.RESULTS,
-            Section.DISCUSSION,
-            Section.INTRODUCTION,
-            Section.RELATED_WORK,
-            Section.CONCLUSION,
-            Section.ABSTRACT,
-        ):
-            evidence = evidence_by_section.get(section_type, [])
+        for section_type in section_order:
             sections[section_type] = self.generate_section(
                 section_type=section_type,
                 context=context,
                 experiment=experiment,
-                evidence=evidence,
+                evidence=evidence_by_section.get(section_type, []),
                 previous_sections=sections,
             )
 
-        # Generate title after all sections are complete, using abstract, introduction, and conclusion
-        title = self.generate_title(
-            abstract=sections[Section.ABSTRACT],
-            introduction=sections[Section.INTRODUCTION],
-            conclusion=sections[Section.CONCLUSION],
-            context=context,
-        )
+        # Use settings title if provided, otherwise generate one
+        if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
+            title = Settings.LATEX_TITLE
+        else:
+            title = self.generate_title(
+                abstract=sections[Section.ABSTRACT],
+                introduction=sections[Section.INTRODUCTION],
+                conclusion=sections[Section.CONCLUSION],
+                context=context,
+            )
 
         return PaperDraft(
             title=title,
@@ -79,7 +78,7 @@ class PaperWriter:
                 "temperature": temperature,
             },
         )
-        return self._extract_response_text(response)
+        return response.content
 
     def _build_section_prompt(
         self,
@@ -128,7 +127,8 @@ class PaperWriter:
             [GENERATION RULES — DO NOT VIOLATE]
             - Do NOT reference the guidelines or instructions.
             - Do NOT comment on the evidence structure.
-            - Output ONLY the final written section.
+            - Do NOT include section headings (e.g., "## Introduction", "# Abstract", etc.) in your output.
+            - Output ONLY the final written section content without any markdown headings.
 
             [FINAL PRIORITY]
             Your output must strictly follow the requirements and produce a polished academic section.
@@ -197,9 +197,6 @@ class PaperWriter:
         for prev_section in relevant_sections:
             if prev_section in previous_sections:
                 section_text = previous_sections[prev_section]
-                # Truncate very long sections to avoid token limits
-                if len(section_text) > 4000:
-                    section_text = section_text[:4000] + "..."
                 parts.append(f"{prev_section.value}:\n{section_text}")
         
         if not parts:
@@ -212,29 +209,27 @@ class PaperWriter:
         context: PaperConcept,
         experiment: Optional[ExperimentResult],
     ) -> str:
-        parts = [
-            ("Concept description", context.description),
-            ("Open questions", context.open_questions),
+        """Format context and experiment data for prompts."""
+        
+        def format_if_present(label: str, value: str) -> Optional[str]:
+            return f"[{label.upper()}]\n{value.strip()}" if isinstance(value, str) and value.strip() else None
+        
+        sections = [
+            format_if_present("Concept description", context.description),
+            format_if_present("Open questions", context.open_questions),
         ]
-
+        
         if experiment:
-            parts.extend(
-                [
-                    ("Hypothesis", getattr(experiment.hypothesis, "description", "")),
-                    ("Expected improvement", getattr(experiment.hypothesis, "expected_improvement", "")),
-                    ("Experimental plan", experiment.experimental_plan),
-                    ("Key execution output", getattr(experiment.execution_result, "stdout", "")),
-                    ("Verdict", getattr(experiment.hypothesis_evaluation, "verdict", "")),
-                    ("Verdict reasoning", getattr(experiment.hypothesis_evaluation, "reasoning", "")),
-                ]
-            )
-
-        formatted = [
-            f"[{label.upper()}]\n{value.strip()}"
-            for label, value in parts
-            if isinstance(value, str) and value.strip()
-        ]
-        return "\n\n".join(formatted)
+            sections.extend([
+                format_if_present("Hypothesis", experiment.hypothesis.description),
+                format_if_present("Expected improvement", experiment.hypothesis.expected_improvement),
+                format_if_present("Experimental plan", experiment.experimental_plan),
+                format_if_present("Key execution output", experiment.execution_result.stdout),
+                format_if_present("Verdict", experiment.hypothesis_evaluation.verdict),
+                format_if_present("Verdict reasoning", experiment.hypothesis_evaluation.reasoning),
+            ])
+        
+        return "\n\n".join(s for s in sections if s)
 
     def get_section_guidelines(
         self,
@@ -245,6 +240,7 @@ class PaperWriter:
         Specifies writing guidelines for each paper section.
         These guidelines are combined with more context and evidence in _build_section_prompt().
         """
+        
         section_guidelines = {
             Section.ABSTRACT: 
             """Summarize the purpose, methodology, key findings, and implications succinctly.
@@ -273,14 +269,15 @@ class PaperWriter:
 
     def _get_results_guidelines(self, experiment: Optional[ExperimentResult]) -> str:
         """Get Results section guidelines, including figure integration if plots are available."""
+
         section_guidelines = """Present experimental outcomes with relevant metrics or observations.
         Compare results against expected improvements or baselines if available.
-        Never fabricate data or results.
-        """
+        Never fabricate data or results."""
 
         if experiment and experiment.plots:
             plots_block = self._format_plots_for_prompt(experiment.plots)
-            section_guidelines += textwrap.dedent(f"""
+            
+            section_guidelines += "\n\n" + textwrap.dedent(f"""
                 [FIGURE INTEGRATION]
                 The following figures were generated from the experiment. You MUST integrate all of them into your Results section.
 
@@ -297,8 +294,8 @@ class PaperWriter:
                 As shown in Figure 1, our method...
 
                 ![Figure 1](output/experiments/experiment_hyp_001/learning_curves.png)
-                *Figure 1: Learning curves comparing the ...*
-            """)
+                *Figure 1: Learning curves comparing the ...*"""
+            )
 
         return section_guidelines
 
@@ -332,8 +329,9 @@ class PaperWriter:
             [CONCLUSION]
             {conclusion}
 
-            Now generate only the title text.
-        """)
+            Now generate only the title text."""
+        )
+
         response = self.model.respond(
             prompt,
             config={
@@ -341,14 +339,6 @@ class PaperWriter:
                 "maxTokens": max_tokens,
             },
         )
-        title = self._extract_response_text(response)
-        # Clean up title - remove quotes if present, ensure proper capitalization
-        title = title.strip().strip('"').strip("'")
+        title = response.content.strip().strip('"').strip("'")
         return title
-
-    @staticmethod
-    def _extract_response_text(response) -> str:
-        if hasattr(response, "content"):
-            return str(response.content).strip()
-        return str(response).strip()
 

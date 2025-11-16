@@ -9,26 +9,26 @@ import textwrap
 from pathlib import Path
 from typing import List, Optional, Set
 
-import lmstudio as lms
 from phases.paper_search.arxiv_api import Paper
 from phases.paper_writing.data_models import PaperDraft, Section
 from phases.latex_generation.metadata import LaTeXMetadata
 from phases.latex_generation.markdown_to_latex import MarkdownToLaTeX
 from phases.latex_generation.bibliography import generate_literature_bib
 from phases.experimentation.experiment_state import ExperimentResult
+from utils.lazy_model_loader import LazyModelMixin
 from settings import Settings
 
 logger = logging.getLogger(__name__)
 
 
-class PaperConverter:
+class PaperConverter(LazyModelMixin):
     """Converts PaperDraft to compilable LaTeX project."""
 
     def __init__(self, model_name: str = None):
         """Initialize PaperConverter."""
        
         self.model_name = model_name or Settings.LATEX_CONVERSION_MODEL
-        self.llm = lms.llm(self.model_name)
+        self._model = None  # Lazy-loaded via LazyModelMixin
 
     def convert_to_latex(
         self,
@@ -105,83 +105,58 @@ class PaperConverter:
         return latex_dir
 
     def _populate_metadata(self, latex_dir: Path, metadata: LaTeXMetadata) -> None:
-        """Generate docinfo.tex with metadata."""
+        """Update paper.tex with metadata for IEEEtran template."""
         
-        docinfo_path = latex_dir / "docinfo.tex"
+        paper_path = latex_dir / "paper.tex"
         
-        # Convert comma-separated authors to LaTeX \and format
-        # Accepts: "John Doe, Jane Smith" or "John Doe, Jane Smith, and Bob Johnson"
-        # Converts to: "John Doe \\and Jane Smith" or "John Doe \\and Jane Smith \\and Bob Johnson"
-        if "," in metadata.author:
-            # Remove "and" before last author if present, then split by comma
-            author_str = metadata.author.replace(", and ", ", ").replace(" and ", ", ")
-            authors_list = [a.strip() for a in author_str.split(",")]
-            authors_tex = " \\and ".join(authors_list)
-        elif "\\and" in metadata.author:
-            # Already in LaTeX format, just normalize spacing
-            authors_tex = metadata.author.replace("\\and", " \\and ")
-        else:
-            authors_tex = metadata.author
+        if not paper_path.exists():
+            logger.error(f"[PaperConverter] paper.tex not found at {paper_path}")
+            return
         
-        # Convert comma-separated supervisors to LaTeX \\ format
-        # Accepts: "Prof. John Doe, Dr. Jane Smith"
-        # Converts to: "Prof. John Doe\\\\Dr. Jane Smith"
-        if "," in metadata.supervisor:
-            supervisors_list = [s.strip() for s in metadata.supervisor.split(",")]
-            supervisors_tex = " \\\\ ".join(supervisors_list)
-        elif "\\\\" in metadata.supervisor:
-            # Already in LaTeX format, just normalize spacing
-            supervisors_tex = metadata.supervisor.replace("\\\\", " \\\\ ")
-        else:
-            supervisors_tex = metadata.supervisor
+        # Read current paper.tex content
+        content = paper_path.read_text(encoding="utf-8")
         
-        submission_type = "digital" if metadata.digital_submission else "paper"
+        # Replace title
+        content = content.replace(
+            r"\newcommand{\dokumententitel}[0]{Paper Title}",
+            f"\\newcommand{{\\dokumententitel}}[0]{{{metadata.title}}}"
+        )
         
-        docinfo_content = textwrap.dedent(f"""\
-            % -------------------------------------------------------
-            % Document Information and Settings
-            %
-
-            % Language setting (English only)
-            \\newcommand{{\\hsmasprache}}{{en}}
-
-            % Submission format
-            \\newcommand{{\\hsmaabgabe}}{{{submission_type}}}
-
-            % Publication and restriction flags
-            \\newcommand{{\\hsmapublizieren}}{{opensource}}
-
-            % Feature flags
-            \\newcommand{{\\hsmaquellcode}}{{nosourcecode}}
-            \\newcommand{{\\hsmasymbole}}{{nosymbole}}
-            \\newcommand{{\\hsmaglossar}}{{noglossar}}
-            \\newcommand{{\\hsmatc}}{{notc}}
-
-            % Title (English only)
-            \\newcommand{{\\hsmatitelen}}{{{metadata.title}}}
-
-            % Authors (supports multiple authors - use \\and to separate)
-            \\newcommand{{\\hsmaauthors}}{{{authors_tex}}}
-
-            % Authors in bibliography format (Lastname, Firstname)
-            % Note: This is a simplified version - you may want to format this properly
-            \\newcommand{{\\hsmaauthorsbib}}{{{metadata.author}}}
-
-            % Location and date
-            \\newcommand{{\\hsmaort}}{{Mannheim}}
-            \\newcommand{{\\hsmaabgabedatum}}{{{metadata.submission_date}}}
-
-            % Supervisors (supports multiple supervisors - use \\\\ to separate lines)
-            \\newcommand{{\\hsmasupervisors}}{{{supervisors_tex}}}
-
-            % Optional fields (leave empty if not needed)
-            \\newcommand{{\\hsmafakultaet}}{{{metadata.faculty}}}
-            \\newcommand{{\\hsmastudiengang}}{{{metadata.study_program}}}
-            \\newcommand{{\\hsmafirma}}{{{metadata.company}}}
-        """)
+        # Generate author blocks for IEEEtran format
+        author_blocks = []
+        for i, author in enumerate(metadata.authors):
+            # Build author block
+            author_name = author.get("name", "Author Name")
+            author_lines = [f"  \\IEEEauthorblockN{{{author_name}}}"]
+            
+            # Build affiliation block
+            affiliation_parts = []
+            if author.get("affiliation"):
+                affiliation_parts.append(author["affiliation"])
+            if author.get("department"):
+                affiliation_parts.append(author["department"])
+            if author.get("address"):
+                affiliation_parts.append(author["address"])
+            if author.get("email"):
+                affiliation_parts.append(f"Email: {author['email']}")
+            
+            if affiliation_parts:
+                affiliation = "\\\\\n    ".join(affiliation_parts)
+                author_lines.append(f"  \\IEEEauthorblockA{{\n    {affiliation}\n    }}")
+            
+            # Join this author's blocks
+            author_block = "\n".join(author_lines)
+            author_blocks.append(author_block)
         
-        docinfo_path.write_text(docinfo_content, encoding="utf-8")
-        logger.info(f"[PaperConverter] Generated docinfo.tex")
+        # Join all authors with \and separator (except last one)
+        full_author_section = "\n  \\and\n".join(author_blocks)
+        
+        # Replace the placeholder
+        content = content.replace("%%AUTHOR_BLOCKS%%", full_author_section)
+        
+        # Write updated content
+        paper_path.write_text(content, encoding="utf-8")
+        logger.info(f"[PaperConverter] Updated paper.tex with {len(metadata.authors)} author(s)")
 
     def _convert_sections_to_chapters(self, latex_dir: Path, paper_draft: PaperDraft) -> None:
         """Convert PaperDraft sections to LaTeX chapter files."""
@@ -218,29 +193,18 @@ class PaperConverter:
             
             # Convert to LaTeX
             logger.info(f"[PaperConverter] Converting {section_type.value} to LaTeX...")
-            latex_content = MarkdownToLaTeX.convert_section_to_latex(section_content, section_type, self.llm)
+            latex_content = MarkdownToLaTeX.convert_section_to_latex(section_content, section_type, self.model)
             
-            # Handle abstract specially - wrap in \newcommand
+            # Handle abstract specially - just plain content (paper.tex has \begin{abstract}...\end{abstract})
             if section_type == Section.ABSTRACT:
-                # Wrap abstract content in \newcommand{\hsmaabstracten}{...}
-                abstract_header = textwrap.dedent("""\
-                    % -------------------------------------------------------
-                    % Abstract
-                    % This file defines the abstract content for the paper.
-                    % The \\hsmaabstracten command is automatically populated with content
-                    % from the paper generation pipeline.
-                    %
-                    % Note: If you want to use quotation marks in the abstract, do not use
-                    %       "` and "', but rather \\enquote{}. "` and "' are not properly
-                    %       recognized.
-                    \\newcommand{\\hsmaabstracten}{""")
-                abstract_footer = "}"
-                latex_content = f"{abstract_header}{latex_content}{abstract_footer}"
+                # Abstract is already wrapped in \begin{abstract} environment in paper.tex
+                # Just write the plain content
+                pass
             else:
-                # Wrap in chapter if needed
-                if "\\chapter{" not in latex_content:
+                # For IEEEtran, use \section instead of \chapter
+                if "\\section{" not in latex_content:
                     section_title = section_type.value
-                    latex_content = f"\\chapter{{{section_title}}}\n\\label{{{section_title.replace(' ', '')}}}\n\n{latex_content}"
+                    latex_content = f"\\section{{{section_title}}}\n\\label{{sec:{section_title.lower().replace(' ', '_')}}}\n\n{latex_content}"
             
             # Write to file
             file_path = latex_dir / filename
@@ -280,17 +244,17 @@ class PaperConverter:
                 # Store definition
                 if key not in definitions:
                     definitions[key] = (abbr, full_form)
-                    keys.add(key)
+                    keys.add(abbr.upper())
                 
-                # Replace with \gls{key} (only first occurrence per file)
+                # Replace with \ac{ABBR} (only first occurrence per file)
                 # Note: This is a simple approach - might replace multiple times
-                new_content = content.replace(match.group(0), f"\\gls{{{key}}}", 1)
+                new_content = content.replace(match.group(0), f"\\ac{{{abbr}}}", 1)
                 if new_content != content:
                     content = new_content
                     file_path.write_text(content, encoding="utf-8")
             
-            # Also extract existing \gls{key} patterns
-            keys.update(re.findall(r'\\gls(?:pl)?\{([^}]+)\}', content))
+            # Also extract existing \ac{key} patterns
+            keys.update(re.findall(r'\\ac(?:s|l|f)?\{([^}]+)\}', content))
         
         # Scan abstract.tex
         scan_file(latex_dir / "abstract.tex")
@@ -304,7 +268,7 @@ class PaperConverter:
         if not keys:
             return
         
-        # Generate abbreviations.tex
+        # Generate abbreviations.tex for IEEEtran template (uses acronym package, not glossaries)
         lines = ["% Abbreviations file", "% Automatically generated", ""]
         for key in sorted(keys):
             if key in definitions:
@@ -314,7 +278,8 @@ class PaperConverter:
                 abbr = key.upper()
                 full = key.replace('_', ' ').title()
             full = full.replace("&", "\\&").replace("%", "\\%")
-            lines.append(f"\\newacronym{{{key}}}{{{abbr}}}{{{full}}}")
+            # Use \acro format for acronym package instead of \newacronym
+            lines.append(f"\\acro{{{abbr}}}{{{full}}}")
         
         (latex_dir / "chapters" / "abbreviations.tex").write_text("\n".join(lines), encoding="utf-8")
         logger.info(f"[PaperConverter] Generated abbreviations.tex with {len(keys)} entries")

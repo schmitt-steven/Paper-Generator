@@ -2,13 +2,13 @@ from phases.paper_search.arxiv_api import ArxivAPI, Paper, RankingScores
 from typing import List
 from dataclasses import asdict
 import textwrap
-import lmstudio as lms
 from lmstudio import BaseModel
 import time
 import requests
 import json
 import os
 from datetime import datetime
+from utils.lazy_model_loader import LazyModelMixin
 
 
 class SearchQuery(BaseModel):
@@ -23,7 +23,7 @@ class SearchQueriesResult(BaseModel):
     queries: List[SearchQuery]
 
 
-class LiteratureSearch:
+class LiteratureSearch(LazyModelMixin):
     
     def __init__(self, model_name: str):
         """
@@ -32,7 +32,8 @@ class LiteratureSearch:
         Args:
             model_name: Name of the LLM model to use for query generation
         """
-        self.model = lms.llm(model_name)
+        self.model_name = model_name
+        self._model = None  # Lazy-loaded via LazyModelMixin
         self.arxiv_api = ArxivAPI()
 
 

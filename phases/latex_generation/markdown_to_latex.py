@@ -46,7 +46,7 @@ class MarkdownToLaTeX:
             - Multiple citations: Convert (smith2024; jones2023) to \\cite{{smith2024,jones2023}}
             - Abbreviations: Identify abbreviations and convert them properly
             - On FIRST occurrence: Write "Full Form (ABBR)" format, e.g., "Artificial Intelligence (AI)"
-            - On SUBSEQUENT occurrences: Use \\gls{{key}} format with lowercase key, e.g., \\gls{{ai}}
+            - On SUBSEQUENT occurrences: Use \\ac{{ABBR}} format with uppercase abbreviation, e.g., \\ac{{AI}}
             - The full form will be automatically extracted from the first occurrence
             - Figures: Convert ![alt text](filename.png) followed by *Figure N: Caption text* to:
             \\begin{{figure}}[ht]
@@ -57,7 +57,7 @@ class MarkdownToLaTeX:
             \\end{{figure}}
             - Code blocks: Convert ```python ... ``` to \\begin{{lstlisting}}[language=Python]...\\end{{lstlisting}}
             - Math: Preserve $...$ for inline math and $$...$$ for display math (or convert to \\[...\\])
-            - Headers: Convert # Title to \\section{{Title}}, ## Subtitle to \\subsection{{Subtitle}}
+            - Headers: Convert # Title to \\subsection{{Title}}, ## Subtitle to \\subsubsection{{Subtitle}} (Note: Main sections use \\section and are added by the generator)
             - Bold/italic: Convert **text** to \\textbf{{text}}, *text* to \\textit{{text}}
             - Lists: Convert markdown lists to LaTeX \\begin{{itemize}}...\\end{{itemize}} or \\begin{{enumerate}}...\\end{{enumerate}}
             - Escape LaTeX special characters: _, &, %, {{, }} must be escaped as \\_, \\&, \\%, \\{{, \\}}
@@ -71,10 +71,11 @@ class MarkdownToLaTeX:
             [OUTPUT REQUIREMENTS]
             - Output ONLY the LaTeX-formatted text
             - Do NOT include any explanations or comments
-            - Do NOT wrap in \\chapter{{}} or \\section{{}} unless the markdown explicitly has a top-level header
+            - Do NOT wrap in \\section{{}} as the main section header is added automatically
+            - Use \\subsection{{}} and \\subsubsection{{}} for any subsections if needed
             - Ensure all citations are properly formatted as \\cite{{key}}
             - Ensure all figures have proper \\begin{{figure}} environments with \\caption and \\label
-            - Ensure all subsequent abbreviations use \\gls{{key}} format with lowercase keys
+            - Ensure all subsequent abbreviations use \\ac{{ABBR}} format with uppercase abbreviations
 
             Convert the markdown to LaTeX now:""")
 

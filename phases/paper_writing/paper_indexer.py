@@ -3,14 +3,13 @@ from __future__ import annotations
 import re
 from typing import Iterable, List, Sequence
 
-import lmstudio as lms
-
 from phases.paper_search.arxiv_api import Paper
 from phases.paper_writing.data_models import PaperChunk
 from utils.file_utils import preprocess_markdown
+from utils.lazy_model_loader import LazyEmbeddingMixin
 
 
-class PaperIndexer:
+class PaperIndexer(LazyEmbeddingMixin):
     """Builds an indexed corpus of paper chunks using whole-document chunking."""
 
     CODE_BLOCK_PATTERN = re.compile(r"```.+?```", re.DOTALL)
@@ -23,7 +22,7 @@ class PaperIndexer:
         overlap_tokens: int = 100,
     ) -> None:
         self.embedding_model_name = embedding_model_name
-        self.embedding_model = lms.embedding_model(embedding_model_name)
+        self._embedding_model = None  # Lazy-loaded via LazyEmbeddingMixin
         self.max_tokens_per_chunk = max_tokens_per_chunk
         self.min_tokens_per_chunk = min_tokens_per_chunk
         self.overlap_tokens = overlap_tokens

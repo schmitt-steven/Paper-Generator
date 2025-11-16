@@ -1,115 +1,101 @@
-% Document type, used packages and their settings
-\documentclass[	\hsmasprache,
-				\hsmaabgabe,
-				\hsmapublizieren,
-				\hsmaquellcode,
-				\hsmasymbole,
-				\hsmaglossar,
-				\hsmatc]{HMA}
-
-% Image folder
+% Normally nothing needs to be adjusted here
+\usepackage[pdftex]{graphicx}
 \graphicspath{{images/}}
+\DeclareGraphicsExtensions{.pdf,.jpeg,.jpg,.png}
 
+% Modern academic font - Libertinus (elegant, readable, professional)
+\usepackage{libertinus}
+\usepackage[libertine]{newtxmath}  % This loads amsmath automatically
+\usepackage{algorithmic}
+\usepackage{array}
+\usepackage{dblfloatfix}
+\usepackage{url}
+\usepackage[autostyle=true]{csquotes}
+\usepackage[backend=biber,
+            sorting=none,   % No sorting
+            doi=true,       % Show DOI
+            isbn=false,     % Don't show ISBN
+            url=true,       % Show URLs
+            maxnames=6,     % Use et al. from 6 authors
+            minnames=1,     % and only show first author
+            style=ieee,]{biblatex}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{listings}             % Source Code listings
+\usepackage[printonlyused]{acronym}
+\usepackage{fancyvrb}
+\usepackage{tocloft} % Better table of contents
 
-% Source code location (not used currently)
-% \newcommand{\srcloc}{src/}
+% Define colors - Modern sleek palette
+\definecolor{linkblue}{RGB}{41, 98, 255}        % Modern vibrant blue for links
+\definecolor{linkblack}{RGB}{45, 45, 45}        % Soft black (not pure black)
+\definecolor{darkgreen}{RGB}{16, 185, 129}      % Modern teal-green (emerald)
+\definecolor{darkblue}{RGB}{59, 130, 246}       % Clean sky blue
+\definecolor{darkred}{RGB}{239, 68, 68}         % Modern red (not too dark)
+\definecolor{comment}{RGB}{107, 114, 128}       % Sophisticated gray for comments
+\definecolor{javadoccomment}{RGB}{96, 165, 250} % Light blue for doc comments
+\definecolor{keyword}{RGB}{168, 85, 247}        % Modern purple for keywords
+\definecolor{type}{RGB}{34, 197, 94}            % Fresh green for types
+\definecolor{method}{RGB}{249, 115, 22}         % Warm orange for methods
+\definecolor{variable}{RGB}{45, 45, 45}         % Soft black for variables
+\definecolor{literal}{RGB}{236, 72, 153}        % Modern pink/magenta for literals
+\definecolor{operator}{RGB}{100, 116, 139}      % Slate gray for operators
 
+\usepackage[english]{babel}
 
-% Checklists with two levels
-\newlist{checklist}{itemize}{2}
-\setlist[checklist]{label=$\square$}
+\DefineBibliographyStrings{english}{
+    andothers = {{et al\adddot}},  % Always use et al.
+}
+\usepackage[
+      unicode=true,
+      hypertexnames=false,
+      colorlinks=true,
+      colorlinks=false,
+      linkcolor=darkblue,
+      citecolor=darkblue,
+      urlcolor=darkblue,
+      pdftex
+   ]{hyperref}
 
-
-
-% Command for creating custom macros. In this case, it's a macro for including images. The label (for \ref) is then the name of the image file
-\newcommand{\bild}[3]{
-	\begin{figure}[ht]
-		\centering
-		\includegraphics[width=#2]{#1}
-		\caption{#3}
-		\label{#1}
-\end{figure}}
-
-
-
-
-							
-
-
-\newcommand{\snowcard}[9]{
-	\begin{table}[ht!]
-		\caption{\hsmasnowcardanforderung\ #1 -- #4}\label{#1}
-		\renewcommand{\arraystretch}{1.2}
-		\centering
-		\sffamily
-		\begin{footnotesize}
-
-			\begin{tabularx}{\linewidth}{sssssl}
-				\toprule
-				\textbf{\hsmasnowcardno} & #1 & \textbf{\hsmasnowcardart} & #2 & \textbf{\hsmasnowcardprio} & #3 \\
-				\midrule
-				\multicolumn{2}{l}{\textbf{\hsmasnowcardtitel}} & \multicolumn{4}{l}{\parbox[t]{11.8cm}{#4}} \\
-				\ifx&#5&%
-				\else
-				\multicolumn{2}{l}{\textbf{\hsmasnowcardherkunft}} & \multicolumn{4}{l}{\parbox[t]{11.8cm}{#5}} \\
-				\fi
-				\ifx&#6&%
-				\else
-				\multicolumn{2}{l}{\textbf{\hsmasnowcardkonflikt}} & \multicolumn{4}{l}{\parbox[t]{11.8cm}{#6}} \\
-				\fi
-				\addlinespace
-				\multicolumn{6}{l}{\textbf{\hsmasnowcardbeschreibung}} \\
-				\multicolumn{6}{l}{\parbox[t]{13.5cm}{#7\strut}} \\
-				\ifx&#8&%
-				\else
-				\addlinespace
-				\multicolumn{6}{l}{\textbf{\hsmasnowcardfitkriterium}} \\
-				\multicolumn{6}{l}{\parbox[t]{13.5cm}{#8\strut}} \\
-				\fi
-				\ifx&#9&%
-
-				\else
-				\addlinespace
-				\multicolumn{6}{l}{\textbf{\hsmasnowcardmaterial}} \\
-				\multicolumn{6}{l}{\parbox[t]{13.5cm}{#9\strut}} \\
-				\fi
-				\bottomrule
-			\end{tabularx}
-		\end{footnotesize}
-	\end{table}
+% Settings for source code listings
+\lstset{
+    xleftmargin=0.1cm,
+    basicstyle=\scriptsize\ttfamily,
+    keywordstyle=\color{keyword},
+    identifierstyle=\color{variable},
+    commentstyle=\color{comment},
+    stringstyle=\color{literal},
+    tabsize=2,
+    lineskip={2pt},
+    columns=flexible,
+    inputencoding=utf8,
+    captionpos=b,
+    breakautoindent=true,
+    breakindent=2em,
+    breaklines=true,
+    prebreak=,
+    postbreak=,
+    numbers=none,
+    numberstyle=\tiny,
+    showspaces=false,      % No space symbols
+    showtabs=false,        % No tab symbols
+    showstringspaces=false,% Spaces in strings
+    morecomment=[s][\color{javadoccomment}]{/**}{*/},
 }
 
-
-
-% Quality Attribute Scenario
-\newcommand{\qas}[9]{
-	\begin{table}[ht!]
-		\caption{\hsmaqasanforderung\ #1 -- #3}\label{#1}
-		\renewcommand{\arraystretch}{1.2}
-		\centering
-		\sffamily
-		\begin{footnotesize}
-
-			\begin{tabularx}{\linewidth}{sssssl}
-				\toprule
-				\textbf{\hsmaqasno} & #1 & \textbf{\hsmaqasart} & QAS & \textbf{\hsmaqasprio} & #2 \\
-				\midrule
-				\multicolumn{2}{l}{\textbf{\hsmaqastitel}} & \multicolumn{4}{l}{\parbox[t]{11.8cm}{#3}} \\
-				\multicolumn{2}{l}{\textbf{\hsmaqasquelle}} & \multicolumn{4}{l}{\parbox[t]{11.8cm}{#4}} \\
-				\multicolumn{2}{l}{\textbf{\hsmaqasstimulus}} & \multicolumn{4}{l}{\parbox[t]{11.8cm}{#5}} \\
-				\multicolumn{2}{l}{\textbf{\hsmaqasartefakt}} & \multicolumn{4}{l}{\parbox[t]{11.8cm}{#6}} \\
-				\addlinespace
-				\multicolumn{6}{l}{\textbf{\hsmaqasumgebung}} \\
-				\multicolumn{6}{l}{\parbox[t]{13.5cm}{#7\strut}} \\
-				\addlinespace
-				\multicolumn{6}{l}{\textbf{\hsmaqasantwort}} \\
-				\multicolumn{6}{l}{\parbox[t]{13.5cm}{#8\strut}} \\
-				\addlinespace
-				\multicolumn{6}{l}{\textbf{\hsmaqasmass}} \\
-				\multicolumn{6}{l}{\parbox[t]{13.5cm}{#9\strut}} \\
-				\bottomrule
-			\end{tabularx}
-		\end{footnotesize}
-	\end{table}
+\hypersetup{
+    pdftitle={\dokumententitel},
+    pdfdisplaydoctitle=true,
+    hidelinks
 }
 
+% Macros for typographically correct abbreviations
+\newcommand{\eg}[0]{e.\,g.}
+\newcommand{\ie}[0]{i.\,e.}
+\newcommand{\etal}[0]{et.\,al.}
+
+% Where is source code located?
+\newcommand{\srcloc}{src/}
+
+% Include bibliography
+\addbibresource{literature.bib}

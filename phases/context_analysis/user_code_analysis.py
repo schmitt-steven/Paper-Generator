@@ -3,8 +3,8 @@ import textwrap
 from pathlib import Path
 from dataclasses import dataclass
 from typing import List
-import lmstudio as lms
 from lmstudio import BaseModel
+from utils.lazy_model_loader import LazyModelMixin
 
 
 @dataclass
@@ -42,7 +42,7 @@ class SnippetExtractionResult(BaseModel):
     snippets: List[CodeSnippet]
     
 
-class CodeAnalyzer:
+class CodeAnalyzer(LazyModelMixin):
     """Encapsulates code file loading and LLM-based analysis methods."""
 
     # Supported languages
@@ -60,7 +60,8 @@ class CodeAnalyzer:
     }
 
     def __init__(self, model_name: str = "qwen/qwen3-coder-30b"):
-        self.model = lms.llm(model_name)
+        self.model_name = model_name
+        self._model = None  # Lazy-loaded via LazyModelMixin
 
     def load_code_files(self, folder_path: str, extensions: List[str] = LANGUAGE_MAP.keys()) -> List[UserCode]:
         code_files = []
