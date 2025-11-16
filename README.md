@@ -67,6 +67,7 @@ All generated files are saved to output/
 
 - Switch from Arxiv API to SemanticScholar API (more papers, more metadata, embeddings of abstracts, ...)
 - Add review/improvement loop to the paper writing process
+- Add logic if hypothesis was disproven
 
 
 ## Algorithm
