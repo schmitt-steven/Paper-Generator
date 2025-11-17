@@ -2,8 +2,8 @@
 
 An agentic, RAG-based system for generating academic paper sections with indirect citations. Uses a 3-phase approach:
 1. Indexing a corpus of research papers into searchable chunks
-2. Using an LLM agent to gather relevant evidence for each section
-3. Generating complete sections (with citations and figure integration)
+2. Searching for relevant information automatically and via an LLM agent for each chapter
+3. Generating complete chapters (with citations and figure integration)
 
 This system is inspired by **PaperQA**, a RAG-based, agent-driven tool that is capable of answering scientific questions, summarizing papers and more. Check it out here: https://github.com/Future-House/paper-qa?tab=readme-ov-file
 
@@ -174,8 +174,8 @@ For each section:
 - Uses abstract, introduction, and conclusion as context
 - Generates concise, informative title
 
-### Output
-- `PaperDraft` containing:
+### Result
+- `PaperDraft` object containing:
   - `title: str`
   - `abstract: str`
   - `introduction: str`
@@ -184,39 +184,3 @@ For each section:
   - `results: str`
   - `discussion: str`
   - `conclusion: str`
-
-
-## Data Flow
-
-```
-[Papers with markdown]
-→ [Preprocessing & Chunking]
-→ [Embedding]
-→ [Indexed Corpus]
-
-For each section:
-  [Section Context + Default Queries]
-  → [Execute Default Queries → Initial Evidence]
-  → [Agent Setup with Initial Evidence + search_evidence Tool]
-  → [Agent Iteratively Calls search_evidence(query, target_section)]
-    → [Vector Search - All Chunks]
-    → [Top K Candidates]
-    → [Contextual Summarization]
-    → [LLM Re-scoring]
-    → [Top Evidence by Combined Score]
-  → [Aggregate All Evidence]
-  → [Final Evidence Set]
-
-[Evidence + Section Context]
-→ [Build Prompt (with figure integration for Results)]
-→ [LLM Generation]
-→ [Section with Citations]
-
-[All Sections Complete]
-→ [Generate Title from Abstract and Conclusion]
-→ [PaperDraft]
-```
-
-## Output Files
-
-- Section Prompts (`output/section_prompts.json`)

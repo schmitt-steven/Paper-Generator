@@ -56,35 +56,29 @@ model = PersistentModel()
 # RBQL UPDATE
 
 def propagate_reward_rbql(terminal_state):
-    """
-    RBQL backward propagation with α=1 (equation 3 from paper).
-    Q(s,a) = R(s,a) + γ * max(Q(next_state))
-    """
     global q_values, gamma
     
-    # Build backward graph from persistent model
     backward = model.build_backward_graph()
     
-    # BFS from terminal state
-    updated = set()
+    # BFS to order states by distance from terminal
+    visited_states = set([terminal_state])
     queue = deque([terminal_state])
+    state_order = []  # Collect (state, action, next_state, reward) tuples
     
     while queue:
         current_state = queue.popleft()
         
-        # For each predecessor (s, a_index, r) that leads to current_state
         for state, action_index, reward in backward[current_state]:
-            key = (state, action_index)
-            if key in updated:
-                continue
+            state_order.append((state, action_index, current_state, reward))
             
-            # RBQL update rule with α=1
-            # Q(s,a) = R(s,a) + γ * max(Q(next_state))
-            next_q = np.max(q_values[current_state])
-            q_values[state][action_index] = reward + gamma * next_q
-            
-            updated.add(key)
-            queue.append(state)
+            if state not in visited_states:
+                visited_states.add(state)
+                queue.append(state)
+    
+    # Update in BFS order
+    for state, action_index, next_state, reward in state_order:
+        next_q = np.max(q_values[next_state])
+        q_values[state][action_index] = reward + gamma * next_q
 
 # ------------------------------------------------------------------
 # HELPER FUNCTIONS
@@ -113,7 +107,7 @@ pygame_font = pyg.font.SysFont("arial", 15)
 x_racket, x_ball, y_ball, vx_ball, vy_ball, score = 5, 1, 1, 1, 1, 0
 episode = 0
 
-file = open('reward_RBQL.txt', 'w')
+file = open('reward_RBQL_improved.txt', 'w')
 clock = pyg.time.Clock()
 cont = True
 

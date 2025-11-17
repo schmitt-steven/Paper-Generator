@@ -140,16 +140,13 @@ class PaperWriter(LazyModelMixin):
     def _format_evidence_for_prompt(evidence: Sequence[Evidence]) -> str:
         lines: List[str] = []
         for idx, item in enumerate(evidence, 1):
-            citation_key = getattr(item.chunk.paper, "citation_key", "unknown")
+            citation_key = item.chunk.paper.citation_key or "unknown"
             source_info = (
                 f"{item.chunk.paper.title} "
                 f"({citation_key}; {item.chunk.paper.published or 'n.d.'})"
             )
             lines.append(f"{idx}. Summary: {item.summary}")
             lines.append(f"   Source: {source_info}")
-            lines.append(
-                f"   Scores → vector: {item.vector_score:.3f}, LLM: {item.llm_score:.3f}, combined: {item.combined_score:.3f}"
-            )
             lines.append("")
         return "\n".join(lines).strip()
 
@@ -242,27 +239,45 @@ class PaperWriter(LazyModelMixin):
         """
         
         section_guidelines = {
-            Section.ABSTRACT: 
-            """Summarize the purpose, methodology, key findings, and implications succinctly.
-            Include major contributions and outcomes in 3-5 sentences.""",
-            Section.INTRODUCTION: 
-            """Establish context and motivation for the research.
-            Introduce the problem and hypothesis derived from open questions.""",
-            Section.RELATED_WORK:
-            """Review existing work in the field and position this research relative to prior contributions.
-            Identify gaps, limitations, and how this work addresses them.
-            Organize by themes or approaches, comparing and contrasting related methods.""",
-            Section.METHODS: 
-            """Detail the experimental setup, methodology, and implementation choices.
-            Contrast the approach with comparable methods or baselines.""",
+            Section.ABSTRACT: textwrap.dedent("""\
+                150-250 words. Structure: (1) problem/gap, (2) approach, (3) key result with metrics, (4) main implication. 
+                Be specific. NO citations."""),
+            
+            Section.INTRODUCTION: textwrap.dedent("""\
+                Open with the problem and its concrete impact.
+                Identify what's missing in current solutions using evidence.
+                State your contribution as specific, falsifiable claims.
+                End with brief paper roadmap.
+                Justify claims with evidence, don't just assert."""),
+            
+            Section.RELATED_WORK: textwrap.dedent("""\
+                Group by approach/theme, not chronologically. For each cluster:
+                - What they did (method + reported results)
+                - Limitations relative to this work
+                - Direct comparison where applicable
+                Avoid generic praise. Be precise about differences. Cite liberally."""),
+            
+            Section.METHODS: textwrap.dedent("""\
+                Reproducibility is the goal. If possible and relevant, include:
+                - Architecture/algorithm with justification for key choices
+                - Hyperparameters, dataset details, compute resources
+                - Baseline comparisons (what and why)
+                - Evaluation metrics with rationale
+                Use present tense. Avoid implementation details unless critical."""),
+            
             Section.RESULTS: 
             self._get_results_guidelines(experiment),
-            Section.DISCUSSION: 
-            """Interpret findings, discuss limitations, and relate to prior work.
-            Highlight implications and potential future directions.""",
-            Section.CONCLUSION: 
-            """Summarize overall contributions and lessons learned.
-            Outline broader impact and suggested future work.""",
+            
+            Section.DISCUSSION: textwrap.dedent("""\
+                Open by restating main finding in context of hypothesis.
+                Explain why it worked/failed using specific evidence and results. Acknowledge limitations honestly.
+                Compare to related work quantitatively where possible.
+                Speculation allowed but label it clearly.
+                End with concrete future directions, not vague "explore further."""),
+            
+            Section.CONCLUSION: textwrap.dedent("""\
+                Summarize: what you did, what you found (with key metrics), broader implications (realistic, not grandiose), one actionable next step.
+                No new information. No citations."""),
         }
 
         return section_guidelines.get(section_type, "")

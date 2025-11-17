@@ -27,7 +27,7 @@ class PaperConverter(LazyModelMixin):
     def __init__(self, model_name: str = None):
         """Initialize PaperConverter."""
        
-        self.model_name = model_name or Settings.LATEX_CONVERSION_MODEL
+        self.model_name = model_name or Settings.LATEX_GENERATION_MODEL
         self._model = None  # Lazy-loaded via LazyModelMixin
 
     def convert_to_latex(
@@ -58,6 +58,38 @@ class PaperConverter(LazyModelMixin):
             self._copy_plot_images(latex_dir, experiment_result)
         
         logger.info(f"[PaperConverter] LaTeX project generated at {latex_dir}")
+        return latex_dir
+
+    @staticmethod
+    def load_latex(output_dir: str = "output/latex") -> Path:
+        """
+        Load existing LaTeX project from output directory.
+        
+        Args:
+            output_dir: Path to the LaTeX output directory
+            
+        Returns:
+            Path to the LaTeX directory
+            
+        Raises:
+            FileNotFoundError: If the LaTeX directory or paper.tex doesn't exist
+        """
+        latex_dir = Path(output_dir)
+        
+        if not latex_dir.exists():
+            raise FileNotFoundError(
+                f"LaTeX directory not found at {latex_dir}. "
+                f"Set LOAD_LATEX = False to generate it."
+            )
+        
+        paper_tex = latex_dir / "paper.tex"
+        if not paper_tex.exists():
+            raise FileNotFoundError(
+                f"paper.tex not found at {paper_tex}. "
+                f"Set LOAD_LATEX = False to generate it."
+            )
+        
+        logger.info(f"[PaperConverter] Loaded existing LaTeX project from {latex_dir}")
         return latex_dir
 
     def compile_latex(self, latex_dir: Path) -> bool:
@@ -233,7 +265,7 @@ class PaperConverter(LazyModelMixin):
                 return
             content = file_path.read_text(encoding="utf-8")
             
-            # Extract "Full Form (ABBR)" patterns and convert to \gls{key}
+            # Extract "Full Form (ABBR)"
             # Pattern: text like "Artificial Intelligence (AI)" or "Machine Learning (ML)"
             pattern = r'([A-Z][^()]*(?:\s+[A-Z][^()]*)*)\s*\(([A-Z]+)\)'
             for match in re.finditer(pattern, content):
