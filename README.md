@@ -68,11 +68,14 @@ All generated files are saved to output/
 - Switch from Arxiv API to SemanticScholar API (more papers, more metadata, embeddings of abstracts, ...)
 - Add review/improvement loop to the paper writing process
 - Add logic if hypothesis was disproven
+- Improve logic for executing steps (e.g. run_from(X), run_only(X), run_steps([X, Y]), run_until(X))
+
+
 
 
 ## Algorithm
 
 The simplified algorithm as an UML-like diagram.
-A more detailed explanation of the paper writing process is in `phases/paper_writing/`
+A more detailed explanation of the paper writing process can be found in `phases/paper_writing/`
 
 ![Paper Generator Algorithm](algorithm_diagram.png)

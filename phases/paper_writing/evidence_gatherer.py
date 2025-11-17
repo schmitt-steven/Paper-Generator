@@ -392,20 +392,21 @@ class EvidenceGatherer(LazyModelMixin, LazyEmbeddingMixin):
 
     @staticmethod
     def _format_evidence_for_prompt(evidence: Sequence[Evidence]) -> str:
+
+        if not evidence:
+            return "No evidence available."
+        
         lines: List[str] = []
         for idx, item in enumerate(evidence, 1):
-            citation_key = getattr(item.chunk.paper, "citation_key", "unknown")
-            authors = ", ".join(item.chunk.paper.authors) if item.chunk.paper.authors else "Unknown authors"
-            line_header = (
-                f"{idx}. {item.chunk.paper.title} "
-                f"({authors}; {citation_key})"
-            )
-            score_line = (
-                f"   Scores → vector: {item.vector_score:.3f}, "
-                f"llm: {item.llm_score:.3f}, combined: {item.combined_score:.3f}"
-            )
-            summary_line = f"   Summary: {item.summary}"
-            lines.extend([line_header, score_line, summary_line, ""])
+            citation_key = item.chunk.paper.citation_key or "unknown"
+            year = item.chunk.paper.published or "n.d."
+            
+            lines.append(f"[{citation_key}]")
+            lines.append(f"    Title: {item.chunk.paper.title}")
+            lines.append(f"    Year: {year}")
+            lines.append(f"    Content: {item.summary}")
+            lines.append("")  # Blank line between entries
+        
         return "\n".join(lines).strip()
 
     @staticmethod
@@ -459,8 +460,8 @@ class EvidenceGatherer(LazyModelMixin, LazyEmbeddingMixin):
             """Interpret results, limitations, and implications.
             Contrast findings with prior work and suggest future research.""",
             Section.CONCLUSION: 
-            """- Summarize contributions and key takeaways.
-            Outline broader impact and immediate next steps.""",
+            """Summarize contributions and key takeaways.
+            Outline broader impact and if senseful, next steps.""",
         }
 
         return objectives_map.get(section_type, "")

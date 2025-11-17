@@ -98,9 +98,9 @@ class PaperGenerator:
                 n_cutting_edge=15,
                 n_hidden_gems=15,
                 n_classics=15,
-                n_well_rounded=20
+                n_well_rounded=15
             )
-            PaperRanker.print_ranked_papers(filtered_papers, n=10)
+            # PaperRanker.print_ranked_papers(filtered_papers, n=10)
 
             # Download papers
             literature_search.download_papers(filtered_papers, base_folder="literature/")
@@ -116,19 +116,8 @@ class PaperGenerator:
         if Settings.LOAD_FINDINGS:
             findings = PaperAnalyzer.load_findings("output/paper_findings.json")
         else:
-            # Filter again to get a good mix of paper types for hypothesis generation
-            print(f"\nFiltering {len(papers_with_markdown)} papers for hypothesis generation...")
-            top_papers: List[Paper] = PaperFilter.filter_diverse(
-                papers=papers_with_markdown,
-                n_cutting_edge=5,
-                n_hidden_gems=5,
-                n_classics=5,
-                n_well_rounded=5
-            )
-            print(f"Selected {len(top_papers)} papers for hypothesis generation")
-            
             analyzer = PaperAnalyzer(model_name=Settings.PAPER_ANALYSIS_MODEL)
-            findings = analyzer.extract_findings(top_papers)
+            findings = analyzer.extract_findings(papers_with_markdown)
         
         #######################################
         # Step 6/11: Analyze Limitations      #
@@ -169,23 +158,18 @@ class PaperGenerator:
         
         if Settings.LOAD_EXPERIMENT_RESULT:
             experiment_result_file = Path("output/experiments") / f"experiment_result_{best_hypothesis.id}.json"
-            if experiment_result_file.exists():
-                print(f"\n[PaperGenerator] Loading existing experiment result...")
-                try:
-                    experiment_result = ExperimentRunner.load_experiment_result(str(experiment_result_file))
-                    print(f"  Experiment result loaded")
-                    print(f"  Verdict: {experiment_result.hypothesis_evaluation.verdict}")
-                    print(f"  Reasoning: {experiment_result.hypothesis_evaluation.reasoning}")
-                except Exception as e:
-                    print(f"\n[PaperGenerator] Error loading experiment result: {e}")
-                    traceback.print_exc()
-                    experiment_result = None
-            else:
-                print(f"\n[PaperGenerator] No experiment result found for hypothesis {best_hypothesis.id}")
-                print(f"[PaperGenerator] Continuing without experiment result")
-                experiment_result = None
+            if not experiment_result_file.exists():
+                raise FileNotFoundError(
+                    f"Experiment result not found at {experiment_result_file}. "
+                    f"Set LOAD_EXPERIMENT_RESULT = False to generate it."
+                )
+            
+            print(f"\n[PaperGenerator] Loading existing experiment result...")
+            experiment_result = ExperimentRunner.load_experiment_result(str(experiment_result_file))
+            print(f"  Experiment result loaded")
 
-        # Check experiment can be run (either generate plan/code or use existing)
+
+        # Check experiment can be run (generate plan/code or use existing)
         elif Settings.LOAD_EXPERIMENT_PLAN and Settings.LOAD_EXPERIMENT_CODE:
             # Try to run existing experiment code if available
             experiment_code_file = Path("output/experiments") / f"experiment_{best_hypothesis.id}.py"
@@ -269,8 +253,11 @@ class PaperGenerator:
         # Step 10/11: Convert to LaTeX        #
         #######################################
 
+        converter = PaperConverter()
+        
         if Settings.LOAD_LATEX:
-            print(f"\n[PaperGenerator] Skipping LaTeX conversion (mode: load)")
+            latex_dir = PaperConverter.load_latex("output/latex")
+            print(f"\n[PaperGenerator] Loaded existing LaTeX project from: {latex_dir}")
         else:
             # Create metadata (can be customized via settings or parameters)
             metadata = LaTeXMetadata.from_settings(
@@ -278,7 +265,6 @@ class PaperGenerator:
             )
             
             # Convert to LaTeX
-            converter = PaperConverter()
             latex_dir = converter.convert_to_latex(
                 paper_draft=paper_draft,
                 metadata=metadata,
@@ -288,15 +274,15 @@ class PaperGenerator:
             
             print(f"\n[PaperGenerator] LaTeX project generated at: {latex_dir}")
 
-            #######################################
-            # Step 11/11: Compile LaTeX           #
-            #######################################
-            
-            if converter.compile_latex(latex_dir):
-                pdf_path = Path("output/result/paper.pdf")
-                print(f"[PaperGenerator] PDF compiled successfully at: {pdf_path}")
-            else:
-                print(f"[PaperGenerator] LaTeX compilation failed. Check logs for details.")
+        #######################################
+        # Step 11/11: Compile LaTeX           #
+        #######################################
+        
+        if converter.compile_latex(latex_dir):
+            pdf_path = Path("output/result/paper.pdf")
+            print(f"[PaperGenerator] PDF compiled successfully at: {pdf_path}")
+        else:
+            print(f"[PaperGenerator] LaTeX compilation failed. Check logs for details.")
 
 
 if __name__ == "__main__":
