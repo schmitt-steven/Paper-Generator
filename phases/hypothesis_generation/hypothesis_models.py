@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Dict, Tuple, Optional
 
-from lmstudio import BaseModel
+from pydantic import BaseModel
 
 
 class FindingsExtractionResult(BaseModel):

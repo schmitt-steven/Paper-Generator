@@ -1,10 +1,15 @@
 class Settings:
-    """Configuration settings for the paper generator pipeline."""
+    """
+    Configuration settings for the paper generator pipeline.
+    
+    Note: MLX embedding models are NOT supported by LM Studio yet, use GGUF instead :(
+    See https://github.com/lmstudio-ai/lmstudio-bug-tracker/issues/808
+    """
     
     # Context Analysis Phase
     CODE_ANALYSIS_MODEL =    "qwen/qwen3-next-80b"  
     NOTES_ANALYSIS_MODEL =   "qwen/qwen3-next-80b"  
-    PAPER_CONCEPTION_MODEL = "qwen/qwen3-next-80b-a3b-thinking-mlx"  
+    PAPER_CONCEPTION_MODEL = "qwen3-next-80b-a3b-thinking-mlx"  
     
     # Paper Search Phase
     LITERATURE_SEARCH_MODEL =             "qwen/qwen3-next-80b"  
@@ -21,7 +26,7 @@ class Settings:
     EXPERIMENT_CODE_WRITE_MODEL =    "qwen/qwen3-next-80b"  
     EXPERIMENT_CODE_FIX_MODEL =      "qwen/qwen3-next-80b"  
     EXPERIMENT_CODE_IMPROVE_MODEL =  "qwen/qwen3-next-80b" 
-    EXPERIMENT_VALIDATION_MODEL =    "qwen/qwen3-next-80b-a3b-thinking-mlx" 
+    EXPERIMENT_VALIDATION_MODEL =    "qwen3-next-80b-a3b-thinking-mlx" 
     EXPERIMENT_VERDICT_MODEL =       "qwen3-next-80b-a3b-thinking-mlx"
     EXPERIMENT_PLOT_CAPTION_MODEL =  "qwen/qwen3-next-80b"  # Must be a VISION model!
     
@@ -59,7 +64,7 @@ class Settings:
 
     LOAD_SEARCH_QUERIES =    True
     LOAD_PAPERS =            True
-    LOAD_PAPER_RANKING =     True
+    LOAD_PAPER_RANKING =     False
 
     LOAD_FINDINGS =          True
     LOAD_LIMITATIONS =       True

@@ -5,6 +5,7 @@ from phases.context_analysis.user_code_analysis import CodeAnalyzer, UserCode, C
 from phases.context_analysis.user_notes_analysis import NotesAnalyzer, UserNotes 
 from utils.file_utils import save_markdown_to_file 
 from utils.lazy_model_loader import LazyModelMixin
+from utils.llm_utils import remove_thinking_blocks
 
 
 @dataclass
@@ -46,13 +47,14 @@ class PaperConception(LazyModelMixin):
         code_snippets_section = self._format_code_snippets_section()
         
         prompt = textwrap.dedent(f"""\
+            [ROLE]
             You are a critical research advisor with expertise in academic rigor, novelty assessment, and peer review standards.
 
-            TASK:
+            [TASK]
             Generate a rigorous paper concept that identifies core ideas, gaps, and research direction.
             Be CRITICAL and DEMANDING. Do not accept vague claims or weak differentiation.
 
-            CRITICAL SECTIONS (in order):
+            [CRITICAL SECTIONS]
             1. Paper Specifications
             2. Research Topic
             3. Research Field
@@ -64,49 +66,48 @@ class PaperConception(LazyModelMixin):
             
             Note: We are at the CONCEPT stage - no need for detailed proofs, experimental designs, or final paper titles yet.
 
-            STRICT REQUIREMENTS FOR EACH SECTION:
-
-            1. PAPER SPECIFICATIONS
+            [STRICT REQUIREMENTS FOR EACH SECTION]
+            1. Paper Specifications
             - Extract all metadata (type, length, audience, style, figures/tables)
             - If missing specific items, state: "[Missing: specific item name - needed for X reason]"
 
-            2. RESEARCH TOPIC
+            2. Research Topic
             - Briefly describe the general topic/area of research (1-2 sentences)
             - This is NOT the final paper title, just the subject matter
 
-            3. RESEARCH FIELD
+            3. Research Field
             - Identify the primary field and relevant subfields
             - State standard terminology if applicable
 
-            4. PROBLEM STATEMENT
+            4. Problem Statement
             - Must be SPECIFIC, not generic (e.g., "scalability issues" or "efficiency problems" are too vague)
             - Must quantify inefficiencies or failure modes with concrete examples
             - Must clearly scope the problem domain and constraints
             - If vague or missing, state: "[Missing: quantifiable problem definition - current description too broad]"
 
-            5. MOTIVATION
+            5. Motivation
             - Why is this problem important to solve?
             - What are the implications or applications?
 
-            6. NOVELTY & DIFFERENTIATION
+            6. Novelty & Differentiation
             **CRITICAL: This is where most papers fail.**
             - Explicitly compare to existing methods in the field
             - State: "This differs from [Method X] because [specific technical difference]"
             - If code/notes don't differentiate from existing work, state: "[Missing: differentiation from existing methods - must explain specific advantages]"
             - Do NOT claim novelty without clear differentiation from prior art
 
-            7. METHODOLOGY & IMPLEMENTATION (High-Level)
+            7. Methodology & Implementation (High-Level)
             - Describe the approach at a high level
             - Reference CODE SNIPPETS below for key implementation insights
             - Identify if mathematical formulation is present or missing
             - If critical details missing, state: "[Missing: X - needed for Y]"
 
-            8. EXPECTED CONTRIBUTION
+            8. Expected Contribution
             - Must be concrete and measurable
             - Avoid vague claims like "improves efficiency"
             - State specific advantages with conditions (e.g., "faster convergence in sparse reward settings")
 
-            CRITICAL INSTRUCTIONS:
+            [CRITICAL INSTRUCTIONS]
             - **Be BRUTAL**: If information is vague, mark it as insufficient
             - **Demand precision**: Generic claims → demand specific examples and scope
             - **Require differentiation**: Always compare to existing methods in the field
@@ -117,33 +118,26 @@ class PaperConception(LazyModelMixin):
             - Extract domain/field from the notes/code and tailor analysis accordingly
             - Focus on CONCEPT quality, not full paper details
 
-            OUTPUT FORMAT:
+            [OUTPUT FORMAT]
             - Use ## for section headings (e.g., "## 1. Paper Specifications")
             - Use ### for subsections if needed
             - Do NOT use horizontal rules (---) between sections
             - Use bullet points (-) for lists
             - Keep formatting clean and consistent
 
-            ═══════════════════════════════════════════════════════════════
-            USER NOTES ANALYSIS
-            ═══════════════════════════════════════════════════════════════
+            [USER NOTES ANALYSIS]
             {NotesAnalyzer.get_analysis_report(self.user_notes)}
 
-            ═══════════════════════════════════════════════════════════════
-            FULL CODE ANALYSIS
-            ═══════════════════════════════════════════════════════════════
+            [FULL CODE ANALYSIS]
             {CodeAnalyzer.get_analysis_report(self.user_code)}
 
-            ═══════════════════════════════════════════════════════════════
-            CODE SNIPPETS (Priority Information - Use These in Methodology)
-            ═══════════════════════════════════════════════════════════════
+            [CODE SNIPPETS] (Priority Information - Use These in Methodology)
             {code_snippets_section}
         """)
 
         result = self.model.respond(prompt)
         
-        # Convert result to string (for plain text responses without response_format)
-        description_text = str(result.content) if hasattr(result, 'content') else str(result)
+        description_text = remove_thinking_blocks(result.content)
         
         # Format code snippets as markdown string
         code_snippets_text = self._format_code_snippets_section()
@@ -157,19 +151,19 @@ class PaperConception(LazyModelMixin):
         """
         
         prompt = textwrap.dedent(f"""\
+            [ROLE]
             You are a strategic research advisor who prioritizes questions for maximum research impact.
 
-            TASK:
+            [TASK]
             Generate a FOCUSED list of literature search questions to understand the research landscape and strengthen differentiation.
             Prioritize questions that address critical gaps in understanding the field and prior work.
 
-            ANALYSIS APPROACH:
+            [ANALYSIS APPROACH]
             1. Identify the MOST CRITICAL gaps in understanding the field and related work
             2. Focus on: (a) existing methods/prior art, (b) how this work differs, (c) key concepts to understand
             3. Questions should guide literature search to establish novelty and context
 
-            QUESTION PRIORITIES:
-
+            [QUESTION PRIORITIES]
             **Priority 1: Related Work & Prior Art**
             - What existing methods in this field address similar problems?
             - What are the standard/state-of-the-art approaches?
@@ -188,7 +182,7 @@ class PaperConception(LazyModelMixin):
             - What terminology and definitions are standard in this field?
             Focus: 2-3 questions on foundational understanding
 
-            CRITICAL INSTRUCTIONS:
+            [CRITICAL INSTRUCTIONS]
             - Maximum 10 questions total - quality over quantity
             - Group questions by priority (label each group)
             - Be SPECIFIC (e.g., "How does Method X differ from Method Y in aspect Z?" not "What is Method Y?")
@@ -196,22 +190,21 @@ class PaperConception(LazyModelMixin):
             - Every question should have clear literature search targets
             - Adapt questions to the specific research domain identified in the paper concept
 
-            PAPER CONCEPT TO ANALYZE:
+            [PAPER CONCEPT TO ANALYZE]
             {concept.description}
 
-            CODE SNIPPETS AVAILABLE:
+            [CODE SNIPPETS AVAILABLE]
             {self._format_code_snippets_section()}
 
-            OUTPUT FORMAT:
-            1. [question]
-            2. [question]
+            [OUTPUT FORMAT]
+            1. question
+            2. question
             ...
         """)
 
         result = self.model.respond(prompt)
         
-        # Convert result to string (for plain text responses without response_format)
-        questions_text = str(result.content) if hasattr(result, 'content') else str(result)
+        questions_text = remove_thinking_blocks(result.content)
         concept.open_questions = questions_text
         
         print(f"Generated open questions for literature search")
@@ -230,26 +223,15 @@ class PaperConception(LazyModelMixin):
         return concept
 
     def save_paper_concept(self, concept: PaperConcept, filename: str = "paper_concept.md", output_dir: str = "output") -> str:
-        """
-        Save the paper concept to a markdown file with open questions and code snippets.
-        
-        Args:
-            concept: The PaperConcept to save
-            filename: Name of the output file (default: "paper_concept.md")
-            output_dir: Directory to save the file (default: "output")
-            
-        Returns:
-            str: Path to the saved file
-        """
+        """Save the paper concept to a markdown file with open questions and code snippets. """
+
         content_parts = []
         
-        # Paper Concept/Outline section
         content_parts.extend([
             "# Paper Concept\n",
             concept.description
         ])
         
-        # Open Questions section
         if concept.open_questions:
             content_parts.extend([
                 "\n\n",
@@ -257,7 +239,6 @@ class PaperConception(LazyModelMixin):
                 concept.open_questions
             ])
         
-        # Important Code Snippets section
         if concept.code_snippets:
             content_parts.extend([
                 "\n\n",
@@ -276,21 +257,11 @@ class PaperConception(LazyModelMixin):
         """
         Load a paper concept from a saved markdown file.
         Allows users to review and edit the concept before continuing.
-        
-        Args:
-            file_path: Path to the saved paper concept markdown file
-            
-        Returns:
-            PaperConcept object with description, open_questions, and code_snippets (as markdown text) loaded from file
-            
-        Note:
-            Users can edit all sections directly in the markdown file:
-            - Paper concept description (main research content)
-            - Open questions for literature search
-            - Code snippets section (entire section as editable markdown text)
-            
-            This simplified approach makes loading/editing much easier since code snippets
-            are stored as markdown text rather than parsed into structured objects.
+  
+        Users can edit all sections directly in the markdown file, as long as the 3 large headers are preserved:
+        - Paper concept description
+        - Open questions for literature search
+        - Code snippets section
         """
         import os
         
@@ -309,21 +280,17 @@ class PaperConception(LazyModelMixin):
         sections = content.split('\n# ')
         
         for section in sections:
-            # Handle the first section which may start with # (no \n before it)
             section = section.lstrip('# ')
             
             if section.startswith('Paper Concept'):
-                # Extract everything after "Paper Concept" until the next section
                 desc_content = section.split('\n', 1)[1] if '\n' in section else ""
                 description = desc_content.strip()
                 
             elif section.startswith('Open Questions'):
-                # Extract everything after "Open Questions for Literature Search" until the next section
                 questions_content = section.split('\n', 1)[1] if '\n' in section else ""
                 open_questions = questions_content.strip()
                 
             elif section.startswith('Important Code Snippets'):
-                # Extract code snippets section
                 snippets_content = section.split('\n', 1)[1] if '\n' in section else ""
                 code_snippets_section = snippets_content.strip()
         

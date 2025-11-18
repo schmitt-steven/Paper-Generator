@@ -8,18 +8,20 @@ Automatic academic paper generator using local language and embedding models.
 
 - #### Python Packages
     - `lmstudio`
+    - `feedparser`
+    - `requests`
+    - `pymupdf4llm`
     - `numpy`
     - `matplotlib`
     - `seaborn`
-    - `pymupdf4llm`
-    - `feedparser`
-    - `requests`
+    - `pygame`
+
 
 - #### LaTeX (MacTeX or BasicTeX, TeX Live, MikTeX...)
 
 ### LM Studio
 
-The LM Studio App must be installed and a local server must be running.
+The LM Studio App must be installed.
 
 You need at least:
 - one LLM capable of tool use
@@ -30,6 +32,8 @@ You could also run the code with just two local models:
 - one multimodal language model that supports tool use
 - one embedding model
 
+Note: MLX embedding models are NOT supported by LM Studio yet :/\
+See https://github.com/lmstudio-ai/lmstudio-bug-tracker/issues/808
 
 **Recommendations:**
 

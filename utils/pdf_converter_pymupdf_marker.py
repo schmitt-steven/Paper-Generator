@@ -3,9 +3,6 @@ import re
 from typing import List
 import pymupdf4llm
 from dataclasses import dataclass
-from marker.converters.pdf import PdfConverter
-from marker.models import create_model_dict
-from marker.output import text_from_rendered
 
 from phases.paper_search.arxiv_api import Paper
 
@@ -35,6 +32,9 @@ class PDFConverter:
 
     def _get_marker_converter(self):
         """Lazy load Marker converter (only loads if math fixing is needed)."""
+        # Lazy import marker only when needed
+        from marker.converters.pdf import PdfConverter
+        from marker.models import create_model_dict
 
         if self._marker_converter is None:
             print("Loading Marker models for math correction...")
@@ -80,6 +80,9 @@ class PDFConverter:
                     
                     # Save the single page PDF
                     single_page_doc.save(tmp_path)
+            
+            # Lazy import marker output function
+            from marker.output import text_from_rendered
             
             converter = self._get_marker_converter()
             rendered = converter(tmp_path)

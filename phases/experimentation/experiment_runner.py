@@ -5,7 +5,8 @@ import re
 import json
 from dataclasses import asdict, is_dataclass
 from typing import Optional, Tuple, List
-from lmstudio import BaseModel
+from pydantic import BaseModel
+import lmstudio as lms
 from phases.context_analysis.paper_conception import PaperConcept
 from phases.hypothesis_generation.hypothesis_models import Hypothesis
 from phases.experimentation.experiment_state import (
@@ -15,6 +16,7 @@ from phases.experimentation.experiment_state import (
 from phases.experimentation.code_executor import CodeExecutor
 from phases.experimentation.results_manager import ResultsManager
 from utils.lazy_model_loader import LazyModelMixin
+from utils.llm_utils import remove_thinking_blocks
 
 
 class ExperimentRunner(LazyModelMixin):
@@ -72,28 +74,40 @@ class ExperimentRunner(LazyModelMixin):
             
             # System prompt for all chunks
             system_prompt = textwrap.dedent(f"""\
+                [ROLE]
                 You are an expert at writing scientific experiment code in Python.
 
-                Task: Generate experiment code in logical chunks to test a given hypothesis.
+                [TASK]
+                Generate experiment code in logical chunks to test a given hypothesis.
 
-                Requirements for ALL code:
+                [REQUIREMENTS]
                 - Write clean, concise Python code
                 - Save plots to plots/ directory (create with os.makedirs if needed)
                 - Save results to JSON in current directory
                 - Print concise, meaningful output (~100-200 lines max)
                 - Output ONLY Python code, NO markdown formatting
 
-                Important: Code MUST complete in under 5 minutes. Reduce iterations, computations, or parameter combinations if needed. Optimize loops and maintain scientific validity.
+                [CONSTRAINTS]
+                Code MUST complete in under 5 minutes. Reduce iterations, computations, or parameter combinations if needed. Optimize loops and maintain scientific validity.
 
-                Hypothesis: {hypothesis.description}
+                [AVAILABLE PACKAGES]
+                The following Python packages are available (optional - use if helpful):
+                - numpy: Numerical computing, arrays, mathematical operations
+                - matplotlib: Plotting and visualization
+                - seaborn: Statistical data visualization (built on matplotlib)
+                - pygame: Game development and interactive simulations
+                These packages are available but not required - use them only if they help test the hypothesis.
+
+                [HYPOTHESIS]
+                Description: {hypothesis.description}
                 Rationale: {hypothesis.rationale}
                 Expected Improvement: {hypothesis.expected_improvement}
                 Baseline: {hypothesis.baseline_to_beat}
 
-                Provided code snippets (only process if helpful):
-                {code_snippets_section}
+                [CODE_SNIPPETS]
+                {code_snippets_section if code_snippets_section else "No code snippets provided"}
 
-                Experimental Plan:
+                [EXPERIMENTAL_PLAN]
                 {experimental_plan}
             """)
 
@@ -112,8 +126,8 @@ class ExperimentRunner(LazyModelMixin):
 
                 Do NOT include algorithm implementations, experiment logic, or visualization yet.""")
 
-                response = self.model.respond(chat, config={"temperature": 0.3})
-                current_code = self._remove_markdown_formatting(response.content)
+                response = self.model.respond(chat, config={"temperature": 0.4})
+                current_code = self._remove_markdown_formatting(remove_thinking_blocks(response.content))
             except Exception as e:
                 error_msg = f"ERROR generating imports chunk: {e}"
                 print(error_msg)
@@ -123,7 +137,7 @@ class ExperimentRunner(LazyModelMixin):
             # Chunk 2/4: Algorithms
             try:
                 print(f"Generating algorithm implementations...")
-                chat.add_user_message("""Implement the code for the algorithms being tested and merge it with the previous response.
+                chat.add_user_message("""Implement the code for the algorithm(s) being tested and merge it with the previous response.
 
                 Include everything from the previous response, then add:
                 - The proposed method/algorithm being tested (as described in the experimental plan)
@@ -133,8 +147,8 @@ class ExperimentRunner(LazyModelMixin):
 
                 Output the COMPLETE code so far (imports and data structures + algorithms).""")
 
-                response = self.model.respond(chat, config={"temperature": 0.3})
-                current_code = self._remove_markdown_formatting(response.content)
+                response = self.model.respond(chat, config={"temperature": 0.4})
+                current_code = self._remove_markdown_formatting(remove_thinking_blocks(response.content))
             except Exception as e:
                 error_msg = f"ERROR generating algorithms chunk: {e}"
                 print(error_msg)
@@ -144,20 +158,22 @@ class ExperimentRunner(LazyModelMixin):
             # Chunk 3/4: Experiment setup and execution
             try:
                 print(f"Generating experiment execution logic...")
-                chat.add_user_message("""Implement the code for the experiment setup and execution and merge it with the previous response.
+                chat.add_user_message(textwrap.dedent("""\
+                    Implement the code for the experiment setup and execution and merge it with the previous response.
 
-                Include everything from the previous response, then add:
-                - Experiment setup and execution (as described in the experimental plan)
-                - Running the proposed method and baseline/comparison method
-                - Metric collection and measurement
-                - Save results to JSON file in current directory
-                - Concise stdout output with key metrics
+                    Include everything from the previous response, then add:
+                    - Experiment setup and execution (as described in the experimental plan)
+                    - Running the proposed method and baseline/comparison method
+                    - Metric collection and measurement
+                    - Save results to JSON file in current directory
+                    - Concise stdout output with key metrics
 
-                Output the COMPLETE code so far (imports and data structures + algorithms + experiment).
-                Do NOT include visualization yet.""")
+                    Output the COMPLETE code so far (imports and data structures + algorithms + experiment).
+                    Do NOT include visualization yet.
+                """))
 
-                response = self.model.respond(chat, config={"temperature": 0.3})
-                current_code = self._remove_markdown_formatting(response.content)
+                response = self.model.respond(chat, config={"temperature": 0.4})
+                current_code = self._remove_markdown_formatting(remove_thinking_blocks(response.content))
             except Exception as e:
                 error_msg = f"ERROR generating experiment chunk: {e}"
                 print(error_msg)
@@ -167,18 +183,20 @@ class ExperimentRunner(LazyModelMixin):
             # Chunk 4/4: Visualization/Plotting
             try:
                 print(f"Generating visualization code...")
-                chat.add_user_message("""Generate the COMPLETE final code including everything from before PLUS visualization and summary.
+                chat.add_user_message(textwrap.dedent("""\
+                    Generate the COMPLETE final code including everything from before PLUS visualization and summary.
 
-                Include everything from the previous response, then add:
-                - Create plots/ directory
-                - Generate comparison plots
-                - Save plots to plots/
-                - Print concise summary of the results (NEVER guess the results, only print the actual results)
+                    Include everything from the previous response, then add:
+                    - Create plots/ directory
+                    - Generate comparison plots
+                    - Save plots to plots/
+                    - Print concise summary of the results (NEVER guess the results, only print the actual results)
 
-                Output the COMPLETE, FINAL code (imports & data structures + algorithms + experiment + visualization).""")
+                    Output the COMPLETE, FINAL code (imports & data structures + algorithms + experiment + visualization).
+                """))
 
-                response = self.model.respond(chat, config={"temperature": 0.3})
-                current_code = self._remove_markdown_formatting(response.content)
+                response = self.model.respond(chat, config={"temperature": 0.4})
+                current_code = self._remove_markdown_formatting(remove_thinking_blocks(response.content))
             except Exception as e:
                 error_msg = f"ERROR generating visualization chunk: {e}"
                 print(error_msg)
@@ -251,26 +269,32 @@ class ExperimentRunner(LazyModelMixin):
             # Create or use existing chat
             if chat is None:
                 # First attempt - create new chat
-                system_prompt = """You are an expert at fixing errors in Python code.
+                system_prompt = textwrap.dedent("""\
+                    [ROLE]
+                    You are an expert at fixing errors in Python code.
 
-                Task: Fix errors in the given Python code.
+                    [TASK]
+                    Fix errors in the given Python code.
 
-                Requirements:
-                1. Analyze the error message carefully to understand the root cause
-                2. Fix the underlying data structure or logic issue, not just the symptom
-                3. Preserve the original code structure and functionality - only change what's necessary
-                4. Maintain existing plot/results saving functionality
-                5. Do NOT add new functionality unrelated to fixing the errors
+                    [REQUIREMENTS]
+                    1. Analyze the error message carefully to understand the root cause
+                    2. Fix the underlying data structure or logic issue, not just the symptom
+                    3. Preserve the original code structure and functionality - only change what's necessary
+                    4. Maintain existing plot/results saving functionality
+                    5. Do NOT add new functionality unrelated to fixing the errors
 
-                Critical analysis steps:
-                - Read the entire code file before making changes
-                - Identify where the error occurs and trace back to find the root cause
-                - Check for inconsistencies: if similar classes/methods exist, ensure they handle data types and operations consistently
-                - Verify data type matches: ensure variables are used in contexts that match their types (e.g., tuples vs integers, correct array dimensions)
-                - Check bounds and indices: verify array/container sizes match the values being accessed
-                - Look for patterns: if one method handles something correctly, similar methods should follow the same pattern
+                    [ANALYSIS_STEPS]
+                    - Read the entire code file before making changes
+                    - Identify where the error occurs and trace back to find the root cause
+                    - Check for inconsistencies: if similar classes/methods exist, ensure they handle data types and operations consistently
+                    - Verify data type matches: ensure variables are used in contexts that match their types (e.g., tuples vs integers, correct array dimensions)
+                    - Check bounds and indices: verify array/container sizes match the values being accessed
+                    - Look for patterns: if one method handles something correctly, similar methods should follow the same pattern
 
-                Always output the COMPLETE fixed Python code file, NO further markdown or explanations."""
+                    [OUTPUT_FORMAT]
+                    Always output the COMPLETE fixed Python code file, NO further markdown or explanations.
+                """)
+                
                 chat = lms.Chat(system_prompt)
             
             # Build user message with context
@@ -290,28 +314,32 @@ class ExperimentRunner(LazyModelMixin):
             stderr_preview = stderr[:1000] if len(stderr) > 2000 else stderr
             
             user_message = textwrap.dedent(f"""\
+                [TASK]
                 Fix the errors in this Python code.
 
                 {attempt_context}
 
-                Code to fix:
+                [CODE_TO_FIX]
                 ```python
                 {broken_code}
                 ```
 
+                [ERROR_INFORMATION]
                 Error Message: {error_message}
                 STDOUT: {stdout_preview}
                 STDERR: {stderr_preview}
 
+                [INSTRUCTIONS]
                 Analyze the error carefully and fix all faulty parts of the code.
                 
+                [OUTPUT_REQUIREMENT]
                 IMPORTANT: Output the COMPLETE fixed Python code file from start to finish. Do not truncate or omit any parts.
             """)
 
             print(f"Fixing experiment code (attempt {fix_attempt}/{max_attempts}): {code_file_path}")
             chat.add_user_message(user_message)
-            result = self.model.respond(chat, config={"temperature": 0.5})
-            cleaned_code = result.content
+            result = self.model.respond(chat, config={"temperature": 0.4})
+            cleaned_code = remove_thinking_blocks(result.content)
             
             # Remove markdown code block markers
             cleaned_code = self._remove_markdown_formatting(cleaned_code)
@@ -361,10 +389,13 @@ class ExperimentRunner(LazyModelMixin):
         result_file_count = len(execution_result.result_files)
         
         system_prompt = textwrap.dedent(f"""\
-            You are an expert at validating scientific experiments. 
-            Task: Evaluate whether an experiment's results are valid and meaningful based on the experimental plan and hypothesis.
+            [ROLE]
+            You are an expert at validating scientific experiments.
 
-            Evaluate experiments by checking:
+            [TASK]
+            Evaluate whether an experiment's results are valid and meaningful based on the experimental plan and hypothesis.
+
+            [VALIDATION_CRITERIA]
             1. Did the experiment actually test the hypothesis?
             2. Were the expected outputs generated (plots, JSON results)?
             3. Are the results meaningful and complete?
@@ -374,30 +405,32 @@ class ExperimentRunner(LazyModelMixin):
                 
         # User message with execution results and code
         validation_prompt = textwrap.dedent(f"""\
+            [TASK]
             Evaluate whether this experiment produced valid and meaningful results.
 
-            Hypothesis:
+            [HYPOTHESIS]
             Description: {hypothesis.description}
             Rationale: {hypothesis.rationale}
             Expected Improvement: {hypothesis.expected_improvement}
             Baseline to Beat: {hypothesis.baseline_to_beat or "N/A"}
 
-            Experimental Plan:
+            [EXPERIMENTAL_PLAN]
             {experimental_plan}
 
-            Execution Results:
+            [EXECUTION_RESULTS]
             - Return Code: {execution_result.return_code}
             - Generated Plots: {plot_count} file(s) {f"({', '.join([os.path.basename(p) for p in execution_result.plot_files])})" if execution_result.plot_files else ""}
             - Generated JSON results: {result_file_count} file(s)
 
-            Code that was executed:
+            [CODE_EXECUTED]
             ```python
             {code_content}
             ```
 
-            STDOUT Output:
+            [STDOUT_OUTPUT]
             {stdout_summary}
 
+            [OUTPUT_REQUIREMENTS]
             Provide a structured evaluation with:
             - reasoning: Detailed explanation of why results are valid or invalid
             - If invalid: concisely describe specific issues that need to be addressed in a few sentences.
@@ -457,11 +490,13 @@ class ExperimentRunner(LazyModelMixin):
                 feedback_text += f"\n\nIssues identified:\n{validation_result.issues}"
             
             prompt = textwrap.dedent(f"""\
+                [ROLE]
                 You are an expert at improving scientific experiment code.
 
-                Task: Improve the given experiment code based on validation feedback.
+                [TASK]
+                Improve the given experiment code based on validation feedback.
 
-                Requirements:
+                [REQUIREMENTS]
                 1. Address all issues identified in the validation feedback as well as possible.
                 2. Ensure the code actually tests the hypothesis as described in the experimental plan
                 3. Ensure plots are saved to "plots/" directory (relative to execution directory) - create this directory if needed using os.makedirs("plots", exist_ok=True)
@@ -470,25 +505,34 @@ class ExperimentRunner(LazyModelMixin):
                 6. Make sure the experiment is complete and meaningful (e.g., not too short, collects proper metrics, etc.)
                 7. Preserve any working, valid parts of the code
 
-                Hypothesis:
+                [AVAILABLE_PACKAGES]
+                The following Python packages are available (optional - use if helpful):
+                - numpy: Numerical computing, arrays, mathematical operations
+                - matplotlib: Plotting and visualization
+                - seaborn: Statistical data visualization (built on matplotlib)
+                - pygame: Game development and interactive simulations
+                These packages are available but not required - use them only if they help test the hypothesis.
+
+                [HYPOTHESIS]
                 Description: {hypothesis.description}
                 Rationale: {hypothesis.rationale}
                 Expected Improvement: {hypothesis.expected_improvement}
                 Baseline to Beat: {hypothesis.baseline_to_beat or "N/A"}
 
-                Current Code:
+                [CURRENT_CODE]
                 ```python
                 {current_code}
                 ```
 
-                Validation Feedback:
+                [VALIDATION_FEEDBACK]
                 {feedback_text}
 
+                [OUTPUT_FORMAT]
                 Output ONLY the improved Python code, NO further markdown or explanations. Your answer will be saved to a code file.
             """)
 
-            result = self.model.respond(prompt, config={"temperature": 0.3})
-            improved_code = result.content
+            result = self.model.respond(prompt, config={"temperature": 0.4})
+            improved_code = remove_thinking_blocks(result.content)
             
             # Remove markdown code block markers
             improved_code = self._remove_markdown_formatting(improved_code)
@@ -529,11 +573,13 @@ class ExperimentRunner(LazyModelMixin):
         plots = []
         
         # System prompt for plot caption generation
-        system_prompt = """You are an expert at writing scientific figure captions for research papers.
+        system_prompt = """[ROLE]
+        You are an expert at writing scientific figure captions for research papers.
 
-        Your task is to generate concise, informative captions for scientific plots/figures generated from experiments.
+        [TASK]
+        Generate concise, informative captions for scientific plots/figures generated from experiments.
 
-        Guidelines for captions:
+        [GUIDELINES]
         1. Describe what the plot shows clearly and concisely
         2. Relate it to the hypothesis being tested
         3. Use professional scientific language suitable for research papers
@@ -556,30 +602,33 @@ class ExperimentRunner(LazyModelMixin):
                 continue
             
             user_message = textwrap.dedent(f"""\
+                [TASK]
                 Generate a caption for this scientific plot.
 
-                Tested hypothesis:
+                [HYPOTHESIS]
                 Description: {hypothesis.description}
                 Rationale: {hypothesis.rationale}
                 Expected Improvement: {hypothesis.expected_improvement}
                 Baseline to Beat: {hypothesis.baseline_to_beat or "N/A"}
 
-                Experimental Plan:
+                [EXPERIMENTAL_PLAN]
                 {experimental_plan}
 
-                Code Execution Output:
+                [CODE_EXECUTION_OUTPUT]
                 {stdout[:1000] if len(stdout) > 1000 else stdout}
 
-                Plot Filename: {filename}
+                [PLOT_FILENAME]
+                {filename}
 
-                Now generate a professional scientific figure caption for this plot. Output ONLY the caption text, no additional formatting or explanations.
+                [OUTPUT_REQUIREMENT]
+                Generate a professional scientific figure caption for this plot. Output ONLY the caption text, no additional formatting or explanations.
             """)
                         
             try:
                 chat = lms.Chat(system_prompt)
                 chat.add_user_message(user_message, images=[image_handle])
-                result = self.vision_model.respond(chat, config={"temperature": 0.5})
-                caption = result.content
+                result = self.vision_model.respond(chat, config={"temperature": 0.4})
+                caption = remove_thinking_blocks(result.content)
                 plots.append(Plot(filename=plot_file, caption=caption))
             except Exception as e:
                 print(f"ERROR: Failed to generate caption for {filename}: {e}")
@@ -597,9 +646,11 @@ class ExperimentRunner(LazyModelMixin):
         """Generate a detailed experimental plan for testing a hypothesis."""
 
         prompt = textwrap.dedent(f"""\
-            Task: Create a detailed, concise experimental plan for testing a given hypothesis.
+            [TASK]
+            Create a detailed, concise experimental plan for testing a given hypothesis.
             The plan will be used to generate the experiment code in Python.
 
+            [PLAN_REQUIREMENTS]
             Include:
             - Objective and success criteria
             - Required mathematical formulas/technical details
@@ -611,26 +662,36 @@ class ExperimentRunner(LazyModelMixin):
               * Concise, meaningful output to stdout (key metrics, conclusions)
               * Plot(s) for visualization
 
-            Important: Experiment MUST complete in under 5 minutes. Use reasonable parameter ranges and reduce iterations/computations/parameter combinations if needed.
+            [CONSTRAINTS]
+            Experiment MUST complete in under 5 minutes. Use reasonable parameter ranges and reduce iterations/computations/parameter combinations if needed.
 
-            Research Context:
+            [AVAILABLE_PACKAGES]
+            The following Python packages are available (optional - use if helpful):
+            - numpy: Numerical computing, arrays, mathematical operations
+            - matplotlib: Plotting and visualization
+            - seaborn: Statistical data visualization (built on matplotlib)
+            - pygame: Game development and interactive simulations
+            These packages are available but not required - use them only if they help test the hypothesis.
+
+            [RESEARCH_CONTEXT]
             {paper_concept.description}
 
-            Code snippets (only use if helpful):
+            [CODE_SNIPPETS]
             {paper_concept.code_snippets if paper_concept.code_snippets else "No code snippets provided"}
 
-            Hypothesis:
+            [HYPOTHESIS]
             Description: {hypothesis.description}
             Rationale: {hypothesis.rationale}
             Expected Improvement: {hypothesis.expected_improvement}
             Baseline to Beat: {hypothesis.baseline_to_beat or "N/A"}
 
+            [INSTRUCTIONS]
             Be specific and actionable. Only use information actually present in the research context.
         """)
 
         try:
-            result = self.model.respond(prompt, config={"temperature": 0.5})
-            return result.content
+            result = self.model.respond(prompt, config={"temperature": 0.4})
+            return remove_thinking_blocks(result.content)
         except Exception as e:
             print(f"ERROR: Failed to generate experimental plan: {e}")
             traceback.print_exc()
@@ -986,20 +1047,22 @@ class ExperimentRunner(LazyModelMixin):
                 
                 # Build context for verdict determination
                 verdict_prompt = textwrap.dedent(f"""\
+                    [ROLE]
                     You are evaluating the results of a scientific experiment to test a hypothesis.
 
-                    Hypothesis:
+                    [HYPOTHESIS]
                     Description: {hypothesis.description}
                     Rationale: {hypothesis.rationale}
                     Expected Improvement: {hypothesis.expected_improvement}
                     Baseline to Beat: {hypothesis.baseline_to_beat or "N/A"}
 
-                    STDOUT:
+                    [STDOUT_OUTPUT]
                     {stdout_summary}
 
-                    Plot captions:
+                    [PLOT_CAPTIONS]
                     {plot_captions_text}
 
+                    [TASK]
                     Based on the execution results and generated plots, provide:
                     1. A concise reasoning about whether the hypothesis is proven, disproven, or inconclusive
                     2. Your concise analysis of the results and observations of the experiment

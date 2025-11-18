@@ -24,6 +24,9 @@ class PaperGenerator:
     
     def generate_paper(self):
 
+        # TODO: use remove_thinking_blocks from llm_utils.py - or shit will break
+        # TODO: Test paper concept until LLM gets it as MODEL BASED
+
         ###############################
         # Step 1/11: Paper Concept  #
         ###############################
@@ -58,7 +61,8 @@ class PaperGenerator:
         if Settings.LOAD_SEARCH_QUERIES:
             search_queries = LiteratureSearch.load_search_queries("output/search_queries.json")
         else:
-            search_queries = literature_search.build_search_queries([paper_concept.description, paper_concept.open_questions])
+            search_queries = literature_search.build_search_queries(paper_concept)
+
 
         #######################################
         # Step 3/11: Execute searches         #
@@ -67,6 +71,7 @@ class PaperGenerator:
             all_papers: List[Paper] = LiteratureSearch.load_papers("output/papers.json")
         else:
             all_papers = literature_search.search_papers(search_queries, max_results_per_query=30)
+
             all_papers = literature_search.get_citation_counts(all_papers)
             all_papers = literature_search.get_bibtex_for_papers(all_papers)
 
@@ -100,7 +105,7 @@ class PaperGenerator:
                 n_classics=15,
                 n_well_rounded=15
             )
-            # PaperRanker.print_ranked_papers(filtered_papers, n=10)
+            PaperRanker.print_ranked_papers(filtered_papers, n=10)
 
             # Download papers
             literature_search.download_papers(filtered_papers, base_folder="literature/")
@@ -109,6 +114,8 @@ class PaperGenerator:
             converter = PDFConverter(fix_math=False, extract_media=True)
             papers_with_markdown: List[Paper] = converter.convert_all_papers(filtered_papers, base_folder="literature/")
             literature_search.save_papers(papers_with_markdown, filename="papers_filtered_with_markdown.json")
+
+        return
 
         #######################################
         # Step 5/11: Extract Findings         #
@@ -167,6 +174,14 @@ class PaperGenerator:
             print(f"\n[PaperGenerator] Loading existing experiment result...")
             experiment_result = ExperimentRunner.load_experiment_result(str(experiment_result_file))
             print(f"  Experiment result loaded")
+            print(f"  Verdict: {experiment_result.hypothesis_evaluation.verdict}")
+            print(f"  Reasoning: {experiment_result.hypothesis_evaluation.reasoning}")
+            
+            # Exit if hypothesis was disproven or inconclusive
+            verdict = experiment_result.hypothesis_evaluation.verdict.lower()
+            if verdict in ["disproven", "inconclusive"]:
+                print(f"\n[PaperGenerator] Hypothesis was {verdict}. Exiting program.")
+                return
 
 
         # Check experiment can be run (generate plan/code or use existing)
@@ -207,6 +222,13 @@ class PaperGenerator:
                 print(f"  Experiment completed")
                 print(f"  Verdict: {result.hypothesis_evaluation.verdict}")
                 print(f"  Reasoning: {result.hypothesis_evaluation.reasoning}")
+                
+                # Exit if hypothesis was disproven or inconclusive
+                verdict = result.hypothesis_evaluation.verdict.lower()
+                if verdict in ["disproven", "inconclusive"]:
+                    print(f"\n[PaperGenerator] Hypothesis was {verdict}. Exiting program.")
+                    return
+                
                 experiment_result = result
             except Exception as e:
                 print(f"\nError running experiment: {e}")

@@ -1,10 +1,13 @@
 import os
+import re
+import json
 import textwrap
 from pathlib import Path
 from dataclasses import dataclass
 from typing import List
-from lmstudio import BaseModel
+from pydantic import BaseModel
 from utils.lazy_model_loader import LazyModelMixin
+from utils.llm_utils import remove_thinking_blocks
 
 
 @dataclass
@@ -90,35 +93,37 @@ class CodeAnalyzer(LazyModelMixin):
 
     def analyze_code_file(self, code_analysis: UserCode) -> UserCode:
         """Analyze a code file using a single structured LLM call."""
+        print(f"Analyzing {code_analysis.file_name}...")
 
         prompt = textwrap.dedent(f"""\
+            [ROLE]
             You are an expert in code analysis and scientific literature.
-            
-            Task:
+
+            [TASK]
             Analyze the following code file and provide a structured analysis.
 
-            Instructions:
-            Provide your analysis as a CodeAnalysisResult with the following fields:
-            1. summary: Technical description of what the code does and how it works in a few sentences.
-            2. novel_concepts: What makes this code truly novel or innovative? If nothing is novel, use an empty string.
-            3. research_relevance: Based on the novel concepts above, what is the research potential? 
-            Otherwise, explain specific academic value in a few sentences. If no research potential, use an empty string.
+            [OUTPUT_FORMAT]
+            You MUST respond with valid JSON containing exactly these three fields:
+            {{
+                "summary": "Technical description of what the code does and how it works in a few sentences.",
+                "novel_concepts": "What makes this code truly novel or innovative? If nothing is novel, use an empty string.",
+                "research_relevance": "Based on the novel concepts above, what is the research potential? Otherwise, explain specific academic value in a few sentences. If no research potential, use an empty string."
+            }}
 
-            Code file: {code_analysis.file_name}
-            Code file content:
+            [CODE FILE] 
+            {code_analysis.file_name}
+
+            [CODE CONTENT]
             ```
             {code_analysis.file_content}
-            ```
-        """)
+            ```"""
+        )
 
         result = self.model.respond(
             prompt, 
             response_format=UserCodeAnalysisResult
-        ).parsed
-
-        code_analysis.summary = result['summary']
-        code_analysis.novel_concepts = result['novel_concepts']
-        code_analysis.research_relevance = result['research_relevance']
+        )
+        code_analysis.__dict__.update(**result.parsed)
 
         print(f"Completed analyzing {code_analysis.file_name}")
         return code_analysis
@@ -127,43 +132,67 @@ class CodeAnalyzer(LazyModelMixin):
         """Extract important code snippets from a file that has novel concepts."""
                 
         prompt = textwrap.dedent(f"""\
+            [ROLE]
             You are an expert in code analysis and scientific research.
 
-            Task:
-            Extract the most important code snippets from this file that demonstrate the novel concepts identified earlier.
+            [TASK]
+            Extract the most important code snippets from this file that demonstrate the novel concepts.
 
-            Novel Concepts Identified:
+            [CODE SUMMARY]
+            {code_analysis.summary}
+
+            [CODE NOVEL CONCEPTS]
             {code_analysis.novel_concepts}
 
-            Instructions:
-            1. Extract only the most important code snippet(s) that best demonstrate the novel/research-worthy aspects
-            2. Copy the code EXACTLY as it appears (verbatim)
-            3. For each snippet provide:
-            - code: The exact code (function, class, or relevant block)
-            - explanation: What this code does (2-3 sentences)
-            - importance_reasoning: Why this specific code is important for research (1-2 sentences)
-            4. Prioritize:
-            - Core algorithmic implementations
-            - Novel data structures or patterns
-            - Key architectural decisions
-            5. If the file is very long, focus on the most critical snippets
+            [CODE RESEARCH RELEVANCE]
+            {code_analysis.research_relevance}
 
-            Code file: {code_analysis.file_name}
-            Code file content:
+            [CODE FILE]
+            {code_analysis.file_name}
+
+            [CODE FILE CONTENT]
             ```
             {code_analysis.file_content}
             ```
-        """)
 
-        result = self.model.respond(
-            prompt,
-            response_format=SnippetExtractionResult,
-        ).parsed
+            [INSTRUCTIONS]
+            1. Extract only the most important code snippet(s) that best demonstrate the novel/research-worthy aspects
+            2. Copy the code EXACTLY as it appears (verbatim) - preserve all indentation, newlines, and formatting
+            4. For each snippet provide:
+            - code: The exact code (function, class, or relevant block) with original formatting preserved
+            - explanation: What this code does (2-3 sentences)
+            - importance_reasoning: Why this specific code is important for research (1-2 sentences)
+            5. Prioritize:
+            - Core algorithmic implementations
+            - Novel data structures or patterns
+            - Key architectural decisions
+            6. If the file is very long, focus on the most critical snippets
+            
+            [OUTPUT FORMAT]
+            Return your response as a JSON object with this exact structure:
+            {{
+            "snippets": [
+                {{
+                "code": "the actual code here",
+                "explanation": "what it does",
+                "importance_reasoning": "why it matters"
+                }}
+            ]
+            }}"""
+        )
 
-        # Convert dict results to CodeSnippet objects
-        code_analysis.important_snippets = [
-            CodeSnippet(**snippet) for snippet in result['snippets']
-        ]
+        result = self.model.respond(prompt)
+        
+        # Parse JSON from content string (response schema doesn't work well for code)
+        content = remove_thinking_blocks(result.content)
+        # Extract JSON from markdown code blocks if present
+        json_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', content, re.DOTALL)
+        if json_match:
+            content = json_match.group(1)
+        
+        parsed_dict = json.loads(content)
+        extraction_result = SnippetExtractionResult(**parsed_dict)
+        code_analysis.important_snippets = extraction_result.snippets
 
         print(f"Extracted {len(code_analysis.important_snippets)} code snippet(s)")
         return code_analysis

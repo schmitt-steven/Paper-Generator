@@ -1,7 +1,12 @@
 from datetime import datetime
 import urllib.request as libreq
+import ssl
 import feedparser
 import re
+import os
+import time
+import shutil
+import time
 from typing import List, Optional
 from dataclasses import dataclass, field
 
@@ -149,7 +154,12 @@ class ArxivAPI:
 
         query_url = BASE_URL + parameters
 
-        with libreq.urlopen(query_url) as response:
+        # Create SSL context that doesn't verify certificates (for macOS compatibility)
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+
+        with libreq.urlopen(query_url, context=ssl_context) as response:
             return response.read().decode('utf-8')
     
 
@@ -202,15 +212,19 @@ class ArxivAPI:
         Download selected papers as PDFs to specified folder.
         Creates a separate folder for each paper (named by paper ID) containing the PDF.
         Includes 1-second rate limiting to be polite to arXiv servers.
+        Deletes all existing papers in the base_folder before downloading new ones.
         
         Args:
             papers: List of Paper objects to download
             base_folder: Base folder for all papers (will be created if doesn't exist)
         """
-        import os
-        import time
         
-        # Create base folder if it doesn't exist
+        # Delete existing papers folder if it exists
+        if os.path.exists(base_folder):
+            print(f"Deleting existing papers in '{base_folder}'...")
+            shutil.rmtree(base_folder)
+        
+        # Create base folder
         os.makedirs(base_folder, exist_ok=True)
         
         print(f"Downloading {len(papers)} papers from arXiv to '{base_folder}'...")
@@ -274,7 +288,6 @@ class ArxivAPI:
         Returns:
             Same list of Paper objects with bibtex field populated
         """
-        import time
         
         print(f"Fetching BibTeX for {len(papers)} papers...")
         found_count = 0
