@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Any
 from datetime import datetime
-from lmstudio import BaseModel
+from pydantic import BaseModel
 from phases.hypothesis_generation.hypothesis_models import Hypothesis
 
 class VerdictResult(BaseModel):

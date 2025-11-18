@@ -11,6 +11,7 @@ from phases.context_analysis.paper_conception import PaperConcept
 from phases.experimentation.experiment_state import ExperimentResult
 from phases.paper_writing.data_models import Evidence, PaperChunk, Section, ScoreResult
 from utils.lazy_model_loader import LazyModelMixin, LazyEmbeddingMixin
+from utils.llm_utils import remove_thinking_blocks
 
 
 @dataclass
@@ -94,9 +95,9 @@ class EvidenceGatherer(LazyModelMixin, LazyEmbeddingMixin):
             prompt = self._build_summary_prompt(query, chunk)
             response = self.llm_model.respond(
                 prompt,
-                config={"temperature": 0.3, "maxTokens": 220},
+                config={"temperature": 0.4, "maxTokens": 300},
             )
-            summary_text = self._extract_response_text(response)
+            summary_text = remove_thinking_blocks(response.content)
             summaries.append((chunk, vector_score, summary_text))
         return summaries
 
@@ -135,14 +136,6 @@ class EvidenceGatherer(LazyModelMixin, LazyEmbeddingMixin):
 
             normalized.append(_NormalizedChunk(chunk=chunk, vector=vector / norm))
         return normalized
-
-    @staticmethod
-    def _extract_response_text(response) -> str:
-        """Safely convert an LM Studio response to plain text."""
-
-        if hasattr(response, "content"):
-            return str(response.content).strip()
-        return str(response).strip()
 
     def _build_summary_prompt(self, query: str, chunk: PaperChunk) -> str:
         """Construct a prompt asking the LLM to summarize chunk relevance."""

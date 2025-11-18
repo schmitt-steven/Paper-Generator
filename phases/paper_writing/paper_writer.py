@@ -5,6 +5,7 @@ from phases.context_analysis.paper_conception import PaperConcept
 from phases.experimentation.experiment_state import ExperimentResult, Plot
 from phases.paper_writing.data_models import Evidence, PaperDraft, Section
 from utils.lazy_model_loader import LazyModelMixin
+from utils.llm_utils import remove_thinking_blocks
 from settings import Settings
 
 
@@ -78,7 +79,7 @@ class PaperWriter(LazyModelMixin):
                 "temperature": temperature,
             },
         )
-        return response.content
+        return remove_thinking_blocks(response.content)
 
     def _build_section_prompt(
         self,
@@ -354,6 +355,6 @@ class PaperWriter(LazyModelMixin):
                 "maxTokens": max_tokens,
             },
         )
-        title = response.content.strip().strip('"').strip("'")
+        title = remove_thinking_blocks(response.content).strip().strip('"').strip("'")
         return title
 

@@ -1,3 +1,12 @@
+
+"""
+RBQL (Recursive Backwards Q-Learning)
+- Stores all transitions in persistent model (never cleared between episodes)
+- On terminal state: BFS backwards through model, updating ALL known states
+- Update: Q(s,a) = R(s,a) + γ * max(Q(s')) with α=1
+- Faster convergence than standard Q-learning on deterministic problems
+"""
+
 import pygame as pyg
 import numpy as np
 import random

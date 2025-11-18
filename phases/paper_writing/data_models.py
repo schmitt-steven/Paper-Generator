@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import List
 
-from lmstudio import BaseModel
+from pydantic import BaseModel
 from phases.paper_search.arxiv_api import Paper
 
 

@@ -1,8 +1,10 @@
 from phases.paper_search.arxiv_api import ArxivAPI, Paper, RankingScores
+from phases.context_analysis.paper_conception import PaperConcept
 from typing import List
 from dataclasses import asdict
 import textwrap
-from lmstudio import BaseModel
+from pydantic import BaseModel
+import lmstudio as lms
 import time
 import requests
 import json
@@ -37,71 +39,101 @@ class LiteratureSearch(LazyModelMixin):
         self.arxiv_api = ArxivAPI()
 
 
-    def build_search_queries(self, contexts: List[str]) -> List[SearchQuery]:
+    def build_search_queries(self, paper_concept: PaperConcept) -> List[SearchQuery]:
         """
-        Generate multiple search queries from contexts for different aspects of academic writing.
+        Generate multiple search queries from paper concept for comprehensive literature search.
         
         Args:
-            contexts: List of research context strings, each describing a topic to search for
+            paper_concept: PaperConcept object containing description, open questions, and code snippets
             
         Returns:
             List of SearchQuery objects with label, query, and description
         """
 
-        system_prompt = """Task: Generate multiple arXiv API search queries usable for a whole and effective literature search.
-        Use the provided context to generate the search queries.
+        system_prompt = textwrap.dedent("""\
+            [TASK]
+            Generate arXiv API search queries for a comprehensive literature search.
 
-        ARXIV QUERY SYNTAX:
-        Field: abs: (abstract)
-        Operators: +AND+, +OR+, +ANDNOT+ (uppercase only)
-        Quotes: %22phrase%22 (spaces become +)
-        Grouping: %28...%29 required when mixing +OR+ with +AND+/+ANDNOT+
+            [ARXIV QUERY SYNTAX]
+            Field: abs: (abstract)
+            Operators: +AND+, +OR+, +ANDNOT+ (uppercase only)
+            Quotes: %22phrase%22 (spaces become +)
+            Grouping: %28...%29 required when mixing +OR+ with +AND+/+ANDNOT+
+
+            [CRITICAL CONSTRAINTS]
+            - Use EXACTLY 2 AND conditions per query. No more, no less.
+            - Use ONLY standard RL terminology that commonly appears in paper abstracts.
+            - NEVER use invented/novel phrases - if it's not established jargon, don't use it.
+            - Avoid ANDNOT entirely.
+            - Labels must be plain text, no URL encoding.
+            - Adhere to the ARXIV QUERY SYNTAX.
 
 
-        GENERATE 6 DIVERSE QUERIES covering different angles:
-        - Broad queries (different term combinations)
-        - Specific queries (different established methods)
-        - Related queries (alternative approaches)  
-        - Survey/Review queries (overview papers and theoretical foundations)
+            [GOOD QUERY EXAMPLES]
+            abs:%22experience%20replay%22+AND+abs:%22Q-learning%22
+            abs:%22prioritized%20sweeping%22+AND+abs:%22reinforcement%20learning%22
+            abs:%22eligibility%20traces%22+AND+abs:%22temporal%20difference%22
+            abs:%22sparse%20reward%22+AND+abs:%22reinforcement%20learning%22
 
-        Vary the terms used - don't repeat the same concepts in every query.
-        Better to have some redundancy than miss relevant papers.
-
-        OUTPUT: SearchQueriesResult with label, query, description for each SearchQuery."""
-
-        chat = lms.Chat(system_prompt)
-        all_search_queries = []
-        
-        print("Generating search queries, this could take a while...")
-        for i, context in enumerate(contexts, 1):
-            user_message = textwrap.dedent(f"""\
-                RESEARCH CONTEXT:
-                {context}
-                Now generate the search queries.
-            """)
-
-            chat.add_user_message(user_message)
+            [BAD QUERY EXAMPLES - DO NOT GENERATE THESE]
+            abs:%22Q-learning%22+AND+abs:%22sample%20efficiency%22+AND+abs:%22sparse%20rewards%22
+            (Too many ANDs - will return nothing)
             
-            result = self.model.respond(
-                chat,
-                response_format=SearchQueriesResult,
-                config={
-                    'temperature': 0.5,
-                }
-            ).parsed
-            
-            # Convert dict results to SearchQuery objects
-            search_queries = [
-                SearchQuery(**query_obj) for query_obj in result['queries']
-            ]
-            all_search_queries.extend(search_queries)
+            abs:%22backward%20induction%22+AND+abs:%22reward%20propagation%22
+            (Phrases too specific - papers don't use these exact terms)
+
+            [REQUIREMENTS]
+            Generate 15 queries covering:
+            - Established methods (Dyna-Q, prioritized sweeping, eligibility traces, etc.)
+            - Core concepts (sample efficiency, sparse rewards, value propagation)
+            - Use standard terminology
+            - Alternative approaches (episodic memory, model-based planning)
+            - Surveys/foundational papers
+
+            Cast a wide net. Better to get 100 results and filter than 0 from a "perfect" query.
+
+            [OUTPUT FORMAT]
+            Return JSON array with objects containing: label, query, description
+        """)
+
+        # Combine all information into a single prompt
+        code_snippets_section = paper_concept.code_snippets if paper_concept.code_snippets else "No code snippets available."
         
-        print(f"Generated {len(all_search_queries)} search queries.")
+        user_message = textwrap.dedent(f"""\
+            [PAPER CONCEPT DESCRIPTION]
+            {paper_concept.description}
+
+            [OPEN QUESTIONS FOR LITERATURE SEARCH]
+            {paper_concept.open_questions if paper_concept.open_questions else "No specific questions provided."}
+
+            [CODE SNIPPETS]
+            {code_snippets_section}
+
+            Generate comprehensive search queries based on all the above information.
+        """)
+
+        print("Generating search queries...")
+        full_prompt = system_prompt + "\n\n" + user_message
+        
+        result = self.model.respond(
+            full_prompt,
+            response_format=SearchQueriesResult,
+            config={
+                'temperature': 0.5,
+            }
+        ).parsed
+        
+        # Convert dict results to SearchQuery objects
+        search_queries = [
+            SearchQuery(**query_obj) for query_obj in result['queries']
+        ]
+        
+        print(f"Generated {len(search_queries)} search queries.")
         
         # Automatically save
-        self.save_search_queries(all_search_queries, filename="search_queries.json", output_dir="output")
+        self.save_search_queries(search_queries, filename="search_queries.json", output_dir="output")
         
-        return all_search_queries
+        return search_queries
     
 
     def save_search_queries(self, queries: List[SearchQuery], filename: str = None, output_dir: str = "output"):

@@ -2,7 +2,7 @@ import textwrap
 from pathlib import Path
 from dataclasses import dataclass
 from typing import List
-from lmstudio import BaseModel
+from pydantic import BaseModel
 from utils.lazy_model_loader import LazyModelMixin
 
 
@@ -76,6 +76,7 @@ class NotesAnalyzer(LazyModelMixin):
 
     def analyze_user_note(self, user_notes: UserNotes) -> UserNotes:
         """Analyze a document to extract research-relevant information using structured LLM analysis."""
+        print(f"Analyzing {user_notes.file_name}...")
 
         prompt = textwrap.dedent(f"""\
             You are an expert research analyst helping to analyze documents for automated research paper generation.

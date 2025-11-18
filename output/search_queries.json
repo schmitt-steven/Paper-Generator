@@ -1,62 +1,77 @@
 [
   {
-    "label": "Q-learning and TD Methods",
-    "query": "abs:%28%28Q-learning+OR+temporal+difference+OR+TD%29+AND+%28reinforcement+learning+OR+RL%29%29",
-    "description": "Broad search for Q-learning variants and temporal difference methods in reinforcement learning"
+    "label": "Persistent transition memory in Q-learning",
+    "query": "abs:%22persistent%20memory%22+AND+abs:%22Q-learning%22",
+    "description": "Foundational model-free methods with persistent memory for value propagation"
   },
   {
-    "label": "Backward Propagation & Graph Methods",
-    "query": "abs:%28backward+propagation+OR+graph+based+OR+state+graph+OR+backwards+Q-learning%29+AND+%28reinforcement+learning+OR+RL%29",
-    "description": "Specific search for backward propagation and graph-based methods in RL"
+    "label": "Backward reward propagation deterministic RL",
+    "query": "abs:%22backward%20propagation%22+AND+abs:%22deterministic%20reinforcement%20learning%22",
+    "description": "Backward reward propagation in deterministic RL environments"
   },
   {
-    "label": "Reward Propagation Alternatives",
-    "query": "%28abs:%28eligibility+traces+OR+experience+replay+OR+credit+assignment%29+AND+abs:%28reinforcement+learning+OR+RL%29%29",
-    "description": "Alternative approaches to reward propagation and credit assignment in sequential decision making"
+    "label": "Dyna-Q versus direct transition reuse",
+    "query": "abs:%22Dyna-Q%22+AND+abs:%22model-free%22",
+    "description": "Dyna-Q vs model-free methods using observed transitions"
   },
   {
-    "label": "Model-Free RL Surveys",
-    "query": "%28abs:survey+OR+review+OR+survey+paper+OR+tutorial%29+AND+%28model-free+reinforcement+learning+OR+Q-learning+OR+temporal+difference%29",
-    "description": "Survey and review papers on model-free reinforcement learning algorithms"
+    "label": "Eligibility traces cross-episode propagation",
+    "query": "abs:%22eligibility%20traces%22+AND+abs:%22value%20propagation%22",
+    "description": "Eligibility traces and value propagation across episodes"
   },
   {
-    "label": "Episodic Tasks & Delayed Rewards",
-    "query": "%28abs:episodic+tasks+OR+delayed+rewards+OR+long+horizon%29+AND+%28reinforcement+learning+OR+RL+OR+sequential+decision+making%29",
-    "description": "Search for episodic tasks, delayed rewards, and planning in RL with temporal structure"
+    "label": "Sample efficiency sparse rewards RL",
+    "query": "abs:%22sample%20efficiency%22+AND+abs:%22sparse%20rewards%22",
+    "description": "Sample efficiency in sparse reward environments"
   },
   {
-    "label": "Efficient Q-Learning Methods",
-    "query": "%28abs:efficient+OR+fast+OR+reduced+computational+OR+computationally+efficient%29+AND+%28Q-learning+OR+temporal+difference+OR+model-free+RL%29",
-    "description": "Research on efficient Q-learning variants with reduced computational overhead"
+    "label": "Backward induction cross-episode RL",
+    "query": "abs:%22backward%20induction%22+AND+abs:%22multi-episode%22",
+    "description": "Backward induction methods in RL with multi-episode memory"
   },
   {
-    "label": "Q-learning and SARSA in Delayed Reward Episodic Tasks",
-    "query": "abs%3A%28%22Q-learning%22+OR+%22SARSA%22%29+AND+%28%22episodic%22+OR+%22delayed+rewards%22+OR+%22sparse+rewards%22%29+AND+%28%22convergence%22+OR+%22performance%22+OR+%22efficiency%22%29",
-    "description": "Broad survey of Q-learning and SARSA performance in episodic tasks with delayed rewards, including convergence analysis and empirical comparisons."
+    "label": "Value iteration model-free RL",
+    "query": "abs:%22value%20iteration%22+AND+abs:%22model-free%22",
+    "description": "Value iteration without transition model knowledge"
   },
   {
-    "label": "Temporal Difference Methods and Credit Assignment",
-    "query": "abs%3A%28%22temporal+difference%22+OR+%22TD%28%CE%BB%29%22+OR+%22eligibility+traces%22%29+AND+%28%22credit+assignment%22+OR+%22experience+replay%22+OR+%22reward+propagation%22%29",
-    "description": "Specific focus on temporal difference methods like TD(λ) and eligibility traces, including their computational bottlenecks and credit assignment mechanisms."
+    "label": "Episodic memory reinforcement learning",
+    "query": "abs:%22episodic%20memory%22+AND+abs:%22reinforcement%20learning%22",
+    "description": "Episodic memory for accelerating RL convergence"
   },
   {
-    "label": "Model-Free Backward Planning and Graph-Based RL",
-    "query": "abs%3A%28%22backward+planning%22+OR+%22model-free+planning%22+OR+%22graph-based+planning%22%29+AND+%28%22reward+propagation%22+OR+%22state+graph%22+OR+%22backwards+update%22%29",
-    "description": "Alternative approaches to backward propagation in reinforcement learning, including model-free planning and graph-based methods."
+    "label": "Transition graph Q-value update",
+    "query": "abs:%22transition%20graph%22+AND+abs:%22Q-value%22",
+    "description": "Transition graphs for value function updates"
   },
   {
-    "label": "Theoretical Foundations of Recursive RL Methods",
-    "query": "abs%3A%28%22convergence+guarantees%22+OR+%22stability+properties%22+OR+%22Bellman+operator%22%29+AND+%28%22recursive+Q-learning%22+OR+%22backward+propagation%22+OR+%22iterative+value+updates%22%29",
-    "description": "Survey of theoretical convergence guarantees and stability properties for recursive or backward propagation methods in reinforcement learning."
+    "label": "Convergence rate model-based RL",
+    "query": "abs:%22convergence%20rate%22+AND+abs:%22model-based%22",
+    "description": "Convergence rate improvements in model-based RL"
   },
   {
-    "label": "Forward vs. Backward Propagation in RL",
-    "query": "%28abs%3A%28%22forward+planning%22+OR+%22backward+planning%22%29+AND+abs%3A%28%22Monte+Carlo+tree+search%22+OR+%22actor+critic%22%29%29+OR+%28abs%3A%28%22forward+propagation%22+OR+%22backwards+update%22%29+AND+abs%3A%28%22temporal+credit+assignment%22+OR+%22structured+TD%22%29%29",
-    "description": "Comparative analysis of forward vs. backward propagation methods in RL, including Monte Carlo tree search and actor-critic approaches."
+    "label": "Prioritized sweeping backward update",
+    "query": "abs:%22prioritized%20sweeping%22+AND+abs:%22backward%20update%22",
+    "description": "Prioritized sweeping and backward value updates"
   },
   {
-    "label": "Computational Trade-offs in RL Algorithms",
-    "query": "abs%3A%28%22trajectory+replay%22+OR+%22experience+buffer%22%29+AND+%28%22memory+usage%22+OR+%22runtime+performance%22+OR+%22sample+efficiency%22%29+AND+%28%22graph+structure%22+OR+%22backward+propagation%22%29",
-    "description": "Empirical comparison of computational trade-offs between full trajectory replay and graph-based backward propagation methods in terms of memory and speed."
+    "label": "RETRACE cross-trajectory rewards",
+    "query": "abs:%22RETRACE%22+AND+abs:%22reward%20propagation%22",
+    "description": "RETRACE and cross-trajectory reward propagation"
+  },
+  {
+    "label": "Survey sample efficient reinforcement learning",
+    "query": "abs:%22survey%22+AND+abs:%22sample%20efficient%20reinforcement%20learning%22",
+    "description": "Survey papers on sample-efficient RL methods"
+  },
+  {
+    "label": "Bellman update historical transitions",
+    "query": "abs:%22Bellman%20optimality%22+AND+abs:%22historical%20transitions%22",
+    "description": "Bellman updates using historical transitions"
+  },
+  {
+    "label": "Model-free dynamic programming RL",
+    "query": "abs:%22model-free%22+AND+abs:%22dynamic%20programming%22",
+    "description": "Model-free dynamic programming hybrids"
   }
 ]
