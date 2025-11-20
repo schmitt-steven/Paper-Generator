@@ -202,7 +202,12 @@ class ArxivAPI:
             pdf_url: URL to the PDF
             filename: Path where PDF should be saved
         """
-        with libreq.urlopen(pdf_url) as response:
+        # Create SSL context that doesn't verify certificates (for macOS compatibility)
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+        
+        with libreq.urlopen(pdf_url, context=ssl_context) as response:
             with open(filename, 'wb') as f:
                 f.write(response.read())
 
@@ -271,8 +276,13 @@ class ArxivAPI:
         Returns:
             BibTeX citation string
         """
+        # Create SSL context that doesn't verify certificates (for macOS compatibility)
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+        
         url = f'https://arxiv.org/bibtex/{paper_id}'
-        with libreq.urlopen(url) as response:
+        with libreq.urlopen(url, context=ssl_context) as response:
             return response.read().decode('utf-8')
 
 

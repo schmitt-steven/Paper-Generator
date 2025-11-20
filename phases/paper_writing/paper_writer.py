@@ -1,28 +1,27 @@
 import textwrap
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, Tuple
 
 from phases.context_analysis.paper_conception import PaperConcept
 from phases.experimentation.experiment_state import ExperimentResult, Plot
 from phases.paper_writing.data_models import Evidence, PaperDraft, Section
-from utils.lazy_model_loader import LazyModelMixin
 from utils.llm_utils import remove_thinking_blocks
 from settings import Settings
+import lmstudio as lms
 
 
-class PaperWriter(LazyModelMixin):
+class PaperWriter:
     """Generates research paper sections using a LLM."""
     
-    def __init__(self, model_name: str):
-        self.model_name = model_name
-        self._model = None  # Lazy-loaded via LazyModelMixin
+    def __init__(self):
+        pass
     
     def generate_paper_sections(
         self,
         context: PaperConcept,
         experiment: ExperimentResult,
         evidence_by_section: Dict[Section, Sequence[Evidence]],
-    ) -> PaperDraft:
-        """Generate all paper sections using provided evidence."""
+    ) -> Tuple[PaperDraft, Dict[str, str]]:
+        """Generate all paper sections using provided evidence. Returns (draft, prompts_by_section)."""
 
         section_order = (
             Section.METHODS, Section.RESULTS, Section.DISCUSSION,
@@ -30,7 +29,16 @@ class PaperWriter(LazyModelMixin):
         )
         
         sections = {}
+        prompts_by_section = {}
         for section_type in section_order:
+            prompt = self._build_section_prompt(
+                section_type=section_type,
+                context=context,
+                experiment=experiment,
+                evidence=evidence_by_section.get(section_type, []),
+                previous_sections=sections,
+            )
+            prompts_by_section[section_type.value] = prompt
             sections[section_type] = self.generate_section(
                 section_type=section_type,
                 context=context,
@@ -50,7 +58,7 @@ class PaperWriter(LazyModelMixin):
                 context=context,
             )
 
-        return PaperDraft(
+        draft = PaperDraft(
             title=title,
             abstract=sections[Section.ABSTRACT],
             introduction=sections[Section.INTRODUCTION],
@@ -60,6 +68,7 @@ class PaperWriter(LazyModelMixin):
             discussion=sections[Section.DISCUSSION],
             conclusion=sections[Section.CONCLUSION],
         )
+        return draft, prompts_by_section
 
     def generate_section(
         self,
@@ -72,8 +81,9 @@ class PaperWriter(LazyModelMixin):
     ) -> str:
         """Generate a single section given context and evidence."""
 
+        model = lms.llm(Settings.PAPER_WRITING_MODEL)
         prompt = self._build_section_prompt(section_type, context, experiment, evidence, previous_sections)
-        response = self.model.respond(
+        response = model.respond(
             prompt,
             config={
                 "temperature": temperature,
@@ -120,8 +130,13 @@ class PaperWriter(LazyModelMixin):
 
            [WRITING REQUIREMENTS — STRICT]
             - Produce a cohesive, original, publication-quality academic narrative.
-            - Use citations strictly via the provided keys in parentheses, placed immediately before final punctuation.
-            - Combine multiple supporting evidence items using semicolons within a single set of parentheses.
+            - CITATION FORMAT: Use square brackets with the EXACT keys provided in the evidence section (e.g., [smith2024]).
+            - CRITICAL: NEVER use numeric citations like [1], [2], [30]. These are strictly forbidden.
+            - CRITICAL: Do NOT invent citation keys. Use ONLY the keys found in the <citation_key> tags in the evidence.
+            - Place citations immediately before final punctuation: "[smith2024]."
+            - For multiple sources: "[smith2024, jones2023]."
+            - If a source in the evidence has "unknown" or "n.d." as a key, do NOT cite it.
+            - Cite external papers ONLY using citation keys from the evidence in square brackets.
             - Never fabricate evidence, results, or citations.
             - Integrate and build upon previous sections to ensure full narrative coherence.
 
@@ -139,17 +154,27 @@ class PaperWriter(LazyModelMixin):
 
     @staticmethod
     def _format_evidence_for_prompt(evidence: Sequence[Evidence]) -> str:
-        lines: List[str] = []
-        for idx, item in enumerate(evidence, 1):
+        if not evidence:
+            return ""
+
+        items = []
+        for item in evidence:
             citation_key = item.chunk.paper.citation_key or "unknown"
-            source_info = (
-                f"{item.chunk.paper.title} "
-                f"({citation_key}; {item.chunk.paper.published or 'n.d.'})"
-            )
-            lines.append(f"{idx}. Summary: {item.summary}")
-            lines.append(f"   Source: {source_info}")
-            lines.append("")
-        return "\n".join(lines).strip()
+            title = item.chunk.paper.title or "Untitled"
+            summary = item.summary or "No summary provided."
+
+            item_lines = [
+                "<item>",
+                f"  <citation_key>{citation_key}</citation_key>",
+                f"  <title>{title}</title>",
+                f"  <summary>{summary}</summary>",
+                "</item>"
+            ]
+            items.append("\n".join(item_lines))
+
+        # Indent the joined items by two spaces for the <evidence> block
+        indented_items = textwrap.indent("\n".join(items), "  ")
+        return f"<evidence>\n{indented_items}\n</evidence>"
 
     @staticmethod
     def _format_plots_for_prompt(plots: List[Plot]) -> str:
@@ -348,7 +373,8 @@ class PaperWriter(LazyModelMixin):
             Now generate only the title text."""
         )
 
-        response = self.model.respond(
+        model = lms.llm(Settings.PAPER_WRITING_MODEL)
+        response = model.respond(
             prompt,
             config={
                 "temperature": temperature,

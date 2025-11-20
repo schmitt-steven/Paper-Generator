@@ -1,5 +1,6 @@
 import subprocess
 import os
+import sys
 from pathlib import Path
 from typing import List, Optional
 from phases.experimentation.experiment_state import ExecutionResult
@@ -37,8 +38,10 @@ class CodeExecutor:
         result_files_before = self._list_result_files(output_dir) if output_dir else []
         
         try:
+            # Use the same Python interpreter that's running this script
+            python_cmd = sys.executable
             process = subprocess.Popen(
-                ["python", file_path],
+                [python_cmd, file_path],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
@@ -67,8 +70,14 @@ class CodeExecutor:
             plot_files_after = self._list_plot_files(output_dir)
             result_files_after = self._list_result_files(output_dir)
             
-            plot_files = [f for f in plot_files_after if f not in plot_files_before]
-            result_files = [f for f in result_files_after if f not in result_files_before]
+            # If execution succeeded, use all files that exist (they may have been regenerated)
+            # If execution failed, only count new files
+            if return_code == 0:
+                plot_files = plot_files_after
+                result_files = result_files_after
+            else:
+                plot_files = [f for f in plot_files_after if f not in plot_files_before]
+                result_files = [f for f in result_files_after if f not in result_files_before]
         
         return ExecutionResult(
             stdout=stdout,
@@ -103,11 +112,15 @@ class CodeExecutor:
         result_files = []
         
         if os.path.exists(output_dir):
-            for file_path in Path(output_dir).rglob('*'):
-                if file_path.is_file() and file_path.suffix.lower() in result_extensions:
-                    # Exclude metadata.json
-                    if file_path.name != "metadata.json":
-                        result_files.append(str(file_path))
+            # Only check root directory for results.json (experiment code generates this)
+            results_json = os.path.join(output_dir, "results.json")
+            if os.path.exists(results_json):
+                result_files.append(results_json)
+            
+            # Also check for CSV files in root
+            for file_path in Path(output_dir).glob('*.csv'):
+                if file_path.is_file():
+                    result_files.append(str(file_path))
         
         return sorted(result_files)
 

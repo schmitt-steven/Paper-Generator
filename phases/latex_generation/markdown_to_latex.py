@@ -15,7 +15,7 @@ class MarkdownToLaTeX:
         prompt = MarkdownToLaTeX._build_conversion_prompt(md_text)
         
         try:
-            response = llm.act(prompt, config={"temperature": 0.2})
+            response = llm.respond(prompt, config={"temperature": 0.3})
             # Extract text from response
             if hasattr(response, "content"):
                 latex_text = response.content
@@ -29,8 +29,8 @@ class MarkdownToLaTeX:
             return latex_text.strip()
         except Exception as e:
             print(f"[MarkdownToLaTeX] Error converting section {section_type.value}: {e}")
+            return ""
 
-    @staticmethod
     def _build_conversion_prompt(md_text: str) -> str:
         """Build the LLM prompt for markdown to LaTeX conversion."""
 
@@ -42,19 +42,20 @@ class MarkdownToLaTeX:
             Convert the following markdown text to LaTeX format.
 
             [CONVERSION RULES]
-            - Citations: Convert (smith2024quantum) to \\cite{{smith2024quantum}}
-            - Multiple citations: Convert (smith2024; jones2023) to \\cite{{smith2024,jones2023}}
+            - Citations: Convert ALL citations in the format [citationKey] to \\cite{{ciationKey}}
+            - Multiple citations: Convert citations like [smith2024, jones2023] to \\cite{{smith2024,jones2023}}
             - Abbreviations: Identify abbreviations and convert them properly
-            - On FIRST occurrence: Write "Full Form (ABBR)" format, e.g., "Artificial Intelligence (AI)"
-            - On SUBSEQUENT occurrences: Use \\ac{{ABBR}} format with uppercase abbreviation, e.g., \\ac{{AI}}
+                - On FIRST occurrence: Write "Full Form (ABBR)" format, e.g., "Artificial Intelligence (AI)"
+                - On SUBSEQUENT occurrences: Use \\ac{{ABBR}} format with uppercase abbreviation, e.g., \\ac{{AI}}
             - The full form will be automatically extracted from the first occurrence
-            - Figures: Convert ![alt text](filename.png) followed by *Figure N: Caption text* to:
+            - Figures: Convert ![alt text](path/to/filename.png) followed by *Figure N: Caption text* to:
             \\begin{{figure}}[ht]
             \\centering
-            \\includegraphics{{filename.png}}
+            \\includegraphics{{images/filename.png}}
             \\caption{{Caption text}}
             \\label{{fig:filename}}
             \\end{{figure}}
+            - Always use images/ directory for all image paths (e.g., images/plot.png), regardless of the original path in markdown.
             - Code blocks: Convert ```python ... ``` to \\begin{{lstlisting}}[language=Python]...\\end{{lstlisting}}
             - Math: Preserve $...$ for inline math and $$...$$ for display math (or convert to \\[...\\])
             - Headers: Convert # Title to \\subsection{{Title}}, ## Subtitle to \\subsubsection{{Subtitle}} (Note: Main sections use \\section and are added by the generator)
@@ -62,20 +63,20 @@ class MarkdownToLaTeX:
             - Lists: Convert markdown lists to LaTeX \\begin{{itemize}}...\\end{{itemize}} or \\begin{{enumerate}}...\\end{{enumerate}}
             - Escape LaTeX special characters: _, &, %, {{, }} must be escaped as \\_, \\&, \\%, \\{{, \\}}
             - Paragraphs: Preserve paragraph breaks (double newlines)
-            - Do NOT alter text content, only convert formatting
+            - Never alter text content, only convert formatting
             - Follow academic LaTeX conventions
 
             [INPUT MARKDOWN]
             {md_text}
 
             [OUTPUT REQUIREMENTS]
-            - Output ONLY the LaTeX-formatted text
-            - Do NOT include any explanations or comments
-            - Do NOT wrap in \\section{{}} as the main section header is added automatically
-            - Use \\subsection{{}} and \\subsubsection{{}} for any subsections if needed
-            - Ensure all citations are properly formatted as \\cite{{key}}
-            - Ensure all figures have proper \\begin{{figure}} environments with \\caption and \\label
-            - Ensure all subsequent abbreviations use \\ac{{ABBR}} format with uppercase abbreviations
+            1. Output ONLY the LaTeX-formatted text
+            2. Do NOT include any explanations or comments
+            3. Do NOT wrap in \\section{{}} as the main section header is added automatically
+            4. Use \\subsection{{}} and \\subsubsection{{}} for any subsections if needed
+            5. Ensure all citations are properly formatted as \\cite{{key}}
+            6. Ensure all figures have proper \\begin{{figure}} environments with \\caption and \\label
+            7. Ensure all subsequent abbreviations use \\ac{{ABBR}} format with uppercase abbreviations
 
             Convert the markdown to LaTeX now:""")
 

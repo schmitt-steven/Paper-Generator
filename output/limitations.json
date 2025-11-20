@@ -1,0 +1,46 @@
+{
+  "paper_concept_file": "output/paper_concept.md",
+  "num_papers_analyzed": 51,
+  "limitations": [
+    {
+      "limitation": "Indiscriminately adding hindsight transitions to the replay buffer is problematic and has mostly been tackled by heuristics; original estimator requires a constant number of time steps T, which is often infeasible in the considered environments.",
+      "score": 0.7344758684180687
+    },
+    {
+      "limitation": "Inefficient capture of relevant past information, poor adaptability to changing observations, and unstable updates over long episodes in partially observable reinforcement learning environments",
+      "score": 0.7297968826447112
+    },
+    {
+      "limitation": "Dense rewards were previously thought to deteriorate GCRL performance, and existing negative results suggested they foreclose efficacy in GCRL; however, the paper identifies that this only holds when the triangle inequality is violated, and establishes a condition under which dense rewards preserve it.",
+      "score": 0.7257208140225331
+    },
+    {
+      "limitation": "Sparse rewards in long-horizon tasks exacerbate sample efficiency issues, and difficulty discrepancies among tasks may cause easy tasks to dominate learning, hindering adaptation to new tasks.",
+      "score": 0.7218309284016784
+    },
+    {
+      "limitation": "Learned models are inaccurate and generate invalid states when iterated over many steps, leading to poor performance compared to model-free methods despite higher computational cost.",
+      "score": 0.7210625984918616
+    },
+    {
+      "limitation": "The robust average-reward Bellman operator lacks a simple contraction property like in discounted settings, the average-reward depends on the limiting behavior of the MDP, and the Bellman function involves two variables (average-reward and relative value function), making the problem more intricate; prior model-free methods were limited to specific uncertainty sets and could not be generalized.",
+      "score": 0.719019453363857
+    },
+    {
+      "limitation": "Objective mismatch between accurate dynamics model learning and policy optimization, leading to poor correlation between model predictive accuracy and action quality; robustness issues with model misspecification and model-exploitation in online and offline RL.",
+      "score": 0.718883395645884
+    },
+    {
+      "limitation": "Current methods fail to fully utilise the structure of trajectory data, and eligibility traces are not widely applied in off-policy RL with neural networks due to their design for linear function approximators and on-policy settings.",
+      "score": 0.7173258354372639
+    },
+    {
+      "limitation": "The provable worst-case sample complexity upper bound of DDQ is higher than the best known model-based and model-free algorithms, though it performs better in practice.",
+      "score": 0.7163363371051048
+    },
+    {
+      "limitation": "Compounding errors in model rollouts and generalization error between learned environment models and real environments",
+      "score": 0.7147727701866541
+    }
+  ]
+}

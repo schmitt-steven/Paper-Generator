@@ -1,0 +1,51 @@
+{
+  "paper_concept_file": "output/paper_concept.md",
+  "num_papers_analyzed": 51,
+  "hypotheses": [
+    {
+      "id": "hyp_001",
+      "description": "RBQL's persistent transition graph and backward BFS propagation will reduce the number of episodes required to achieve convergence in deterministic sparse-reward environments compared to standard Q-learning.",
+      "rationale": "Standard Q-learning updates state-action values sequentially during episodes, leading to inaccurate early-state value estimates due to outdated future reward information (Watkins and Dayan 1992). RBQL's persistent memory enables holistic backward updates after each episode, ensuring all states receive updated terminal rewards through topological propagation rather than sequential stale estimates.",
+      "method_combination": "Persistent transition memory structure combined with backward BFS propagation from terminal states after each episode",
+      "expected_improvement": "Improved convergence rate",
+      "baseline_to_beat": "Standard Q-learning",
+      "selected_for_experimentation": true
+    },
+    {
+      "id": "hyp_002",
+      "description": "RBQL's model-free backward propagation approach will demonstrate superior sample efficiency in deterministic environments compared to Dyna-Q, which requires explicit model learning and simulation steps.",
+      "rationale": "Dyna-Q (Sutton 1990) requires building and maintaining a transition model before generating hypothetical transitions, adding computational complexity. RBQL directly uses observed transitions for backward propagation without simulation overhead, avoiding model inaccuracies that plague Dyna-Q in high-dimensional deterministic problems.",
+      "method_combination": "Persistent transition graph with backward propagation without model learning or simulation",
+      "expected_improvement": "Reduced computational overhead per episode",
+      "baseline_to_beat": "Dyna-Q",
+      "selected_for_experimentation": false
+    },
+    {
+      "id": "hyp_003",
+      "description": "RBQL's backward propagation mechanism will achieve convergence comparable to Value Iteration in deterministic environments while requiring no prior knowledge of transition dynamics.",
+      "rationale": "Value Iteration requires full knowledge of the environment's transition dynamics to perform updates, which is infeasible for large-scale problems (Sutton and Barto 2018). RBQL operates purely on observed transitions through backward propagation, enabling value iteration-like updates without requiring complete state space knowledge.",
+      "method_combination": "Backward BFS propagation over observed transitions without transition model assumptions",
+      "expected_improvement": "Effective dynamic programming-like updates without explicit model knowledge",
+      "baseline_to_beat": "Value Iteration",
+      "selected_for_experimentation": false
+    },
+    {
+      "id": "hyp_004",
+      "description": "RBQL's persistent transition graph will enable cross-episode reward propagation that improves convergence speed in sparse-reward tasks compared to RETRACE's single-trajectory backward induction.",
+      "rationale": "RETRACE (Munos et al. 2016) processes backward induction only within a single trajectory, limiting its ability to leverage historical data across episodes. RBQL maintains persistent transitions between episodes, allowing terminal rewards from one episode to influence updates in subsequent episodes through the transition graph.",
+      "method_combination": "Persistent transition graph with backward propagation across multiple episodes",
+      "expected_improvement": "Enhanced sample efficiency across episodes",
+      "baseline_to_beat": "RETRACE",
+      "selected_for_experimentation": false
+    },
+    {
+      "id": "hyp_005",
+      "description": "RBQL's backward BFS propagation will exhibit faster convergence in maze navigation tasks with sparse rewards compared to standard Q-learning by propagating terminal rewards through the entire transition graph.",
+      "rationale": "In maze navigation problems, standard Q-learning requires multiple episodes to propagate rewards backward through the path (Watkins and Dayan 1992), whereas RBQL's persistent graph allows terminal rewards to propagate through all known states in a single pass after each episode, directly addressing sparse-reward challenges.",
+      "method_combination": "Backward propagation of terminal rewards via BFS over persistent transition graph",
+      "expected_improvement": "Accelerated value propagation in structured environments",
+      "baseline_to_beat": "Standard Q-learning",
+      "selected_for_experimentation": false
+    }
+  ]
+}

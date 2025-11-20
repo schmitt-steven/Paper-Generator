@@ -108,14 +108,13 @@ class PaperGenerator:
             PaperRanker.print_ranked_papers(filtered_papers, n=10)
 
             # Download papers
-            literature_search.download_papers(filtered_papers, base_folder="literature/")
+            literature_search.download_papers_as_pdfs(filtered_papers, base_folder="literature/")
             
             # Convert papers to markdown and update markdown_text field
             converter = PDFConverter(fix_math=False, extract_media=True)
             papers_with_markdown: List[Paper] = converter.convert_all_papers(filtered_papers, base_folder="literature/")
             literature_search.save_papers(papers_with_markdown, filename="papers_filtered_with_markdown.json")
 
-        return
 
         #######################################
         # Step 5/11: Extract Findings         #
@@ -134,10 +133,14 @@ class PaperGenerator:
             top_limitations = limitation_analyzer.load_limitations("output/limitations.json")
         else:
             limitation_analyzer = LimitationAnalyzer.build_from_findings(findings, paper_concept)
-            limitation_analyzer.print_limitations(n=10, show_scores=True)
             top_limitations = limitation_analyzer.find_top_limitations(n=10)
-        
-        # Generate and validate hypotheses
+            limitation_analyzer.print_limitations(n=10, show_scores=True, top_limitations=top_limitations)
+
+        # TODO: Make thresholds based on top scores, not hardcoded
+                
+        #######################################
+        # Step 7/11: Generate Hypotheses      #
+        #######################################
         hypothesis_builder = HypothesisBuilder(
             model_name=Settings.HYPOTHESIS_BUILDER_MODEL,
             embedding_model_name=Settings.HYPOTHESIS_BUILDER_EMBEDDING_MODEL,
@@ -145,21 +148,28 @@ class PaperGenerator:
             top_limitations=top_limitations,
             num_papers_analyzed=len(findings)
         )
-        
-        #######################################
-        # Step 7/11: Generate Hypotheses      #
-        #######################################
+
         if Settings.LOAD_HYPOTHESES:
             hypotheses = hypothesis_builder.load_hypotheses("output/hypotheses.json")
         else:
             hypotheses = hypothesis_builder.generate_hypotheses(n_hypotheses=5)
 
-        best_hypothesis = hypothesis_builder.select_best_hypotheses(hypotheses, max_n=1)
+        print(f"Selecting best hypothesis from {len(hypotheses)} hypotheses...")
+        best_hypotheses = hypothesis_builder.select_best_hypotheses(hypotheses, max_n=1)
+        best_hypothesis = best_hypotheses[0] if best_hypotheses else None
+        if not best_hypothesis:
+            print("No hypothesis selected. Exiting.")
+            return
+        print(f"Selected hypothesis {best_hypothesis.id}: {best_hypothesis.description}")
+
+        # TODO: Implememt testing multiple hypotheses
         
         #######################################
         # Step 8/11: Run Experiment           #
         #######################################
-        experiment_runner = ExperimentRunner(model_name=Settings.EXPERIMENT_PLAN_MODEL)
+
+        # Q: Smart to use experiment plan for writing? - plan might not fit after code changes
+        experiment_runner = ExperimentRunner()
         
         experiment_result = None
         
@@ -190,7 +200,6 @@ class PaperGenerator:
             experiment_code_file = Path("output/experiments") / f"experiment_{best_hypothesis.id}.py"
             
             if experiment_code_file.exists():
-                print(f"\n[PaperGenerator] Found existing experiment code, running it...")
                 try:
                     result = experiment_runner.run_experiment(
                         best_hypothesis,
@@ -235,11 +244,19 @@ class PaperGenerator:
                 traceback.print_exc()
        
         # IDEA: have a fallback if context window is full (e.g. only paste code if context window is full OR only paste func signatures instead of full code if context window is full)
-
+        # TODO: Improve prompts, ensure fairness, check for bottlenecks etc
+        
         #######################################
         # Step 9/11: Write Paper              #
         #######################################
         # TODO: Test specialized embedding and writing model (Specter; LLMs from CycleResearcher paper)
+        # Make evidence sizes smaller, less chunks
+        # Adjust what evidence is gathered for: NOT the abstract
+        # Save not just the evidence prompts, but also the prompts for writing
+        # Please for the love of god add a way to save and load evidence
+
+        # Add prints, what section is being written
+        # what section is converted to LaTeX, when is latex compiled etc
 
         if Settings.LOAD_PAPER_DRAFT:
             print(f"\n[PaperGenerator] Loading existing paper draft...")
@@ -256,15 +273,11 @@ class PaperGenerator:
                 return
         else:
             if experiment_result and papers_with_markdown:
-                paper_writing_pipeline = PaperWritingPipeline(
-                    writer_model_name=Settings.PAPER_WRITING_MODEL,
-                    embedding_model_name=Settings.PAPER_INDEXING_EMBEDDING_MODEL,
-                    evidence_model_name=Settings.EVIDENCE_GATHERING_MODEL,
-                )
+                paper_writing_pipeline = PaperWritingPipeline()
 
                 paper_draft: PaperDraft = paper_writing_pipeline.write_paper(
-                    context=paper_concept,
-                    experiment=experiment_result,
+                    paper_concept=paper_concept,
+                    experiment_result=experiment_result,
                     papers=papers_with_markdown,
                 )
             else:

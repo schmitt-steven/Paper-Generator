@@ -70,11 +70,15 @@ All generated files are saved to output/
 ## TODOs
 
 - Switch from Arxiv API to SemanticScholar API (more papers, more metadata, embeddings of abstracts, ...)
+- Add human-in-the-loop feature
 - Add review/improvement loop to the paper writing process
+- Try coding agent like 
 - Add logic if hypothesis was disproven
+- Add logic to test multiple hypotheses
 - Improve logic for executing steps (e.g. run_from(X), run_only(X), run_steps([X, Y]), run_until(X))
-
-
+- Standardize saving/loading
+- Finetune prompts; update formatting (XML tags)
+- Use tokenizers instead of approximations
 
 
 ## Algorithm
