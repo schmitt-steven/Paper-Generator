@@ -7,7 +7,7 @@ import shutil
 import subprocess
 import textwrap
 from pathlib import Path
-from typing import List, Optional, Set
+from typing import Any, List, Optional, Set
 
 from phases.paper_search.arxiv_api import Paper
 from phases.paper_writing.data_models import PaperDraft, Section
@@ -24,11 +24,11 @@ logger = logging.getLogger(__name__)
 class PaperConverter(LazyModelMixin):
     """Converts PaperDraft to compilable LaTeX project."""
 
-    def __init__(self, model_name: str = None):
+    def __init__(self, model_name: Optional[str] = None):
         """Initialize PaperConverter."""
        
         self.model_name = model_name or Settings.LATEX_GENERATION_MODEL
-        self._model = None  # Lazy-loaded via LazyModelMixin
+        self._model: Optional[Any] = None  # Lazy-loaded via LazyModelMixin
 
     def convert_to_latex(
         self,
@@ -103,7 +103,7 @@ class PaperConverter(LazyModelMixin):
                 text=True,
                 check=True
             )
-            pdf_path = Path("output/result/paper.pdf")
+            pdf_path = latex_dir / "result" / "paper.pdf"
             if pdf_path.exists():
                 logger.info(f"[PaperConverter] PDF generated at {pdf_path}")
                 return True
@@ -155,7 +155,7 @@ class PaperConverter(LazyModelMixin):
         )
         
         # Generate author blocks for IEEEtran format
-        author_blocks = []
+        author_blocks: List[str] = []
         for i, author in enumerate(metadata.authors):
             # Build author block
             author_name = author.get("name", "Author Name")
@@ -224,6 +224,7 @@ class PaperConverter(LazyModelMixin):
                 continue
             
             # Convert to LaTeX
+            print(f"[PaperConverter] Converting {section_type.value} to LaTeX...")
             logger.info(f"[PaperConverter] Converting {section_type.value} to LaTeX...")
             latex_content = MarkdownToLaTeX.convert_section_to_latex(section_content, section_type, self.model)
             
@@ -265,9 +266,8 @@ class PaperConverter(LazyModelMixin):
                 return
             content = file_path.read_text(encoding="utf-8")
             
-            # Extract "Full Form (ABBR)"
             # Pattern: text like "Artificial Intelligence (AI)" or "Machine Learning (ML)"
-            pattern = r'([A-Z][^()]*(?:\s+[A-Z][^()]*)*)\s*\(([A-Z]+)\)'
+            pattern = r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s*\(([A-Z]{2,})\)'
             for match in re.finditer(pattern, content):
                 full_form = match.group(1).strip()
                 abbr = match.group(2).strip()

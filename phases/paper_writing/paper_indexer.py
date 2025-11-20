@@ -1,28 +1,32 @@
 from __future__ import annotations
 
 import re
-from typing import Iterable, List, Sequence
+from typing import Iterable, List, Sequence, Optional
+import json
+import os
 
 from phases.paper_search.arxiv_api import Paper
 from phases.paper_writing.data_models import PaperChunk
 from utils.file_utils import preprocess_markdown
-from utils.lazy_model_loader import LazyEmbeddingMixin
+from settings import Settings
+import time
+import lmstudio as lms
 
 
-class PaperIndexer(LazyEmbeddingMixin):
+
+class PaperIndexer:
     """Builds an indexed corpus of paper chunks using whole-document chunking."""
+    
+    EMBEDDINGS_FILE = "output/paper_embeddings.json"
 
     CODE_BLOCK_PATTERN = re.compile(r"```.+?```", re.DOTALL)
 
     def __init__(
         self,
-        embedding_model_name: str,
-        max_tokens_per_chunk: int = 500,
-        min_tokens_per_chunk: int = 300,
-        overlap_tokens: int = 100,
+        max_tokens_per_chunk: int = 700,
+        min_tokens_per_chunk: int = 500,
+        overlap_tokens: int = 50,
     ) -> None:
-        self.embedding_model_name = embedding_model_name
-        self._embedding_model = None  # Lazy-loaded via LazyEmbeddingMixin
         self.max_tokens_per_chunk = max_tokens_per_chunk
         self.min_tokens_per_chunk = min_tokens_per_chunk
         self.overlap_tokens = overlap_tokens
@@ -30,21 +34,45 @@ class PaperIndexer(LazyEmbeddingMixin):
     def index_papers(self, papers: Sequence[Paper]) -> List[PaperChunk]:
         """Parse and chunk papers into indexed PaperChunk records."""
 
-        chunk_specs: List[tuple[Paper, int, str, str]] = []
-        for paper in papers:
-            if not paper.markdown_text:
-                continue
-
-            cleaned_markdown = preprocess_markdown(paper.markdown_text)
-            chunks = self._chunk_document(cleaned_markdown)
-            for chunk_idx, chunk_text in enumerate(chunks):
-                chunk_id = self._build_chunk_id(paper.id, chunk_idx)
-                chunk_specs.append((paper, chunk_idx, chunk_id, chunk_text))
-
+        print(f"\n{'='*80}")
+        print(f"INDEXING {len(papers)} PAPERS")
+        print(f"{'='*80}\n")
+        
+        # Try to load existing embeddings if enabled
+        if Settings.LOAD_PAPER_EMBEDDINGS:
+            existing_embeddings = self.load_embeddings()
+            if existing_embeddings:
+                # We have embeddings, but we still need to rebuild chunk_specs to create PaperChunk objects
+                # Do minimal processing - just chunk without printing stats
+                chunk_specs: List[tuple[Paper, int, str, str]] = []
+                for paper in papers:
+                    if not paper.markdown_text:
+                        continue
+                    cleaned_markdown = preprocess_markdown(paper.markdown_text)
+                    cleaned_markdown = self._strip_references_section(cleaned_markdown)
+                    chunks = self._chunk_document(cleaned_markdown)
+                    for chunk_idx, chunk_text in enumerate(chunks):
+                        chunk_id = self._build_chunk_id(paper.id, chunk_idx)
+                        chunk_specs.append((paper, chunk_idx, chunk_id, chunk_text))
+                
+                if len(existing_embeddings) == len(chunk_specs):
+                    print(f"Loaded {len(existing_embeddings)} existing embeddings from {self.EMBEDDINGS_FILE}")
+                    embeddings = existing_embeddings
+                else:
+                    print(f"Found {len(existing_embeddings)} embeddings but need {len(chunk_specs)}. Re-generating...")
+                    # Fall through to regenerate
+                    chunk_specs, embeddings = self._process_and_embed_papers(papers)
+            else:
+                # No embeddings file found, do full processing
+                chunk_specs, embeddings = self._process_and_embed_papers(papers)
+        else:
+            # Not loading embeddings, do full processing
+            chunk_specs, embeddings = self._process_and_embed_papers(papers)
+        
         if not chunk_specs:
             return []
-
-        embeddings = self._embed_texts([spec[3] for spec in chunk_specs])
+        
+        print(f"\nBuilding indexed corpus from {len(chunk_specs)} chunks...")
 
         indexed_chunks: List[PaperChunk] = []
         for spec, embedding in zip(chunk_specs, embeddings):
@@ -60,6 +88,47 @@ class PaperIndexer(LazyEmbeddingMixin):
             )
 
         return indexed_chunks
+    
+    def _process_and_embed_papers(self, papers: Sequence[Paper]) -> tuple[List[tuple[Paper, int, str, str]], List[List[float]]]:
+        """Process papers (preprocess, strip refs, chunk) and generate embeddings."""
+        chunk_specs: List[tuple[Paper, int, str, str]] = []
+        total_tokens_saved = 0
+        papers_with_refs_stripped = 0
+        
+        for paper in papers:
+            if not paper.markdown_text:
+                continue
+
+            cleaned_markdown = preprocess_markdown(paper.markdown_text)
+            
+            # Strip references and acknowledgments sections
+            original_tokens = self._estimate_tokens(cleaned_markdown)
+            cleaned_markdown = self._strip_references_section(cleaned_markdown)
+            final_tokens = self._estimate_tokens(cleaned_markdown)
+            tokens_saved = original_tokens - final_tokens
+            if tokens_saved > 0:
+                total_tokens_saved += tokens_saved
+                papers_with_refs_stripped += 1
+            chunks = self._chunk_document(cleaned_markdown)
+            for chunk_idx, chunk_text in enumerate(chunks):
+                chunk_id = self._build_chunk_id(paper.id, chunk_idx)
+                chunk_specs.append((paper, chunk_idx, chunk_id, chunk_text))
+
+        if not chunk_specs:
+            return [], []
+        
+        # Print summary of reference stripping
+        print(f"PREPROCESSING SUMMARY:")
+        print(f"  Papers processed: {len(papers)}")
+        print(f"  References stripped: {papers_with_refs_stripped}/{len(papers)} papers")
+        print(f"  Tokens saved: {total_tokens_saved:,}")
+        print(f"  Total chunks created: {len(chunk_specs)}\n")
+        
+        print(f"Creating embeddings for {len(chunk_specs)} chunks...")
+        embeddings = self._embed_texts([spec[3] for spec in chunk_specs])
+        self.save_embeddings(embeddings)
+        
+        return chunk_specs, embeddings
 
     def _chunk_document(self, document_text: str) -> List[str]:
         """Chunk document text into overlapping windows while preserving structures."""
@@ -137,7 +206,6 @@ class PaperIndexer(LazyEmbeddingMixin):
 
     @staticmethod
     def _estimate_tokens(text: str) -> int:
-        # Approximate tokens using word count (average 1 token ≈ 0.75 words)
         return max(1, int(len(text.split()) / 0.75))
 
     @staticmethod
@@ -146,8 +214,66 @@ class PaperIndexer(LazyEmbeddingMixin):
         return f"{safe_paper_id}_chunk{chunk_idx:02d}"
 
     def _embed_texts(self, texts: Sequence[str]) -> List[List[float]]:
-        """Embed texts sequentially."""
+        """Embed texts in batches."""
+        if not texts:
+            return []
+        
+        embedding_model = lms.embedding_model(Settings.PAPER_INDEXING_EMBEDDING_MODEL)
+        batch_size = Settings.PAPER_EMBEDDING_BATCH_SIZE
+        all_embeddings: List[List[float]] = []
+        
+        num_batches = (len(texts) + batch_size - 1) // batch_size
+        
+        for i in range(0, len(texts), batch_size):
+            batch = list(texts[i:i + batch_size])
+            batch_num = (i // batch_size) + 1
+            
+            start_time = time.time()
+            batch_embeddings = embedding_model.embed(batch)
+            elapsed = time.time() - start_time
+            
+            print(f"  Embedding batch {batch_num}/{num_batches} ({len(batch)} items)... Done in {elapsed:.2f}s")
+            all_embeddings.extend(batch_embeddings)
+                
+        return all_embeddings
 
-        return [self.embedding_model.embed(text) for text in texts]
 
 
+    def save_embeddings(self, embeddings: List[List[float]]) -> None:
+        """Save embeddings to JSON file."""
+        try:
+            os.makedirs(os.path.dirname(self.EMBEDDINGS_FILE), exist_ok=True)
+            with open(self.EMBEDDINGS_FILE, 'w', encoding='utf-8') as f:
+                json.dump(embeddings, f)
+            print(f"Saved {len(embeddings)} embeddings to {self.EMBEDDINGS_FILE}")
+        except Exception as e:
+            print(f"Error saving embeddings: {e}")
+
+    def load_embeddings(self) -> Optional[List[List[float]]]:
+        """Load embeddings from JSON file if it exists."""
+        if not os.path.exists(self.EMBEDDINGS_FILE):
+            return None
+        
+        try:
+            with open(self.EMBEDDINGS_FILE, 'r', encoding='utf-8') as f:
+                embeddings = json.load(f)
+            return embeddings
+        except Exception as e:
+            print(f"Error loading embeddings: {e}")
+            return None
+
+    def _strip_references_section(self, text: str) -> str:
+        """Remove references, acknowledgments, and bibliography sections from text."""
+        import re
+        
+        # Pattern matches common reference section headers (case-insensitive, with optional markdown formatting)
+        # Matches: REFERENCES, References, **References**, ACKNOWLEDGMENTS, etc.
+        pattern = r'^\s*(?:\*\*)?(?:\d+\.?\s*)?(?:REFERENCES?|ACKNOWLEDGMENTS?|ACKNOWLEDGEMENTS?|BIBLIOGRAPHY)(?:\*\*)?(?:\s+.*)?$'
+        
+        lines = text.split('\n')
+        for i, line in enumerate(lines):
+            if re.match(pattern, line, re.IGNORECASE):
+                # Truncate at this line
+                return '\n'.join(lines[:i])
+        
+        return text

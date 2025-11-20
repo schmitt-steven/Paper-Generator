@@ -14,25 +14,26 @@ def extract_citation_keys_from_markdown(md_text: str) -> Set[str]:
     """
     Extract citation keys from markdown text (before LaTeX conversion).
     
-    Handles citations in parentheses format:
-    - (smith2024quantum)
-    - (smith2024; jones2023)
+    Handles citations in square brackets format:
+    - [smith2024quantum]
+    - [smith2024, jones2023]
+    - [1], [29] (numeric - will generate placeholder entries)
     
     Args:
-        md_text: Markdown text with citations in parentheses
+        md_text: Markdown text with citations in square brackets
     
     Returns:
-        Set of unique citation keys
+        Set of unique citation keys (including numeric ones for placeholder generation)
     """
-    # Pattern to match (key1) or (key1; key2; key3)
-    # Matches parentheses with alphanumeric keys separated by semicolons
-    pattern = r'\(([a-z0-9]+(?:\d{4})?(?:\s*;\s*[a-z0-9]+(?:\d{4})?)*)\)'
+    # Pattern to match [key1] or [key1, key2, key3]
+    # Accepts any alphanumeric keys to ensure bibliography is always populated
+    pattern = r'\[([a-z0-9]+(?:\s*,\s*[a-z0-9]+)*)\]'
     matches = re.findall(pattern, md_text, re.IGNORECASE)
     
     citation_keys = set()
     for match in matches:
-        # Split by semicolon and strip whitespace
-        keys = [k.strip() for k in match.split(";")]
+        # Split by comma and strip whitespace
+        keys = [k.strip() for k in match.split(",")]
         citation_keys.update(keys)
     
     return citation_keys

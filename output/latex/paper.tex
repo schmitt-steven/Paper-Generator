@@ -1,0 +1,75 @@
+%% !TeX program = pdflatex
+
+\documentclass[conference,compsoc,final,a4paper]{IEEEtran}
+\usepackage[utf8]{inputenx}
+
+%% Note: The title will be automatically replaced by the paper generator
+\newcommand{\dokumententitel}[0]{Recursive Backwards Q-Learning: Achieving Value Iteration Efficiency in Deterministic Environments Through Persistent Transition Memory}
+
+\input{preamble}
+
+\begin{document}
+
+% Document title
+\title{\dokumententitel}
+
+% Author names - will be set by the paper generator
+\author{
+  \IEEEauthorblockN{Qwen3}
+  \IEEEauthorblockA{
+    University of Qwen\\
+    Department of Computer Science\\
+    Buckingham Palace, London, UK\\
+    Email: qwen.rocks@china.gov
+    }
+  \and
+  \IEEEauthorblockN{Second Author}
+  \IEEEauthorblockA{
+    Tech Corp\\
+    AI Department\\
+    Mannheim, Germany\\
+    Email: second@guy.com
+    }
+}
+
+% Generate title
+\maketitle
+\thispagestyle{plain}
+\pagestyle{plain}
+
+% Document content begins here
+% ----------------------------------------------------------------------------------------------------------
+
+% Abstract
+\begin{abstract}
+\input{abstract}
+\end{abstract}
+
+% Generate table of contents
+{\small\tableofcontents}
+
+% Sections
+% -------------------------------------------------------
+\input{chapters/introduction}
+\input{chapters/related_work}
+\input{chapters/methods}
+\input{chapters/results}
+\input{chapters/discussion}
+\input{chapters/conclusion}
+
+% --------------------------------------------------------------------
+% Abbreviations
+\section*{Abbreviations}
+\addcontentsline{toc}{section}{Abbreviations}
+
+% The longest abbreviation is written in square brackets
+% at \begin{acronym} to prevent ugly line breaks
+\begin{acronym}[IEEE]
+\input{chapters/abbreviations}
+\end{acronym}
+
+% Bibliography
+\addcontentsline{toc}{section}{References}
+\printbibliography
+
+\end{document}

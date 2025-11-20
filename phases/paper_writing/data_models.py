@@ -10,7 +10,6 @@ from phases.paper_search.arxiv_api import Paper
 
 class Section(str, Enum):
     """Section types for generated paper content."""
-
     ABSTRACT = "Abstract"
     INTRODUCTION = "Introduction"
     RELATED_WORK = "Related Work"
@@ -36,7 +35,6 @@ class PaperDraft:
 @dataclass
 class PaperChunk:
     """Indexed chunk of a source paper used for retrieval."""
-
     chunk_id: str
     paper: Paper
     chunk_text: str
@@ -50,10 +48,26 @@ class ScoreResult(BaseModel):
     reason: str
 
 
+class SummaryItem(BaseModel):
+    summary: str
+
+
+class SummaryBatchResult(BaseModel):
+    results: List[SummaryItem]
+
+
+class ScoreItem(BaseModel):
+    score: float
+    reason: str
+
+
+class ScoreBatchResult(BaseModel):
+    results: List[ScoreItem]
+
+
 @dataclass
 class Evidence:
     """Scored evidence chunk returned by retrieval pipeline."""
-
     chunk: PaperChunk
     summary: str
     vector_score: float

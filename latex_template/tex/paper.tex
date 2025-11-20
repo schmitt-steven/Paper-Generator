@@ -3,22 +3,19 @@
 \documentclass[conference,compsoc,final,a4paper]{IEEEtran}
 \usepackage[utf8]{inputenx}
 
-%% Please set the title and author of the paper here
+%% Note: The title will be automatically replaced by the paper generator
 \newcommand{\dokumententitel}[0]{Paper Title}
 
-\input{preamble} % Load additional settings from another file
+\input{preamble}
 
 \begin{document}
 
 % Document title
 \title{\dokumententitel}
 
-% Author names - This section will be populated by the paper generator
+% Author names - will be set by the paper generator
 \author{
-  \IEEEauthorblockN{Author Name}
-  \IEEEauthorblockA{
-    Affiliation Name
-    }
+%%AUTHOR_BLOCKS%%
 }
 
 % Generate title
@@ -53,7 +50,6 @@
 
 % The longest abbreviation is written in square brackets
 % at \begin{acronym} to prevent ugly line breaks
-% You must sort the abbreviations alphabetically yourself!
 \begin{acronym}[IEEE]
 \input{chapters/abbreviations}
 \end{acronym}

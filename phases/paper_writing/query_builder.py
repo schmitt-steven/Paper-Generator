@@ -40,39 +40,31 @@ class QueryBuilder:
         context: PaperConcept,
         experiment: Optional[ExperimentResult],
     ) -> List[str]:
-        queries = [
+        return [
             self._combine_segments(
                 ("Research concept overview", context.description),
                 ("Hypothesis summary", self._safe_get(experiment, "hypothesis.description")),
+                ("Experiment outcomes", self._safe_get(experiment, "execution_result.stdout")),
+                ("Validation insights", self._safe_get(experiment, "validation_result.reasoning")),
+                ("Expected improvements", self._safe_get(experiment, "hypothesis.expected_improvement")),
             )
         ]
-
-        summary_segments = [
-            ("Experiment outcomes", self._safe_get(experiment, "execution_result.stdout")),
-            ("Validation insights", self._safe_get(experiment, "validation_result.reasoning")),
-            ("Expected improvements", self._safe_get(experiment, "hypothesis.expected_improvement")),
-        ]
-        queries.append(self._combine_segments(*summary_segments))
-        return queries
 
     def _build_introduction_queries(
         self,
         context: PaperConcept,
         experiment: Optional[ExperimentResult],
     ) -> List[str]:
-        base_query = self._combine_segments(
-            ("Research context", context.description),
-            ("Open questions", context.open_questions),
-            ("Hypothesis overview", self._safe_get(experiment, "hypothesis.description")),
-        )
-
-        differentiation_query = self._combine_segments(
-            ("Method differentiation", self._safe_get(experiment, "hypothesis.method_combination")),
-            ("Expected improvement", self._safe_get(experiment, "hypothesis.expected_improvement")),
-            ("Baseline to beat", self._safe_get(experiment, "hypothesis.baseline_to_beat")),
-        )
-
-        return [base_query, differentiation_query]
+        return [
+            self._combine_segments(
+                ("Research context", context.description),
+                ("Open questions", context.open_questions),
+                ("Hypothesis overview", self._safe_get(experiment, "hypothesis.description")),
+                ("Method differentiation", self._safe_get(experiment, "hypothesis.method_combination")),
+                ("Expected improvement", self._safe_get(experiment, "hypothesis.expected_improvement")),
+                ("Baseline to beat", self._safe_get(experiment, "hypothesis.baseline_to_beat")),
+            )
+        ]
 
     def _build_related_work_queries(
         self,
@@ -84,12 +76,10 @@ class QueryBuilder:
                 ("Research domain", context.description),
                 ("Method combination", self._safe_get(experiment, "hypothesis.method_combination")),
                 ("Baseline approaches", self._safe_get(experiment, "hypothesis.baseline_to_beat")),
-            ),
-            self._combine_segments(
                 ("Research gap", context.open_questions),
                 ("Expected improvement", self._safe_get(experiment, "hypothesis.expected_improvement")),
                 ("Key techniques", context.code_snippets),
-            ),
+            )
         ]
 
     def _build_methods_queries(
@@ -101,11 +91,9 @@ class QueryBuilder:
             self._combine_segments(
                 ("Experimental plan", self._safe_get(experiment, "experimental_plan")),
                 ("Implementation details", self._safe_get(experiment, "experiment_code")),
-            ),
-            self._combine_segments(
                 ("Method combination", self._safe_get(experiment, "hypothesis.method_combination")),
                 ("Key code snippets", context.code_snippets),
-            ),
+            )
         ]
 
     def _build_results_queries(
@@ -122,11 +110,9 @@ class QueryBuilder:
                 ("Experiment stdout", stdout),
                 ("Validation reasoning", validation),
                 ("Result files", self._safe_join(self._safe_get(experiment, "execution_result.result_files"))),
-            ),
-            self._combine_segments(
                 ("Key metrics and observations", stdout),
                 ("Plot summaries", plot_captions),
-            ),
+            )
         ]
 
     def _build_discussion_queries(
@@ -139,11 +125,9 @@ class QueryBuilder:
                 ("Hypothesis verdict", self._safe_get(experiment, "hypothesis_evaluation.verdict")),
                 ("Verdict reasoning", self._safe_get(experiment, "hypothesis_evaluation.reasoning")),
                 ("Validation issues", self._safe_get(experiment, "validation_result.issues")),
-            ),
-            self._combine_segments(
                 ("Observed limitations", self._safe_get(experiment, "validation_result.reasoning")),
                 ("Future work ideas", context.open_questions),
-            ),
+            )
         ]
 
     def _build_conclusion_queries(
@@ -156,12 +140,10 @@ class QueryBuilder:
                 ("Final verdict", self._safe_get(experiment, "hypothesis_evaluation.verdict")),
                 ("Supporting reasoning", self._safe_get(experiment, "hypothesis_evaluation.reasoning")),
                 ("Research description", context.description),
-            ),
-            self._combine_segments(
                 ("Key contributions", self._safe_get(experiment, "hypothesis.expected_improvement")),
                 ("Implications", self._safe_get(experiment, "validation_result.reasoning")),
                 ("Future directions", context.open_questions),
-            ),
+            )
         ]
 
     @staticmethod

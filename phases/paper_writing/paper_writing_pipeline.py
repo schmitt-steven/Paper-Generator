@@ -14,6 +14,8 @@ from phases.paper_writing.data_models import Evidence, PaperChunk, PaperDraft, S
 from phases.paper_writing.paper_indexer import PaperIndexer
 from phases.paper_writing.paper_writer import PaperWriter
 from phases.paper_writing.query_builder import QueryBuilder
+from utils.lms_settings import LMSJITSettings
+from settings import Settings
 
 
 class PaperWritingPipeline:
@@ -21,23 +23,17 @@ class PaperWritingPipeline:
 
     def __init__(
         self,
-        writer_model_name: str,
-        embedding_model_name: str,
-        evidence_model_name: Optional[str] = None,
-        top_k_initial: int = 20,
-        top_k_final: int = 8,
-        agentic_iterations: int = 5,
+        top_k_initial: int = 15,
+        top_k_final: int = 10,
+        agentic_iterations: int = 3,
     ) -> None:
-        self.llm_model_name = writer_model_name
-        self.embedding_model_name = embedding_model_name
-        self.evidence_model_name = evidence_model_name or writer_model_name
         self.top_k_initial = top_k_initial
         self.top_k_final = top_k_final
         self.agentic_iterations = agentic_iterations
 
-        self.indexer = PaperIndexer(embedding_model_name=embedding_model_name)
+        self.indexer = PaperIndexer()
         self.query_builder = QueryBuilder()
-        self.writer = PaperWriter(model_name=writer_model_name)
+        self.writer = PaperWriter()
 
         self._indexed_corpus: Optional[List[PaperChunk]] = None
 
@@ -49,8 +45,8 @@ class PaperWritingPipeline:
 
     def write_paper(
         self,
-        context: PaperConcept,
-        experiment: ExperimentResult,
+        paper_concept: PaperConcept,
+        experiment_result: ExperimentResult,
         papers: Sequence[Paper],
     ) -> PaperDraft:
         """Run the full pipeline and return generated paper sections."""
@@ -58,48 +54,63 @@ class PaperWritingPipeline:
         if not self._indexed_corpus:
             self.index_papers(papers)
 
+        print(f"\n{'='*80}")
+        print(f"GATHERING EVIDENCE FOR PAPER SECTIONS")
+        print(f"{'='*80}\n")
+        
         gatherer = EvidenceGatherer(
-            llm_model_name=self.evidence_model_name,
-            embedding_model_name=self.embedding_model_name,
             indexed_corpus=self._indexed_corpus or [],
         )
 
         evidence_by_section: Dict[Section, Sequence[Evidence]] = {}
-        prompts_by_section: Dict[str, str] = {}
         # Generate sections in order: Methods -> Results -> Discussion -> Introduction -> Related Work -> Conclusion -> Abstract
-        for section_type in (
-            Section.METHODS,
-            Section.RESULTS,
-            Section.DISCUSSION,
-            Section.INTRODUCTION,
-            Section.RELATED_WORK,
-            Section.CONCLUSION,
-            Section.ABSTRACT,
-        ):
-            default_queries = self.query_builder.build_default_queries(section_type, context, experiment)
+        
+        # Use context manager to ensure multiple models can be loaded for ALL sections
+        with LMSJITSettings():
+            for section_type in (
+                Section.METHODS,
+                Section.RESULTS,
+                Section.DISCUSSION,
+                Section.INTRODUCTION,
+                Section.RELATED_WORK,
+                Section.CONCLUSION,
+                # Section.ABSTRACT,
+            ):
+                print(f"[{section_type.value}] Gathering evidence for {section_type.value} section...")
+                default_queries = self.query_builder.build_default_queries(section_type, paper_concept, experiment_result)
 
-            evidence, final_prompt = gatherer.gather_evidence(
-                section_type=section_type,
-                context=context,
-                experiment=experiment,
-                default_queries=default_queries,
-                max_iterations=self.agentic_iterations,
-                top_k_initial=self.top_k_initial,
-                top_k_final=self.top_k_final,
-            )
+                evidence, _ = gatherer.gather_evidence(
+                    section_type=section_type,
+                    context=paper_concept,
+                    experiment=experiment_result,
+                    default_queries=default_queries,
+                    max_iterations=self.agentic_iterations,
+                    top_k_initial=self.top_k_initial,
+                    top_k_final=self.top_k_final,
+                )
 
-            evidence_by_section[section_type] = evidence
-            prompts_by_section[section_type.value] = final_prompt
+                evidence_by_section[section_type] = evidence
 
-        # Automatically save prompts to output directory
-        self._save_prompts(prompts_by_section)
-
-        paper_draft = self.writer.generate_paper_sections(
-            context=context,
-            experiment=experiment,
+        print(f"\n{'='*80}")
+        print(f"WRITING PAPER SECTIONS")
+        print(f"{'='*80}\n")
+        
+        # Load prompts if setting is enabled
+        if Settings.LOAD_PAPER_WRITING_PROMPTS:
+            writing_prompts = self.load_section_writing_prompts()
+            print(f"[PaperWritingPipeline] Using loaded writing prompts for {len(writing_prompts)} sections")
+        else:
+            writing_prompts = None
+        
+        paper_draft, generated_prompts = self.writer.generate_paper_sections(
+            context=paper_concept,
+            experiment=experiment_result,
             evidence_by_section=evidence_by_section,
         )
-        self._save_paper_draft(paper_draft)
+        
+        # Save writing prompts to output directory (use generated if not loaded)
+        self._save_prompts(prompts_by_section=generated_prompts if writing_prompts is None else writing_prompts)
+        self._save_paper_draft(paper_draft=paper_draft)
 
         return paper_draft
 
@@ -107,11 +118,11 @@ class PaperWritingPipeline:
     def _save_prompts(
         prompts_by_section: Dict[str, str],
     ) -> None:
-        """Save section prompts to a JSON file for debugging."""
+        """Save section writing prompts to a JSON file."""
 
         output_dir = "output"
         os.makedirs(output_dir, exist_ok=True)
-        output_path = os.path.join(output_dir, "section_prompts.json")
+        output_path = os.path.join(output_dir, "section_writing_prompts.json")
 
         output_data = {
             "sections": {
@@ -123,7 +134,27 @@ class PaperWritingPipeline:
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(output_data, f, indent=2, ensure_ascii=False)
 
-        print(f"[PaperWritingPipeline] Saved prompts to {output_path}")
+        print(f"[PaperWritingPipeline] Saved section writing prompts to {output_path}")
+
+    @staticmethod
+    def load_section_writing_prompts(
+        filepath: str = "output/section_writing_prompts.json",
+    ) -> Dict[str, str]:
+        """Load section writing prompts from a JSON file."""
+
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f"Section writing prompts file not found: {filepath}")
+
+        with open(filepath, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        prompts = {
+            section_name: section_data["prompt"]
+            for section_name, section_data in data.get("sections", {}).items()
+        }
+
+        print(f"[PaperWritingPipeline] Loaded {len(prompts)} section writing prompts from {filepath}")
+        return prompts
 
     @staticmethod
     def _save_paper_draft(
@@ -136,37 +167,14 @@ class PaperWritingPipeline:
         os.makedirs(output_dir, exist_ok=True)
         output_path = os.path.join(output_dir, filename)
 
-        markdown_content = textwrap.dedent(f"""\
-            # {paper_draft.title}
-
-            ## Abstract
-
-            {paper_draft.abstract}
-
-            ## Introduction
-
-            {paper_draft.introduction}
-
-            ## Related Work
-
-            {paper_draft.related_work}
-
-            ## Methods
-
-            {paper_draft.methods}
-
-            ## Results
-
-            {paper_draft.results}
-
-            ## Discussion
-
-            {paper_draft.discussion}
-
-            ## Conclusion
-
-            {paper_draft.conclusion}
-        """)
+        markdown_content = f"# {paper_draft.title}\n\n"
+        markdown_content += f"## Abstract\n\n{paper_draft.abstract}\n\n"
+        markdown_content += f"## Introduction\n\n{paper_draft.introduction}\n\n"
+        markdown_content += f"## Related Work\n\n{paper_draft.related_work}\n\n"
+        markdown_content += f"## Methods\n\n{paper_draft.methods}\n\n"
+        markdown_content += f"## Results\n\n{paper_draft.results}\n\n"
+        markdown_content += f"## Discussion\n\n{paper_draft.discussion}\n\n"
+        markdown_content += f"## Conclusion\n\n{paper_draft.conclusion}\n"
 
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(markdown_content)

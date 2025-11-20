@@ -34,6 +34,7 @@ class Hypothesis(BaseModel):
     method_combination: str
     expected_improvement: str
     baseline_to_beat: Optional[str]
+    selected_for_experimentation: bool = False
 
 
 class HypothesesList(BaseModel):

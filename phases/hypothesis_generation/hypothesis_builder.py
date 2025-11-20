@@ -199,7 +199,9 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
                     "rationale": h.rationale,
                     "method_combination": h.method_combination,
                     "expected_improvement": h.expected_improvement,
-                    "baseline_to_beat": h.baseline_to_beat
+                    "expected_improvement": h.expected_improvement,
+                    "baseline_to_beat": h.baseline_to_beat,
+                    "selected_for_experimentation": h.selected_for_experimentation
                 }
                 for h in hypotheses
             ]
@@ -232,7 +234,8 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
                     rationale=hyp_data.get("rationale", ""),
                     method_combination=hyp_data.get("method_combination", ""),
                     expected_improvement=hyp_data.get("expected_improvement", ""),
-                    baseline_to_beat=hyp_data.get("baseline_to_beat")
+                    baseline_to_beat=hyp_data.get("baseline_to_beat"),
+                    selected_for_experimentation=hyp_data.get("selected_for_experimentation", False)
                 )
                 hypotheses.append(hypothesis)
             
@@ -263,7 +266,18 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
         if not hypotheses:
             return []
         
+        # Check if any hypotheses are already selected
+        already_selected = [h for h in hypotheses if h.selected_for_experimentation]
+        if already_selected:
+            print(f"\nFound {len(already_selected)} already selected hypotheses.")
+            # If we have more than max_n, just take the first max_n (or could add logic to re-select)
+            return already_selected[:max_n]
+        
         if len(hypotheses) <= max_n:
+            # If few hypotheses, select all of them
+            for h in hypotheses:
+                h.selected_for_experimentation = True
+            self.save_hypotheses(hypotheses, "output/hypotheses.json")
             return hypotheses
         
         # Format hypotheses for prompt
@@ -326,13 +340,18 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
                 print(f"Warning: LLM selected {len(selected_ids)} hypotheses, limiting to {max_n}")
                 selected_ids = selected_ids[:max_n]
             
-            # Filter hypotheses by selected IDs
+            # Filter hypotheses by selected IDs and update status
             selected_hypotheses = []
             id_to_hypothesis = {h.id: h for h in hypotheses}
             
             for hyp_id in selected_ids:
                 if hyp_id in id_to_hypothesis:
-                    selected_hypotheses.append(id_to_hypothesis[hyp_id])
+                    h = id_to_hypothesis[hyp_id]
+                    h.selected_for_experimentation = True
+                    selected_hypotheses.append(h)
+            
+            # Save the updated state (with selected flags)
+            self.save_hypotheses(hypotheses, "output/hypotheses.json")
             
             print(f"\nSelected {len(selected_hypotheses)} {'hypothesis' if len(selected_hypotheses) == 1 else 'hypotheses'} from {len(hypotheses)} candidates:")
             for h in selected_hypotheses:
@@ -343,5 +362,9 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
         except Exception as e:
             print(f"Error selecting hypotheses: {e}")
             # Fallback: return first max_n hypotheses if selection fails
-            return hypotheses[:max_n]
+            fallback = hypotheses[:max_n]
+            for h in fallback:
+                h.selected_for_experimentation = True
+            self.save_hypotheses(hypotheses, "output/hypotheses.json")
+            return fallback
 

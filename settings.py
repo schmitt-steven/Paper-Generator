@@ -14,12 +14,12 @@ class Settings:
     # Paper Search Phase
     LITERATURE_SEARCH_MODEL =             "qwen/qwen3-next-80b"  
     PAPER_ANALYSIS_MODEL =                "qwen/qwen3-next-80b"
-    PAPER_RANKING_EMBEDDING_MODEL =       "qwen3-embedding-4b-dwq"  # Must be an embedding model!
-    LIMITATION_ANALYSIS_EMBEDDING_MODEL = "qwen3-embedding-4b-dwq"  # Must be an embedding model!
+    PAPER_RANKING_EMBEDDING_MODEL =       "text-embedding-qwen3-embedding-4b@q5_0"  # Must be an embedding model!
+    LIMITATION_ANALYSIS_EMBEDDING_MODEL = "text-embedding-qwen3-embedding-4b@q5_0"  # Must be an embedding model!
     
     # Hypothesis Generation Phase
     HYPOTHESIS_BUILDER_MODEL =           "qwen3-next-80b-a3b-thinking-mlx"
-    HYPOTHESIS_BUILDER_EMBEDDING_MODEL = "qwen3-embedding-4b-dwq"  # Must be an embedding model!
+    HYPOTHESIS_BUILDER_EMBEDDING_MODEL = "text-embedding-qwen3-embedding-4b@q5_0"  # Must be an embedding model!
     
     # Experimentation Phase
     EXPERIMENT_PLAN_MODEL =          "qwen3-next-80b-a3b-thinking-mlx"
@@ -27,12 +27,14 @@ class Settings:
     EXPERIMENT_CODE_FIX_MODEL =      "qwen/qwen3-next-80b"  
     EXPERIMENT_CODE_IMPROVE_MODEL =  "qwen/qwen3-next-80b" 
     EXPERIMENT_VALIDATION_MODEL =    "qwen3-next-80b-a3b-thinking-mlx" 
+    EXPERIMENT_PLOT_CAPTION_MODEL =  "qwen/qwen3-vl-4b"  # Must be a VISION model!
     EXPERIMENT_VERDICT_MODEL =       "qwen3-next-80b-a3b-thinking-mlx"
-    EXPERIMENT_PLOT_CAPTION_MODEL =  "qwen/qwen3-next-80b"  # Must be a VISION model!
+
     
     # Paper Writing Phase
-    PAPER_INDEXING_EMBEDDING_MODEL = "qwen3-embedding-4b-dwq"  # Must be an embedding model!
-    EVIDENCE_GATHERING_MODEL =       "qwen3-next-80b-a3b-thinking-mlx"  
+    PAPER_INDEXING_EMBEDDING_MODEL = "text-embedding-qwen3-embedding-4b@q5_0"  # Must be an embedding model!
+    PAPER_EMBEDDING_BATCH_SIZE =     64  # Number of text chunks to embed at once
+    EVIDENCE_GATHERING_MODEL =       "qwen/qwen3-next-80b"  
     PAPER_WRITING_MODEL =            "qwen/qwen3-next-80b"
     
     # LaTeX Generation Phase
@@ -50,7 +52,7 @@ class Settings:
             "email": "qwen.rocks@china.gov"
         },
         {
-            "name": "Second Author",
+            "name": "Human",
             "affiliation": "Tech Corp",
             "department": "AI Department",
             "address": "Mannheim, Germany",
@@ -60,19 +62,21 @@ class Settings:
     
 
     # Set to True to load existing files from output/ and skip the respective step
-    LOAD_PAPER_CONCEPT =     True
+    LOAD_PAPER_CONCEPT = True
 
-    LOAD_SEARCH_QUERIES =    True
-    LOAD_PAPERS =            True
-    LOAD_PAPER_RANKING =     False
+    LOAD_SEARCH_QUERIES = True
+    LOAD_PAPERS =         True
+    LOAD_PAPER_RANKING =  True
 
-    LOAD_FINDINGS =          True
-    LOAD_LIMITATIONS =       True
-    LOAD_HYPOTHESES =        True  # if true, ignores LOAD_FINDINGS/LIMITATIONS
+    LOAD_FINDINGS =    True
+    LOAD_LIMITATIONS = True
+    LOAD_HYPOTHESES =  True
 
-    LOAD_EXPERIMENT_PLAN =   False
-    LOAD_EXPERIMENT_CODE =   False
-    LOAD_EXPERIMENT_RESULT = False  # if true, ignores LOAD_EXPERIMENT_PLAN/CODE
+    LOAD_EXPERIMENT_PLAN =   True
+    LOAD_EXPERIMENT_CODE =   True
+    LOAD_EXPERIMENT_RESULT = True
 
-    LOAD_PAPER_DRAFT =       False
-    LOAD_LATEX =             False  # if true, ignores LOAD_PAPER_DRAFT
+    LOAD_PAPER_EMBEDDINGS =      True
+    LOAD_PAPER_WRITING_PROMPTS = False
+    LOAD_PAPER_DRAFT =           False
+    LOAD_LATEX =                 False

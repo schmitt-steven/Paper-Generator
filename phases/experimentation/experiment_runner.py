@@ -15,35 +15,20 @@ from phases.experimentation.experiment_state import (
 )
 from phases.experimentation.code_executor import CodeExecutor
 from phases.experimentation.results_manager import ResultsManager
-from utils.lazy_model_loader import LazyModelMixin
 from utils.llm_utils import remove_thinking_blocks
+import lmstudio as lms
 
 
-class ExperimentRunner(LazyModelMixin):
+class ExperimentRunner:
     """Conducts experiments to test hypotheses."""
     
-    def __init__(
-        self,
-        model_name: str = "qwen/qwen3-coder-30b",
-        vision_model_name: Optional[str] = None,
-        base_output_dir: str = "output/experiments"
-    ):
-        self.model_name = model_name
-        self._model = None  # Lazy-loaded via LazyModelMixin
-        self.vision_model_name = vision_model_name or model_name
-        self._vision_model = None  # Lazy-loaded separately
+    def __init__(self, base_output_dir: str = "output/experiments"):
+        from settings import Settings
+        self.settings = Settings
         self.executor = CodeExecutor()
         self.results_manager = ResultsManager(base_output_dir)
         self.base_output_dir = base_output_dir        
         os.makedirs(base_output_dir, exist_ok=True)
-    
-    @property
-    def vision_model(self):
-        """Lazy-load the vision model on first access."""
-        if self._vision_model is None:
-            import lmstudio as lms
-            self._vision_model = lms.llm(self.vision_model_name)
-        return self._vision_model
     
     def _remove_markdown_formatting(self, code_content: str) -> str:
         """Remove markdown code block markers from code content."""
@@ -126,7 +111,8 @@ class ExperimentRunner(LazyModelMixin):
 
                 Do NOT include algorithm implementations, experiment logic, or visualization yet.""")
 
-                response = self.model.respond(chat, config={"temperature": 0.4})
+                model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
+                response = model.respond(chat, config={"temperature": 0.4})
                 current_code = self._remove_markdown_formatting(remove_thinking_blocks(response.content))
             except Exception as e:
                 error_msg = f"ERROR generating imports chunk: {e}"
@@ -147,7 +133,8 @@ class ExperimentRunner(LazyModelMixin):
 
                 Output the COMPLETE code so far (imports and data structures + algorithms).""")
 
-                response = self.model.respond(chat, config={"temperature": 0.4})
+                model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
+                response = model.respond(chat, config={"temperature": 0.4})
                 current_code = self._remove_markdown_formatting(remove_thinking_blocks(response.content))
             except Exception as e:
                 error_msg = f"ERROR generating algorithms chunk: {e}"
@@ -172,7 +159,8 @@ class ExperimentRunner(LazyModelMixin):
                     Do NOT include visualization yet.
                 """))
 
-                response = self.model.respond(chat, config={"temperature": 0.4})
+                model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
+                response = model.respond(chat, config={"temperature": 0.4})
                 current_code = self._remove_markdown_formatting(remove_thinking_blocks(response.content))
             except Exception as e:
                 error_msg = f"ERROR generating experiment chunk: {e}"
@@ -195,7 +183,8 @@ class ExperimentRunner(LazyModelMixin):
                     Output the COMPLETE, FINAL code (imports & data structures + algorithms + experiment + visualization).
                 """))
 
-                response = self.model.respond(chat, config={"temperature": 0.4})
+                model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
+                response = model.respond(chat, config={"temperature": 0.4})
                 current_code = self._remove_markdown_formatting(remove_thinking_blocks(response.content))
             except Exception as e:
                 error_msg = f"ERROR generating visualization chunk: {e}"
@@ -208,6 +197,7 @@ class ExperimentRunner(LazyModelMixin):
             code_file_path = os.path.abspath(code_file_path)
             with open(code_file_path, 'w', encoding='utf-8') as f:
                 f.write(current_code)
+            print(f"Code saved to {code_file_path}")
             
             print(f"Executing generated code: {code_file_path}")
             execution_result = self.executor.execute_file(code_file_path, output_dir=output_dir)
@@ -338,7 +328,8 @@ class ExperimentRunner(LazyModelMixin):
 
             print(f"Fixing experiment code (attempt {fix_attempt}/{max_attempts}): {code_file_path}")
             chat.add_user_message(user_message)
-            result = self.model.respond(chat, config={"temperature": 0.4})
+            model = lms.llm(self.settings.EXPERIMENT_CODE_FIX_MODEL)
+            result = model.respond(chat, config={"temperature": 0.4})
             cleaned_code = remove_thinking_blocks(result.content)
             
             # Remove markdown code block markers
@@ -439,7 +430,8 @@ class ExperimentRunner(LazyModelMixin):
         try:
             chat = lms.Chat(system_prompt)
             chat.add_user_message(validation_prompt)
-            result = self.model.respond(chat, response_format=ValidationResult)
+            model = lms.llm(self.settings.EXPERIMENT_VALIDATION_MODEL)
+            result = model.respond(chat, response_format=ValidationResult)
             parsed_dict = result.parsed
             
             validation_result = ValidationResult(**parsed_dict)
@@ -531,7 +523,8 @@ class ExperimentRunner(LazyModelMixin):
                 Output ONLY the improved Python code, NO further markdown or explanations. Your answer will be saved to a code file.
             """)
 
-            result = self.model.respond(prompt, config={"temperature": 0.4})
+            model = lms.llm(self.settings.EXPERIMENT_CODE_IMPROVE_MODEL)
+            result = model.respond(prompt, config={"temperature": 0.4})
             improved_code = remove_thinking_blocks(result.content)
             
             # Remove markdown code block markers
@@ -627,7 +620,8 @@ class ExperimentRunner(LazyModelMixin):
             try:
                 chat = lms.Chat(system_prompt)
                 chat.add_user_message(user_message, images=[image_handle])
-                result = self.vision_model.respond(chat, config={"temperature": 0.4})
+                model = lms.llm(self.settings.EXPERIMENT_PLOT_CAPTION_MODEL)
+                result = model.respond(chat, config={"temperature": 0.4})
                 caption = remove_thinking_blocks(result.content)
                 plots.append(Plot(filename=plot_file, caption=caption))
             except Exception as e:
@@ -686,11 +680,11 @@ class ExperimentRunner(LazyModelMixin):
             Baseline to Beat: {hypothesis.baseline_to_beat or "N/A"}
 
             [INSTRUCTIONS]
-            Be specific and actionable. Only use information actually present in the research context.
-        """)
+            Be specific and actionable. Only use information actually present in the research context.""")
 
         try:
-            result = self.model.respond(prompt, config={"temperature": 0.4})
+            model = lms.llm(self.settings.EXPERIMENT_PLAN_MODEL)
+            result = model.respond(prompt, config={"temperature": 0.4})
             return remove_thinking_blocks(result.content)
         except Exception as e:
             print(f"ERROR: Failed to generate experimental plan: {e}")
@@ -817,10 +811,27 @@ class ExperimentRunner(LazyModelMixin):
         
         plots = [Plot(**plot_data) for plot_data in data.get('plots', [])]
         
+        # Load experiment_code from saved data, or try to load from file if not present
+        experiment_code = data.get('experiment_code')
+        if not experiment_code:
+            # Try to load from the experiment code file
+            import os
+            base_dir = os.path.dirname(file_path)
+            hypothesis_id = hypothesis.id
+            code_file_path = os.path.join(base_dir, f"experiment_{hypothesis_id}.py")
+            if os.path.exists(code_file_path):
+                try:
+                    with open(code_file_path, 'r', encoding='utf-8') as f:
+                        experiment_code = f.read()
+                except Exception:
+                    experiment_code = ""
+            else:
+                experiment_code = ""
+        
         experiment_result = ExperimentResult(
             hypothesis=hypothesis,
             experimental_plan=data['experimental_plan'],
-            experiment_code=data['experiment_code'],
+            experiment_code=experiment_code,
             execution_result=execution_result,
             validation_result=validation_result,
             hypothesis_evaluation=hypothesis_evaluation,
@@ -871,6 +882,19 @@ class ExperimentRunner(LazyModelMixin):
             # Load existing code and execute it
             print(f"Executing loaded code: {code_file_path}")
             execution_result = self.executor.execute_file(code_file_path, output_dir=self.base_output_dir)
+            if execution_result.return_code != 0:
+                print(f"Code execution failed with return code {execution_result.return_code}")
+                print(f"STDERR: {execution_result.stderr[:500] if execution_result.stderr else 'None'}")
+                print(f"STDOUT: {execution_result.stdout[:500] if execution_result.stdout else 'None'}")
+            else:
+                print(f"Code executed successfully. Generated {len(execution_result.plot_files)} plot(s) and {len(execution_result.result_files)} result file(s)")
+                if len(execution_result.plot_files) == 0 and len(execution_result.result_files) == 0:
+                    # Check if files exist but weren't detected as new
+                    plots_dir = os.path.join(self.base_output_dir, "plots")
+                    results_file = os.path.join(self.base_output_dir, "results.json")
+                    existing_plots = [f for f in os.listdir(plots_dir) if f.endswith(('.png', '.svg', '.pdf'))] if os.path.exists(plots_dir) else []
+                    existing_results = os.path.exists(results_file)
+                    print(f"  Note: Found {len(existing_plots)} existing plot(s) and {'1' if existing_results else '0'} existing result file(s) (may have been created in previous run)")
             write_result = CodeGenerationResult(
                 code_file_path=code_file_path,
                 execution_result=execution_result
@@ -1070,7 +1094,8 @@ class ExperimentRunner(LazyModelMixin):
                 """)
                 
                 try:
-                    result = self.model.respond(verdict_prompt, response_format=VerdictResult)
+                    model = lms.llm(self.settings.EXPERIMENT_VERDICT_MODEL)
+                    result = model.respond(verdict_prompt, response_format=VerdictResult)
                     parsed_dict = result.parsed
                     
                     verdict_result = VerdictResult(**parsed_dict)

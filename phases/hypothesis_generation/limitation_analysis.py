@@ -11,25 +11,28 @@ from utils.lazy_model_loader import LazyEmbeddingMixin
 class LimitationAnalyzer(LazyEmbeddingMixin):
     """Analyzes literature to identify research limitations and opportunities"""
     
-    def __init__(self, embedding_model_name: str = "text-embedding-embeddinggemma-300m", similarity_threshold: float = 0.85):
-        self.embedding_model_name = embedding_model_name
+    def __init__(self, embedding_model_name: str = None, similarity_threshold: float = 0.8):
+        from settings import Settings
+        self.embedding_model_name = embedding_model_name or Settings.LIMITATION_ANALYSIS_EMBEDDING_MODEL
         self._embedding_model = None  # Lazy-loaded via LazyEmbeddingMixin
         self.similarity_threshold = similarity_threshold  # Threshold for clustering similar limitations
     
     @staticmethod
-    def build_from_findings(findings: List[PaperFindings], paper_concept: PaperConcept, similarity_threshold: float = 0.85) -> 'LimitationAnalyzer':
+    def build_from_findings(findings: List[PaperFindings], paper_concept: PaperConcept, similarity_threshold: float = 0.8) -> 'LimitationAnalyzer':
         """Build a LimitationAnalyzer instance with aggregated findings from papers"""
         analyzer = LimitationAnalyzer(similarity_threshold=similarity_threshold)
         analyzer.findings = findings
         analyzer.paper_concept = paper_concept
         
         # Aggregate limitations (raw counts)
+        print("Identifying limitations from findings...")
         raw_limitations = Counter()
         for finding in findings:
             if finding.main_limitations:
                 raw_limitations[finding.main_limitations] += 1
         
         # Cluster similar limitations together
+        print(f"Filtering {len(raw_limitations)} limitations...")
         analyzer.common_limitations = analyzer._cluster_similar_limitations(raw_limitations)
         
         return analyzer
@@ -133,15 +136,17 @@ class LimitationAnalyzer(LazyEmbeddingMixin):
         
         return top_limitations
     
-    def print_limitations(self, n: int = 10, show_scores: bool = True):
+    def print_limitations(self, n: int = 10, show_scores: bool = True, top_limitations: List[Tuple[str, float]] = None):
         """
         Print top N research limitations in a formatted way.
         
         Args:
             n: Number of top limitations to print (default: 10)
             show_scores: Whether to display scores alongside limitations (default: True)
+            top_limitations: Optional pre-computed top limitations (to avoid duplicate computation)
         """
-        top_limitations = self.find_top_limitations(n=n)
+        if top_limitations is None:
+            top_limitations = self.find_top_limitations(n=n)
         
         if not top_limitations:
             print("\nNo limitations found.")

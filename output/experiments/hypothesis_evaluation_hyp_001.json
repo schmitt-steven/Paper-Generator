@@ -1,0 +1,5 @@
+{
+  "hypothesis_id": "hyp_001",
+  "verdict": "proven",
+  "reasoning": "The hypothesis states that RBQL's persistent transition graph and backward BFS propagation reduce episodes needed for convergence compared to standard Q-learning. The results show RBQL: 4.8 ± 0.7 episodes, Q-Learning (α=1.0): 6.6 ± 2.5 episodes, and Q-Learning (α=0.5): 11.7 ± 2.5 episodes. RBQL is faster than both Q-learning variants, especially α=0.5 (2.45x) and even α=1.0 (1.37x), which is the fair comparison since α=1.0 has same effective learning rate as RBQL's batch updates.\\n"
+}

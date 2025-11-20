@@ -9,9 +9,10 @@ import numpy as np
 
 from phases.context_analysis.paper_conception import PaperConcept
 from phases.experimentation.experiment_state import ExperimentResult
-from phases.paper_writing.data_models import Evidence, PaperChunk, Section, ScoreResult
-from utils.lazy_model_loader import LazyModelMixin, LazyEmbeddingMixin
+from phases.paper_writing.data_models import Evidence, PaperChunk, Section, ScoreResult, SummaryBatchResult, ScoreBatchResult
 from utils.llm_utils import remove_thinking_blocks
+from settings import Settings
+import lmstudio as lms
 
 
 @dataclass
@@ -20,107 +21,240 @@ class _NormalizedChunk:
     vector: np.ndarray
 
 
-class EvidenceGatherer(LazyModelMixin, LazyEmbeddingMixin):
+class EvidenceGatherer:
     """Retrieves and scores evidence chunks for a given query."""
 
     def __init__(
         self,
-        llm_model_name: str,
-        embedding_model_name: str,
         indexed_corpus: Sequence[PaperChunk],
     ) -> None:
-        self.model_name = llm_model_name  # For LazyModelMixin
-        self._model = None  # Lazy-loaded via LazyModelMixin (accessed as self.model)
-        self.embedding_model_name = embedding_model_name
-        self._embedding_model = None  # Lazy-loaded via LazyEmbeddingMixin
-
         self.indexed_corpus = list(indexed_corpus)
         self._normalized_chunks = self._normalize_corpus(indexed_corpus)
-    
-    @property
-    def llm_model(self):
-        """Alias for model property (for backward compatibility)."""
-        return self.model
 
     def search_evidence(
         self,
         query: str,
         target_section: Section,
-        top_k_initial: int = 20,
+        top_k_initial: int = 10,
         top_k_final: int = 5,
         exclude_chunk_ids: Optional[Set[str]] = None,
+        llm_model=None,
+        embedding_model=None,
     ) -> List[Evidence]:
         """Run the full evidence retrieval pipeline for a query."""
 
-        vector_candidates = self._vector_search(query, top_k_initial, exclude_chunk_ids)
-        summarized_candidates = self._contextual_summarize(query, vector_candidates)
-        rescored_candidates = self._llm_rescore(query, target_section, summarized_candidates)
-        return self._combine_scores(query, rescored_candidates, top_k_final)
+        retrieved_chunks = self._vector_search(query, top_k_initial, exclude_chunk_ids, embedding_model)
+        summarized_chunks = self._summarize_chunks_batch(query, retrieved_chunks, llm_model=llm_model)
+        rescored_chunks = self._score_chunks_batch(query, target_section, summarized_chunks, llm_model=llm_model)
+        
+        return self._combine_scores(query, rescored_chunks, top_k_final)
 
     def _vector_search(
         self,
         query: str,
         top_k: int,
         exclude_chunk_ids: Optional[Set[str]] = None,
+        embedding_model=None,
     ) -> List[Tuple[PaperChunk, float]]:
         """Return top_k chunks by cosine similarity to the query embedding."""
 
-        query_embedding = np.array(self.embedding_model.embed(query), dtype=np.float32)
+        if embedding_model is None:
+            raise ValueError("embedding_model must be provided to avoid model loading conflicts")
+        
+        query_embedding = np.array(embedding_model.embed(query), dtype=np.float32)
         query_norm = np.linalg.norm(query_embedding)
         if query_norm == 0:
             return []
-
         normalized_query = query_embedding / query_norm
 
         scored_chunks: List[Tuple[float, PaperChunk]] = []
         for normalized_chunk in self._normalized_chunks:
             if exclude_chunk_ids and normalized_chunk.chunk.chunk_id in exclude_chunk_ids:
                 continue
-
+            
             score = float(np.dot(normalized_query, normalized_chunk.vector))
             scored_chunks.append((score, normalized_chunk.chunk))
 
         top_chunks = heapq.nlargest(top_k, scored_chunks, key=lambda item: item[0])
         return [(chunk, score) for score, chunk in top_chunks]
 
-    def _contextual_summarize(
+    def _summarize_chunks_batch(
         self,
         query: str,
-        candidates: List[Tuple[PaperChunk, float]],
+        chunks: List[Tuple[PaperChunk, float]],
+        batch_size: int = 5,
+        llm_model=None,
     ) -> List[Tuple[PaperChunk, float, str]]:
-        """Summarize how each candidate chunk relates to the query context."""
+        """Summarize chunks in batches."""
+        
+        if not chunks:
+            return []
+        
+        if llm_model is None:
+            raise ValueError("llm_model must be provided")
+        results: List[Tuple[PaperChunk, float, str]] = []
+        total = len(chunks)
+        print(f"    Summarizing {total} chunks in batches of {batch_size}...")
 
-        summaries: List[Tuple[PaperChunk, float, str]] = []
-        for chunk, vector_score in candidates:
-            prompt = self._build_summary_prompt(query, chunk)
-            response = self.llm_model.respond(
-                prompt,
-                config={"temperature": 0.4, "maxTokens": 300},
-            )
-            summary_text = remove_thinking_blocks(response.content)
-            summaries.append((chunk, vector_score, summary_text))
-        return summaries
+        for i in range(0, total, batch_size):
+            batch = chunks[i : i + batch_size]
+            # print(f"      Summarizing batch {i//batch_size + 1}/{(total + batch_size - 1)//batch_size}...")
+            
+            prompt = self._build_batch_summary_prompt(query, batch)
+            
+            try:
+                response = llm_model.respond(
+                    prompt,
+                    response_format=SummaryBatchResult,
+                    config={"temperature": 0.3, "maxTokens": 2000},
+                )
+                
+                batch_results = response.parsed.get('results', [])
+                
+                if len(batch_results) < len(batch):
+                    print(f"[DEBUG] Batch mismatch! Expected {len(batch)}, got {len(batch_results)}")
+                    print(f"[DEBUG] Raw response content: {response.content}")
+                    print(f"[DEBUG] Parsed response: {response.parsed}")
+                
+                # Map results by index (assuming order is preserved)
+                for j, (chunk, vector_score) in enumerate(batch):
+                    if j < len(batch_results):
+                        item = batch_results[j]
+                        summary = item.get('summary') if isinstance(item, dict) else getattr(item, 'summary', None)
+                            
+                        if summary:
+                            results.append((chunk, vector_score, summary))
+                        else:
+                             results.append((chunk, vector_score, "Summary missing"))
+                    else:
+                        print(f"[WARNING] LLM returned fewer summaries than requested ({len(batch_results)} vs {len(batch)}). Using fallback.")
+                        results.append((chunk, vector_score, "Summary failed"))
+                        
+            except Exception as e:
+                print(f"[WARNING] Batch summarization failed: {e}")
+                for chunk, vector_score in batch:
+                    results.append((chunk, vector_score, "Batch summary failed"))
+                    
+        return results
 
-    def _llm_rescore(
+    def _score_chunks_batch(
         self,
         query: str,
         target_section: Section,
-        candidates: List[Tuple[PaperChunk, float, str]],
+        chunks: List[Tuple[PaperChunk, float, str]],
+        batch_size: int = 5,
+        llm_model=None,
     ) -> List[Tuple[PaperChunk, float, str, float]]:
-        """Assign LLM relevance scores (0.0-1.0) to summarized evidence."""
+        """Score chunks in batches."""
+        
+        if llm_model is None:
+            raise ValueError("llm_model must be provided")
+        results: List[Tuple[PaperChunk, float, str, float]] = []
+        total = len(chunks)
+        print(f"    Scoring {total} chunks in batches of {batch_size}...")
 
-        rescored: List[Tuple[PaperChunk, float, str, float]] = []
-        for chunk, vector_score, summary in candidates:
-            prompt = self._build_scoring_prompt(query, target_section, chunk, summary)
-            response = self.llm_model.respond(
-                prompt,
-                response_format=ScoreResult,
-                config={"temperature": 0.2, "maxTokens": 120},
-            )
-            parsed_dict = response.parsed
-            score = self._clamp_score(float(parsed_dict.get("score", 0.0)))
-            rescored.append((chunk, vector_score, summary, score))
-        return rescored
+        for i in range(0, total, batch_size):
+            batch = chunks[i : i + batch_size]
+            # print(f"      Scoring batch {i//batch_size + 1}/{(total + batch_size - 1)//batch_size}...")
+            
+            prompt = self._build_batch_scoring_prompt(query, target_section, batch)
+            
+            try:
+                response = llm_model.respond(
+                    prompt,
+                    response_format=ScoreBatchResult,
+                    config={"temperature": 0.2, "maxTokens": 1000},
+                )
+                
+                # User confirmed response.parsed is always a dict when schema is used
+                batch_results = response.parsed.get('results', [])
+                
+                # Map results by index
+                for j, (chunk, vector_score, summary) in enumerate(batch):
+                    if j < len(batch_results):
+                        item = batch_results[j]
+                        score_val = item.get('score') if isinstance(item, dict) else getattr(item, 'score', None)
+                            
+                        if score_val is not None:
+                            score = self._clamp_score(float(score_val))
+                            results.append((chunk, vector_score, summary, score))
+                        else:
+                            results.append((chunk, vector_score, summary, 0.0))
+                    else:
+                        print(f"[WARNING] LLM returned fewer scores than requested ({len(batch_results)} vs {len(batch)}). Using fallback.")
+                        results.append((chunk, vector_score, summary, 0.0))
+                        
+            except Exception as e:
+                print(f"[WARNING] Batch scoring failed: {e}")
+                for chunk, vector_score, summary in batch:
+                    results.append((chunk, vector_score, summary, 0.0))
+                    
+        return results
+
+    def _build_batch_summary_prompt(self, query: str, batch: List[Tuple[PaperChunk, float]]) -> str:
+        items_text = []
+        for j, (chunk, _) in enumerate(batch):
+            content = chunk.chunk_text
+            items_text.append(textwrap.dedent(f"""\
+                <chunk>
+                  <title>{chunk.paper.title}</title>
+                  <content>
+                    {content}
+                  </content>
+                </chunk>
+            """))
+        
+        return textwrap.dedent(f"""\
+            [ROLE]
+            You are assisting with academic literature review.
+
+            [TASK]
+            For each provided chunk, provide a summary of the content in a few sentences.
+
+            [INSTRUCTIONS]
+            Your response MUST be a JSON object conforming to the `SummaryBatchResult` schema.
+            You MUST return exactly {len(batch)} summaries, one for each item, in the same order as provided.
+            Never skip any items.
+
+            [CHUNKS]
+            {"".join(items_text)}"""
+        )
+
+    def _build_batch_scoring_prompt(self, query: str, target_section: Section, batch: List[Tuple[PaperChunk, float, str]]) -> str:
+        items_text = []
+        for j, (chunk, _, _) in enumerate(batch):
+            content = chunk.chunk_text
+            items_text.append(textwrap.dedent(f"""\
+                <text>
+                  <title>{chunk.paper.title}</title>
+                  <content>
+                    {content}
+                  </content>
+                </text>
+            """))
+
+        return textwrap.dedent(f"""\
+            [ROLE]
+            You are rating the relevance of text chunks for academic writing.
+
+            [INSTRUCTIONS]
+            Rate how relevant the each text chunks is for the target section and query.
+            For each item, provide:
+            1. score: 0.0 (not relevant) to 1.0 (highly relevant).
+            2. reason: Brief reason (1 sentence).
+            
+            Your response MUST be a JSON object conforming to the `ScoreBatchResult` schema.
+            Ensure you return exactly one score for each item, in the same order.
+
+            [QUERY]
+            {query}
+
+            [TARGET SECTION]
+            {target_section.value}
+
+            [TEXT CHUNKS]
+            {"".join(items_text)}
+        """)
 
     @staticmethod
     def _normalize_corpus(indexed_corpus: Sequence[PaperChunk]) -> List[_NormalizedChunk]:
@@ -137,62 +271,6 @@ class EvidenceGatherer(LazyModelMixin, LazyEmbeddingMixin):
             normalized.append(_NormalizedChunk(chunk=chunk, vector=vector / norm))
         return normalized
 
-    def _build_summary_prompt(self, query: str, chunk: PaperChunk) -> str:
-        """Construct a prompt asking the LLM to summarize chunk relevance."""
-
-        authors = ", ".join(chunk.paper.authors) if chunk.paper.authors else "Unknown authors"
-        published = chunk.paper.published or "Unknown year"
-        excerpt = self._truncate_chunk(chunk.chunk_text)
-
-        return textwrap.dedent(f"""\
-            [ROLE]
-            You are assisting with academic literature review. Summarize the following paper chunk in the context of the research query. Follow these rules:
-            - Use ~3 sentences.
-            - Emphasize why the chunk is relevant to the query.
-            - Do not quote verbatim; paraphrase.
-            - Mention the key idea and its relation to the query.
-
-            [QUERY]
-            {query}
-
-            [PAPER]
-            {chunk.paper.title} ({authors}, {published})
-
-            [CHUNK]
-            \"\"\"
-            {excerpt}
-            \"\"\"
-        """)
-
-    @staticmethod
-    def _truncate_chunk(chunk_text: str, max_chars: int = 3500) -> str:
-        if len(chunk_text) <= max_chars:
-            return chunk_text
-        return chunk_text[: max_chars - 3].rstrip() + "..."
-
-    def _build_scoring_prompt(self, query: str, target_section: Section, chunk: PaperChunk, summary: str) -> str:
-        authors = ", ".join(chunk.paper.authors) if chunk.paper.authors else "Unknown authors"
-        published = chunk.paper.published or "Unknown year"
-
-        return textwrap.dedent(f"""\
-            [ROLE]
-            You are rating the relevance of evidence for academic writing.
-            Rate how well the evidence summary supports the research query for the target section.
-            Provide a score between 0 and 1, where 1 indicates highly relevant and 0 indicates not relevant.
-
-            [TARGET SECTION]
-            {target_section.value}
-
-            [QUERY]
-            {query}
-
-            [PAPER]
-            {chunk.paper.title} ({authors}, {published})
-
-            [EVIDENCE SUMMARY]
-            {summary}
-        """)
-
     @staticmethod
     def _clamp_score(score: float) -> float:
         """Clamp score value between 0 and 1."""
@@ -201,13 +279,13 @@ class EvidenceGatherer(LazyModelMixin, LazyEmbeddingMixin):
     def _combine_scores(
         self,
         query: str,
-        candidates: List[Tuple[PaperChunk, float, str, float]],
+        chunks: List[Tuple[PaperChunk, float, str, float]],
         top_k_final: int,
     ) -> List[Evidence]:
         """Combine vector and LLM scores and return top evidence."""
 
         weighted: List[Evidence] = []
-        for chunk, vector_score, summary, llm_score in candidates:
+        for chunk, vector_score, summary, llm_score in chunks:
             combined = (0.4 * vector_score) + (0.6 * llm_score)
             weighted.append(
                 Evidence(
@@ -246,23 +324,34 @@ class EvidenceGatherer(LazyModelMixin, LazyEmbeddingMixin):
         default_queries: Sequence[str],
         max_iterations: int = 5,
         top_k_initial: int = 20,
-        top_k_final: int = 5,
-    ) -> List[Evidence]:
+        top_k_final: int = 10,
+    ) -> Tuple[List[Evidence], str]:
         """Gather evidence using agentic iterative search with default queries as starting point."""
 
-        # Step 1: Execute default queries to get initial evidence
+        # Step 1: Create embedding model FIRST and do all initial vector searches
+        embedding_model = lms.embedding_model(Settings.PAPER_INDEXING_EMBEDDING_MODEL)
+        
         collected_evidence: List[Evidence] = []
         seen_chunk_ids: Set[str] = set()
+        all_retrieved_chunks: List[Tuple[str, Section, List[Tuple[PaperChunk, float]]]] = []
+        
         for query in default_queries:
             if not query:
                 continue
-            new_evidence = self.search_evidence(
-                query,
-                section_type,
-                top_k_initial,
-                top_k_final,
-                exclude_chunk_ids=seen_chunk_ids,
-            )
+            # Do vector search with embedding model
+            retrieved_chunks = self._vector_search(query, top_k_initial, seen_chunk_ids, embedding_model)
+            all_retrieved_chunks.append((query, section_type, retrieved_chunks))
+            # Update seen_chunk_ids based on retrieved chunks
+            seen_chunk_ids.update(chunk.chunk_id for chunk, _ in retrieved_chunks)
+        
+        # Step 2: Create LLM model ONCE (this unloads embedding model)
+        llm_model = lms.llm(Settings.EVIDENCE_GATHERING_MODEL)
+        
+        # Step 3: Now do all summarization and scoring (using LLM model)
+        for query, target_section, retrieved_chunks in all_retrieved_chunks:
+            summarized_chunks = self._summarize_chunks_batch(query, retrieved_chunks, llm_model=llm_model)
+            rescored_chunks = self._score_chunks_batch(query, target_section, summarized_chunks, llm_model=llm_model)
+            new_evidence = self._combine_scores(query, rescored_chunks, top_k_final)
             collected_evidence.extend(new_evidence)
             seen_chunk_ids.update(ev.chunk.chunk_id for ev in new_evidence)
 
@@ -275,7 +364,7 @@ class EvidenceGatherer(LazyModelMixin, LazyEmbeddingMixin):
         def search_evidence_tool(query: str) -> str:
             """Search for additional evidence using a custom query string."""
 
-            nonlocal collected_evidence, tool_calls, seen_chunk_ids, tool_results
+            nonlocal collected_evidence, tool_calls, seen_chunk_ids, tool_results, llm_model, embedding_model
 
             if tool_calls >= max_iterations:
                 result = "Tool call limit reached; reuse existing evidence."
@@ -295,27 +384,36 @@ class EvidenceGatherer(LazyModelMixin, LazyEmbeddingMixin):
 
             tool_calls += 1
             executed_queries.add(query_key)
-
+            
+            print(f"  [Agent Tool Call #{tool_calls}] Query: \"{cleaned_query}\"")
+            
+            # With LMSJITSettings, we can use the existing models without reloading!
             new_evidence = self.search_evidence(
                 cleaned_query,
                 section_type,
                 top_k_initial=top_k_initial,
                 top_k_final=top_k_final,
                 exclude_chunk_ids=seen_chunk_ids,
+                llm_model=llm_model,
+                embedding_model=embedding_model,
             )
+            
             collected_evidence = self._deduplicate_evidence(collected_evidence + new_evidence)
             seen_chunk_ids.update(ev.chunk.chunk_id for ev in new_evidence)
             result = self._summarize_tool_results(new_evidence)
             tool_results.append(result)
+            print(f"        Added {len(new_evidence)} new evidence items")
+            
             return result
 
         initial_prompt = self.build_agent_prompt(section_type, context, experiment, collected_evidence)
 
         try:
-            self.llm_model.act(
+            print(f"  [Agentic Search] Starting iterative evidence gathering...")
+            llm_model.act(
                 initial_prompt,
                 tools=[search_evidence_tool],
-                config={"temperature": 0.2},
+                config={"temperature": 0.4},
             )
         except Exception as exc:
             # Surface issue but return whatever evidence we have
@@ -373,15 +471,16 @@ class EvidenceGatherer(LazyModelMixin, LazyEmbeddingMixin):
             {evidence_text or 'No evidence yet.'}
 
             [AVAILABLE TOOL]
-            search_evidence(query: str): retrieve additional literature evidence related to the query.
-            Use this when additional supporting material is required.
+            search_evidence(query: str): retrieve additional information related to the query.
+            The query is used to generate an embedding, which is then used to find the most semantically similar chunks in a corpus of academic papers.
+            Use this tool when additional supporting material is required.
 
             [RESPONSIBILITIES]
             - Review existing evidence and identify missing aspects.
             - Formulate focused queries when additional evidence is needed.
             - Avoid redundant searches—do not repeat queries that were already covered.
-            - When done searching, respond with ONLY "done" to indicate evidence gathering is complete.
-        """)
+            - When done searching, respond with ONLY "done" to indicate evidence gathering is complete."""
+        )
 
     @staticmethod
     def _format_evidence_for_prompt(evidence: Sequence[Evidence]) -> str:

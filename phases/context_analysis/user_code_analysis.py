@@ -211,6 +211,8 @@ class CodeAnalyzer(LazyModelMixin):
                 analyzed = self.extract_important_snippets(analyzed)
             
             analyzed_files.append(analyzed)
+        
+        print(f"Code analysis complete: analyzed {len(analyzed_files)} file(s)")
         return analyzed_files
     
 
