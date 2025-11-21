@@ -81,7 +81,10 @@ class PaperGenerator:
         if Settings.LOAD_PAPER_RANKING:
             # Load set of papers that are already ranked, filtered and have markdown
             loaded_papers: List[Paper] = LiteratureSearch.load_papers("output/papers_filtered_with_markdown.json")
-            papers_with_markdown: List[Paper] = [p for p in loaded_papers if getattr(p, "markdown_text", None) and p.markdown_text.strip()]
+            papers_with_markdown: List[Paper] = [
+                p for p in loaded_papers 
+                if getattr(p, "markdown_text", None) is not None and isinstance(p.markdown_text, str) and p.markdown_text.strip()
+            ]
         else:
             # Rank papers based on embedding similarity, citation counts, and publication date
             # The embeddings of the papers are based on title and abstract.
@@ -257,7 +260,8 @@ class PaperGenerator:
 
         # Add prints, what section is being written
         # what section is converted to LaTeX, when is latex compiled etc
-
+        # Exclude used chunks, not seen chunks
+        
         if Settings.LOAD_PAPER_DRAFT:
             print(f"\n[PaperGenerator] Loading existing paper draft...")
             try:
@@ -287,12 +291,16 @@ class PaperGenerator:
         #######################################
         # Step 10/11: Convert to LaTeX        #
         #######################################
+        
+        print(f"\n{'='*80}")
+        print(f"CONVERTING TO LATEX")
+        print(f"{'='*80}\n")
 
         converter = PaperConverter()
         
         if Settings.LOAD_LATEX:
             latex_dir = PaperConverter.load_latex("output/latex")
-            print(f"\n[PaperGenerator] Loaded existing LaTeX project from: {latex_dir}")
+            print(f"[PaperGenerator] Loaded existing LaTeX project from: {latex_dir}")
         else:
             # Create metadata (can be customized via settings or parameters)
             metadata = LaTeXMetadata.from_settings(
@@ -307,11 +315,15 @@ class PaperGenerator:
                 experiment_result=experiment_result,
             )
             
-            print(f"\n[PaperGenerator] LaTeX project generated at: {latex_dir}")
+            print(f"[PaperGenerator] LaTeX project generated at: {latex_dir}")
 
         #######################################
         # Step 11/11: Compile LaTeX           #
         #######################################
+        
+        print(f"\n{'='*80}")
+        print(f"COMPILING LATEX")
+        print(f"{'='*80}\n")
         
         if converter.compile_latex(latex_dir):
             pdf_path = Path("output/result/paper.pdf")

@@ -25,10 +25,10 @@ def _generate_citation_key(bibtex: Optional[str], authors: List[str], published:
     Generate a citation key for a paper.
     
     Priority:
-    1. Extract from BibTeX entry key if available (e.g., @article{smith2024quantum, -> smith2024quantum)
-    2. Generate from first author last name + year (e.g., smith2024)
+    1. Extract from BibTeX entry key if available (e.g., @article{Diekhoff2024RecursiveBQ, -> Diekhoff2024RecursiveBQ)
+    2. Generate from first author last name + year (e.g., diekhoff2024)
     """
-    # Try to extract from BibTeX
+    # Try to extract from BibTeX first (use original BibTeX keys)
     if bibtex:
         # Look for pattern: @article{key, or @inproceedings{key, etc.
         match = re.search(r'@\w+\{([^,]+)', bibtex)
@@ -77,11 +77,7 @@ class Paper:
     markdown_text: Optional[str] = None
     ranking: Optional[RankingScores] = None
     citation_key: Optional[str] = field(default=None, init=False)
-    
-    def __post_init__(self):
-        """Auto-generate citation_key if not already set"""
-        if self.citation_key is None:
-            self.citation_key = _generate_citation_key(self.bibtex, self.authors, self.published)
+
 
 
 class ArxivAPI:
@@ -309,6 +305,8 @@ class ArxivAPI:
             try:
                 bibtex = self.get_bibtex(paper_id)
                 paper.bibtex = bibtex
+                # Set citation key from BibTeX
+                paper.citation_key = _generate_citation_key(bibtex, paper.authors, paper.published)
                 found_count += 1
                 print(f"  [{i}/{len(papers)}] Got BibTeX for {paper_id}")
             except Exception as e:

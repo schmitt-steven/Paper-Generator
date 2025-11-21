@@ -31,6 +31,7 @@ class PaperWriter:
         sections = {}
         prompts_by_section = {}
         for section_type in section_order:
+            print(f"Writing {section_type.value} section...")
             prompt = self._build_section_prompt(
                 section_type=section_type,
                 context=context,
@@ -130,13 +131,15 @@ class PaperWriter:
 
            [WRITING REQUIREMENTS — STRICT]
             - Produce a cohesive, original, publication-quality academic narrative.
-            - CITATION FORMAT: Use square brackets with the EXACT keys provided in the evidence section (e.g., [smith2024]).
+            - CITATION FORMAT: Use square brackets with the EXACT, COMPLETE citation keys provided in the <citation_key> tags in the evidence section.
+            - CRITICAL: Copy the citation keys EXACTLY as they appear in <citation_key> tags. Do NOT shorten them, do NOT change them, do NOT generate simplified versions.
             - CRITICAL: NEVER use numeric citations like [1], [2], [30]. These are strictly forbidden.
-            - CRITICAL: Do NOT invent citation keys. Use ONLY the keys found in the <citation_key> tags in the evidence.
-            - Place citations immediately before final punctuation: "[smith2024]."
-            - For multiple sources: "[smith2024, jones2023]."
+            - CRITICAL: Do NOT invent citation keys. Do NOT generate "nameYear" format. Use ONLY the exact keys found in the <citation_key> tags.
+            - Example: If evidence shows <citation_key>Hoppe2019QgraphboundedQS</citation_key>, use [Hoppe2019QgraphboundedQS] exactly, NOT [Hoppe2019].
+            - Place citations immediately before final punctuation: "[exactKeyFromEvidence]."
+            - For multiple sources: "[exactKey1, exactKey2]."
             - If a source in the evidence has "unknown" or "n.d." as a key, do NOT cite it.
-            - Cite external papers ONLY using citation keys from the evidence in square brackets.
+            - Cite external papers ONLY using the exact citation keys from the evidence in square brackets.
             - Never fabricate evidence, results, or citations.
             - Integrate and build upon previous sections to ensure full narrative coherence.
 
@@ -184,8 +187,18 @@ class PaperWriter:
         
         lines = []
         for idx, plot in enumerate(plots, 1):
+            # Convert full path to relative path from output/ directory
+            # e.g., "output/experiments/plots/file.png" -> "experiments/plots/file.png"
+            filename = plot.filename
+            if filename.startswith("output/"):
+                filename = filename[len("output/"):]
+            elif "/" in filename and not filename.startswith("experiments/"):
+                # If it's a full path, extract relative part
+                if "experiments" in filename:
+                    filename = filename[filename.find("experiments"):]
+            
             lines.append(f"Figure {idx}:")
-            lines.append(f"  Filename: {plot.filename}")
+            lines.append(f"  Filename: {filename}")
             lines.append(f"  Caption: {plot.caption}")
             lines.append("")
         return "\n".join(lines).strip()
@@ -326,15 +339,18 @@ class PaperWriter:
 
                 For each figure:
                 1. Reference it naturally in the text (e.g., "As shown in Figure 1..." or "Figure 2 demonstrates...")
-                2. Include the markdown image syntax: ![Brief alt text](filename.png)
-                3. Add a visible caption line immediately below: *Figure N: Full caption text*
-                4. Use the exact caption text provided above for each figure
-                5. Place figures at appropriate points in the narrative where they support your discussion
+                2. Include the markdown image syntax: ![Brief alt text](relative_path_to_image.png)
+                3. CRITICAL: Use RELATIVE paths from the paper_draft.md location (which is in the output/ directory).
+                   - If filename is "experiments/plots/file.png", use exactly that (no "output/" prefix)
+                   - Example: ![Alt text](experiments/plots/convergence_comparison.png)
+                4. Add a visible caption line immediately below: *Figure N: Full caption text*
+                5. Use the exact caption text provided above for each figure
+                6. Place figures at appropriate points in the narrative where they support your discussion
 
                 Example:
                 As shown in Figure 1, our method...
 
-                ![Figure 1](output/experiments/experiment_hyp_001/learning_curves.png)
+                ![Convergence Comparison](experiments/plots/convergence_comparison.png)
                 *Figure 1: Learning curves comparing the ...*"""
             )
 
