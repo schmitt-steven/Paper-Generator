@@ -69,7 +69,7 @@ An LLM agent gathers evidence:
 - Uses structured output
 
 #### 4. Combined Scoring & Selection
-- Combined score: `0.4 * vector_score + 0.6 * llm_score`
+- Combined score: `0.3 * vector_score + 0.7 * llm_score`
 - Sort by combined score, select top `filtered_chunks`
 - Return `Evidence` objects
 
@@ -98,7 +98,7 @@ Sections are generated in order: Methods → Results → Discussion → Introduc
 
 ### Special Handling
 - **Results Section**: Includes figure integration instructions and captions
-- **Citations**: Square bracket format `[smith2024]` from evidence citation keys
+
 
 ### Output
 - `PaperDraft` with all sections and title

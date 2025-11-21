@@ -11,10 +11,11 @@ Automatic academic paper generator using local language and embedding models.
     - `feedparser`
     - `requests`
     - `pymupdf4llm`
-    - `numpy`
-    - `matplotlib`
-    - `seaborn`
-    - `pygame`
+    - Could be used by LLM for experiments:
+        - `numpy`
+        - `matplotlib`
+        - `seaborn`
+        - `pygame`
 
 
 - #### LaTeX (MacTeX or BasicTeX, TeX Live, MikTeX...)
@@ -72,14 +73,14 @@ All generated files are saved to output/
 - Switch from Arxiv API to SemanticScholar API (more papers, more metadata, embeddings of abstracts, ...)
 - Add human-in-the-loop feature
 - Add review/improvement loop to the paper writing process
-- Try coding agent like 
+- Try coding agent like SWE-agent or OpenHands
 - Add logic if hypothesis was disproven
 - Add logic to test multiple hypotheses
 - Improve logic for executing steps (e.g. run_from(X), run_only(X), run_steps([X, Y]), run_until(X))
 - Standardize saving/loading
 - Finetune prompts; update formatting (XML tags)
 - Use tokenizers instead of approximations
-
+...
 
 ## Algorithm
 

@@ -286,7 +286,7 @@ class EvidenceGatherer:
 
         weighted: List[Evidence] = []
         for chunk, vector_score, summary, llm_score in chunks:
-            combined = (0.4 * vector_score) + (0.6 * llm_score)
+            combined = (0.3 * vector_score) + (0.7 * llm_score)
             weighted.append(
                 Evidence(
                     chunk=chunk,
