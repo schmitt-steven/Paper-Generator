@@ -52,7 +52,7 @@ class PaperConverter(LazyModelMixin):
         
         self._generate_bibliography(latex_dir, paper_draft, indexed_papers)
         
-        self._generate_abbreviations(latex_dir)
+        self._generate_abbreviations(latex_dir, paper_draft)
         
         if experiment_result:
             self._copy_plot_images(latex_dir, experiment_result)
@@ -111,10 +111,24 @@ class PaperConverter(LazyModelMixin):
                 logger.error(f"[PaperConverter] Compilation succeeded but PDF not found at {pdf_path}")
                 return False
         except subprocess.CalledProcessError as e:
-            logger.error(f"[PaperConverter] LaTeX compilation failed: {e.stderr}")
+            logger.error(f"[PaperConverter] LaTeX compilation failed with exit code {e.returncode}")
+            if e.stdout:
+                print(f"STDOUT:\n{e.stdout}")
+            if e.stderr:
+                print(f"STDERR:\n{e.stderr}")
+            # Also check for log files that might have more info
+            log_file = latex_dir / "temp" / "paper.log"
+            if log_file.exists():
+                print(f"\nLast 50 lines of LaTeX log file:")
+                with open(log_file, 'r', encoding='utf-8', errors='ignore') as f:
+                    lines = f.readlines()
+                    for line in lines[-50:]:
+                        print(line.rstrip())
             return False
         except Exception as e:
             logger.error(f"[PaperConverter] Error during compilation: {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
     def _setup_latex_directory(self, output_dir: Path) -> Path:
@@ -256,65 +270,199 @@ class PaperConverter(LazyModelMixin):
         
         logger.info(f"[PaperConverter] Generated literature.bib with {len(bib_content.split('@')) - 1} entries")
 
-    def _generate_abbreviations(self, latex_dir: Path) -> None:
-        """Extract abbreviation definitions from LaTeX files and generate abbreviations.tex."""
+    def _generate_abbreviations(self, latex_dir: Path, paper_draft: PaperDraft) -> None:
+        """Extract abbreviation definitions from paper draft and generate abbreviations.tex."""
         definitions: dict[str, tuple[str, str]] = {}  # key -> (abbr, full)
         keys: Set[str] = set()
         
-        def scan_file(file_path: Path) -> None:
-            if not file_path.exists():
+        def extract_abbrevs_from_text(text: str) -> None:
+            """Extract "Full Form (ABBR)" patterns from text."""
+            if not text:
                 return
-            content = file_path.read_text(encoding="utf-8")
             
-            # Pattern: text like "Artificial Intelligence (AI)" or "Machine Learning (ML)"
-            pattern = r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s*\(([A-Z]{2,})\)'
-            for match in re.finditer(pattern, content):
+            # Clean up malformed nested patterns first
+            # "Full Form (Full Form (ABBR))" -> "Full Form (ABBR)"
+            text = re.sub(
+                r'([A-Z][A-Za-z\s\-]+?)\s*\([^\)]*\1[^\)]*\(([A-Z]{2,})\)\)',
+                r'\1 (\2)',
+                text,
+                flags=re.IGNORECASE | re.DOTALL
+            )
+            
+            # Match: capitalized phrase followed by (2+ capital letters)
+            pattern = r'([A-Z][A-Za-z\s\-]+?)\s*\(([A-Z]{2,})\)'
+            
+            for match in re.finditer(pattern, text):
                 full_form = match.group(1).strip()
-                abbr = match.group(2).strip()
+                abbr = match.group(2).strip().upper()
                 key = abbr.lower()
                 
-                # Store definition
+                # Remove leading unwanted words
+                words = full_form.split()
+                unwanted_starts = {'unlike', 'the', 'a', 'an', 'this', 'that', 'these', 'those', 
+                                'such', 'some', 'any', 'all', 'each', 'every', 'both'}
+                
+                while words and words[0].lower() in unwanted_starts:
+                    words.pop(0)
+                
+                # Skip leading lowercase words
+                while words and words[0][0].islower():
+                    words.pop(0)
+                
+                if not words:
+                    continue
+                
+                full_form = ' '.join(words)
+                
+                # Store first occurrence only
                 if key not in definitions:
                     definitions[key] = (abbr, full_form)
-                    keys.add(abbr.upper())
-                
-                # Replace with \ac{ABBR} (only first occurrence per file)
-                # Note: This is a simple approach - might replace multiple times
-                new_content = content.replace(match.group(0), f"\\ac{{{abbr}}}", 1)
-                if new_content != content:
-                    content = new_content
-                    file_path.write_text(content, encoding="utf-8")
+                    keys.add(abbr)
+        
+        # Extract from markdown sections
+        for section_content in [
+            paper_draft.abstract,
+            paper_draft.introduction,
+            paper_draft.related_work,
+            paper_draft.methods,
+            paper_draft.results,
+            paper_draft.discussion,
+            paper_draft.conclusion,
+        ]:
+            extract_abbrevs_from_text(section_content)
+        
+        # Scan LaTeX files for additional abbreviations
+        def scan_latex_file(file_path: Path) -> None:
+            if not file_path.exists():
+                return
             
-            # Also extract existing \ac{key} patterns
-            keys.update(re.findall(r'\\ac(?:s|l|f)?\{([^}]+)\}', content))
+            content = file_path.read_text(encoding="utf-8")
+            extract_abbrevs_from_text(content)
+            
+            # Extract any existing \ac{KEY} usage
+            found_keys = re.findall(r'\\ac(?:s|l|f|p)?\{([^}]+)\}', content)
+            for key in found_keys:
+                keys.add(key.upper())
         
-        # Scan abstract.tex
-        scan_file(latex_dir / "abstract.tex")
-        
-        # Scan all .tex files in chapters directory
+        # Scan all LaTeX files
+        scan_latex_file(latex_dir / "abstract.tex")
         chapters_dir = latex_dir / "chapters"
         if chapters_dir.exists():
             for file_path in chapters_dir.glob("*.tex"):
-                scan_file(file_path)
+                if file_path.name != "abbreviations.tex":
+                    scan_latex_file(file_path)
         
         if not keys:
+            logger.warning("[PaperConverter] No abbreviations found")
             return
         
-        # Generate abbreviations.tex for IEEEtran template (uses acronym package, not glossaries)
-        lines = ["% Abbreviations file", "% Automatically generated", ""]
+        # Generate abbreviations.tex
+        lines = [
+            "% Abbreviations file",
+            "% Automatically generated",
+            ""
+        ]
+        
         for key in sorted(keys):
-            if key in definitions:
-                abbr, full = definitions[key]
+            key_lower = key.lower()
+            
+            if key_lower in definitions:
+                abbr, full = definitions[key_lower]
             else:
-                # Fallback: infer from key
                 abbr = key.upper()
                 full = key.replace('_', ' ').title()
-            full = full.replace("&", "\\&").replace("%", "\\%")
-            # Use \acro format for acronym package instead of \newacronym
+            
+            # Escape LaTeX special characters
+            full = full.replace("&", "\\&").replace("%", "\\%").replace("_", "\\_")
             lines.append(f"\\acro{{{abbr}}}{{{full}}}")
         
-        (latex_dir / "chapters" / "abbreviations.tex").write_text("\n".join(lines), encoding="utf-8")
+        abbrev_file = latex_dir / "chapters" / "abbreviations.tex"
+        abbrev_file.write_text("\n".join(lines), encoding="utf-8")
         logger.info(f"[PaperConverter] Generated abbreviations.tex with {len(keys)} entries")
+        
+        # Convert abbreviations in LaTeX files to \ac{} format
+        self._convert_abbreviations_to_ac(latex_dir, keys, definitions)
+
+
+    def _convert_abbreviations_to_ac(self, latex_dir: Path, keys: Set[str], definitions: dict[str, tuple[str, str]]) -> None:
+        """Convert all abbreviation mentions to \ac{} format - LaTeX handles first occurrence expansion."""
+        
+        def process_file(file_path: Path) -> None:
+            if not file_path.exists():
+                return
+                
+            content = file_path.read_text(encoding="utf-8")
+            original_content = content
+            
+            # Clean up any malformed nested patterns from source
+            for abbr in sorted(keys, key=len, reverse=True):
+                key_lower = abbr.lower()
+                if key_lower not in definitions:
+                    continue
+                
+                known_full_form = definitions[key_lower][1]
+                escaped_full = re.escape(known_full_form)
+                escaped_abbr = re.escape(abbr)
+                
+                # Remove nested duplicates: "Full Form (Full Form (ABBR))" -> "Full Form (ABBR)"
+                nested_pattern = rf'{escaped_full}\s*\([^\)]*{escaped_full}[^\)]*\({escaped_abbr}\)\)'
+                content = re.sub(
+                    nested_pattern, 
+                    rf'{known_full_form} ({abbr})',
+                    content,
+                    flags=re.IGNORECASE | re.DOTALL
+                )
+            
+            # Convert "Full Form (ABBR)" -> \ac{ABBR}
+            # The \ac{} command will automatically expand to "Full Form (ABBR)" on first use
+            for abbr in sorted(keys, key=len, reverse=True):
+                key_lower = abbr.lower()
+                if key_lower not in definitions:
+                    continue
+                
+                known_full_form = definitions[key_lower][1]
+                escaped_full = re.escape(known_full_form)
+                escaped_abbr = re.escape(abbr)
+                
+                # Match "Full Form (ABBR)" but NOT if already \ac{ABBR}
+                pattern = rf'{escaped_full}\s*\((?!\\ac\{{){escaped_abbr}\)'
+                content = re.sub(pattern, rf'\\ac{{{abbr}}}', content, flags=re.IGNORECASE)
+            
+            # Convert standalone "ABBR" -> \ac{ABBR}
+            for abbr in sorted(keys, key=len, reverse=True):
+                escaped_abbr = re.escape(abbr)
+                
+                # Match standalone abbreviation, but not if already in \ac{}
+                pattern = rf'(?<!\\ac\{{)(?<!\\)\b{escaped_abbr}\b(?!\}})'
+                
+                def safe_replace(match):
+                    pos = match.start()
+                    
+                    # Check if already inside \ac{...}
+                    before = content[max(0, pos-10):pos]
+                    if '\\ac{' in before and not ')' in before[before.rfind('\\ac{'):]:
+                        return match.group(0)
+                    
+                    after = content[pos+len(abbr):min(len(content), pos+len(abbr)+10)]
+                    if after.startswith('}'):
+                        return match.group(0)
+                        
+                    return rf'\ac{{{abbr}}}'
+                
+                content = re.sub(pattern, safe_replace, content)
+            
+            if content != original_content:
+                file_path.write_text(content, encoding="utf-8")
+                logger.info(f"[PaperConverter] Converted abbreviations to \\ac{{}} in {file_path.name}")
+        
+        # Process all chapter files
+        chapters_dir = latex_dir / "chapters"
+        if chapters_dir.exists():
+            for file_path in chapters_dir.glob("*.tex"):
+                if file_path.name != "abbreviations.tex":
+                    process_file(file_path)
+        
+        process_file(latex_dir / "abstract.tex")
 
     def _copy_plot_images(self, latex_dir: Path, experiment_result: ExperimentResult) -> None:
         """Copy plot images from experiments/plots to LaTeX images directory."""

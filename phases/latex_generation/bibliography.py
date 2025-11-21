@@ -16,7 +16,7 @@ def extract_citation_keys_from_markdown(md_text: str) -> Set[str]:
     
     Handles citations in square brackets format:
     - [smith2024quantum]
-    - [smith2024, jones2023]
+    - [smith2024, jones2023] or [smith2024; jones2023]
     - [1], [29] (numeric - will generate placeholder entries)
     
     Args:
@@ -25,15 +25,15 @@ def extract_citation_keys_from_markdown(md_text: str) -> Set[str]:
     Returns:
         Set of unique citation keys (including numeric ones for placeholder generation)
     """
-    # Pattern to match [key1] or [key1, key2, key3]
-    # Accepts any alphanumeric keys to ensure bibliography is always populated
-    pattern = r'\[([a-z0-9]+(?:\s*,\s*[a-z0-9]+)*)\]'
-    matches = re.findall(pattern, md_text, re.IGNORECASE)
+    # Pattern to match [key1] or [key1, key2] or [key1; key2]
+    # Handles both comma and semicolon separators
+    pattern = r'\[([a-zA-Z0-9]+(?:\s*[,;]\s*[a-zA-Z0-9]+)*)\]'
+    matches = re.findall(pattern, md_text)
     
     citation_keys = set()
     for match in matches:
-        # Split by comma and strip whitespace
-        keys = [k.strip() for k in match.split(",")]
+        # Split by comma or semicolon and strip whitespace
+        keys = [k.strip() for k in re.split(r'[,;]', match)]
         citation_keys.update(keys)
     
     return citation_keys
@@ -104,16 +104,31 @@ def create_paper_mapping(indexed_papers: List[Paper]) -> Dict[str, Paper]:
     """
     Create a mapping from citation_key to Paper object.
     
+    Maps papers by both their current citation_key and their BibTeX key (if available).
+    This handles cases where papers have short keys (e.g., "lee2018") but the paper
+    draft uses full BibTeX keys (e.g., "Lee2018SampleEfficientDR").
+    
     Args:
         indexed_papers: List of Paper objects with citation_key set
     
     Returns:
-        Dictionary mapping citation_key -> Paper
+        Dictionary mapping citation_key -> Paper (includes both short and BibTeX keys)
     """
     mapping = {}
     for paper in indexed_papers:
+        # Map by current citation_key
         if paper.citation_key:
             mapping[paper.citation_key] = paper
+        
+        # Also map by BibTeX key if BibTeX is available
+        # Extract key from BibTeX entry: @article{Key, or @inproceedings{Key,
+        if paper.bibtex:
+            bibtex_match = re.search(r'@\w+\{([^,]+)', paper.bibtex)
+            if bibtex_match:
+                bibtex_key = bibtex_match.group(1).strip()
+                if bibtex_key and bibtex_key != paper.citation_key:
+                    mapping[bibtex_key] = paper
+    
     return mapping
 
 
@@ -130,7 +145,6 @@ def generate_bibtex_entry(paper: Paper) -> str:
         BibTeX entry as string
     """
     if paper.bibtex:
-        # Use existing BibTeX if available
         return paper.bibtex
     
     # Generate minimal BibTeX entry
@@ -211,17 +225,18 @@ def generate_literature_bib(
         else:
             missing_keys.append(key)
             logger.warning(f"[Bibliography] Missing citation key: {key}")
-            # Generate placeholder entry
+            # Generate placeholder entry with complete required fields
             placeholder = textwrap.dedent(f"""\
-                @article{{{key},
+                @misc{{{key},
                   author = {{Unknown}},
                   title = {{Missing reference for {key}}},
                   year = {{n.d.}},
+                  note = {{Citation key not found in indexed papers}},
                 }}""")
             bibtex_entries.append(placeholder)
     
-    if missing_keys:
-        logger.warning(f"[Bibliography] {len(missing_keys)} citation keys not found in indexed papers: {missing_keys}")
+    #if missing_keys:
+    #    logger.warning(f"[Bibliography] {len(missing_keys)} citation keys not found in indexed papers: {missing_keys}")
     
     return "\n\n".join(bibtex_entries)
 

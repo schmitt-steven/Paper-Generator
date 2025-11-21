@@ -371,13 +371,16 @@ class LiteratureSearch(LazyModelMixin):
             if response.status_code == 200:
                 results = response.json()
                 
-                # Update papers with BibTeX
+                # Update papers with BibTeX and set citation keys
                 found_count = 0
+                from phases.paper_search.arxiv_api import _generate_citation_key
                 for paper, result in zip(papers_to_process, results):
                     if result and 'citationStyles' in result and result['citationStyles']:
                         bibtex = result['citationStyles'].get('bibtex')
                         if bibtex:
                             paper.bibtex = bibtex
+                            # Set citation key from BibTeX
+                            paper.citation_key = _generate_citation_key(bibtex, paper.authors, paper.published)
                             found_count += 1
                     else:
                         paper.bibtex = None

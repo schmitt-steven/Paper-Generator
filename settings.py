@@ -34,8 +34,13 @@ class Settings:
     # Paper Writing Phase
     PAPER_INDEXING_EMBEDDING_MODEL = "text-embedding-qwen3-embedding-4b@q5_0"  # Must be an embedding model!
     PAPER_EMBEDDING_BATCH_SIZE =     64  # Number of text chunks to embed at once
+
     EVIDENCE_GATHERING_MODEL =       "qwen/qwen3-next-80b"  
     PAPER_WRITING_MODEL =            "qwen/qwen3-next-80b"
+
+    EVIDENCE_INITIAL_CHUNKS =        12  # Number of chunks retrieved from vector search
+    EVIDENCE_FILTERED_CHUNKS =       8  # Number of chunks after LLM filtering/scoring
+    EVIDENCE_AGENTIC_ITERATIONS =    3   # Number of agentic search iterations
     
     # LaTeX Generation Phase
     LATEX_GENERATION_MODEL = "qwen/qwen3-next-80b"
@@ -77,6 +82,6 @@ class Settings:
     LOAD_EXPERIMENT_RESULT = True
 
     LOAD_PAPER_EMBEDDINGS =      True
-    LOAD_PAPER_WRITING_PROMPTS = False
-    LOAD_PAPER_DRAFT =           False
+    LOAD_PAPER_WRITING_PROMPTS = True
+    LOAD_PAPER_DRAFT =           True
     LOAD_LATEX =                 False

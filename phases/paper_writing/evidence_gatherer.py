@@ -35,19 +35,19 @@ class EvidenceGatherer:
         self,
         query: str,
         target_section: Section,
-        top_k_initial: int = 10,
-        top_k_final: int = 5,
+        initial_chunks: int = 10,
+        filtered_chunks: int = 5,
         exclude_chunk_ids: Optional[Set[str]] = None,
         llm_model=None,
         embedding_model=None,
     ) -> List[Evidence]:
         """Run the full evidence retrieval pipeline for a query."""
 
-        retrieved_chunks = self._vector_search(query, top_k_initial, exclude_chunk_ids, embedding_model)
+        retrieved_chunks = self._vector_search(query, initial_chunks, exclude_chunk_ids, embedding_model)
         summarized_chunks = self._summarize_chunks_batch(query, retrieved_chunks, llm_model=llm_model)
         rescored_chunks = self._score_chunks_batch(query, target_section, summarized_chunks, llm_model=llm_model)
         
-        return self._combine_scores(query, rescored_chunks, top_k_final)
+        return self._combine_scores(query, rescored_chunks, filtered_chunks)
 
     def _vector_search(
         self,
@@ -106,7 +106,7 @@ class EvidenceGatherer:
                 response = llm_model.respond(
                     prompt,
                     response_format=SummaryBatchResult,
-                    config={"temperature": 0.3, "maxTokens": 2000},
+                    config={"temperature": 0.3},
                 )
                 
                 batch_results = response.parsed.get('results', [])
@@ -280,7 +280,7 @@ class EvidenceGatherer:
         self,
         query: str,
         chunks: List[Tuple[PaperChunk, float, str, float]],
-        top_k_final: int,
+        filtered_chunks: int,
     ) -> List[Evidence]:
         """Combine vector and LLM scores and return top evidence."""
 
@@ -299,7 +299,7 @@ class EvidenceGatherer:
             )
 
         weighted.sort(key=lambda ev: ev.combined_score, reverse=True)
-        return weighted[:top_k_final]
+        return weighted[:filtered_chunks]
 
     @staticmethod
     def _deduplicate_evidence(evidence_list: Sequence[Evidence]) -> List[Evidence]:
@@ -323,8 +323,8 @@ class EvidenceGatherer:
         experiment: Optional[ExperimentResult],
         default_queries: Sequence[str],
         max_iterations: int = 5,
-        top_k_initial: int = 20,
-        top_k_final: int = 10,
+        initial_chunks: int = 20,
+        filtered_chunks: int = 10,
     ) -> Tuple[List[Evidence], str]:
         """Gather evidence using agentic iterative search with default queries as starting point."""
 
@@ -339,7 +339,7 @@ class EvidenceGatherer:
             if not query:
                 continue
             # Do vector search with embedding model
-            retrieved_chunks = self._vector_search(query, top_k_initial, seen_chunk_ids, embedding_model)
+            retrieved_chunks = self._vector_search(query, initial_chunks, seen_chunk_ids, embedding_model)
             all_retrieved_chunks.append((query, section_type, retrieved_chunks))
             # Update seen_chunk_ids based on retrieved chunks
             seen_chunk_ids.update(chunk.chunk_id for chunk, _ in retrieved_chunks)
@@ -351,7 +351,7 @@ class EvidenceGatherer:
         for query, target_section, retrieved_chunks in all_retrieved_chunks:
             summarized_chunks = self._summarize_chunks_batch(query, retrieved_chunks, llm_model=llm_model)
             rescored_chunks = self._score_chunks_batch(query, target_section, summarized_chunks, llm_model=llm_model)
-            new_evidence = self._combine_scores(query, rescored_chunks, top_k_final)
+            new_evidence = self._combine_scores(query, rescored_chunks, filtered_chunks)
             collected_evidence.extend(new_evidence)
             seen_chunk_ids.update(ev.chunk.chunk_id for ev in new_evidence)
 
@@ -391,8 +391,8 @@ class EvidenceGatherer:
             new_evidence = self.search_evidence(
                 cleaned_query,
                 section_type,
-                top_k_initial=top_k_initial,
-                top_k_final=top_k_final,
+                initial_chunks=initial_chunks,
+                filtered_chunks=filtered_chunks,
                 exclude_chunk_ids=seen_chunk_ids,
                 llm_model=llm_model,
                 embedding_model=embedding_model,
@@ -402,14 +402,14 @@ class EvidenceGatherer:
             seen_chunk_ids.update(ev.chunk.chunk_id for ev in new_evidence)
             result = self._summarize_tool_results(new_evidence)
             tool_results.append(result)
-            print(f"        Added {len(new_evidence)} new evidence items")
+            print(f"    Added {len(new_evidence)} new evidence items")
             
             return result
 
         initial_prompt = self.build_agent_prompt(section_type, context, experiment, collected_evidence)
 
         try:
-            print(f"  [Agentic Search] Starting iterative evidence gathering...")
+            # print(f"  [Agentic Search] Starting iterative evidence gathering...")
             llm_model.act(
                 initial_prompt,
                 tools=[search_evidence_tool],

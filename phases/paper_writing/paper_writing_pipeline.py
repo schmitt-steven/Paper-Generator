@@ -21,16 +21,7 @@ from settings import Settings
 class PaperWritingPipeline:
     """Orchestrates indexing, evidence gathering, and section writing."""
 
-    def __init__(
-        self,
-        top_k_initial: int = 15,
-        top_k_final: int = 10,
-        agentic_iterations: int = 3,
-    ) -> None:
-        self.top_k_initial = top_k_initial
-        self.top_k_final = top_k_final
-        self.agentic_iterations = agentic_iterations
-
+    def __init__(self) -> None:
         self.indexer = PaperIndexer()
         self.query_builder = QueryBuilder()
         self.writer = PaperWriter()
@@ -84,9 +75,9 @@ class PaperWritingPipeline:
                     context=paper_concept,
                     experiment=experiment_result,
                     default_queries=default_queries,
-                    max_iterations=self.agentic_iterations,
-                    top_k_initial=self.top_k_initial,
-                    top_k_final=self.top_k_final,
+                    max_iterations=Settings.EVIDENCE_AGENTIC_ITERATIONS,
+                    initial_chunks=Settings.EVIDENCE_INITIAL_CHUNKS,
+                    filtered_chunks=Settings.EVIDENCE_FILTERED_CHUNKS,
                 )
 
                 evidence_by_section[section_type] = evidence
