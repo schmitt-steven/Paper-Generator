@@ -3,9 +3,10 @@ import json
 import os
 import textwrap
 from typing import List
+from pathlib import Path
 from phases.paper_search.arxiv_api import Paper
 from phases.hypothesis_generation.hypothesis_models import PaperFindings, FindingsExtractionResult
-from utils.file_utils import preprocess_markdown
+from utils.file_utils import preprocess_markdown, save_json, load_json
 from utils.lazy_model_loader import LazyModelMixin
 
 
@@ -241,8 +242,8 @@ class PaperAnalyzer(LazyModelMixin):
     @staticmethod
     def save_findings(findings: List[PaperFindings], filepath: str = "output/paper_findings.json"):
         """Save paper findings to JSON file"""
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        
+        path_obj = Path(filepath)
+
         findings_data = [
             {
                 "paper_id": f.paper_id,
@@ -253,18 +254,17 @@ class PaperAnalyzer(LazyModelMixin):
             }
             for f in findings
         ]
-        
-        with open(filepath, 'w', encoding='utf-8') as file:
-            json.dump(findings_data, file, indent=2, ensure_ascii=False)
-        
+
+        save_json(findings_data, path_obj.name, str(path_obj.parent))
+
         print(f"Saved {len(findings)} paper findings to {filepath}")
     
     @staticmethod
     def load_findings(filepath: str) -> List[PaperFindings]:
         """Load paper findings from JSON file"""
-        with open(filepath, 'r', encoding='utf-8') as file:
-            data = json.load(file)
-        
+        path_obj = Path(filepath)
+        data = load_json(path_obj.name, str(path_obj.parent))
+
         findings = [PaperFindings(**item) for item in data]
         print(f"Loaded {len(findings)} paper findings from {filepath}")
         return findings

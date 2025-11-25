@@ -1,27 +1,89 @@
 import re
+import json
 from pathlib import Path
+from typing import Any
 
 
-def save_markdown_to_file(content: str, filename: str, output_dir: str = None) -> str:
+def save_markdown(content: str, filename: str, output_dir: str = None) -> str:
     """Save markdown content to a file."""
-    
+
     if output_dir:
         target_dir = Path(output_dir)
     else:
         # Use the current working directory
         target_dir = Path.cwd()
-    
+
     # Create directory if it doesn't exist
     target_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # Create the full file path
     file_path = target_dir / filename
-    
+
     # Write the content to the file
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(content)
 
     return str(file_path)
+
+
+def load_markdown(filename: str, input_dir: str = None) -> str:
+    """Load markdown content from a file."""
+
+    if input_dir:
+        source_dir = Path(input_dir)
+    else:
+        # Use the current working directory
+        source_dir = Path.cwd()
+
+    # Create the full file path
+    file_path = source_dir / filename
+
+    # Read the content from the file
+    with open(file_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+
+    return content
+
+
+def save_json(data: dict | list | Any, filename: str, output_dir: str = None, indent: int = 2, ensure_ascii: bool = False) -> str:
+    """Save JSON data to a file."""
+
+    if output_dir:
+        target_dir = Path(output_dir)
+    else:
+        # Use the current working directory
+        target_dir = Path.cwd()
+
+    # Create directory if it doesn't exist
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create the full file path
+    file_path = target_dir / filename
+
+    # Write the JSON data to the file
+    with open(file_path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, indent=indent, ensure_ascii=ensure_ascii)
+
+    return str(file_path)
+
+
+def load_json(filename: str, input_dir: str = None) -> dict | list | Any:
+    """Load JSON data from a file."""
+
+    if input_dir:
+        source_dir = Path(input_dir)
+    else:
+        # Use the current working directory
+        source_dir = Path.cwd()
+
+    # Create the full file path
+    file_path = source_dir / filename
+
+    # Read the JSON data from the file
+    with open(file_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+
+    return data
 
 
 def preprocess_markdown(markdown: str) -> str:

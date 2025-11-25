@@ -4,10 +4,11 @@ import re
 from typing import Iterable, List, Sequence, Optional
 import json
 import os
+from pathlib import Path
 
 from phases.paper_search.arxiv_api import Paper
 from phases.paper_writing.data_models import PaperChunk
-from utils.file_utils import preprocess_markdown
+from utils.file_utils import preprocess_markdown, save_json, load_json
 from settings import Settings
 import time
 import lmstudio as lms
@@ -242,21 +243,20 @@ class PaperIndexer:
     def save_embeddings(self, embeddings: List[List[float]]) -> None:
         """Save embeddings to JSON file."""
         try:
-            os.makedirs(os.path.dirname(self.EMBEDDINGS_FILE), exist_ok=True)
-            with open(self.EMBEDDINGS_FILE, 'w', encoding='utf-8') as f:
-                json.dump(embeddings, f)
+            path_obj = Path(self.EMBEDDINGS_FILE)
+            save_json(embeddings, path_obj.name, str(path_obj.parent))
             print(f"Saved {len(embeddings)} embeddings to {self.EMBEDDINGS_FILE}")
         except Exception as e:
             print(f"Error saving embeddings: {e}")
 
     def load_embeddings(self) -> Optional[List[List[float]]]:
         """Load embeddings from JSON file if it exists."""
-        if not os.path.exists(self.EMBEDDINGS_FILE):
+        path_obj = Path(self.EMBEDDINGS_FILE)
+        if not path_obj.exists():
             return None
-        
+
         try:
-            with open(self.EMBEDDINGS_FILE, 'r', encoding='utf-8') as f:
-                embeddings = json.load(f)
+            embeddings = load_json(path_obj.name, str(path_obj.parent))
             return embeddings
         except Exception as e:
             print(f"Error loading embeddings: {e}")

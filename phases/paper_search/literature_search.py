@@ -10,7 +10,9 @@ import requests
 import json
 import os
 from datetime import datetime
+from pathlib import Path
 from utils.lazy_model_loader import LazyModelMixin
+from utils.file_utils import save_json, load_json
 
 
 class SearchQuery(BaseModel):
@@ -136,20 +138,16 @@ class LiteratureSearch(LazyModelMixin):
         return search_queries
     
 
-    def save_search_queries(self, queries: List[SearchQuery], filename: str = None, output_dir: str = "output"):
+    @staticmethod
+    def save_search_queries(queries: List[SearchQuery], filename: str = None, output_dir: str = "output"):
         """Save search queries to JSON file."""
-        os.makedirs(output_dir, exist_ok=True)
-        
         if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"search_queries_{timestamp}.json"
-        
-        filepath = os.path.join(output_dir, filename)
+
         queries_data = [{"label": q.label, "query": q.query, "description": q.description} for q in queries]
-        
-        with open(filepath, 'w', encoding='utf-8') as f:
-            json.dump(queries_data, f, indent=2, ensure_ascii=False)
-        
+        filepath = save_json(queries_data, filename, output_dir)
+
         print(f"Saved {len(queries)} search queries to {filepath}")
         return filepath
     
@@ -157,9 +155,9 @@ class LiteratureSearch(LazyModelMixin):
     @staticmethod
     def load_search_queries(filepath: str) -> List[SearchQuery]:
         """Load search queries from JSON file."""
-        with open(filepath, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        
+        path_obj = Path(filepath)
+        data = load_json(path_obj.name, str(path_obj.parent))
+
         queries = [SearchQuery(**q) for q in data]
         print(f"Loaded {len(queries)} queries from {filepath}")
         return queries
@@ -400,15 +398,13 @@ class LiteratureSearch(LazyModelMixin):
         return papers
     
 
-    def save_papers(self, papers: List[Paper], filename: str = None, output_dir: str = "output"):
+    @staticmethod
+    def save_papers(papers: List[Paper], filename: str = None, output_dir: str = "output"):
         """Save papers to JSON file."""
-        os.makedirs(output_dir, exist_ok=True)
-        
         if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"papers_{timestamp}.json"
-        
-        filepath = os.path.join(output_dir, filename)
+
         papers_data = [
             {
                 "id": paper.id,
@@ -431,10 +427,9 @@ class LiteratureSearch(LazyModelMixin):
             }
             for paper in papers
         ]
-        
-        with open(filepath, 'w', encoding='utf-8') as f:
-            json.dump(papers_data, f, indent=2, ensure_ascii=False)
-        
+
+        filepath = save_json(papers_data, filename, output_dir)
+
         print(f"Saved {len(papers)} papers to {filepath}")
         return filepath
     
@@ -442,27 +437,27 @@ class LiteratureSearch(LazyModelMixin):
     @staticmethod
     def load_papers(filepath: str) -> List[Paper]:
         """Load papers from JSON file."""
-        with open(filepath, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        
+        path_obj = Path(filepath)
+        data = load_json(path_obj.name, str(path_obj.parent))
+
         papers = []
         for p in data:
             # Convert ranking dict back to RankingScores object
             if p.get('ranking'):
                 p['ranking'] = RankingScores(**p['ranking'])
-            
+
             # Extract citation_key if present (it won't be passed to constructor due to init=False)
             citation_key = p.pop('citation_key', None)
-            
+
             # Create Paper object (citation_key will be auto-generated in __post_init__ if None)
             paper = Paper(**p)
-            
+
             # If citation_key was in JSON, use it (otherwise keep auto-generated one)
             if citation_key:
                 paper.citation_key = citation_key
-            
+
             papers.append(paper)
-        
+
         print(f"Loaded {len(papers)} papers from {filepath}")
         return papers
 
