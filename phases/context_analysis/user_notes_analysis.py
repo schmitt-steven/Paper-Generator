@@ -47,10 +47,11 @@ class NotesAnalyzer(LazyModelMixin):
         self.model_name = model_name
         self._model = None  # Lazy-loaded via LazyModelMixin
 
-    def load_user_notes(self, folder_path: str, extensions: List[str] = None) -> List[UserNotes]:
+    @staticmethod
+    def load_user_notes(folder_path: str, extensions: List[str] = None) -> List[UserNotes]:
         """Load documents from the specified folder."""
         if extensions is None:
-            extensions = list(self.SUPPORTED_EXTENSIONS.keys())
+            extensions = list(NotesAnalyzer.SUPPORTED_EXTENSIONS.keys())
         
         files = []
         folder = Path(folder_path)
@@ -61,8 +62,7 @@ class NotesAnalyzer(LazyModelMixin):
         for file_path in folder.rglob('*'):
             if file_path.is_file() and file_path.suffix in extensions:
                 try:
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        content = f.read()
+                    content = file_path.read_text(encoding='utf-8')
                     files.append(UserNotes(
                         file_path=str(file_path),
                         file_name=file_path.name,

@@ -5,6 +5,7 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 
 from phases.experimentation.experiment_state import HypothesisEvaluation
+from utils.file_utils import save_json, load_json
 
 
 class ResultsManager:
@@ -19,33 +20,31 @@ class ResultsManager:
         evaluation: HypothesisEvaluation
     ) -> str:
         """Save hypothesis evaluation (proven/disproven/inconclusive)."""
-        
-        os.makedirs(self.base_output_dir, exist_ok=True)
-        
+
         eval_data = {
             "hypothesis_id": evaluation.hypothesis_id,
             "verdict": evaluation.verdict,
             "reasoning": evaluation.reasoning
         }
-        
-        eval_path = os.path.join(self.base_output_dir, f"hypothesis_evaluation_{evaluation.hypothesis_id}.json")
-        with open(eval_path, 'w', encoding='utf-8') as f:
-            json.dump(eval_data, f, indent=2, ensure_ascii=False)
-        
+
+        filename = f"hypothesis_evaluation_{evaluation.hypothesis_id}.json"
+        eval_path = save_json(eval_data, filename, self.base_output_dir)
+
         return eval_path
     
+    @staticmethod
     def load_previous_results(
-        self,
         hypothesis_id: str,
-        run_id: Optional[int] = None
+        run_id: Optional[int] = None,
+        base_dir: str = "output/experiments"
     ) -> Dict[str, Any]:
         """Load previous experiment results for comparison."""
-        
+
         result_data = {}
-        eval_path = os.path.join(self.base_output_dir, f"hypothesis_evaluation_{hypothesis_id}.json")
+        eval_path = os.path.join(base_dir, f"hypothesis_evaluation_{hypothesis_id}.json")
         if os.path.exists(eval_path):
-            with open(eval_path, 'r', encoding='utf-8') as f:
-                result_data = json.load(f)
-        
+            path_obj = Path(eval_path)
+            result_data = load_json(path_obj.name, str(path_obj.parent))
+
         return result_data
 

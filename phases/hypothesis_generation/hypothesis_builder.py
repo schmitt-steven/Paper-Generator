@@ -2,9 +2,11 @@ import json
 import textwrap
 import numpy as np
 from typing import List, Tuple
+from pathlib import Path
 from phases.context_analysis.paper_conception import PaperConcept
 from phases.hypothesis_generation.hypothesis_models import Hypothesis, HypothesesList, HypothesesResult, SelectedHypotheses
 from utils.lazy_model_loader import LazyModelMixin, LazyEmbeddingMixin
+from utils.file_utils import save_json, load_json
 
 
 class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
@@ -178,7 +180,7 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
             
             # Automatically save
             if final_hypotheses:
-                self.save_hypotheses(final_hypotheses, filepath="output/hypotheses.json")
+                HypothesisBuilder.save_hypotheses(final_hypotheses, filepath="output/hypotheses.json", num_papers_analyzed=self.num_papers_analyzed)
             
             return final_hypotheses
         
@@ -187,11 +189,14 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
             # Return empty list on error
             return []
     
-    def save_hypotheses(self, hypotheses: List[Hypothesis], filepath: str):
+    @staticmethod
+    def save_hypotheses(hypotheses: List[Hypothesis], filepath: str, num_papers_analyzed: int = 0):
         """Save hypotheses to JSON file."""
+        path_obj = Path(filepath)
+
         result_dict = {
             "paper_concept_file": "output/paper_concept.md",
-            "num_papers_analyzed": self.num_papers_analyzed,
+            "num_papers_analyzed": num_papers_analyzed,
             "hypotheses": [
                 {
                     "id": h.id,
@@ -206,26 +211,26 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
                 for h in hypotheses
             ]
         }
-        
-        with open(filepath, 'w', encoding='utf-8') as f:
-            json.dump(result_dict, f, indent=2, ensure_ascii=False)
-        
+
+        save_json(result_dict, path_obj.name, str(path_obj.parent))
+
         print(f"\nSaved {len(hypotheses)} hypotheses to {filepath}")
     
-    def load_hypotheses(self, filepath: str) -> List[Hypothesis]:
+    @staticmethod
+    def load_hypotheses(filepath: str) -> List[Hypothesis]:
         """
         Load hypotheses from a JSON file.
-        
+
         Args:
             filepath: Path to the JSON file containing saved hypotheses
-        
+
         Returns:
             List of Hypothesis objects
         """
         try:
-            with open(filepath, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            
+            path_obj = Path(filepath)
+            data = load_json(path_obj.name, str(path_obj.parent))
+
             hypotheses = []
             for hyp_data in data.get("hypotheses", []):
                 hypothesis = Hypothesis(
@@ -238,10 +243,10 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
                     selected_for_experimentation=hyp_data.get("selected_for_experimentation", False)
                 )
                 hypotheses.append(hypothesis)
-            
+
             print(f"Loaded {len(hypotheses)} hypotheses from {filepath}")
             return hypotheses
-        
+
         except FileNotFoundError:
             print(f"Error: File not found: {filepath}")
             return []
@@ -277,7 +282,7 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
             # If few hypotheses, select all of them
             for h in hypotheses:
                 h.selected_for_experimentation = True
-            self.save_hypotheses(hypotheses, "output/hypotheses.json")
+            HypothesisBuilder.save_hypotheses(hypotheses, "output/hypotheses.json", num_papers_analyzed=self.num_papers_analyzed)
             return hypotheses
         
         # Format hypotheses for prompt
@@ -349,9 +354,9 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
                     h = id_to_hypothesis[hyp_id]
                     h.selected_for_experimentation = True
                     selected_hypotheses.append(h)
-            
+
             # Save the updated state (with selected flags)
-            self.save_hypotheses(hypotheses, "output/hypotheses.json")
+            HypothesisBuilder.save_hypotheses(hypotheses, "output/hypotheses.json", num_papers_analyzed=self.num_papers_analyzed)
             
             print(f"\nSelected {len(selected_hypotheses)} {'hypothesis' if len(selected_hypotheses) == 1 else 'hypotheses'} from {len(hypotheses)} candidates:")
             for h in selected_hypotheses:
@@ -365,6 +370,6 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
             fallback = hypotheses[:max_n]
             for h in fallback:
                 h.selected_for_experimentation = True
-            self.save_hypotheses(hypotheses, "output/hypotheses.json")
+            HypothesisBuilder.save_hypotheses(hypotheses, "output/hypotheses.json", num_papers_analyzed=self.num_papers_analyzed)
             return fallback
 

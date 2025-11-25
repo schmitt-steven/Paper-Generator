@@ -3,9 +3,11 @@ import json
 import os
 from typing import List, Tuple
 from collections import Counter
+from pathlib import Path
 from phases.context_analysis.paper_conception import PaperConcept
 from phases.hypothesis_generation.hypothesis_models import PaperFindings
 from utils.lazy_model_loader import LazyEmbeddingMixin
+from utils.file_utils import save_json, load_json
 
 
 class LimitationAnalyzer(LazyEmbeddingMixin):
@@ -127,7 +129,7 @@ class LimitationAnalyzer(LazyEmbeddingMixin):
         
         # Automatically save
         if top_limitations:
-            self.save_limitations(
+            LimitationAnalyzer.save_limitations(
                 top_limitations,
                 filepath="output/limitations.json",
                 paper_concept_file="output/paper_concept.md",
@@ -165,10 +167,11 @@ class LimitationAnalyzer(LazyEmbeddingMixin):
         print(f"Analyzed {len(self.findings)} papers")
         print(f"Total unique limitations after clustering: {len(self.common_limitations)}")
     
-    def save_limitations(self, top_limitations: List[Tuple[str, float]], filepath: str = "output/limitations.json", paper_concept_file: str = "output/paper_concept.md", num_papers_analyzed: int = 0):
+    @staticmethod
+    def save_limitations(top_limitations: List[Tuple[str, float]], filepath: str = "output/limitations.json", paper_concept_file: str = "output/paper_concept.md", num_papers_analyzed: int = 0):
         """Save limitations to JSON file."""
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        
+        path_obj = Path(filepath)
+
         limitations_data = {
             "paper_concept_file": paper_concept_file,
             "num_papers_analyzed": num_papers_analyzed,
@@ -180,26 +183,26 @@ class LimitationAnalyzer(LazyEmbeddingMixin):
                 for limitation, score in top_limitations
             ]
         }
-        
-        with open(filepath, 'w', encoding='utf-8') as f:
-            json.dump(limitations_data, f, indent=2, ensure_ascii=False)
-        
+
+        save_json(limitations_data, path_obj.name, str(path_obj.parent))
+
         print(f"Saved {len(top_limitations)} limitations to {filepath}")
     
-    def load_limitations(self, filepath: str = "output/limitations.json") -> List[Tuple[str, float]]:
+    @staticmethod
+    def load_limitations(filepath: str = "output/limitations.json") -> List[Tuple[str, float]]:
         """Load limitations from JSON file."""
         try:
-            with open(filepath, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            
+            path_obj = Path(filepath)
+            data = load_json(path_obj.name, str(path_obj.parent))
+
             limitations = [
                 (item["limitation"], item["score"])
                 for item in data.get("limitations", [])
             ]
-            
+
             print(f"Loaded {len(limitations)} limitations from {filepath}")
             return limitations
-        
+
         except FileNotFoundError:
             print(f"Error: File not found: {filepath}")
             return []

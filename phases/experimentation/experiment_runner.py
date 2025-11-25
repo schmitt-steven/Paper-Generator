@@ -5,7 +5,9 @@ import re
 import json
 from dataclasses import asdict, is_dataclass
 from typing import Optional, Tuple, List
+from pathlib import Path
 from pydantic import BaseModel
+from utils.file_utils import save_json, load_json, save_markdown, load_markdown
 import lmstudio as lms
 from phases.context_analysis.paper_conception import PaperConcept
 from phases.hypothesis_generation.hypothesis_models import Hypothesis
@@ -699,10 +701,7 @@ class ExperimentRunner:
         """Save an experimental plan to a file."""
 
         filename = f"experimental_plan_{hypothesis_id}.md"
-        file_path = os.path.join(self.base_output_dir, filename)
-        
-        with open(file_path, 'w', encoding='utf-8') as f:
-            f.write(experimental_plan)
+        file_path = save_markdown(experimental_plan, filename, self.base_output_dir)
         
         return file_path
     
@@ -714,13 +713,13 @@ class ExperimentRunner:
 
         filename = f"experimental_plan_{hypothesis_id}.md"
         file_path = os.path.join(self.base_output_dir, filename)
-        
-        if not os.path.exists(file_path):
+
+        path_obj = Path(file_path)
+        if not path_obj.exists():
             raise FileNotFoundError(f"Experimental plan not found: {file_path}")
-        
-        with open(file_path, 'r', encoding='utf-8') as f:
-            plan_content = f.read()
-        
+
+        plan_content = load_markdown(path_obj.name, str(path_obj.parent))
+
         return plan_content
     
     def load_experiment_code(
@@ -758,16 +757,13 @@ class ExperimentRunner:
         experiment_result: ExperimentResult
     ) -> str:
         """Save ExperimentResult to JSON file."""
-        
-        os.makedirs(self.base_output_dir, exist_ok=True)
-        
+
         # Convert ExperimentResult to dictionary
         result_dict = self._experiment_result_to_dict(experiment_result)
-        
-        file_path = os.path.join(self.base_output_dir, f"experiment_result_{experiment_result.hypothesis.id}.json")
-        with open(file_path, 'w', encoding='utf-8') as f:
-            json.dump(result_dict, f, indent=2, ensure_ascii=False)
-        
+
+        filename = f"experiment_result_{experiment_result.hypothesis.id}.json"
+        file_path = save_json(result_dict, filename, self.base_output_dir)
+
         return file_path
     
     def _experiment_result_to_dict(self, result: ExperimentResult) -> dict:
@@ -796,9 +792,9 @@ class ExperimentRunner:
     @staticmethod
     def load_experiment_result(file_path: str) -> ExperimentResult:
         """Load ExperimentResult from JSON file."""
-        
-        with open(file_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
+
+        path_obj = Path(file_path)
+        data = load_json(path_obj.name, str(path_obj.parent))
         
         # Reconstruct nested objects
         hypothesis = Hypothesis(**data['hypothesis'])

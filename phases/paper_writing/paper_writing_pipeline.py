@@ -5,6 +5,7 @@ import os
 import re
 import textwrap
 from typing import Dict, List, Optional, Sequence
+from pathlib import Path
 
 from phases.context_analysis.paper_conception import PaperConcept
 from phases.experimentation.experiment_state import ExperimentResult
@@ -15,6 +16,7 @@ from phases.paper_writing.paper_indexer import PaperIndexer
 from phases.paper_writing.paper_writer import PaperWriter
 from phases.paper_writing.query_builder import QueryBuilder
 from utils.lms_settings import LMSJITSettings
+from utils.file_utils import save_json, load_json, save_markdown, load_markdown
 from settings import Settings
 
 
@@ -111,10 +113,6 @@ class PaperWritingPipeline:
     ) -> None:
         """Save section writing prompts to a JSON file."""
 
-        output_dir = "output"
-        os.makedirs(output_dir, exist_ok=True)
-        output_path = os.path.join(output_dir, "section_writing_prompts.json")
-
         output_data = {
             "sections": {
                 section_name: {"prompt": prompt}
@@ -122,8 +120,7 @@ class PaperWritingPipeline:
             }
         }
 
-        with open(output_path, "w", encoding="utf-8") as f:
-            json.dump(output_data, f, indent=2, ensure_ascii=False)
+        output_path = save_json(output_data, "section_writing_prompts.json", "output")
 
         print(f"[PaperWritingPipeline] Saved section writing prompts to {output_path}")
 
@@ -133,11 +130,11 @@ class PaperWritingPipeline:
     ) -> Dict[str, str]:
         """Load section writing prompts from a JSON file."""
 
-        if not os.path.exists(filepath):
+        path_obj = Path(filepath)
+        if not path_obj.exists():
             raise FileNotFoundError(f"Section writing prompts file not found: {filepath}")
 
-        with open(filepath, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        data = load_json(path_obj.name, str(path_obj.parent))
 
         prompts = {
             section_name: section_data["prompt"]
@@ -155,9 +152,6 @@ class PaperWritingPipeline:
     ) -> None:
         """Save the paper draft as a markdown file."""
 
-        os.makedirs(output_dir, exist_ok=True)
-        output_path = os.path.join(output_dir, filename)
-
         markdown_content = f"# {paper_draft.title}\n\n"
         markdown_content += f"## Abstract\n\n{paper_draft.abstract}\n\n"
         markdown_content += f"## Introduction\n\n{paper_draft.introduction}\n\n"
@@ -167,8 +161,7 @@ class PaperWritingPipeline:
         markdown_content += f"## Discussion\n\n{paper_draft.discussion}\n\n"
         markdown_content += f"## Conclusion\n\n{paper_draft.conclusion}\n"
 
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write(markdown_content)
+        output_path = save_markdown(markdown_content, filename, output_dir)
 
         print(f"[PaperWritingPipeline] Saved paper draft to {output_path}")
 
@@ -177,37 +170,37 @@ class PaperWritingPipeline:
         filepath: str = "output/paper_draft.md",
     ) -> PaperDraft:
         """Load a paper draft from a markdown file."""
-        
-        if not os.path.exists(filepath):
+
+        path_obj = Path(filepath)
+        if not path_obj.exists():
             raise FileNotFoundError(f"Paper draft file not found: {filepath}")
-        
-        with open(filepath, "r", encoding="utf-8") as f:
-            content = f.read()
-        
+
+        content = load_markdown(path_obj.name, str(path_obj.parent))
+
         # Extract title (first # header)
         title_match = re.search(r'^#\s+(.+)$', content, re.MULTILINE)
         if not title_match:
             raise ValueError("Could not find title in paper draft file")
         title = title_match.group(1).strip()
-        
+
         # Extract sections using regex
         # Pattern matches: ## Section Name followed by content until next ## or end
         section_pattern = r'##\s+(\w+(?:\s+\w+)*)\s*\n\n(.*?)(?=\n##\s+|$)'
         sections = {}
-        
+
         for match in re.finditer(section_pattern, content, re.DOTALL):
             section_name = match.group(1).strip()
             section_content = match.group(2).strip()
             sections[section_name.lower().replace(' ', '_')] = section_content
-        
+
         # Build PaperDraft with extracted sections
         draft_data = {'title': title}
         for field_name in ['abstract', 'introduction', 'related_work', 'methods', 'results', 'discussion', 'conclusion']:
             draft_data[field_name] = sections.get(field_name, '')
-        
+
         paper_draft = PaperDraft(**draft_data)
         print(f"[PaperWritingPipeline] Loaded paper draft from {filepath}")
-        
+
         return paper_draft
 
     def reset_index(self) -> None:

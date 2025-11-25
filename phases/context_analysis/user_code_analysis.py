@@ -66,7 +66,10 @@ class CodeAnalyzer(LazyModelMixin):
         self.model_name = model_name
         self._model = None  # Lazy-loaded via LazyModelMixin
 
-    def load_code_files(self, folder_path: str, extensions: List[str] = LANGUAGE_MAP.keys()) -> List[UserCode]:
+    @staticmethod
+    def load_code_files(folder_path: str, extensions: List[str] = None) -> List[UserCode]:
+        if extensions is None:
+            extensions = list(CodeAnalyzer.LANGUAGE_MAP.keys())
         code_files = []
         folder = Path(folder_path)
 
@@ -76,8 +79,7 @@ class CodeAnalyzer(LazyModelMixin):
         for file_path in folder.rglob('*'):
             if file_path.is_file() and file_path.suffix in extensions:
                 try:
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        content = f.read()
+                    content = file_path.read_text(encoding='utf-8')
                     code_files.append(UserCode(
                         file_path=str(file_path),
                         file_name=file_path.name,

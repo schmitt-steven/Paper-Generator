@@ -3,7 +3,7 @@ import textwrap
 from typing import List
 from phases.context_analysis.user_code_analysis import CodeAnalyzer, UserCode, CodeSnippet
 from phases.context_analysis.user_notes_analysis import NotesAnalyzer, UserNotes 
-from utils.file_utils import save_markdown_to_file 
+from utils.file_utils import save_markdown, load_markdown 
 from utils.lazy_model_loader import LazyModelMixin
 from utils.llm_utils import remove_thinking_blocks
 
@@ -216,13 +216,14 @@ class PaperConception(LazyModelMixin):
         
         concept = self.generate_core_information()
         concept = self.identify_open_questions(concept)
-        
+
         # Automatically save
-        self.save_paper_concept(concept, filename="paper_concept.md", output_dir="output")
-        
+        PaperConception.save_paper_concept(concept, filename="paper_concept.md", output_dir="output")
+
         return concept
 
-    def save_paper_concept(self, concept: PaperConcept, filename: str = "paper_concept.md", output_dir: str = "output") -> str:
+    @staticmethod
+    def save_paper_concept(concept: PaperConcept, filename: str = "paper_concept.md", output_dir: str = "output") -> str:
         """Save the paper concept to a markdown file with open questions and code snippets. """
 
         content_parts = []
@@ -246,8 +247,8 @@ class PaperConception(LazyModelMixin):
                 concept.code_snippets
             ])
         
-        full_content = "\n".join(content_parts)        
-        file_path = save_markdown_to_file(full_content, filename, output_dir)
+        full_content = "\n".join(content_parts)
+        file_path = save_markdown(full_content, filename, output_dir)
         print(f"Paper concept saved to: {file_path}")
         
         return file_path
@@ -257,19 +258,19 @@ class PaperConception(LazyModelMixin):
         """
         Load a paper concept from a saved markdown file.
         Allows users to review and edit the concept before continuing.
-  
+
         Users can edit all sections directly in the markdown file, as long as the 3 large headers are preserved:
         - Paper concept description
         - Open questions for literature search
         - Code snippets section
         """
-        import os
-        
-        if not os.path.exists(file_path):
+        from pathlib import Path
+
+        path_obj = Path(file_path)
+        if not path_obj.exists():
             raise FileNotFoundError(f"Paper concept file not found: {file_path}")
-        
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
+
+        content = load_markdown(path_obj.name, str(path_obj.parent))
         
         # Parse the markdown content
         description = ""

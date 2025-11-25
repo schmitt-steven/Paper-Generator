@@ -24,9 +24,6 @@ class PaperGenerator:
     
     def generate_paper(self):
 
-        # TODO: use remove_thinking_blocks from llm_utils.py - or shit will break
-        # TODO: Test paper concept until LLM gets it as MODEL BASED
-
         ###############################
         # Step 1/11: Paper Concept  #
         ###############################
@@ -116,7 +113,7 @@ class PaperGenerator:
             # Convert papers to markdown and update markdown_text field
             converter = PDFConverter(fix_math=False, extract_media=True)
             papers_with_markdown: List[Paper] = converter.convert_all_papers(filtered_papers, base_folder="literature/")
-            literature_search.save_papers(papers_with_markdown, filename="papers_filtered_with_markdown.json")
+            LiteratureSearch.save_papers(papers_with_markdown, filename="papers_filtered_with_markdown.json")
 
 
         #######################################
@@ -132,8 +129,7 @@ class PaperGenerator:
         # Step 6/11: Analyze Limitations      #
         #######################################
         if Settings.LOAD_LIMITATIONS:
-            limitation_analyzer = LimitationAnalyzer()
-            top_limitations = limitation_analyzer.load_limitations("output/limitations.json")
+            top_limitations = LimitationAnalyzer.load_limitations("output/limitations.json")
         else:
             limitation_analyzer = LimitationAnalyzer.build_from_findings(findings, paper_concept)
             top_limitations = limitation_analyzer.find_top_limitations(n=10)
@@ -153,7 +149,7 @@ class PaperGenerator:
         )
 
         if Settings.LOAD_HYPOTHESES:
-            hypotheses = hypothesis_builder.load_hypotheses("output/hypotheses.json")
+            hypotheses = HypothesisBuilder.load_hypotheses("output/hypotheses.json")
         else:
             hypotheses = hypothesis_builder.generate_hypotheses(n_hypotheses=5)
 
