@@ -1,15 +1,11 @@
 from __future__ import annotations
-
 from dataclasses import dataclass, field
+from typing import List, Optional
 from enum import Enum
-from typing import List
-
 from pydantic import BaseModel
-from phases.paper_search.arxiv_api import Paper
-
+from phases.paper_search.paper import Paper
 
 class Section(str, Enum):
-    """Section types for generated paper content."""
     ABSTRACT = "Abstract"
     INTRODUCTION = "Introduction"
     RELATED_WORK = "Related Work"

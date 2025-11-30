@@ -1,28 +1,57 @@
 import traceback
-from pathlib import Path
 from typing import List
-from phases.context_analysis.paper_conception import PaperConcept, PaperConception
+from pathlib import Path
 from phases.context_analysis.user_code_analysis import CodeAnalyzer
-from phases.context_analysis.user_notes_analysis import NotesAnalyzer
-from phases.paper_search.arxiv_api import Paper
+from phases.context_analysis.paper_conception import PaperConception, PaperConcept
+from phases.context_analysis.user_requirements import load_user_requirements
 from phases.paper_search.literature_search import LiteratureSearch
+from phases.paper_search.user_paper_loader import UserPaperLoader
+from phases.paper_search.paper import Paper
 from phases.paper_search.paper_ranking import PaperRanker
 from phases.paper_search.paper_filtering import PaperFilter
-from phases.paper_writing.data_models import PaperDraft
-from utils.pdf_converter_pymupdf_marker import PDFConverter
 from phases.hypothesis_generation.paper_analysis import PaperAnalyzer
 from phases.hypothesis_generation.limitation_analysis import LimitationAnalyzer
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.experimentation.experiment_runner import ExperimentRunner
+from phases.experimentation.experiment_state import ExperimentResult
 from phases.paper_writing.paper_writing_pipeline import PaperWritingPipeline
+from phases.paper_writing.data_models import PaperDraft
 from phases.latex_generation.paper_converter import PaperConverter
 from phases.latex_generation.metadata import LaTeXMetadata
 from settings import Settings
 
 
 class PaperGenerator: 
+
+    # X TODO: Switch from Arxiv to Semantic Scholar
+    # X TODO: Add own papers
     
+    # TODO: Add setting for automatically generating hypothesis
+    # TODO: Build User Requirements frame
+
+    # TODO: Add Tkinter interface with human-in-the-loop feature
+        # Screen: settings (Phases (including models, batch sizes etc.), LaTeX data, starting point)
+        # Screen: check paper concept
+        # Screen: add papers, checkbox: search for additional papers (if checked: slider for number of papers)
+        # Screen: check hypothesis
+        # Screen: check experiment plan
+    # Tkinter GUI features:
+        # Tabs: to preview and edit Markdown
+        # Drag and drop field to add own papers, left click to select from file browser
+        # Dropdown with available models from LM Studio
+        # Dropdown for starting point
+        # Bottom section/bar,on each screen, with button to continue/start a step
+    
+    # TODO: Remove table of contents from tex
+    # TODO: Move results into folders of each step
+    # Check: Paper Concept still needed?
+    # TODO: Add review/improvement loop to the paper writing process
+
     def generate_paper(self):
+
+        # Load user requirements (always loaded as it's needed for hypothesis check)
+        user_requirements = load_user_requirements("user_files/user_requirements.md")
+        user_provided_hypothesis = bool(user_requirements.hypothesis and user_requirements.hypothesis.strip())
 
         ###############################
         # Step 1/11: Paper Concept  #
@@ -37,16 +66,11 @@ class PaperGenerator:
             code_files = code_analyzer.load_code_files("user_files")
             analyzed_files = code_analyzer.analyze_all_files(code_files)
             
-            # Analyze all notes (.md, .txt etc.)
-            notes_analyzer = NotesAnalyzer(model_name=Settings.NOTES_ANALYSIS_MODEL)
-            notes = notes_analyzer.load_user_notes("user_files")
-            analyzed_notes = notes_analyzer.analyze_all_user_notes(notes)
-            
             # Generate paper outline (auto-saved to output/paper_concept.md)
             concept_builder = PaperConception(
                 model_name=Settings.PAPER_CONCEPTION_MODEL,
                 user_code=analyzed_files,
-                user_notes=analyzed_notes
+                user_requirements=user_requirements
             )
             paper_concept = concept_builder.build_paper_concept()
 
@@ -68,9 +92,19 @@ class PaperGenerator:
             all_papers: List[Paper] = LiteratureSearch.load_papers("output/papers.json")
         else:
             all_papers = literature_search.search_papers(search_queries, max_results_per_query=30)
-
-            all_papers = literature_search.get_citation_counts(all_papers)
-            all_papers = literature_search.get_bibtex_for_papers(all_papers)
+        
+        # Load user-provided papers and merge with searched papers
+        user_paper_loader = UserPaperLoader(model_name=Settings.LITERATURE_SEARCH_MODEL)
+        user_papers = user_paper_loader.load_user_papers(
+            folder_path="user_files/papers/",
+            s2_api=literature_search.s2_api
+        )
+        
+        if user_papers:
+            print(f"\nMerging {len(user_papers)} user-provided paper(s) with {len(all_papers)} searched paper(s)...")
+            # Detect and merge duplicates (prefer user papers)
+            all_papers = literature_search.detect_and_merge_duplicates(user_papers, all_papers)
+            print(f"Total papers after merging: {len(all_papers)}\n")
 
         #######################################################
         # Step 4/11: Rank, filter and download papers       #
@@ -78,62 +112,78 @@ class PaperGenerator:
         if Settings.LOAD_PAPER_RANKING:
             # Load set of papers that are already ranked, filtered and have markdown
             loaded_papers: List[Paper] = LiteratureSearch.load_papers("output/papers_filtered_with_markdown.json")
-            papers_with_markdown: List[Paper] = [
-                p for p in loaded_papers 
-                if getattr(p, "markdown_text", None) is not None and isinstance(p.markdown_text, str) and p.markdown_text.strip()
-            ]
+            # Filter: include papers that have markdown text (both user-provided and searched need markdown)
+            papers_with_markdown: List[Paper] = []
+            for p in loaded_papers:
+                if getattr(p, "markdown_text", None) is not None and isinstance(p.markdown_text, str) and p.markdown_text.strip():
+                    papers_with_markdown.append(p)
+            
+            # Count user-provided papers in final list
+            user_with_markdown = [p for p in papers_with_markdown if p.user_provided]
+            
+            print(f"\n[PaperGenerator] Loaded {len(papers_with_markdown)} papers from saved ranking")
         else:
-            # Rank papers based on embedding similarity, citation counts, and publication date
-            # The embeddings of the papers are based on title and abstract.
+            # Separate user-provided papers (skip ranking for these)
+            user_provided_papers = [p for p in all_papers if p.user_provided]
+            searched_papers = [p for p in all_papers if not p.user_provided]
+            
+            print(f"\n[PaperGenerator] Ranking {len(searched_papers)} searched papers (skipping {len(user_provided_papers)} user-provided papers)...")
+            
+            # Rank only automatically searched papers
             ranker = PaperRanker(embedding_model_name=Settings.PAPER_RANKING_EMBEDDING_MODEL)
             ranking_context = f"{paper_concept.description}\nOpen Research Questions:\n{paper_concept.open_questions}"
-            ranked_papers: List[Paper] = ranker.rank_papers(
-                papers=all_papers,
+            ranked_searched_papers: List[Paper] = ranker.rank_papers(
+                papers=searched_papers,
                 context=ranking_context,
                 weights={
                     'relevance': 0.7,
                     'citations': 0.2,
                     'recency': 0.1
                 }
-            )
+            ) if searched_papers else []
             
-            # Filter the ranked papers
-            filtered_papers: List[Paper] = PaperFilter.filter_diverse(
-                papers=ranked_papers,
-                n_cutting_edge=15,
-                n_hidden_gems=15,
-                n_classics=15,
-                n_well_rounded=15
-            )
-            PaperRanker.print_ranked_papers(filtered_papers, n=10)
+            # Merge user-provided papers back into final list
+            ranked_papers: List[Paper] = user_provided_papers + ranked_searched_papers
 
-            # Download papers
-            literature_search.download_papers_as_pdfs(filtered_papers, base_folder="literature/")
+            # Filter papers: include papers that have markdown text
+            # User-provided papers bypass ranking but still need markdown to be usable
+            papers_with_markdown: List[Paper] = []
+            for p in ranked_papers:
+                if getattr(p, "markdown_text", None) is not None and isinstance(p.markdown_text, str) and p.markdown_text.strip():
+                    papers_with_markdown.append(p)
             
-            # Convert papers to markdown and update markdown_text field
-            converter = PDFConverter(fix_math=False, extract_media=True)
-            papers_with_markdown: List[Paper] = converter.convert_all_papers(filtered_papers, base_folder="literature/")
-            LiteratureSearch.save_papers(papers_with_markdown, filename="papers_filtered_with_markdown.json")
+            # Count user-provided papers in final list
+            user_with_markdown = [p for p in papers_with_markdown if p.user_provided]
+            
+            print(f"\n[PaperGenerator] Final paper list: {len(papers_with_markdown)} papers with markdown")           
+            if len(user_provided_papers) > len(user_with_markdown):
+                missing = len(user_provided_papers) - len(user_with_markdown)
+                print(f"Warning: {missing} user-provided paper(s) missing markdown (will not be usable)")
 
+        findings = []
+        top_limitations = []
 
-        #######################################
-        # Step 5/11: Extract Findings         #
-        #######################################
-        if Settings.LOAD_FINDINGS:
-            findings = PaperAnalyzer.load_findings("output/paper_findings.json")
+        if user_provided_hypothesis:
+            print(f"\n[PaperGenerator] User hypothesis provided. Skipping Findings and Limitations analysis.")
         else:
-            analyzer = PaperAnalyzer(model_name=Settings.PAPER_ANALYSIS_MODEL)
-            findings = analyzer.extract_findings(papers_with_markdown)
-        
-        #######################################
-        # Step 6/11: Analyze Limitations      #
-        #######################################
-        if Settings.LOAD_LIMITATIONS:
-            top_limitations = LimitationAnalyzer.load_limitations("output/limitations.json")
-        else:
-            limitation_analyzer = LimitationAnalyzer.build_from_findings(findings, paper_concept)
-            top_limitations = limitation_analyzer.find_top_limitations(n=10)
-            limitation_analyzer.print_limitations(n=10, show_scores=True, top_limitations=top_limitations)
+            #######################################
+            # Step 5/11: Extract Findings         #
+            #######################################
+            if Settings.LOAD_FINDINGS:
+                findings = PaperAnalyzer.load_findings("output/paper_findings.json")
+            else:
+                analyzer = PaperAnalyzer(model_name=Settings.PAPER_ANALYSIS_MODEL)
+                findings = analyzer.extract_findings(papers_with_markdown)
+            
+            #######################################
+            # Step 6/11: Analyze Limitations      #
+            #######################################
+            if Settings.LOAD_LIMITATIONS:
+                top_limitations = LimitationAnalyzer.load_limitations("output/limitations.json")
+            else:
+                limitation_analyzer = LimitationAnalyzer.build_from_findings(findings, paper_concept)
+                top_limitations = limitation_analyzer.find_top_limitations(n=10)
+                limitation_analyzer.print_limitations(n=10, show_scores=True, top_limitations=top_limitations)
 
         # TODO: Make thresholds based on top scores, not hardcoded
                 
@@ -150,18 +200,24 @@ class PaperGenerator:
 
         if Settings.LOAD_HYPOTHESES:
             hypotheses = HypothesisBuilder.load_hypotheses("output/hypotheses.json")
+        elif user_provided_hypothesis:
+            print(f"Using user-provided hypothesis...")
+            hypotheses = hypothesis_builder.create_hypothesis_from_user_input(user_requirements)
         else:
             hypotheses = hypothesis_builder.generate_hypotheses(n_hypotheses=5)
 
-        print(f"Selecting best hypothesis from {len(hypotheses)} hypotheses...")
-        best_hypotheses = hypothesis_builder.select_best_hypotheses(hypotheses, max_n=1)
-        best_hypothesis = best_hypotheses[0] if best_hypotheses else None
-        if not best_hypothesis:
+        if user_provided_hypothesis:
+            selected_hypothesis = hypotheses[0] if hypotheses else None
+            if selected_hypothesis:
+                 print(f"Auto-selected user hypothesis {selected_hypothesis.id}")
+        else:
+            print(f"Selecting best hypothesis from {len(hypotheses)} hypotheses...")
+            selected_hypothesis = hypothesis_builder.select_best_hypotheses(hypotheses, max_n=1)[0]
+            
+        if not selected_hypothesis:
             print("No hypothesis selected. Exiting.")
             return
-        print(f"Selected hypothesis {best_hypothesis.id}: {best_hypothesis.description}")
-
-        # TODO: Implememt testing multiple hypotheses
+        print(f"Using hypothesis: {selected_hypothesis.description}")
         
         #######################################
         # Step 8/11: Run Experiment           #
@@ -173,7 +229,7 @@ class PaperGenerator:
         experiment_result = None
         
         if Settings.LOAD_EXPERIMENT_RESULT:
-            experiment_result_file = Path("output/experiments") / f"experiment_result_{best_hypothesis.id}.json"
+            experiment_result_file = Path("output/experiments") / f"experiment_result_{selected_hypothesis.id}.json"
             if not experiment_result_file.exists():
                 raise FileNotFoundError(
                     f"Experiment result not found at {experiment_result_file}. "
@@ -196,12 +252,12 @@ class PaperGenerator:
         # Check experiment can be run (generate plan/code or use existing)
         elif Settings.LOAD_EXPERIMENT_PLAN and Settings.LOAD_EXPERIMENT_CODE:
             # Try to run existing experiment code if available
-            experiment_code_file = Path("output/experiments") / f"experiment_{best_hypothesis.id}.py"
+            experiment_code_file = Path("output/experiments") / f"experiment_{selected_hypothesis.id}.py"
             
             if experiment_code_file.exists():
                 try:
                     result = experiment_runner.run_experiment(
-                        best_hypothesis,
+                        selected_hypothesis,
                         paper_concept,
                         load_existing_plan=True,
                         load_existing_code=True
@@ -215,14 +271,14 @@ class PaperGenerator:
                     traceback.print_exc()
                     experiment_result = None
             else:
-                print(f"\n[PaperGenerator] No experiment code found for hypothesis {best_hypothesis.id}")
+                print(f"\n[PaperGenerator] No experiment code found for hypothesis {selected_hypothesis.id}")
                 print(f"[PaperGenerator] Continuing without experiment result")
                 experiment_result = None
         else:
-            print(f"\nTesting hypothesis {best_hypothesis.id}: {best_hypothesis.description}")
+            print(f"\nTesting hypothesis {selected_hypothesis.id}: {selected_hypothesis.description}")
             try:
                 result = experiment_runner.run_experiment(
-                    best_hypothesis, 
+                    selected_hypothesis, 
                     paper_concept, 
                     load_existing_plan=Settings.LOAD_EXPERIMENT_PLAN,
                     load_existing_code=Settings.LOAD_EXPERIMENT_CODE

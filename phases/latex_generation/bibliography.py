@@ -1,14 +1,11 @@
-"""Citation extraction and bibliography generation."""
-
 import re
 import textwrap
 import logging
-from typing import List, Set, Dict
-from phases.paper_search.arxiv_api import Paper
+from typing import Set, List, Dict
+from phases.paper_search.paper import Paper
 from phases.paper_writing.data_models import PaperDraft
 
 logger = logging.getLogger(__name__)
-
 
 def extract_citation_keys_from_markdown(md_text: str) -> Set[str]:
     """
@@ -160,12 +157,29 @@ def generate_bibtex_entry(paper: Paper) -> str:
     # Use citation_key as entry key
     entry_key = paper.citation_key or "unknown"
     
-    # Determine entry type (default to article)
-    entry_type = "article"
-    if paper.journal_ref:
-        entry_type = "article"
-    elif "arxiv" in (paper.primary_category or "").lower():
-        entry_type = "article"
+    # Determine entry type
+    entry_type = "article"  # Default fallback
+    
+    # Try to extract from BibTeX if available (even if we're generating new entry)
+    if paper.bibtex:
+        bibtex_type_match = re.search(r'@(\w+)\{', paper.bibtex)
+        if bibtex_type_match:
+            entry_type = bibtex_type_match.group(1)
+    
+    # If no BibTeX or couldn't extract, infer from venue name
+    if entry_type == "article" and paper.venue:
+        venue_lower = paper.venue.lower()
+        # Conference indicators
+        conference_keywords = ["conference", "proceedings", "workshop", "symposium", 
+                               "iclr", "neurips", "icml", "aaai", "ijcai", "acl", 
+                               "emnlp", "cvpr", "iccv", "eccv", "sigir", "kdd"]
+        # Journal indicators  
+        journal_keywords = ["journal", "transactions", "review", "magazine"]
+        
+        if any(keyword in venue_lower for keyword in conference_keywords):
+            entry_type = "inproceedings"
+        elif any(keyword in venue_lower for keyword in journal_keywords):
+            entry_type = "article"
     
     # Build BibTeX entry
     bibtex_lines = [
@@ -175,8 +189,12 @@ def generate_bibtex_entry(paper: Paper) -> str:
         f"  year = {{{year}}},",
     ]
     
-    if paper.journal_ref:
-        bibtex_lines.append(f"  journal = {{{paper.journal_ref}}},")
+    # Add venue field - use appropriate field name based on entry type
+    if paper.venue:
+        if entry_type == "inproceedings":
+            bibtex_lines.append(f"  booktitle = {{{paper.venue}}},")
+        else:  # article or other
+            bibtex_lines.append(f"  journal = {{{paper.venue}}},")
     
     if paper.doi:
         bibtex_lines.append(f"  doi = {{{paper.doi}}},")

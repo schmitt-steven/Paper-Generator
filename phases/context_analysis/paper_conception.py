@@ -2,8 +2,8 @@ from dataclasses import dataclass
 import textwrap
 from typing import List
 from phases.context_analysis.user_code_analysis import CodeAnalyzer, UserCode, CodeSnippet
-from phases.context_analysis.user_notes_analysis import NotesAnalyzer, UserNotes 
-from utils.file_utils import save_markdown, load_markdown 
+from phases.context_analysis.user_requirements import UserRequirements
+from utils.file_utils import save_markdown, load_markdown
 from utils.lazy_model_loader import LazyModelMixin
 from utils.llm_utils import remove_thinking_blocks
 
@@ -17,11 +17,25 @@ class PaperConcept():
 
 class PaperConception(LazyModelMixin):
 
-    def __init__(self, model_name, user_code: List[UserCode], user_notes: List[UserNotes]):
+    def __init__(self, model_name, user_code: List[UserCode], user_requirements: UserRequirements):
         self.model_name = model_name
         self._model = None  # Lazy-loaded via LazyModelMixin
         self.user_code = user_code
-        self.user_notes = user_notes
+            sections.append(f"Introduction Requirements: {req.introduction}")
+        if req.related_work:
+            sections.append(f"Related Work Requirements: {req.related_work}")
+        if req.methods:
+            sections.append(f"Methods Requirements: {req.methods}")
+        if req.results:
+            sections.append(f"Results Requirements: {req.results}")
+        if req.discussion:
+            sections.append(f"Discussion Requirements: {req.discussion}")
+        if req.conclusion:
+            sections.append(f"Conclusion Requirements: {req.conclusion}")
+        if req.acknowledgements:
+            sections.append(f"Acknowledgements Requirements: {req.acknowledgements}")
+
+        return "\n".join(sections)
 
     def _format_code_snippets_section(self) -> str:
         """Extract and format code snippets prominently for the LLM."""
@@ -125,13 +139,13 @@ class PaperConception(LazyModelMixin):
             - Use bullet points (-) for lists
             - Keep formatting clean and consistent
 
-            [USER NOTES ANALYSIS]
-            {NotesAnalyzer.get_analysis_report(self.user_notes)}
+            [USER REQUIREMENTS]
+            {self._format_user_requirements_section()}
 
             [FULL CODE ANALYSIS]
             {CodeAnalyzer.get_analysis_report(self.user_code)}
 
-            [CODE SNIPPETS] (Priority Information - Use These in Methodology)
+            [CODE SNIPPETS] (Use These in Methodology)
             {code_snippets_section}
         """)
 
@@ -325,29 +339,16 @@ if __name__ == "__main__":
         file_path="test.py",
         file_name="test.py",
         file_content="# test code",
-        summary="Implements recursive backward Q-learning algorithm",
-        novel_concepts="Novel backward propagation through state graph",
-        research_relevance="Improves sample efficiency in sparse reward environments"
-    )
-    
-    # Mock analyzed notes
-    mock_notes = UserNotes(
-        file_path="notes.md",
-        file_name="notes.md", 
-        file_content="# Research notes",
-        summary="Proposes Recursive Backwards Q-Learning (RBQ)",
-        key_findings="Standard Q-learning is slow in sparse reward settings",
-        methodologies="Backward pass through trajectories after each episode",
-        technical_details="Uses BFS for reward propagation",
-        data_and_results="",
-        related_work=""
+        discussion="",
+        conclusion="",
+        acknowledgements=None
     )
     
     # Test paper conception
     conception = PaperConception(
         model_name="qwen/qwen3-coder-30b",
         user_code=[mock_code],
-        user_notes=[mock_notes]
+        user_requirements=mock_requirements
     )
     
     concept = conception.build_paper_concept()

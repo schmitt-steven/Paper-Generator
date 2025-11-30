@@ -1,13 +1,9 @@
-from phases.paper_search.arxiv_api import Paper
-from typing import List
-import numpy as np
-from datetime import datetime
-
+from typing import List, Optional
+from phases.paper_search.paper import Paper
 
 class PaperFilter:
     """
-    Filters papers based on various strategies after ranking.
-    All methods are static - no state needed.
+    Filters papers based on ranking scores and diversity criteria.
     """
     
     @staticmethod

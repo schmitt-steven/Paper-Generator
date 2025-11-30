@@ -1,11 +1,10 @@
-from phases.paper_search.arxiv_api import Paper, RankingScores
-from typing import List, Tuple, Dict
+from typing import List, Dict
 import numpy as np
 from datetime import datetime
-from utils.lazy_model_loader import LazyEmbeddingMixin
+from phases.paper_search.paper import Paper, RankingScores
+from utils.lazy_model_loader import LazyModelMixin
 
-
-class PaperRanker(LazyEmbeddingMixin):
+class PaperRanker(LazyModelMixin):
     """
     Ranks papers by composite score based on:
     - Semantic relevance (embedding similarity to context)
@@ -21,7 +20,7 @@ class PaperRanker(LazyEmbeddingMixin):
             embedding_model_name: Name of the LM Studio embedding model
         """
         self.embedding_model_name = embedding_model_name
-        self._embedding_model = None  # Lazy-loaded via LazyEmbeddingMixin
+        self._embedding_model = None
     
     def rank_papers(
         self,
@@ -42,8 +41,8 @@ class PaperRanker(LazyEmbeddingMixin):
         """
         if weights is None:
             weights = {
-                'relevance': 0.8,
-                'citations': 0.1,
+                'relevance': 0.7,
+                'citations': 0.2 ,
                 'recency': 0.1
             }
         

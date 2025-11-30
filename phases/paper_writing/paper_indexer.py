@@ -1,17 +1,13 @@
 from __future__ import annotations
-
 import re
-from typing import Iterable, List, Sequence, Optional
-import json
-import os
-from pathlib import Path
-
-from phases.paper_search.arxiv_api import Paper
-from phases.paper_writing.data_models import PaperChunk
-from utils.file_utils import preprocess_markdown, save_json, load_json
-from settings import Settings
 import time
+from typing import List, Sequence, Iterable, Optional
+from pathlib import Path
 import lmstudio as lms
+from settings import Settings
+from utils.file_utils import save_json, load_json
+from phases.paper_search.paper import Paper
+from phases.paper_writing.data_models import PaperChunk
 
 
 

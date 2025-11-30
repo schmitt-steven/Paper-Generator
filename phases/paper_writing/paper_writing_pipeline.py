@@ -1,20 +1,12 @@
 from __future__ import annotations
-
-import json
-import os
-import re
-import textwrap
-from typing import Dict, List, Optional, Sequence
-from pathlib import Path
-
+from typing import List, Sequence, Optional
 from phases.context_analysis.paper_conception import PaperConcept
-from phases.experimentation.experiment_state import ExperimentResult
-from phases.paper_search.arxiv_api import Paper
-from phases.paper_writing.evidence_gatherer import EvidenceGatherer
-from phases.paper_writing.data_models import Evidence, PaperChunk, PaperDraft, Section
+from phases.paper_search.paper import Paper
+from phases.paper_writing.data_models import PaperDraft, PaperChunk
 from phases.paper_writing.paper_indexer import PaperIndexer
-from phases.paper_writing.paper_writer import PaperWriter
 from phases.paper_writing.query_builder import QueryBuilder
+from phases.paper_writing.paper_writer import PaperWriter
+from phases.experimentation.experiment_state import ExperimentResult
 from utils.lms_settings import LMSJITSettings
 from utils.file_utils import save_json, load_json, save_markdown, load_markdown
 from settings import Settings

@@ -1,14 +1,24 @@
-import re
-import json
-import os
+from typing import List, Optional
 import textwrap
-from typing import List
+import re
 from pathlib import Path
-from phases.paper_search.arxiv_api import Paper
-from phases.hypothesis_generation.hypothesis_models import PaperFindings, FindingsExtractionResult
-from utils.file_utils import preprocess_markdown, save_json, load_json
+from pydantic import BaseModel
+from phases.paper_search.paper import Paper
 from utils.lazy_model_loader import LazyModelMixin
+from utils.file_utils import save_json, load_json
+from utils.pdf_converter_pymupdf_marker import preprocess_markdown
 
+class FindingsExtractionResult(BaseModel):
+    methods_used: List[str]
+    test_setup: str
+    main_limitations: str
+
+class PaperFindings(BaseModel):
+    paper_id: str
+    title: str
+    methods_used: List[str]
+    test_setup: str
+    main_limitations: str
 
 class PaperAnalyzer(LazyModelMixin):
     """Analyzes papers to extract key findings using section-aware extraction"""
@@ -27,8 +37,8 @@ class PaperAnalyzer(LazyModelMixin):
 
         print(f"\nExtracting findings from {total} papers...")
         for i, paper in enumerate(papers, 1):
-            # Extract clean ID for display (e.g., "http://arxiv.org/abs/2301.12345v1" -> "2301.12345v1")
-            paper_id = paper.id.split('/')[-1] if '/' in paper.id else paper.id
+            # Use paper ID directly (Semantic Scholar IDs are already clean alphanumeric strings)
+            paper_id = paper.id
             print(f"  [{i}/{total}] Processing {paper_id}...")
             finding = self.extract_paper_findings(paper)
             findings.append(finding)
@@ -44,8 +54,8 @@ class PaperAnalyzer(LazyModelMixin):
         
         Returns structured PaperFindings with methods, datasets, results, limitations.
         """
-        # Extract clean ID (e.g., "http://arxiv.org/abs/2301.12345v1" -> "2301.12345v1")
-        paper_id = paper.id.split('/')[-1] if '/' in paper.id else paper.id
+        # Use paper ID directly (Semantic Scholar IDs are already clean alphanumeric strings)
+        paper_id = paper.id
         
         key_sections = self.extract_key_sections(paper)
         
