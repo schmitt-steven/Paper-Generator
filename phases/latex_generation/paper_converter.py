@@ -5,18 +5,16 @@ import os
 import re
 import shutil
 import subprocess
-import textwrap
+from typing import Optional, Any, List, Set
 from pathlib import Path
-from typing import Any, List, Optional, Set
-
-from phases.paper_search.arxiv_api import Paper
-from phases.paper_writing.data_models import PaperDraft, Section
-from phases.latex_generation.metadata import LaTeXMetadata
-from phases.latex_generation.markdown_to_latex import MarkdownToLaTeX
-from phases.latex_generation.bibliography import generate_literature_bib
-from phases.experimentation.experiment_state import ExperimentResult
-from utils.lazy_model_loader import LazyModelMixin
 from settings import Settings
+from phases.paper_search.paper import Paper
+from phases.paper_writing.data_models import PaperDraft
+from utils.lazy_model_loader import LazyModelMixin
+from phases.latex_generation.bibliography import generate_literature_bib
+from phases.latex_generation.markdown_to_latex import MarkdownToLaTeX
+from phases.latex_generation.metadata import LaTeXMetadata
+from phases.experimentation.experiment_state import ExperimentResult
 
 logger = logging.getLogger(__name__)
 

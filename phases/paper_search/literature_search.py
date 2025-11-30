@@ -1,22 +1,23 @@
-from phases.paper_search.arxiv_api import ArxivAPI, Paper, RankingScores
-from phases.context_analysis.paper_conception import PaperConcept
-from typing import List
-from dataclasses import asdict
+from typing import List, Optional
 import textwrap
-from pydantic import BaseModel
-import lmstudio as lms
-import time
-import requests
 import json
-import os
+import time
+import re
 from datetime import datetime
 from pathlib import Path
+from pydantic import BaseModel
+from dataclasses import asdict
+from difflib import SequenceMatcher
+
+from phases.paper_search.paper import Paper, RankingScores
+from phases.paper_search.semantic_scholar_api import SemanticScholarAPI
+from utils.pdf_downloader import PDFDownloader
 from utils.lazy_model_loader import LazyModelMixin
 from utils.file_utils import save_json, load_json
+from phases.context_analysis.paper_conception import PaperConcept
 
 
 class SearchQuery(BaseModel):
-    """Represents a single search query with metadata"""
     label: str
     query: str
     description: str
@@ -37,8 +38,8 @@ class LiteratureSearch(LazyModelMixin):
             model_name: Name of the LLM model to use for query generation
         """
         self.model_name = model_name
-        self._model = None  # Lazy-loaded via LazyModelMixin
-        self.arxiv_api = ArxivAPI()
+        self._model = None
+        self.s2_api = SemanticScholarAPI()
 
 
     def build_search_queries(self, paper_concept: PaperConcept) -> List[SearchQuery]:
@@ -54,35 +55,26 @@ class LiteratureSearch(LazyModelMixin):
 
         system_prompt = textwrap.dedent("""\
             [TASK]
-            Generate arXiv API search queries for a comprehensive literature search.
+            Generate Semantic Scholar search queries for a comprehensive literature search.
 
-            [ARXIV QUERY SYNTAX]
-            Field: abs: (abstract)
-            Operators: +AND+, +OR+, +ANDNOT+ (uppercase only)
-            Quotes: %22phrase%22 (spaces become +)
-            Grouping: %28...%29 required when mixing +OR+ with +AND+/+ANDNOT+
+            [SEMANTIC SCHOLAR QUERY SYNTAX]
+            - Plain text queries work best.
+            - Use + for AND (e.g., "reinforcement learning" + "sparse reward")
+            - Use | for OR (e.g., "DQN" | "Q-learning")
+            - Use - for NOT (e.g., "transformers" - "vision")
+            - Use "exact phrase" for multi-word terms.
+            - Filters: year:2020-2024, venue:NeurIPS, fieldsOfStudy:Computer Science
 
             [CRITICAL CONSTRAINTS]
-            - Use EXACTLY 2 AND conditions per query. No more, no less.
-            - Use ONLY standard RL terminology that commonly appears in paper abstracts.
-            - NEVER use invented/novel phrases - if it's not established jargon, don't use it.
-            - Avoid ANDNOT entirely.
+            - Use standard terminology.
+            - Avoid overly complex boolean logic.
             - Labels must be plain text, no URL encoding.
-            - Adhere to the ARXIV QUERY SYNTAX.
-
+            - Adhere to the SEMANTIC SCHOLAR QUERY SYNTAX.
 
             [GOOD QUERY EXAMPLES]
-            abs:%22experience%20replay%22+AND+abs:%22Q-learning%22
-            abs:%22prioritized%20sweeping%22+AND+abs:%22reinforcement%20learning%22
-            abs:%22eligibility%20traces%22+AND+abs:%22temporal%20difference%22
-            abs:%22sparse%20reward%22+AND+abs:%22reinforcement%20learning%22
-
-            [BAD QUERY EXAMPLES - DO NOT GENERATE THESE]
-            abs:%22Q-learning%22+AND+abs:%22sample%20efficiency%22+AND+abs:%22sparse%20rewards%22
-            (Too many ANDs - will return nothing)
-            
-            abs:%22backward%20induction%22+AND+abs:%22reward%20propagation%22
-            (Phrases too specific - papers don't use these exact terms)
+            "experience replay" + "Q-learning"
+            "reinforcement learning" + "sparse reward"
+            "transformer" + "attention" year:2015-2025
 
             [REQUIREMENTS]
             Generate 15 queries covering:
@@ -163,6 +155,69 @@ class LiteratureSearch(LazyModelMixin):
         return queries
 
 
+    def _normalize_title(self, title: str) -> str:
+        """Normalize title for comparison (lowercase, remove special chars, extra spaces)"""
+        if not title:
+            return ""
+        # Lowercase
+        normalized = title.lower()
+        # Remove special characters except spaces
+        normalized = re.sub(r'[^\w\s]', '', normalized)
+        # Remove extra whitespace
+        normalized = re.sub(r'\s+', ' ', normalized)
+        return normalized.strip()
+    
+    def _get_first_author(self, authors: List[str]) -> str:
+        """Extract first author name for comparison"""
+        if not authors:
+            return ""
+        first_author = authors[0].strip()
+        # Extract last name (handle "Last, First" or "First Last" formats)
+        if ',' in first_author:
+            return first_author.split(',')[0].strip().lower()
+        else:
+            parts = first_author.split()
+            return parts[-1].lower() if parts else first_author.lower()
+    
+    def _title_similarity(self, title1: str, title2: str) -> float:
+        """Calculate similarity between two titles (0-1)"""
+        norm1 = self._normalize_title(title1)
+        norm2 = self._normalize_title(title2)
+        return SequenceMatcher(None, norm1, norm2).ratio()
+    
+    def _is_duplicate(self, paper1: Paper, paper2: Paper) -> bool:
+        """
+        Check if two papers are duplicates.
+        
+        Primary: DOI exact match (if both have DOI)
+        Secondary: Title + first author similarity (fuzzy match)
+        
+        Args:
+            paper1: First paper
+            paper2: Second paper
+            
+        Returns:
+            True if papers are duplicates
+        """
+        # Primary: DOI exact match
+        if paper1.doi and paper2.doi:
+            if paper1.doi.lower() == paper2.doi.lower():
+                return True
+        
+        # Secondary: Title + first author similarity
+        title_sim = self._title_similarity(paper1.title, paper2.title)
+        if title_sim >= 0.9:  # High title similarity threshold
+            # Check first author match
+            author1 = self._get_first_author(paper1.authors)
+            author2 = self._get_first_author(paper2.authors)
+            if author1 and author2:
+                # Check if author names are similar (fuzzy match)
+                author_sim = SequenceMatcher(None, author1, author2).ratio()
+                if author_sim >= 0.9:  # High author similarity threshold
+                    return True
+        
+        return False
+    
     def remove_duplicates(self, papers: List[Paper]) -> List[Paper]:
         """
         Remove duplicate papers from the list based on paper ID.
@@ -185,30 +240,73 @@ class LiteratureSearch(LazyModelMixin):
                 duplicate_count += 1
         
         return unique_papers
-
-
-    def execute_search(self, query: str, max_results: int = 50) -> List[Paper]:
+    
+    def detect_and_merge_duplicates(
+        self, 
+        user_papers: List[Paper], 
+        searched_papers: List[Paper]
+    ) -> List[Paper]:
         """
-        Execute a single search on arXiv using the provided query string.
+        Detect duplicates between user-provided and searched papers, merge them.
+        Prefers user-provided papers over searched papers when duplicates are found.
         
         Args:
-            query: Formatted search query string for arXiv API
+            user_papers: List of user-provided Paper objects
+            searched_papers: List of automatically searched Paper objects
+            
+        Returns:
+            Merged list of unique Paper objects (user papers take priority)
+        """
+        merged = list(user_papers)  # Start with all user papers
+        seen_user_ids = {p.id for p in user_papers}
+        duplicate_count = 0
+        
+        for searched_paper in searched_papers:
+            # Skip if already in user papers (by ID)
+            if searched_paper.id in seen_user_ids:
+                duplicate_count += 1
+                print(f"  Duplicate detected (by ID): {searched_paper.title[:60]}... (keeping user version)")
+                continue
+            
+            # Check for duplicates by DOI or title+author
+            is_duplicate = False
+            for user_paper in user_papers:
+                if self._is_duplicate(user_paper, searched_paper):
+                    is_duplicate = True
+                    duplicate_count += 1
+                    print(f"  Duplicate detected: '{searched_paper.title[:60]}...' (keeping user version)")
+                    break
+            
+            if not is_duplicate:
+                merged.append(searched_paper)
+        
+        if duplicate_count > 0:
+            print(f"  Removed {duplicate_count} duplicate(s) from searched papers (kept user versions)\n")
+        
+        return merged
+
+
+    def execute_search(self, query: str, max_results: int = 20) -> List[Paper]:
+        """
+        Execute a single search on Semantic Scholar using the provided query string.
+        
+        Args:
+            query: Search query string
             max_results: Maximum number of results per query (default: 50)
             
         Returns:
-            List of Paper objects with metadata (title, authors, abstract, etc.)
+            List of Paper objects
         """
-        print(f"Searching arXiv with: {query} (max_results={max_results})")
-        response = self.arxiv_api.search_papers(query, max_results=max_results)
-        papers = self.arxiv_api.parse_response(response)
+        print(f"Searching Semantic Scholar with: {query} (max_results={max_results})")
+        papers = self.s2_api.search_papers(query, max_results=max_results)
         print(f"Found {len(papers)} papers\n")
         return papers
     
 
     def search_papers(self, queries: List[SearchQuery], max_results_per_query: int = 30) -> List[Paper]:
         """
-        Execute multiple searches on arXiv using a list of SearchQuery objects.
-        Includes 3-second delay between queries to respect arXiv rate limits.
+        Execute multiple searches on Semantic Scholar using a list of SearchQuery objects.
+        Includes delay between queries to respect rate limits.
         Automatically removes duplicate papers.
         
         Args:
@@ -224,9 +322,9 @@ class LiteratureSearch(LazyModelMixin):
             papers = self.execute_search(query_obj.query, max_results=max_results_per_query)
             all_papers.extend(papers)
             
-            # Add delay between queries to respect arXiv rate limit (1 request per 3 seconds recommended)
+            # Add delay between queries to respect rate limit
             if i < len(queries):
-                time.sleep(3)
+                time.sleep(1.0)
         
         # Remove duplicates
         unique_papers = self.remove_duplicates(all_papers)
@@ -238,164 +336,22 @@ class LiteratureSearch(LazyModelMixin):
         return unique_papers
 
 
-    def get_citation_counts(self, papers: List[Paper]) -> List[Paper]:
-        """
-        Fetch citation counts for papers from Semantic Scholar API.
-        Updates papers in-place with citation counts and returns the list.
-        
-        Args:
-            papers: List of Paper objects from arXiv
-            
-        Returns:
-            Same list of Paper objects with citation_count field populated
-        """
-        if not papers:
-            return papers
-        
-        # Handle if more than 500 papers (Semantic Scholar API limit)
-        if len(papers) > 500:
-            print(f"Warning: {len(papers)} papers exceeds API limit. Processing first 500 only.")
-            papers_to_process = papers[:500]
-        else:
-            papers_to_process = papers
-        
-        # Clean arXiv IDs (handle both URL and direct ID formats, remove version numbers)
-        arxiv_ids = []
-        for p in papers_to_process:
-            # Extract ID from URL if present (e.g., "http://arxiv.org/abs/2103.12345v2")
-            paper_id = p.id.split('/')[-1] if '/' in p.id else p.id
-            # Remove version number (e.g., "2103.12345v2" -> "2103.12345")
-            paper_id = paper_id.split('v')[0]
-            arxiv_ids.append(paper_id)
-        
-        # Format for Semantic Scholar API
-        paper_ids = [f"ARXIV:{arxiv_id}" for arxiv_id in arxiv_ids]
-        
-        print(f"Fetching citation counts for {len(papers_to_process)} papers...")
-        
-        try:
-            # Single batch API call
-            url = "https://api.semanticscholar.org/graph/v1/paper/batch"
-            params = {"fields": "citationCount"}
-            
-            response = requests.post(url, params=params, json={"ids": paper_ids}, timeout=30)
-            
-            if response.status_code == 200:
-                results = response.json()
-                
-                # Update papers with citation counts
-                found_count = 0
-                for paper, result in zip(papers_to_process, results):
-                    if result and 'citationCount' in result:
-                        paper.citation_count = result['citationCount']
-                        found_count += 1
-                    else:
-                        paper.citation_count = None
-                
-                print(f"Citation counts found for {found_count}/{len(papers_to_process)} papers")
-            else:
-                print(f"Semantic Scholar API request failed with status {response.status_code}")
-                print(f"Response: {response.text[:500]}")  # Show error details
-                for paper in papers_to_process:
-                    paper.citation_count = None
-                    
-        except Exception as e:
-            print(f"Error fetching citation counts: {e}")
-            for paper in papers_to_process:
-                paper.citation_count = None
-        
-        return papers
-
-
-    def download_papers_as_pdfs(self, papers: List[Paper], base_folder: str = "literature/"):
+    def download_papers_as_pdfs(
+        self, 
+        papers: List[Paper], 
+        base_folder: str = "output/literature/"
+    ):
         """
         Download selected papers as PDFs to specified folder.
-        Creates a separate folder for each paper (named by paper ID) containing the PDF.
-        The markdown subfolder will be created later by the PDF converter.
-        Convenience wrapper around arxiv_api.download_papers_as_pdfs().
         
         Args:
             papers: List of Paper objects to download
-            base_folder: Base folder for all papers (will be created if doesn't exist)
+            base_folder: Base folder for all papers
             
         Returns:
             Tuple of (successful_count, failed_count)
         """
-        return self.arxiv_api.download_papers_as_pdfs(papers, base_folder)
-    
-
-    def get_bibtex_for_papers(self, papers: List[Paper]) -> List[Paper]:
-        """
-        Get BibTeX citations for multiple papers.
-        Uses Semantic Scholar bulk API to retrieve all BibTeX citations once.
-        Updates papers in-place with BibTeX and returns the list.
-        
-        Args:
-            papers: List of Paper objects
-            
-        Returns:
-            Same list of Paper objects with bibtex field populated
-        """
-        if not papers:
-            return papers
-        
-        # Handle if more than 500 papers (Semantic Scholar API limit)
-        if len(papers) > 500:
-            print(f"Warning: {len(papers)} papers exceeds API limit. Processing first 500 only.")
-            papers_to_process = papers[:500]
-        else:
-            papers_to_process = papers
-        
-        # Clean arXiv IDs and prepare for Semantic Scholar API
-        arxiv_ids = []
-        for p in papers_to_process:
-            # Extract ID from URL if present (e.g., "http://arxiv.org/abs/2103.12345v2")
-            paper_id = p.id.split('/')[-1] if '/' in p.id else p.id
-            # Remove version number (e.g., "2103.12345v2" -> "2103.12345")
-            paper_id = paper_id.split('v')[0]
-            arxiv_ids.append(paper_id)
-        
-        # Format for Semantic Scholar API
-        paper_ids = [f"ARXIV:{arxiv_id}" for arxiv_id in arxiv_ids]
-        
-        print(f"Fetching BibTeX from Semantic Scholar for {len(papers_to_process)} papers...")
-        
-        try:
-            url = "https://api.semanticscholar.org/graph/v1/paper/batch"
-            params = {"fields": "citationStyles"}
-            
-            response = requests.post(url, params=params, json={"ids": paper_ids}, timeout=30)
-            
-            if response.status_code == 200:
-                results = response.json()
-                
-                # Update papers with BibTeX and set citation keys
-                found_count = 0
-                from phases.paper_search.arxiv_api import _generate_citation_key
-                for paper, result in zip(papers_to_process, results):
-                    if result and 'citationStyles' in result and result['citationStyles']:
-                        bibtex = result['citationStyles'].get('bibtex')
-                        if bibtex:
-                            paper.bibtex = bibtex
-                            # Set citation key from BibTeX
-                            paper.citation_key = _generate_citation_key(bibtex, paper.authors, paper.published)
-                            found_count += 1
-                    else:
-                        paper.bibtex = None
-                
-                print(f"Fetched BibTeX for {found_count}/{len(papers_to_process)} papers")
-            else:
-                print(f"Semantic Scholar API request failed with status {response.status_code}")
-                print(f"Response: {response.text[:500]}")
-                for paper in papers_to_process:
-                    paper.bibtex = None
-                
-        except Exception as e:
-            print(f"Error fetching BibTeX from Semantic Scholar: {e}")
-            for paper in papers_to_process:
-                paper.bibtex = None
-        
-        return papers
+        return PDFDownloader.download_papers_as_pdfs(papers, base_folder)
     
 
     @staticmethod
@@ -410,20 +366,20 @@ class LiteratureSearch(LazyModelMixin):
                 "id": paper.id,
                 "title": paper.title,
                 "published": paper.published,
-                "updated": paper.updated,
                 "authors": paper.authors,
                 "summary": paper.summary,
                 "pdf_url": paper.pdf_url,
                 "doi": paper.doi,
-                "categories": paper.categories,
-                "primary_category": paper.primary_category,
-                "comment": paper.comment,
-                "journal_ref": paper.journal_ref,
+                "fields_of_study": paper.fields_of_study,
+                "venue": paper.venue,
                 "citation_count": paper.citation_count,
                 "bibtex": paper.bibtex,
                 "markdown_text": paper.markdown_text,
                 "ranking": asdict(paper.ranking) if paper.ranking else None,
-                "citation_key": paper.citation_key
+                "citation_key": paper.citation_key,
+                "is_open_access": paper.is_open_access,
+                "user_provided": paper.user_provided,
+                "pdf_path": paper.pdf_path
             }
             for paper in papers
         ]
@@ -460,22 +416,3 @@ class LiteratureSearch(LazyModelMixin):
 
         print(f"Loaded {len(papers)} papers from {filepath}")
         return papers
-
-
-if __name__ == "__main__":
-    lit_search = LiteratureSearch(model_name='qwen/qwen3-coder-30b')
-    
-    test_contexts = [
-        """Research focus: Deep learning approaches for time series forecasting in financial markets."""
-    ]
-    
-    #print("Building search queries...")
-    search_queries = lit_search.build_search_queries(test_contexts)
-    
-    #print("Executing all searches...")
-    all_papers = lit_search.search_papers(search_queries)
-
-    all_papers = lit_search.get_citation_counts(all_papers)
-
-    # print("Downloading papers...")
-    # lit_search.arxiv_api.download_papers_as_pdfs(all_papers)

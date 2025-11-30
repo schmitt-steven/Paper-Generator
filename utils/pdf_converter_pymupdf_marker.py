@@ -1,19 +1,16 @@
 import os
 import re
-from typing import List
-import pymupdf4llm
+from typing import List, Optional
 from dataclasses import dataclass
-
-from phases.paper_search.arxiv_api import Paper
-
+import pymupdf4llm
+from phases.paper_search.paper import Paper
 
 @dataclass
 class MarkdownParseResult:
-    """Holds the information about a parsed PDF file."""
     pdf_name: str
     markdown_path: str
     markdown_text: str
-    pages: list[dict]
+    pages: List[dict]
     image_dir: str | None
     page_count: int
     pages_fixed_with_marker: list[int]
@@ -121,14 +118,14 @@ class PDFConverter:
     def convert_to_markdown(self, file_path: str) -> MarkdownParseResult:
         """Convert PDF to Markdown, using Marker for math-heavy pages.
         
-        Expects PDF structure: literature/PAPER_ID/PAPER_ID.pdf
-        Output goes to: literature/PAPER_ID/markdown/
+        Expects PDF structure: output/literature/PAPER_ID/PAPER_ID.pdf
+        Output goes to: output/literature/PAPER_ID/markdown/
         """
 
         base_name = os.path.splitext(os.path.basename(file_path))[0]
         pdf_dir = os.path.dirname(file_path)
         
-        # Output to literature/PAPER_ID/markdown/
+        # Output to output/literature/PAPER_ID/markdown/
         pdf_output_dir = os.path.join(pdf_dir, "markdown")
         image_dir = os.path.join(pdf_output_dir, "images") if self.extract_media else None
 
@@ -206,9 +203,12 @@ class PDFConverter:
             f.write(markdown_text)
     
     
-    # TODO: Add a field to Paper for the file path for the pdfs and the markdown files
-    def convert_all_papers(self, papers: List[Paper], base_folder: str = "literature/") -> List[Paper]:
+    def convert_all_papers(self, papers: List[Paper], base_folder: str = "output/literature/") -> List[Paper]:
         """Convert PDFs to markdown and update Paper objects with markdown text.
+        
+        Handles both:
+        - Papers with pdf_url (downloaded papers) → look in output/literature/{id}/
+        - Papers with pdf_path (user papers) → use pdf_path directly
         
         Args:
             papers: List of Paper objects to update
@@ -220,21 +220,45 @@ class PDFConverter:
         print(f"\nConverting {len(papers)} papers to markdown...")
         
         for i, paper in enumerate(papers, 1):
-            # Extract arXiv ID from URL if needed (e.g., "http://arxiv.org/abs/2507.09087v2" -> "2507.09087v2")
-            arxiv_id = paper.id.split('/')[-1] if '/' in paper.id else paper.id
+            pdf_path = None
             
-            pdf_path = os.path.join(base_folder, arxiv_id, f"{arxiv_id}.pdf")
+            # Check pdf_path first (user-provided papers)
+            if paper.pdf_path:
+                # pdf_path is relative to project root
+                if os.path.isabs(paper.pdf_path):
+                    pdf_path = paper.pdf_path
+                else:
+                    pdf_path = os.path.join(os.getcwd(), paper.pdf_path)
+                    # Normalize path
+                    pdf_path = os.path.normpath(pdf_path)
+            
+            # Fallback to pdf_url location (downloaded papers)
+            if not pdf_path or not os.path.exists(pdf_path):
+                # Use paper.id (Semantic Scholar ID) - same as PDF downloader
+                # Sanitize ID for filesystem (matching PDFDownloader logic)
+                safe_id = "".join([c for c in paper.id if c.isalnum() or c in ('-', '_', '.')])
+                pdf_path = os.path.join(base_folder, safe_id, f"{safe_id}.pdf")
             
             if os.path.exists(pdf_path):
-                print(f"[{i}/{len(papers)}] {arxiv_id}")
+                print(f"[{i}/{len(papers)}] {paper.title[:80]}...")
                 try:
                     result = self.convert_to_markdown(pdf_path)
                     paper.markdown_text = result.markdown_text
+                    
+                    # If this was a user paper using original pdf_path, update it to point to copied location
+                    # (if it's not already in output/literature/)
+                    if paper.user_provided and paper.pdf_path:
+                        current_pdf_path = os.path.normpath(os.path.join(os.getcwd(), paper.pdf_path))
+                        if not current_pdf_path.startswith(os.path.normpath(os.path.join(os.getcwd(), base_folder))):
+                            # Update pdf_path to point to copied location
+                            paper.pdf_path = os.path.relpath(pdf_path, os.getcwd())
                 except Exception as e:
                     print(f"FAILED: {e}\n")
                     paper.markdown_text = None
             else:
-                print(f"[{i}/{len(papers)}] SKIPPED: PDF not found for {arxiv_id}")
+                print(f"[{i}/{len(papers)}] SKIPPED: PDF not found for {paper.title[:80]}...")
+                if paper.pdf_path:
+                    print(f"  Expected at: {paper.pdf_path}")
                 paper.markdown_text = None
         
         return papers

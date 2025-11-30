@@ -188,7 +188,96 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
             print(f"Error generating hypotheses: {e}")
             # Return empty list on error
             return []
-    
+    def create_hypothesis_from_user_input(self, user_requirements) -> List[Hypothesis]:
+        """
+        Create a Hypothesis object from a user-provided string.
+        Uses LLM to structure the raw text into a proper Hypothesis object.
+        """
+        user_hypothesis_text = user_requirements.hypothesis
+        print(f"\nProcessing user-provided hypothesis...")
+        
+        prompt = textwrap.dedent(f"""\
+            You are a research assistant helping to structure a user's research hypothesis.
+                        
+            Task: Convert this raw hypothesis into a structured format.
+            
+            REQUIREMENTS:
+            1. Extract/Infer a clear description, rationale, method combination, expected improvement, and baseline.
+            2. If information is missing, infer reasonable defaults based on the context or mark as "Not specified".
+            3. Ensure the output is a valid Hypothesis object.
+            4. Use the additional user requirements to better understand the context and intent of the hypothesis.
+            
+            Research Context:
+            {self.paper_concept.description}
+
+            User's raw hypothesis:
+            "{user_hypothesis_text}"
+            
+            Additional User Requirements/Context:
+            Topic: {user_requirements.topic}
+            Methods: {user_requirements.methods}
+            Results: {user_requirements.results}
+            Discussion: {user_requirements.discussion}
+            
+            Generate the structured hypothesis now."""
+        )
+
+        try:
+            # Generate hypothesis using structured response
+            # We reuse HypothesesList to keep it consistent, even if it's just one
+            result = self.model.respond(
+                prompt,
+                response_format=HypothesesList,
+                config={"temperature": 0.3, "maxTokens": 1000}
+            )
+            
+            response_data = result.parsed
+            hypotheses_data = response_data.get("hypotheses", [])
+            
+            hypotheses = []
+            for i, hyp_data in enumerate(hypotheses_data, 1):
+                hypothesis = Hypothesis(
+                    id=hyp_data.get("id", f"user_hyp_{i:03d}"),
+                    description=hyp_data.get("description", user_hypothesis_text), # Fallback to raw text
+                    rationale=hyp_data.get("rationale", "User provided hypothesis"),
+                    method_combination=hyp_data.get("method_combination", "User specified method"),
+                    expected_improvement=hyp_data.get("expected_improvement", "As specified by user"),
+                    baseline_to_beat=hyp_data.get("baseline_to_beat"),
+                    selected_for_experimentation=True # Auto-select user hypothesis
+                )
+                hypotheses.append(hypothesis)
+            
+            if not hypotheses:
+                # Fallback if LLM fails to return a list
+                print("Warning: LLM failed to structure user hypothesis. Creating basic object.")
+                hypotheses = [Hypothesis(
+                    id="user_hyp_001",
+                    description=user_hypothesis_text,
+                    rationale="User provided hypothesis",
+                    method_combination="User specified",
+                    expected_improvement="Unknown",
+                    baseline_to_beat=None,
+                    selected_for_experimentation=True
+                )]
+
+            # Save it
+            HypothesisBuilder.save_hypotheses(hypotheses, "output/hypotheses.json", num_papers_analyzed=self.num_papers_analyzed)
+            
+            return hypotheses
+
+        except Exception as e:
+            print(f"Error processing user hypothesis: {e}")
+            # Fallback
+            return [Hypothesis(
+                id="user_hyp_001",
+                description=user_hypothesis_text,
+                rationale="User provided hypothesis (Error in processing)",
+                method_combination="User specified",
+                expected_improvement="Unknown",
+                baseline_to_beat=None,
+                selected_for_experimentation=True
+            )]
+
     @staticmethod
     def save_hypotheses(hypotheses: List[Hypothesis], filepath: str, num_papers_analyzed: int = 0):
         """Save hypotheses to JSON file."""
