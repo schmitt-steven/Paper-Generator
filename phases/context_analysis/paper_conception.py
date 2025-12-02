@@ -1,9 +1,14 @@
 from dataclasses import dataclass
 import textwrap
 from typing import List
-from phases.context_analysis.user_code_analysis import CodeAnalyzer, UserCode, CodeSnippet
+
+from phases.context_analysis.user_code_analysis import (
+    CodeAnalyzer,
+    CodeSnippet,
+    UserCode,
+)
 from phases.context_analysis.user_requirements import UserRequirements
-from utils.file_utils import save_markdown, load_markdown
+from utils.file_utils import load_markdown, save_markdown
 from utils.lazy_model_loader import LazyModelMixin
 from utils.llm_utils import remove_thinking_blocks
 
@@ -17,11 +22,18 @@ class PaperConcept():
 
 class PaperConception(LazyModelMixin):
 
-    def __init__(self, model_name, user_code: List[UserCode], user_requirements: UserRequirements):
+    def __init__(self, model_name, user_code: list[UserCode], user_requirements: UserRequirements):
         self.model_name = model_name
         self._model = None  # Lazy-loaded via LazyModelMixin
         self.user_code = user_code
-            sections.append(f"Introduction Requirements: {req.introduction}")
+        self.user_requirements = user_requirements
+
+    def _format_user_requirements_section(self) -> str:
+        """Format user requirements into a readable section for the LLM prompt."""
+        sections = []
+        req = self.user_requirements
+        
+        sections.append(f"Introduction Requirements: {req.introduction}")
         if req.related_work:
             sections.append(f"Related Work Requirements: {req.related_work}")
         if req.methods:
@@ -331,38 +343,3 @@ class PaperConception(LazyModelMixin):
         print(f"\nCode Snippets ({len(concept.code_snippets)} chars):")
         print(concept.code_snippets[:500] + "..." if len(concept.code_snippets) > 500 else concept.code_snippets)
         print(f"\nOpen Questions:\n{concept.open_questions}")
-
-
-if __name__ == "__main__":
-    # Mock analyzed code
-    mock_code = UserCode(
-        file_path="test.py",
-        file_name="test.py",
-        file_content="# test code",
-        discussion="",
-        conclusion="",
-        acknowledgements=None
-    )
-    
-    # Test paper conception
-    conception = PaperConception(
-        model_name="qwen/qwen3-coder-30b",
-        user_code=[mock_code],
-        user_requirements=mock_requirements
-    )
-    
-    concept = conception.build_paper_concept()
-    conception.print_paper_concept(concept)
-    
-    # Save to markdown file
-    file_path = conception.save_paper_concept(concept, filename="test_paper_concept.md")
-    
-    # Example: Load the concept back from file
-    print("\n" + "="*80)
-    print("Testing load_paper_concept...")
-    print("="*80)
-    loaded_concept = PaperConception.load_paper_concept(file_path)
-    print("\nLoaded concept summary:")
-    print(f"Description starts with: {loaded_concept.description[:100]}...")
-    print(f"Open questions: {loaded_concept.open_questions[:100] if loaded_concept.open_questions else 'None'}...")
-    print(f"Code snippets: {len(loaded_concept.code_snippets)} characters")

@@ -13,90 +13,15 @@ class SettingsScreen(BaseFrame):
         self.settings_vars = {}
         self.author_frames = []
         
-        super().__init__(parent, controller, title="Settings", next_text="Save & Continue", has_back=False)
-
-    def create_content(self):
-        # Container frame to center the content
-        container = ttk.Frame(self.content_frame)
-        container.pack(fill="both", expand=True)
-        
-        # Canvas for scrolling
-        canvas = tk.Canvas(container)
-        scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
-        self.scrollable_frame = ttk.Frame(canvas)
-
-        self.scrollable_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(
-                scrollregion=canvas.bbox("all")
-            )
+        super().__init__(
+            parent=parent,
+            controller=controller,
+            title="Settings",
+            next_text="Continue",
+            has_back=False
         )
 
-        canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-
-        # Bind mouse wheel scrolling - better approach: bind to parent window
-        # and find the scrollable widget under the mouse
-        def find_scrollable_widget(widget):
-            """Walk up the widget hierarchy to find the first scrollable widget (Canvas)."""
-            while widget:
-                if isinstance(widget, tk.Canvas):
-                    return widget
-                widget = widget.master
-            return None
-        
-        def on_mousewheel(event):
-            # Get the widget under the mouse cursor
-            x, y = event.x_root, event.y_root
-            root = self.controller
-            widget = root.winfo_containing(x, y)
-            
-            if not widget:
-                return
-            
-            # Widgets that should handle their own scroll/mousewheel events
-            interactive_widgets = (ttk.Combobox, ttk.Spinbox, tk.Spinbox, tk.Listbox, tk.Text)
-            if isinstance(widget, interactive_widgets):
-                return  # Let widget handle it natively
-            
-            # Find the scrollable canvas in the widget hierarchy
-            scrollable = find_scrollable_widget(widget)
-            if scrollable == canvas:
-                # Only scroll if it's our canvas
-                if hasattr(event, 'delta') and event.delta:
-                    # Windows
-                    scrollable.yview_scroll(int(-1 * (event.delta / 120)), "units")
-                elif hasattr(event, 'num'):
-                    if event.num == 4:
-                        # Linux - scroll up
-                        scrollable.yview_scroll(-1, "units")
-                    elif event.num == 5:
-                        # Linux - scroll down
-                        scrollable.yview_scroll(1, "units")
-        
-        # Bind to the root window (parent window)
-        root = self.controller  # PaperGeneratorApp (tk.Tk)
-        root.bind_all("<MouseWheel>", on_mousewheel)  # Windows
-        root.bind_all("<Button-4>", on_mousewheel)   # Linux scroll up
-        root.bind_all("<Button-5>", on_mousewheel)   # Linux scroll down
-
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-        
-        # Update canvas window width to match canvas width and constrain to max 800px, centered
-        def update_canvas_window(event):
-            canvas_width = event.width
-            max_width = 600
-            content_width = min(canvas_width, max_width)
-            x_offset = (canvas_width - content_width) // 2 if canvas_width > max_width else 0
-            
-            canvas_items = canvas.find_all()
-            if canvas_items:
-                canvas.itemconfig(canvas_items[0], width=content_width)
-                canvas.coords(canvas_items[0], x_offset, 0)
-        
-        canvas.bind("<Configure>", update_canvas_window)
-
+    def create_content(self):
         # Guidance
         guidance_frame = ttk.LabelFrame(self.scrollable_frame, text="Info", padding="10")
         guidance_frame.pack(fill="x", padx=10, pady=5)
@@ -220,16 +145,34 @@ class SettingsScreen(BaseFrame):
         entry = ttk.Entry(row_frame, textvariable=self.title_var)
         entry.pack(side="right", fill="x", expand=True)
         # Placeholder logic could be added here or just label text
-        ttk.Label(frame, text="(Leave empty for LLM generated title)", font=("Helvetica", 8, "italic")).pack(anchor="e")
+        ttk.Label(frame, text="(Leave empty for LLM generated title)", font=("SF Pro", 14, "italic")).pack(anchor="e")
 
-        # Authors
-        self.authors_container = ttk.Frame(frame)
-        self.authors_container.pack(fill="x", pady=5)
+        # Authors section with modern card design
+        authors_section = ttk.Frame(frame, style="Card.TFrame", padding=1)
+        authors_section.pack(fill="x", pady=(20, 10))
         
-        ttk.Label(self.authors_container, text="Authors").pack(anchor="w")
+        # Header row
+        header_frame = ttk.Frame(authors_section, padding=10)
+        header_frame.pack(fill="x")
         
-        self.add_author_btn = ttk.Button(frame, text="Add Author", command=self.add_author)
-        self.add_author_btn.pack(pady=5)
+        ttk.Label(header_frame, text="Authors", font=("SF Pro", 14, "bold")).pack(side="left")
+        
+        # Buttons on the right
+        button_frame = ttk.Frame(header_frame)
+        button_frame.pack(side="right")
+        
+        self.remove_author_btn = ttk.Button(button_frame, text="Remove", command=self.remove_last_author)
+        self.remove_author_btn.pack(side="left", padx=(0, 5))
+        
+        self.add_author_btn = ttk.Button(button_frame, text="Add", command=self.add_author)
+        self.add_author_btn.pack(side="left")
+        
+        # Separator
+        ttk.Separator(authors_section, orient="horizontal").pack(fill="x")
+        
+        # Authors container
+        self.authors_container = ttk.Frame(authors_section, padding=10)
+        self.authors_container.pack(fill="x")
 
         # Load authors from Settings
         if Settings.LATEX_AUTHORS:
@@ -238,10 +181,17 @@ class SettingsScreen(BaseFrame):
         else:
             # Add at least one empty author if none exist
             self.add_author()
+        
+        # Initialize button state
+        self._update_remove_button_state()
 
     def add_author(self, data=None):
-        author_frame = ttk.Frame(self.authors_container, padding="5", borderwidth=1, relief="solid")
-        author_frame.pack(fill="x", pady=2)
+        # Add separator if not the first author
+        if len(self.author_frames) > 0:
+            ttk.Separator(self.authors_container, orient="horizontal").pack(fill="x", padx=10)
+        
+        author_frame = ttk.Frame(self.authors_container, padding="10")
+        author_frame.pack(fill="x", pady=5)
         
         fields = ["Name", "Affiliation", "Department", "Address", "Email"]
         entries = {}
@@ -256,18 +206,39 @@ class SettingsScreen(BaseFrame):
                 # Field names in Settings are lowercase keys
                 entry.insert(0, data.get(field.lower(), ""))
             entries[field.lower()] = entry
-
-        # Remove button
-        if len(self.author_frames) > 0:
-            remove_btn = ttk.Button(author_frame, text="Remove", command=lambda f=author_frame: self.remove_author(f))
-            remove_btn.pack(anchor="e", pady=2)
         
         self.author_frames.append((author_frame, entries))
+        self._update_remove_button_state()
 
-    def remove_author(self, frame):
-        frame.destroy()
-        # Remove from list
-        self.author_frames = [af for af in self.author_frames if af[0] != frame]
+    def remove_last_author(self):
+        """Remove the last added author."""
+        if len(self.author_frames) <= 1:
+            return  # Don't remove if only one author
+        
+        # Get the last author frame and its separator (if exists)
+        last_frame, _ = self.author_frames[-1]
+        
+        # Find and remove the separator before this frame (if it exists)
+        for widget in self.authors_container.winfo_children():
+            if isinstance(widget, ttk.Separator):
+                # Check if this separator is right before the last frame
+                widget_index = self.authors_container.winfo_children().index(widget)
+                frame_index = self.authors_container.winfo_children().index(last_frame)
+                if widget_index == frame_index - 1:
+                    widget.destroy()
+                    break
+        
+        # Remove the frame
+        last_frame.destroy()
+        self.author_frames.pop()
+        self._update_remove_button_state()
+    
+    def _update_remove_button_state(self):
+        """Update the remove button state based on number of authors."""
+        if len(self.author_frames) > 1:
+            self.remove_author_btn.config(state="normal")
+        else:
+            self.remove_author_btn.config(state="disabled")
 
     
     @override

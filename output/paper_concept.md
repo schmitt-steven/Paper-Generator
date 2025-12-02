@@ -50,29 +50,7 @@ RBQL’s ability to accelerate value propagation could directly lower deployment
 - **Theoretical bridge**: Demonstrates how persistent memory structures can transform model-free RL into a dynamic programming-like process without explicit transition models, providing a new framework for efficient value propagation.  
 - **Practical impact**: Enables deployment of RL in sample-constrained deterministic systems (e.g., robotic path planning) where current methods require prohibitively many trials. However, no claims about stochastic environments are supported by the methodology. **[Missing: specific validation metrics for deterministic scenarios - e.g., episode count reduction percentage in benchmark mazes]**
 
-
-
-# Open Questions for Literature Search
-
-### Priority 1: Related Work & Prior Art  
-1. How do existing model-free RL methods (e.g., Q-learning, SARSA) handle terminal reward propagation across multiple episodes in deterministic sparse-reward environments, and what specific limitations cause sample inefficiency compared to dynamic programming?  
-2. How do model-based approaches like Dyna-Q (Sutton, 1990) and R-MAX leverage historical transitions for value updates, particularly regarding their dependency on learned transition models versus pure model-free methods?  
-3. What specific limitations exist in backward induction techniques (e.g., RETRACE, Munos et al. 2016) for propagating rewards across multiple episodes using persistent transition structures, and how do these methods handle updates from past trajectories?  
-4. How does value iteration address sparse rewards in deterministic environments, and what constraints prevent its direct application to large-scale problems with unknown transition dynamics?  
-5. Which prior RL algorithms maintain persistent transition graphs for backward propagation of rewards across episodes, and why have these approaches not been integrated with full state-space Bellman updates?  
-
-### Priority 2: Differentiation & Positioning  
-6. How does RBQL’s backward BFS propagation differ from Dyna-Q in terms of transition model usage and explicit simulation overhead, specifically regarding the need for learned models versus direct observation reuse?  
-7. What technical distinctions exist between RBQL’s persistent transition graph for cross-episode updates and RETRACE’s single-trajectory backward steps in handling sparse rewards?  
-
-### Priority 3: Key Concepts & Background  
-8. What mathematical principles underpin topological ordering of states for backward Bellman updates in deterministic transition graphs, and how do they ensure correct Q-value propagation?  
-9. Which standard metrics (e.g., convergence episode count, reward accumulation) are used to measure sample efficiency in deterministic RL problems with sparse rewards?
-
-
-
 # Important Code Snippets
-
 
 ## From: recursive_backwards_q_learning.py
 
@@ -160,3 +138,20 @@ def propagate_reward_rbql(terminal_state):
         next_q = np.max(q_values[next_state])
         q_values[state][action_index] = reward + gamma * next_q
 ```
+
+# Open Questions
+
+### Priority 1: Related Work & Prior Art  
+1. How do existing model-free RL methods (e.g., Q-learning, SARSA) handle terminal reward propagation across multiple episodes in deterministic sparse-reward environments, and what specific limitations cause sample inefficiency compared to dynamic programming?  
+2. How do model-based approaches like Dyna-Q (Sutton, 1990) and R-MAX leverage historical transitions for value updates, particularly regarding their dependency on learned transition models versus pure model-free methods?  
+3. What specific limitations exist in backward induction techniques (e.g., RETRACE, Munos et al. 2016) for propagating rewards across multiple episodes using persistent transition structures, and how do these methods handle updates from past trajectories?  
+4. How does value iteration address sparse rewards in deterministic environments, and what constraints prevent its direct application to large-scale problems with unknown transition dynamics?  
+5. Which prior RL algorithms maintain persistent transition graphs for backward propagation of rewards across episodes, and why have these approaches not been integrated with full state-space Bellman updates?  
+
+### Priority 2: Differentiation & Positioning  
+6. How does RBQL’s backward BFS propagation differ from Dyna-Q in terms of transition model usage and explicit simulation overhead, specifically regarding the need for learned models versus direct observation reuse?  
+7. What technical distinctions exist between RBQL’s persistent transition graph for cross-episode updates and RETRACE’s single-trajectory backward steps in handling sparse rewards?  
+
+### Priority 3: Key Concepts & Background  
+8. What mathematical principles underpin topological ordering of states for backward Bellman updates in deterministic transition graphs, and how do they ensure correct Q-value propagation?  
+9. Which standard metrics (e.g., convergence episode count, reward accumulation) are used to measure sample efficiency in deterministic RL problems with sparse rewards?

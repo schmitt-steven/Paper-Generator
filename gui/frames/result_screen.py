@@ -7,5 +7,5 @@ class ResultScreen(BaseFrame):
         super().__init__(parent, controller, title="Result", has_next=False)
 
     def create_content(self):
-        ttk.Label(self.content_frame, text="Final Paper Generation Result").pack(pady=20)
+        ttk.Label(self.scrollable_frame, text="Final Paper Generation Result").pack(pady=20)
         # Placeholder for result display

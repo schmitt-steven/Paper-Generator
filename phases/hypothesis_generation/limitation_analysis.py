@@ -1,7 +1,7 @@
 import numpy as np
 import json
 import os
-from typing import List, Tuple
+from typing import Tuple
 from collections import Counter
 from pathlib import Path
 from phases.context_analysis.paper_conception import PaperConcept
@@ -20,7 +20,7 @@ class LimitationAnalyzer(LazyEmbeddingMixin):
         self.similarity_threshold = similarity_threshold  # Threshold for clustering similar limitations
     
     @staticmethod
-    def build_from_findings(findings: List[PaperFindings], paper_concept: PaperConcept, similarity_threshold: float = 0.8) -> 'LimitationAnalyzer':
+    def build_from_findings(findings: list[PaperFindings], paper_concept: PaperConcept, similarity_threshold: float = 0.8) -> 'LimitationAnalyzer':
         """Build a LimitationAnalyzer instance with aggregated findings from papers"""
         analyzer = LimitationAnalyzer(similarity_threshold=similarity_threshold)
         analyzer.findings = findings

@@ -1,49 +1,33 @@
-import traceback
-from typing import List
 from pathlib import Path
+import traceback
+from typing import Any, List
+
+from phases.context_analysis.paper_conception import PaperConcept, PaperConception
 from phases.context_analysis.user_code_analysis import CodeAnalyzer
-from phases.context_analysis.paper_conception import PaperConception, PaperConcept
 from phases.context_analysis.user_requirements import load_user_requirements
-from phases.paper_search.literature_search import LiteratureSearch
-from phases.paper_search.user_paper_loader import UserPaperLoader
-from phases.paper_search.paper import Paper
-from phases.paper_search.paper_ranking import PaperRanker
-from phases.paper_search.paper_filtering import PaperFilter
-from phases.hypothesis_generation.paper_analysis import PaperAnalyzer
-from phases.hypothesis_generation.limitation_analysis import LimitationAnalyzer
-from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.experimentation.experiment_runner import ExperimentRunner
 from phases.experimentation.experiment_state import ExperimentResult
-from phases.paper_writing.paper_writing_pipeline import PaperWritingPipeline
-from phases.paper_writing.data_models import PaperDraft
-from phases.latex_generation.paper_converter import PaperConverter
+from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
+from phases.hypothesis_generation.hypothesis_models import PaperFindings
+from phases.hypothesis_generation.limitation_analysis import LimitationAnalyzer
+from phases.hypothesis_generation.paper_analysis import PaperAnalyzer
 from phases.latex_generation.metadata import LaTeXMetadata
+from phases.latex_generation.paper_converter import PaperConverter
+from phases.paper_search.literature_search import LiteratureSearch
+from phases.paper_search.paper import Paper
+from phases.paper_search.paper_filtering import PaperFilter
+from phases.paper_search.paper_ranking import PaperRanker
+from phases.paper_search.user_paper_loader import UserPaperLoader
+from phases.paper_writing.data_models import PaperDraft
+from phases.paper_writing.paper_writing_pipeline import PaperWritingPipeline
 from settings import Settings
 
 
 class PaperGenerator: 
 
-    # X TODO: Switch from Arxiv to Semantic Scholar
-    # X TODO: Add own papers
-    
-    # TODO: Add setting for automatically generating hypothesis
-    # TODO: Build User Requirements frame
+    # Add setting to clear cache
 
-    # TODO: Add Tkinter interface with human-in-the-loop feature
-        # Screen: settings (Phases (including models, batch sizes etc.), LaTeX data, starting point)
-        # Screen: check paper concept
-        # Screen: add papers, checkbox: search for additional papers (if checked: slider for number of papers)
-        # Screen: check hypothesis
-        # Screen: check experiment plan
-    # Tkinter GUI features:
-        # Tabs: to preview and edit Markdown
-        # Drag and drop field to add own papers, left click to select from file browser
-        # Dropdown with available models from LM Studio
-        # Dropdown for starting point
-        # Bottom section/bar,on each screen, with button to continue/start a step
-    
     # TODO: Remove table of contents from tex
-    # TODO: Move results into folders of each step
     # Check: Paper Concept still needed?
     # TODO: Add review/improvement loop to the paper writing process
 
@@ -91,7 +75,7 @@ class PaperGenerator:
         if Settings.LOAD_PAPERS:
             all_papers: List[Paper] = LiteratureSearch.load_papers("output/papers.json")
         else:
-            all_papers = literature_search.search_papers(search_queries, max_results_per_query=30)
+            all_papers = literature_search.search_papers(search_queries, max_results_per_query=15)
         
         # Load user-provided papers and merge with searched papers
         user_paper_loader = UserPaperLoader(model_name=Settings.LITERATURE_SEARCH_MODEL)
@@ -113,11 +97,11 @@ class PaperGenerator:
             # Load set of papers that are already ranked, filtered and have markdown
             loaded_papers: List[Paper] = LiteratureSearch.load_papers("output/papers_filtered_with_markdown.json")
             # Filter: include papers that have markdown text (both user-provided and searched need markdown)
-            papers_with_markdown: List[Paper] = []
+            loaded_papers_with_markdown: List[Paper] = []
             for p in loaded_papers:
                 if getattr(p, "markdown_text", None) is not None and isinstance(p.markdown_text, str) and p.markdown_text.strip():
-                    papers_with_markdown.append(p)
-            
+                    loaded_papers_with_markdown.append(p)
+            papers_with_markdown = loaded_papers_with_markdown
             # Count user-provided papers in final list
             user_with_markdown = [p for p in papers_with_markdown if p.user_provided]
             
@@ -146,22 +130,14 @@ class PaperGenerator:
             ranked_papers: List[Paper] = user_provided_papers + ranked_searched_papers
 
             # Filter papers: include papers that have markdown text
-            # User-provided papers bypass ranking but still need markdown to be usable
             papers_with_markdown: List[Paper] = []
             for p in ranked_papers:
                 if getattr(p, "markdown_text", None) is not None and isinstance(p.markdown_text, str) and p.markdown_text.strip():
                     papers_with_markdown.append(p)
-            
-            # Count user-provided papers in final list
-            user_with_markdown = [p for p in papers_with_markdown if p.user_provided]
-            
             print(f"\n[PaperGenerator] Final paper list: {len(papers_with_markdown)} papers with markdown")           
-            if len(user_provided_papers) > len(user_with_markdown):
-                missing = len(user_provided_papers) - len(user_with_markdown)
-                print(f"Warning: {missing} user-provided paper(s) missing markdown (will not be usable)")
 
-        findings = []
-        top_limitations = []
+        findings: list[PaperFindings] = []
+        top_limitations: list[Any] = []
 
         if user_provided_hypothesis:
             print(f"\n[PaperGenerator] User hypothesis provided. Skipping Findings and Limitations analysis.")
