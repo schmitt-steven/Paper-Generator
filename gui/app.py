@@ -1,17 +1,56 @@
 import tkinter as tk
 from tkinter import ttk
+import sv_ttk
+import sys
+import os
 from .frames import (
     SettingsScreen,
     UserRequirementsScreen,
+    CodeFilesScreen,
+    PaperConceptScreen,
     PaperSelectionScreen,
     HypothesisScreen,
     ExperimentationPlanScreen,
+    ExperimentResultsScreen,
+    PaperDraftScreen,
     ResultScreen
 )
 
 class PaperGeneratorApp(tk.Tk):
     def __init__(self):
         super().__init__()
+
+
+        # Windows DPI awareness (fixes blurry text on Windows)
+        if sys.platform == "win32":
+            from ctypes import windll
+            windll.shcore.SetProcessDpiAwareness(2)
+        
+        # macOS/Linux: Scaling variables for high-DPI displays
+        MACOS_SCALING = 1.0
+        LINUX_SCALING = 1.0
+        
+        if sys.platform == "darwin":  # macOS
+            try:
+                current_scaling = float(self.tk.call('tk', 'scaling'))
+                if MACOS_SCALING != 1.0:
+                    self.tk.call('tk', 'scaling', '-displayof', '.', MACOS_SCALING)
+            except:
+                pass
+        elif sys.platform.startswith('linux'):
+            try:
+                current_scaling = float(self.tk.call('tk', 'scaling'))
+                if LINUX_SCALING != 1.0:
+                    self.tk.call('tk', 'scaling', '-displayof', '.', LINUX_SCALING)
+            except:
+                pass
+        
+        # Apply Sun Valley theme
+        sv_ttk.set_theme("dark")
+        style = ttk.Style()
+        style.layout("TButton", style.layout("Accent.TButton"))
+        style.configure("TButton", **style.configure("Accent.TButton"))
+        style.map("TButton", **style.map("Accent.TButton"))
         
         self.title("Paper Generator")
         self.geometry("800x600")
@@ -26,9 +65,13 @@ class PaperGeneratorApp(tk.Tk):
         self.screen_order = [
             SettingsScreen,
             UserRequirementsScreen,
+            CodeFilesScreen,
+            PaperConceptScreen,
             PaperSelectionScreen,
             HypothesisScreen,
             ExperimentationPlanScreen,
+            ExperimentResultsScreen,
+            PaperDraftScreen,
             ResultScreen
         ]
         self.current_screen_index = 0
@@ -61,5 +104,5 @@ class PaperGeneratorApp(tk.Tk):
             self.show_frame(previous_class)
 
 if __name__ == "__main__":
-    app = PaperGeneratorApp()
+    app: PaperGeneratorApp = PaperGeneratorApp()
     app.mainloop()

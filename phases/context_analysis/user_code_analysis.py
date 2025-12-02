@@ -4,7 +4,7 @@ import json
 import textwrap
 from pathlib import Path
 from dataclasses import dataclass
-from typing import List
+from typing import cast
 from pydantic import BaseModel
 from utils.lazy_model_loader import LazyModelMixin
 from utils.llm_utils import remove_thinking_blocks
@@ -19,7 +19,7 @@ class UserCode:
     summary: str = ""
     novel_concepts: str = ""
     research_relevance: str = ""
-    important_snippets: List['CodeSnippet'] = None
+    important_snippets: list['CodeSnippet'] | None  = None
     
     def __post_init__(self):
         if self.important_snippets is None:
@@ -42,7 +42,7 @@ class UserCodeAnalysisResult(BaseModel):
 
 class SnippetExtractionResult(BaseModel):
     """Structured response format for snippet extraction"""
-    snippets: List[CodeSnippet]
+    snippets: list[CodeSnippet]
     
 
 class CodeAnalyzer(LazyModelMixin):
@@ -67,7 +67,7 @@ class CodeAnalyzer(LazyModelMixin):
         self._model = None  # Lazy-loaded via LazyModelMixin
 
     @staticmethod
-    def load_code_files(folder_path: str, extensions: List[str] = None) -> List[UserCode]:
+    def load_code_files(folder_path: str, extensions: list[str] | None = None) -> list[UserCode]:
         if extensions is None:
             extensions = list(CodeAnalyzer.LANGUAGE_MAP.keys())
         code_files = []
@@ -125,7 +125,10 @@ class CodeAnalyzer(LazyModelMixin):
             prompt, 
             response_format=UserCodeAnalysisResult
         )
-        code_analysis.__dict__.update(**result.parsed)
+        parsed = cast(UserCodeAnalysisResult, result.parsed)
+        code_analysis.summary = parsed.summary
+        code_analysis.novel_concepts = parsed.novel_concepts
+        code_analysis.research_relevance = parsed.research_relevance
 
         print(f"Completed analyzing {code_analysis.file_name}")
         return code_analysis
@@ -199,7 +202,7 @@ class CodeAnalyzer(LazyModelMixin):
         print(f"Extracted {len(code_analysis.important_snippets)} code snippet(s)")
         return code_analysis
 
-    def analyze_all_files(self, code_files: List[UserCode]) -> List[UserCode]:
+    def analyze_all_files(self, code_files: list[UserCode]) -> list[UserCode]:
         """
         Analyze all code files and extract important code snippets from files
         that have novel concepts.
@@ -219,7 +222,7 @@ class CodeAnalyzer(LazyModelMixin):
     
 
     @staticmethod
-    def get_analysis_report(analyzed_files: List[UserCode]) -> str:
+    def get_analysis_report(analyzed_files: list[UserCode]) -> str:
         report = ["=== Code Analysis Report ===\n"]
         
         for analysis in analyzed_files:

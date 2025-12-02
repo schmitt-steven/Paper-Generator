@@ -21,6 +21,9 @@ from utils.llm_utils import remove_thinking_blocks
 import lmstudio as lms
 
 
+EXPERIMENTAL_PLAN_FILE = "experimental_plan.md"
+
+
 class ExperimentRunner:
     """Conducts experiments to test hypotheses."""
     
@@ -695,24 +698,20 @@ class ExperimentRunner:
     
     def save_experimental_plan(
         self,
-        experimental_plan: str,
-        hypothesis_id: str
+        experimental_plan: str
     ) -> str:
         """Save an experimental plan to a file."""
 
-        filename = f"experimental_plan_{hypothesis_id}.md"
-        file_path = save_markdown(experimental_plan, filename, self.base_output_dir)
+        file_path = save_markdown(experimental_plan, EXPERIMENTAL_PLAN_FILE, self.base_output_dir)
         
         return file_path
     
     def load_experimental_plan(
-        self,
-        hypothesis_id: str
+        self
     ) -> str:
         """Load an experimental plan from a file."""
 
-        filename = f"experimental_plan_{hypothesis_id}.md"
-        file_path = os.path.join(self.base_output_dir, filename)
+        file_path = os.path.join(self.base_output_dir, EXPERIMENTAL_PLAN_FILE)
 
         path_obj = Path(file_path)
         if not path_obj.exists():
@@ -746,9 +745,9 @@ class ExperimentRunner:
         """Load both experimental plan and experiment code files."""
         
         return ExperimentFiles(
-            experimental_plan=self.load_experimental_plan(hypothesis_id),
+            experimental_plan=self.load_experimental_plan(),
             experiment_code=self.load_experiment_code(hypothesis_id),
-            plan_file_path=os.path.join(self.base_output_dir, f"experimental_plan_{hypothesis_id}.md"),
+            plan_file_path=os.path.join(self.base_output_dir, EXPERIMENTAL_PLAN_FILE),
             code_file_path=os.path.join(self.base_output_dir, f"experiment_{hypothesis_id}.py")
         )
     
@@ -853,17 +852,17 @@ class ExperimentRunner:
         
         # Generate or load experimental plan
         try:
-            plan_file_path = os.path.join(self.base_output_dir, f"experimental_plan_{hypothesis.id}.md")
+            plan_file_path = os.path.join(self.base_output_dir, EXPERIMENTAL_PLAN_FILE)
             if load_existing_plan and os.path.exists(plan_file_path):
-                print(f"Loading existing experimental plan for {hypothesis.id}...")
-                experimental_plan = self.load_experimental_plan(hypothesis.id)
+                print(f"Loading existing experimental plan...")
+                experimental_plan = self.load_experimental_plan()
             else:
                 if load_existing_plan:
                     print(f"Experimental plan not found, generating new plan...")
                 else:
-                    print(f"Generating new experimental plan for {hypothesis.id}...")
+                    print(f"Generating new experimental plan...")
                 experimental_plan = self._generate_experimental_plan(hypothesis, paper_concept)
-                self.save_experimental_plan(experimental_plan, hypothesis.id)
+                self.save_experimental_plan(experimental_plan)
         except Exception as e:
             print(f"ERROR: Failed to generate/load experimental plan: {e}")
             traceback.print_exc()

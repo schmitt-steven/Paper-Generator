@@ -1,6 +1,5 @@
-import tkinter as tk
 from tkinter import ttk
-from ..base_frame import BaseFrame
+from ..base_frame import BaseFrame, create_styled_text
 import os
 
 class UserRequirementsScreen(BaseFrame):
@@ -8,101 +7,15 @@ class UserRequirementsScreen(BaseFrame):
         self.file_path = "user_files/user_requirements.md"
         self.section_widgets = {}
         self.sections = []
-        super().__init__(parent, controller, title="User Requirements", next_text="Save & Continue")
-
-    def create_content(self):
-        # Canvas for scrolling
-        canvas = tk.Canvas(self.content_frame)
-        scrollbar = ttk.Scrollbar(self.content_frame, orient="vertical", command=canvas.yview)
-        self.scrollable_frame = ttk.Frame(canvas)
-
-        self.scrollable_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(
-                scrollregion=canvas.bbox("all")
-            )
+        super().__init__(
+            parent=parent,
+            controller=controller,
+            title="User Requirements",
+            next_text="Continue"
         )
 
-        canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-        
-        # Bind mousewheel
-        def _on_mousewheel(event):
-            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-        canvas.bind_all("<MouseWheel>", _on_mousewheel)
-
-        self.load_file_content()
-
-    def load_file_content(self):
-        if not os.path.exists(self.file_path):
-            ttk.Label(self.scrollable_frame, text=f"File not found: {self.file_path}").pack()
-            return
-
-        with open(self.file_path, "r", encoding="utf-8") as f:
-            lines = f.readlines()
-
-        current_section = None
-        current_text = []
-        
-        # Helper to flush current section
-        def flush_section():
-            nonlocal current_section, current_text
-            if current_section is not None:
-                self.create_section_ui(current_section, "".join(current_text).strip())
-            elif current_text:
-                # Content before any header
-                self.create_section_ui("General Information (Preamble)", "".join(current_text).strip())
-            current_text = []
-
-        for line in lines:
-            stripped = line.strip()
-            if stripped.startswith("## ") or stripped.startswith("### "):
-                flush_section()
-                current_section = stripped.lstrip("#").strip()
-            else:
-                current_text.append(line)
-        
-        flush_section()
-
-    def create_section_ui(self, title, content):
-        frame = ttk.LabelFrame(self.scrollable_frame, text=title, padding="10")
-        frame.pack(fill="x", padx=10, pady=5)
-
-        text_widget = tk.Text(frame, height=5, wrap="word")
-        text_widget.pack(fill="x", expand=True)
-        text_widget.insert("1.0", content)
-        
-        self.section_widgets[title] = text_widget
-
-    # Re-implementing load and save with structure preservation
     def create_content(self):
-        # Canvas setup (same as above)
-        canvas = tk.Canvas(self.content_frame)
-        scrollbar = ttk.Scrollbar(self.content_frame, orient="vertical", command=canvas.yview)
-        self.scrollable_frame = ttk.Frame(canvas)
-
-        self.scrollable_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(
-                scrollregion=canvas.bbox("all")
-            )
-        )
-
-        canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-        
-        # Bind mousewheel
-        def _on_mousewheel(event):
-            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-        canvas.bind_all("<MouseWheel>", _on_mousewheel)
-
-        self.sections = [] # List of tuples (header_line, text_widget)
+        self.sections = []  # List of tuples (header_line, text_widget)
         self.load_and_parse()
 
     def load_and_parse(self):
@@ -129,10 +42,9 @@ class UserRequirementsScreen(BaseFrame):
             
             # Special handling for grouping headers
             if title in ["General Information", "Section Specifications"]:
-                # Just a label/header, no text field
                 frame = ttk.Frame(self.scrollable_frame, padding="10")
                 frame.pack(fill="x", padx=10, pady=10)
-                ttk.Label(frame, text=title, font=("Helvetica", 12, "bold")).pack(anchor="w")
+                ttk.Label(frame, text=title, font=("SF Pro", 16, "bold")).pack(anchor="w")
                 # ttk.Separator(frame, orient="horizontal").pack(fill="x", pady=5)
                 
                 self.sections.append((header, None))
@@ -141,7 +53,7 @@ class UserRequirementsScreen(BaseFrame):
             frame = ttk.LabelFrame(self.scrollable_frame, text=title, padding="10")
             frame.pack(fill="x", padx=10, pady=5)
             
-            text_widget = tk.Text(frame, height=6, wrap="word")
+            text_widget = create_styled_text(frame, height=6)
             text_widget.pack(fill="x", expand=True)
             text_widget.insert("1.0", "".join(text_lines).strip())
             

@@ -82,6 +82,63 @@ class SemanticScholarAPI:
         
         return []
     
+    def get_paper_by_id(self, paper_id: str) -> Optional[Paper]:
+        """
+        Fetch a single paper by its ID.
+        Supports Semantic Scholar IDs and external IDs like ARXIV:2404.15822
+        
+        Args:
+            paper_id: Paper ID (S2 ID or external ID like "ARXIV:2404.15822")
+            
+        Returns:
+            Paper object or None if not found
+        """
+        params = {
+            "fields": ",".join(self.FIELDS)
+        }
+        
+        max_retries = 3
+        backoff = 1
+        
+        for attempt in range(max_retries):
+            self._rate_limit()
+            
+            try:
+                response = requests.get(
+                    f"{self.BASE_URL}/paper/{paper_id}",
+                    params=params,
+                    headers=self.headers,
+                    timeout=30
+                )
+                
+                if response.status_code == 404:
+                    return None
+                
+                if response.status_code == 429:
+                    print(f"    Rate limited (429). Retrying in {backoff}s...")
+                    time.sleep(backoff)
+                    backoff *= 4
+                    continue
+                
+                if response.status_code >= 500:
+                    print(f"    Server error ({response.status_code}). Retrying in {backoff}s...")
+                    time.sleep(backoff)
+                    backoff *= 4
+                    continue
+                
+                response.raise_for_status()
+                data = response.json()
+                return self._to_paper(data)
+                
+            except requests.exceptions.RequestException as e:
+                if attempt == max_retries - 1:
+                    print(f"    Failed to fetch paper {paper_id}: {e}")
+                    return None
+                time.sleep(backoff)
+                backoff *= 4
+        
+        return None
+
     def _to_paper(self, data: dict) -> Optional[Paper]:
         """Convert S2 response to Paper object"""
         # Build PDF URL from open access PDF if available

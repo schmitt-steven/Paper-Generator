@@ -1,24 +1,13 @@
-from typing import List, Optional
+from typing import Optional
 import textwrap
 import re
 from pathlib import Path
 from pydantic import BaseModel
 from phases.paper_search.paper import Paper
+from phases.hypothesis_generation.hypothesis_models import PaperFindings, FindingsExtractionResult
 from utils.lazy_model_loader import LazyModelMixin
 from utils.file_utils import save_json, load_json
 from utils.pdf_converter_pymupdf_marker import preprocess_markdown
-
-class FindingsExtractionResult(BaseModel):
-    methods_used: List[str]
-    test_setup: str
-    main_limitations: str
-
-class PaperFindings(BaseModel):
-    paper_id: str
-    title: str
-    methods_used: List[str]
-    test_setup: str
-    main_limitations: str
 
 class PaperAnalyzer(LazyModelMixin):
     """Analyzes papers to extract key findings using section-aware extraction"""
@@ -27,7 +16,7 @@ class PaperAnalyzer(LazyModelMixin):
         self.model_name = model_name
         self._model = None  # Lazy-loaded via LazyModelMixin
 
-    def extract_findings(self, papers: List[Paper]) -> List[PaperFindings]:
+    def extract_findings(self, papers: list[Paper]) -> list[PaperFindings]:
         """
         Extract findings from a list of papers sequentially.
         Shows progress bar.
@@ -92,7 +81,7 @@ class PaperAnalyzer(LazyModelMixin):
             )
             
             # LLM always returns dict, never an object
-            extraction_result = result.parsed
+            extraction_result: FindingsExtractionResult = result.parsed
             
             # Convert to full PaperFindings 
             findings = PaperFindings(
@@ -158,7 +147,7 @@ class PaperAnalyzer(LazyModelMixin):
         
         return combined_sections
     
-    def extract_section_by_keywords(self, markdown_text: str, keywords: List[str], max_chars: int = 2000) -> str:
+    def extract_section_by_keywords(self, markdown_text: str, keywords: list[str], max_chars: int = 2000) -> str:
         """
         Extract a section from markdown text using comprehensive pattern matching.
         
@@ -222,7 +211,7 @@ class PaperAnalyzer(LazyModelMixin):
         # Fallback: keyword density search
         return self._extract_by_keyword_density(markdown_text, keywords, max_chars)
     
-    def _extract_by_keyword_density(self, markdown_text: str, keywords: List[str], max_chars: int) -> str:
+    def _extract_by_keyword_density(self, markdown_text: str, keywords: list[str], max_chars: int) -> str:
         """
         Extract section by finding the window with highest keyword density.
         Uses sliding windows of 500 chars.
@@ -250,7 +239,7 @@ class PaperAnalyzer(LazyModelMixin):
     
     
     @staticmethod
-    def save_findings(findings: List[PaperFindings], filepath: str = "output/paper_findings.json"):
+    def save_findings(findings: list[PaperFindings], filepath: str = "output/paper_findings.json"):
         """Save paper findings to JSON file"""
         path_obj = Path(filepath)
 
@@ -270,7 +259,7 @@ class PaperAnalyzer(LazyModelMixin):
         print(f"Saved {len(findings)} paper findings to {filepath}")
     
     @staticmethod
-    def load_findings(filepath: str) -> List[PaperFindings]:
+    def load_findings(filepath: str) -> list[PaperFindings]:
         """Load paper findings from JSON file"""
         path_obj = Path(filepath)
         data = load_json(path_obj.name, str(path_obj.parent))
