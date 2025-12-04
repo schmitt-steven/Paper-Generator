@@ -20,7 +20,6 @@ Searches, ranks, filters, and downloads academic papers.
 ## Output
 
 - `output/search_queries.json` - Generated queries
-- `output/papers.json` - All found papers
-- `output/papers_filtered_with_markdown.json` - Filtered papers with markdown
+- `output/papers.json` - All papers (updated after ranking/filtering with markdown)
 - `output/literature/` - Downloaded PDFs and markdown files
 

@@ -18,7 +18,7 @@ class SemanticScholarAPI:
         self._last_request_time = 0
     
     def _rate_limit(self):
-        """Enforce 1 req/sec with API key, 0.5 req/sec without"""
+        """Enforce req/sec"""
         min_interval = 1.0 if self.api_key else 2.0
         elapsed = time.time() - self._last_request_time
         if elapsed < min_interval:
@@ -26,20 +26,17 @@ class SemanticScholarAPI:
         self._last_request_time = time.time()
     
     def search_papers(self, query: str, max_results: int = 50) -> List[Paper]:
-        """
-        Search papers using S2 search endpoint.
-        """
+        """Search papers using S2 search endpoint. Only returns open access papers."""
         self._rate_limit()
         
         params = {
             "query": query,
             "fields": ",".join(self.FIELDS),
-            "limit": min(max_results, 100)
+            "limit": min(max_results, 100),
+            "openAccessPdf": True  # Filter to only open access papers with public PDFs
         }
-        
-        # Retry logic
         max_retries = 3
-        backoff = 1
+        backoff = 2
         
         for attempt in range(max_retries):
             try:
@@ -53,13 +50,13 @@ class SemanticScholarAPI:
                 if response.status_code == 429:
                     print(f"Rate limited (429). Retrying in {backoff}s...")
                     time.sleep(backoff)
-                    backoff *= 4
+                    backoff *= 3
                     continue
                 
                 if response.status_code >= 500:
                     print(f"Server error ({response.status_code}). Retrying in {backoff}s...")
                     time.sleep(backoff)
-                    backoff *= 4
+                    backoff *= 3
                     continue
                 
                 response.raise_for_status()
@@ -98,7 +95,7 @@ class SemanticScholarAPI:
         }
         
         max_retries = 3
-        backoff = 1
+        backoff = 2
         
         for attempt in range(max_retries):
             self._rate_limit()
@@ -117,13 +114,13 @@ class SemanticScholarAPI:
                 if response.status_code == 429:
                     print(f"    Rate limited (429). Retrying in {backoff}s...")
                     time.sleep(backoff)
-                    backoff *= 4
+                    backoff *= 3
                     continue
                 
                 if response.status_code >= 500:
                     print(f"    Server error ({response.status_code}). Retrying in {backoff}s...")
                     time.sleep(backoff)
-                    backoff *= 4
+                    backoff *= 3
                     continue
                 
                 response.raise_for_status()
@@ -135,7 +132,7 @@ class SemanticScholarAPI:
                     print(f"    Failed to fetch paper {paper_id}: {e}")
                     return None
                 time.sleep(backoff)
-                backoff *= 4
+                backoff *= 3
         
         return None
 
@@ -155,11 +152,11 @@ class SemanticScholarAPI:
             bibtex = data["citationStyles"].get("bibtex")
         
         return Paper(
-            id=data.get("paperId"),
-            title=data.get("title", ""),
+            id=data.get("paperId", "No ID found"),
+            title=data.get("title", "No title found"),
             published=data.get("publicationDate") or str(data.get("year", "")),
             authors=authors,
-            summary=data.get("abstract") or "",
+            summary=data.get("abstract", "No abstract found"),
             pdf_url=pdf_url,
             doi=data.get("externalIds", {}).get("DOI"),
             fields_of_study=[f for f in (data.get("fieldsOfStudy") or []) if f],
@@ -167,4 +164,5 @@ class SemanticScholarAPI:
             citation_count=data.get("citationCount"),
             bibtex=bibtex,
             is_open_access=data.get("isOpenAccess", False),
+            user_provided=False,
         )

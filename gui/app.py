@@ -1,3 +1,6 @@
+from tkinter.ttk import Style
+
+
 import tkinter as tk
 from tkinter import ttk
 import sv_ttk
@@ -47,13 +50,26 @@ class PaperGeneratorApp(tk.Tk):
         
         # Apply Sun Valley theme
         sv_ttk.set_theme("dark")
+
         style = ttk.Style()
         style.layout("TButton", style.layout("Accent.TButton"))
         style.configure("TButton", **style.configure("Accent.TButton"))
         style.map("TButton", **style.map("Accent.TButton"))
+
+        # Custom Listbox (Dropdown Menu) styling
+        style.configure("TCombobox", font=("SF Pro", 14))
+        style.configure("ComboboxPopdownFrame", relief="flat", background="#2b2b2b")
+        self.option_add("*TCombobox*Listbox*Font", ("SF Pro", 14))
+        self.option_add("*TCombobox*Listbox*Background", "#2b2b2b")
+        self.option_add("*TCombobox*Listbox*Foreground", "#ffffff")
+        self.option_add("*TCombobox*Listbox*selectBackground", "#404040")
+        self.option_add("*TCombobox*Listbox*selectForeground", "#ffffff")
+        self.option_add("*TCombobox*Listbox*relief", "flat")
+        self.option_add("*TCombobox*Listbox*borderWidth", 5)
+        self.option_add("*TCombobox*Listbox*highlightThickness", 0)
         
         self.title("Paper Generator")
-        self.geometry("800x600")
+        self.geometry("1000x800")
         
         # Container that holds all the frames
         self.container = ttk.Frame(self)
@@ -77,7 +93,11 @@ class PaperGeneratorApp(tk.Tk):
         self.current_screen_index = 0
         
         self.init_frames()
-        self.show_frame(self.screen_order[0])
+        # Show initial frame and call on_show
+        initial_frame = self.frames[self.screen_order[0]]
+        initial_frame.tkraise()
+        if hasattr(initial_frame, 'on_show'):
+            initial_frame.on_show()
 
     def init_frames(self):
         for Frame in self.screen_order:
@@ -88,6 +108,9 @@ class PaperGeneratorApp(tk.Tk):
     def show_frame(self, cont):
         frame = self.frames[cont]
         frame.tkraise()
+        # Call on_show if the frame has this method (for lazy loading)
+        if hasattr(frame, 'on_show'):
+            frame.on_show()
 
     def next_screen(self):
         self.current_screen_index += 1

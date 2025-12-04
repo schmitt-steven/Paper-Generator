@@ -6,9 +6,9 @@ from utils.lm_studio_client import get_model_names
 
 class SettingsScreen(BaseFrame):
     def __init__(self, parent, controller):
-        self.llm_models = get_model_names("llm")
-        self.embedding_models = get_model_names("embedding")
-        self.vision_models = get_model_names("llm", vision_only=True) 
+        self.llm_models = get_model_names(model_type="llm")
+        self.embedding_models = get_model_names(model_type="embedding")
+        self.vision_models = get_model_names(model_type="llm", vision_only=True) 
         
         self.settings_vars = {}
         self.author_frames = []
@@ -73,6 +73,7 @@ class SettingsScreen(BaseFrame):
         # LaTeX Generation Section (combines model and data)
         self.create_latex_generation_section()
 
+
     def create_phase_section(self, title, settings):
         from settings import Settings
         frame = ttk.LabelFrame(self.scrollable_frame, text=title, padding="10")
@@ -89,7 +90,7 @@ class SettingsScreen(BaseFrame):
             row_frame = ttk.Frame(frame)
             row_frame.pack(fill="x", pady=2)
             
-            ttk.Label(row_frame, text=label_text, width=50).pack(side="left")
+            ttk.Label(row_frame, text=label_text, width=30).pack(side="left")
             
             var = tk.StringVar() # Or IntVar for spinbox, but StringVar works generally
             
@@ -97,8 +98,8 @@ class SettingsScreen(BaseFrame):
             current_value = getattr(Settings, key, "")
             
             if setting_type == "dropdown":
-                dropdown = ttk.Combobox(row_frame, textvariable=var, values=options if len(setting) == 3 else extra, state="readonly")
-                dropdown.pack(side="right", fill="x", expand=True)
+                dropdown = ttk.Combobox(row_frame, textvariable=var, values=options if len(setting) == 3 else extra, state="readonly", width=60)
+                dropdown.pack(side="right", fill="x", expand=True, padx=(10, 0))
                 
                 # Set current value if valid, else default to first
                 values = options if len(setting) == 3 else extra
@@ -110,7 +111,7 @@ class SettingsScreen(BaseFrame):
             elif setting_type == "spinbox":
                 min_val, max_val = extra
                 spinbox = ttk.Spinbox(row_frame, from_=min_val, to=max_val, textvariable=var)
-                spinbox.pack(side="right", fill="x", expand=True)
+                spinbox.pack(side="right", fill="x", expand=True, padx=(10, 0))
                 var.set(current_value if current_value else min_val)
             
             self.settings_vars[key] = var
@@ -123,12 +124,13 @@ class SettingsScreen(BaseFrame):
         # LaTeX Generation Model
         row_frame = ttk.Frame(frame)
         row_frame.pack(fill="x", pady=2)
-        ttk.Label(row_frame, text="LaTeX Generation Model", width=40).pack(side="left")
+        
+        ttk.Label(row_frame, text="LaTeX Generation Model", width=30).pack(side="left")
         
         var = tk.StringVar()
         current_value = getattr(Settings, "LATEX_GENERATION_MODEL", "")
-        dropdown = ttk.Combobox(row_frame, textvariable=var, values=self.llm_models, state="readonly")
-        dropdown.pack(side="right", fill="x", expand=True)
+        dropdown = ttk.Combobox(row_frame, textvariable=var, values=self.llm_models, state="readonly", width=60)
+        dropdown.pack(side="right", fill="x", expand=True, padx=(10, 0))
         
         if current_value in self.llm_models:
             dropdown.set(current_value)
@@ -140,14 +142,14 @@ class SettingsScreen(BaseFrame):
         # Title
         row_frame = ttk.Frame(frame)
         row_frame.pack(fill="x", pady=2)
-        ttk.Label(row_frame, text="Paper Title", width=40).pack(side="left")
+        ttk.Label(row_frame, text="Paper Title", width=30).pack(side="left")
         self.title_var = tk.StringVar(value=Settings.LATEX_TITLE)
         entry = ttk.Entry(row_frame, textvariable=self.title_var)
         entry.pack(side="right", fill="x", expand=True)
         # Placeholder logic could be added here or just label text
         ttk.Label(frame, text="(Leave empty for LLM generated title)", font=("SF Pro", 14, "italic")).pack(anchor="e")
 
-        # Authors section with modern card design
+        # Authors section
         authors_section = ttk.Frame(frame, style="Card.TFrame", padding=1)
         authors_section.pack(fill="x", pady=(20, 10))
         
@@ -157,7 +159,7 @@ class SettingsScreen(BaseFrame):
         
         ttk.Label(header_frame, text="Authors", font=("SF Pro", 14, "bold")).pack(side="left")
         
-        # Buttons on the right
+        # Buttons
         button_frame = ttk.Frame(header_frame)
         button_frame.pack(side="right")
         
@@ -250,7 +252,11 @@ class SettingsScreen(BaseFrame):
         for key, var in self.settings_vars.items():
             value = var.get()
             # Convert to int if it's a numeric setting
-            if key in ["PAPER_EMBEDDING_BATCH_SIZE", "EVIDENCE_INITIAL_CHUNKS", "EVIDENCE_FILTERED_CHUNKS", "EVIDENCE_AGENTIC_ITERATIONS"]:
+            if key in ["PAPER_EMBEDDING_BATCH_SIZE",
+                       "EVIDENCE_INITIAL_CHUNKS",
+                       "EVIDENCE_FILTERED_CHUNKS",
+                       "EVIDENCE_AGENTIC_ITERATIONS",
+                       "LATEX_GENERATION_MODEL"]:
                 try:
                     value = int(value)
                 except ValueError:
@@ -276,7 +282,7 @@ class SettingsScreen(BaseFrame):
         
         Settings.LATEX_AUTHORS = authors
 
-        # Save settings to file for persistence
+        # Save settings to file
         Settings.save_to_file()
 
         # Proceed to next screen

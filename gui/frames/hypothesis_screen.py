@@ -1,13 +1,20 @@
 import tkinter as tk
 from tkinter import ttk
+import threading
+from pathlib import Path
 from typing import List, Optional
 
-from ..base_frame import BaseFrame, create_styled_text
+from ..base_frame import BaseFrame, ProgressPopup, create_styled_text
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.hypothesis_generation.hypothesis_models import Hypothesis
+from phases.context_analysis.paper_conception import PaperConception
+from phases.experimentation.experiment_runner import ExperimentRunner
 
 
 HYPOTHESES_FILE = "output/hypotheses.json"
+
+# Output file to check for dynamic button text
+EXPERIMENTAL_PLAN_FILE = Path("output/experiments/experimental_plan.md")
 
 
 class HypothesisScreen(BaseFrame):
@@ -23,19 +30,24 @@ class HypothesisScreen(BaseFrame):
         self.expected_improvement_text: tk.Text
         self.baseline_text: tk.Text
         
+        # Dynamic button text based on whether output file exists
+        next_text = "Continue" if EXPERIMENTAL_PLAN_FILE.exists() else "Generate Experiment Plan"
+        
         super().__init__(
             parent=parent,
             controller=controller,
-            title="Hypothesis Review",
-            next_text="Prepare Experimentation"
+            title="Hypothesis",
+            next_text=next_text,
+            has_regenerate=True,
+            regenerate_text="Regenerate"
         )
 
     def create_content(self):
         # Info text
         self._create_info_section()
         
-        # Load and display the hypothesis
-        self._load_hypothesis()
+        # Don't load hypothesis yet - wait until screen is shown
+        # This prevents loading on app startup
 
     def _create_info_section(self):
         """Create the info text section."""
@@ -63,6 +75,11 @@ class HypothesisScreen(BaseFrame):
 
     def _load_hypothesis(self):
         """Load hypotheses from file and display the selected one."""
+        # Only load if file exists
+        if not Path(HYPOTHESES_FILE).exists():
+            self._show_error(f"No hypotheses found: {HYPOTHESES_FILE}\n\nPlease complete the previous steps first.")
+            return
+        
         try:
             self.hypotheses = HypothesisBuilder.load_hypotheses(HYPOTHESES_FILE)
         except Exception as e:
@@ -89,6 +106,13 @@ class HypothesisScreen(BaseFrame):
         
         # Create the editable sections
         self._create_hypothesis_fields()
+    
+    def on_show(self):
+        """Called when screen is shown - load hypothesis if not already loaded."""
+        # Only load if we haven't loaded yet and file exists
+        if not hasattr(self, 'current_hypothesis') or self.current_hypothesis is None:
+            if Path(HYPOTHESES_FILE).exists():
+                self._load_hypothesis()
 
     def _show_error(self, message: str):
         """Display an error message."""
@@ -150,11 +174,10 @@ class HypothesisScreen(BaseFrame):
         
         return text_widget
 
-    def on_next(self):
-        """Save the edited hypothesis and proceed."""
+    def _save_hypothesis(self) -> Hypothesis | None:
+        """Save the edited hypothesis and return it."""
         if self.current_hypothesis is None:
-            super().on_next()
-            return
+            return None
         
         # Get content from text widgets
         description = self.description_text.get("1.0", "end-1c").strip()
@@ -184,4 +207,54 @@ class HypothesisScreen(BaseFrame):
         except Exception as e:
             print(f"[Hypothesis] Failed to save: {e}")
         
-        super().on_next()
+        return updated_hypothesis
+
+    def on_next(self):
+        """Save the edited hypothesis and proceed or generate experiment plan."""
+        if self.current_hypothesis is None:
+            super().on_next()
+            return
+        
+        # Always save first
+        updated_hypothesis = self._save_hypothesis()
+        if updated_hypothesis is None:
+            super().on_next()
+            return
+        
+        # Check if output exists
+        if EXPERIMENTAL_PLAN_FILE.exists():
+            super().on_next()
+        else:
+            self._run_generation(updated_hypothesis)
+
+    def _run_generation(self, hypothesis: Hypothesis):
+        """Run experiment plan generation with progress popup."""
+        popup = ProgressPopup(self.controller, "Generating Experiment Plan...")
+        
+        def task():
+            try:
+                # Load paper concept
+                self.after(0, lambda: popup.update_status("Loading paper concept..."))
+                paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
+                
+                # Generate experimental plan
+                self.after(0, lambda: popup.update_status("Generating experimental plan..."))
+                experiment_runner = ExperimentRunner()
+                experimental_plan = experiment_runner._generate_experimental_plan(hypothesis, paper_concept)
+                experiment_runner.save_experimental_plan(experimental_plan)
+                
+                # Success - close popup and proceed
+                self.after(0, lambda: self._on_generation_success(popup))
+                
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                self.after(0, lambda err=str(e): popup.show_error(err))
+        
+        thread = threading.Thread(target=task, daemon=True)
+        thread.start()
+
+    def _on_generation_success(self, popup: ProgressPopup):
+        """Handle successful generation."""
+        popup.close()
+        self.controller.next_screen()
