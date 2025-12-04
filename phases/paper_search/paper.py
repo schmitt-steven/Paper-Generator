@@ -14,7 +14,7 @@ class RankingScores:
 
 @dataclass
 class Paper:
-    """Represents an academic paper from Semantic Scholar"""
+    """An academic paper from Semantic Scholar"""
     id: str  # S2 paperId
     title: str
     published: str  # YYYY-MM-DD or YYYY
@@ -22,17 +22,15 @@ class Paper:
     summary: str
     pdf_url: Optional[str]
     doi: Optional[str]
-    fields_of_study: List[str]  # Was categories
-    venue: Optional[str]  # Was journal_ref
+    fields_of_study: List[str]
+    venue: Optional[str]
     citation_count: Optional[int] = None
     bibtex: Optional[str] = None
     markdown_text: Optional[str] = None
     ranking: Optional[RankingScores] = None
-    
     is_open_access: bool = False
     user_provided: bool = False
     pdf_path: Optional[str] = None
-    
     citation_key: Optional[str] = field(default=None, init=False)
 
     def __post_init__(self):

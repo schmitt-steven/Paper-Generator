@@ -198,7 +198,7 @@ class ExperimentRunner:
                 raise
             
             # Save the complete code (from final chunk)
-            code_file_path = os.path.join(output_dir, f"experiment_{hypothesis.id}.py")
+            code_file_path = os.path.join(output_dir, "experiment.py")
             code_file_path = os.path.abspath(code_file_path)
             with open(code_file_path, 'w', encoding='utf-8') as f:
                 f.write(current_code)
@@ -721,13 +721,10 @@ class ExperimentRunner:
 
         return plan_content
     
-    def load_experiment_code(
-        self,
-        hypothesis_id: str
-    ) -> str:
+    def load_experiment_code(self) -> str:
         """Load experiment code from a file."""
         
-        filename = f"experiment_{hypothesis_id}.py"
+        filename = "experiment.py"
         file_path = os.path.join(self.base_output_dir, filename)
         
         if not os.path.exists(file_path):
@@ -738,17 +735,14 @@ class ExperimentRunner:
         
         return code_content
     
-    def load_experiment_files(
-        self,
-        hypothesis_id: str
-    ) -> ExperimentFiles:
+    def load_experiment_files(self) -> ExperimentFiles:
         """Load both experimental plan and experiment code files."""
         
         return ExperimentFiles(
             experimental_plan=self.load_experimental_plan(),
-            experiment_code=self.load_experiment_code(hypothesis_id),
+            experiment_code=self.load_experiment_code(),
             plan_file_path=os.path.join(self.base_output_dir, EXPERIMENTAL_PLAN_FILE),
-            code_file_path=os.path.join(self.base_output_dir, f"experiment_{hypothesis_id}.py")
+            code_file_path=os.path.join(self.base_output_dir, "experiment.py")
         )
     
     def save_experiment_result(
@@ -760,7 +754,7 @@ class ExperimentRunner:
         # Convert ExperimentResult to dictionary
         result_dict = self._experiment_result_to_dict(experiment_result)
 
-        filename = f"experiment_result_{experiment_result.hypothesis.id}.json"
+        filename = "experiment_result.json"
         file_path = save_json(result_dict, filename, self.base_output_dir)
 
         return file_path
@@ -812,8 +806,7 @@ class ExperimentRunner:
             # Try to load from the experiment code file
             import os
             base_dir = os.path.dirname(file_path)
-            hypothesis_id = hypothesis.id
-            code_file_path = os.path.join(base_dir, f"experiment_{hypothesis_id}.py")
+            code_file_path = os.path.join(base_dir, "experiment.py")
             if os.path.exists(code_file_path):
                 try:
                     with open(code_file_path, 'r', encoding='utf-8') as f:
@@ -869,11 +862,11 @@ class ExperimentRunner:
             raise
         
         # Generate or load experiment code
-        code_file_path = os.path.join(self.base_output_dir, f"experiment_{hypothesis.id}.py")
+        code_file_path = os.path.join(self.base_output_dir, "experiment.py")
         code_file_path = os.path.abspath(code_file_path)
         
         if load_existing_code and os.path.exists(code_file_path):
-            print(f"Loading existing experiment code for {hypothesis.id}...")
+            print(f"Loading existing experiment code...")
             # Load existing code and execute it
             print(f"Executing loaded code: {code_file_path}")
             execution_result = self.executor.execute_file(code_file_path, output_dir=self.base_output_dir)

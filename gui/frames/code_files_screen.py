@@ -1,11 +1,16 @@
 import tkinter as tk
 from tkinter import ttk, filedialog
 import shutil
+import threading
 from pathlib import Path
 from typing import List, Dict
 from dataclasses import dataclass
 
-from ..base_frame import BaseFrame, create_gray_button
+from ..base_frame import BaseFrame, ProgressPopup, create_gray_button
+from phases.context_analysis.user_code_analysis import CodeAnalyzer
+from phases.context_analysis.paper_conception import PaperConception
+from phases.context_analysis.user_requirements import load_user_requirements
+from settings import Settings
 
 
 ALLOWED_EXTENSIONS = {
@@ -14,6 +19,9 @@ ALLOWED_EXTENSIONS = {
     '.rs', '.rb', '.cs', '.swift', '.kt',
     '.scala', '.r', '.jl'
 }
+
+# Output file
+PAPER_CONCEPT_FILE = Path("output/paper_concept.md")
 
 @dataclass
 class CodeFile:
@@ -33,11 +41,13 @@ class CodeFilesScreen(BaseFrame):
         self.count_label: ttk.Label
         self.files_list: ttk.Frame
         
+        next_text = "Continue" if PAPER_CONCEPT_FILE.exists() else "Generate Paper Concept"
+        
         super().__init__(
             parent=parent,
             controller=controller,
             title="Code Files",
-            next_text="Generate Paper Concept"
+            next_text=next_text
         )
 
     def create_content(self):
@@ -46,6 +56,10 @@ class CodeFilesScreen(BaseFrame):
         
         # Code files section
         self._create_files_section()
+    
+    def on_show(self):
+        """Called when screen is shown - load existing code files from user_files/."""
+        self._load_existing_files()
 
     def _create_info_section(self):
         """Create the info text section."""
@@ -155,6 +169,22 @@ class CodeFilesScreen(BaseFrame):
         
         return entry_frame
 
+    def _load_existing_files(self):
+        """Load existing code files from user_files/ directory."""
+        user_files_dir = Path("user_files")
+        if not user_files_dir.exists():
+            return
+        
+        # Find all code files in user_files/
+        code_file_paths = []
+        for file_path in user_files_dir.iterdir():
+            if file_path.is_file() and file_path.suffix.lower() in ALLOWED_EXTENSIONS:
+                code_file_paths.append(str(file_path))
+        
+        if code_file_paths:
+            # Process files (this will add them to self.code_files and refresh the display)
+            self._process_files(tuple(code_file_paths))
+    
     def _on_upload_click(self):
         """Handle Upload button click."""
         # Build file type filter from allowed extensions
@@ -192,11 +222,14 @@ class CodeFilesScreen(BaseFrame):
                 print(f"[CodeFiles] Skipping duplicate: {src_path.name}")
                 continue
             
-            # Copy to user_files/
+            # Determine destination path
             dest_path = user_files_dir / src_path.name
-            shutil.copy2(src_path, dest_path)
             
-            # Count lines
+            # Only copy if source is not already in user_files/
+            if src_path.parent.resolve() != user_files_dir.resolve():
+                shutil.copy2(src_path, dest_path)
+            
+            # Count lines (use dest_path which is always in user_files/)
             try:
                 with open(dest_path, 'r', encoding='utf-8', errors='ignore') as f:
                     line_count = sum(1 for _ in f)
@@ -250,4 +283,52 @@ class CodeFilesScreen(BaseFrame):
         
         self.code_files = [f for f in self.code_files if f.filename != filename]
         self._refresh_files_list()
+
+    def on_next(self):
+        """Check if output exists, otherwise generate paper concept."""
+        if PAPER_CONCEPT_FILE.exists():
+            super().on_next()
+        else:
+            self._run_generation()
+
+    def _run_generation(self):
+        """Run paper concept generation with progress popup."""
+        popup = ProgressPopup(self.controller, "Generating Paper Concept...")
+        
+        def task():
+            try:
+                # Step 1: Load user requirements
+                self.after(0, lambda: popup.update_status("Loading user requirements..."))
+                user_requirements = load_user_requirements("user_files/user_requirements.md")
+                
+                # Step 2: Analyze code files
+                self.after(0, lambda: popup.update_status("Analyzing code files..."))
+                code_analyzer = CodeAnalyzer(model_name=Settings.CODE_ANALYSIS_MODEL)
+                code_files = code_analyzer.load_code_files("user_files")
+                analyzed_files = code_analyzer.analyze_all_files(code_files)
+                
+                # Step 3: Generate paper concept
+                self.after(0, lambda: popup.update_status("Building paper concept..."))
+                concept_builder = PaperConception(
+                    model_name=Settings.PAPER_CONCEPTION_MODEL,
+                    user_code=analyzed_files,
+                    user_requirements=user_requirements
+                )
+                concept_builder.build_paper_concept()
+                
+                # Success - close popup and proceed
+                self.after(0, lambda: self._on_generation_success(popup))
+                
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                self.after(0, lambda err=str(e): popup.show_error(err))
+        
+        thread = threading.Thread(target=task, daemon=True)
+        thread.start()
+
+    def _on_generation_success(self, popup: ProgressPopup):
+        """Handle successful generation."""
+        popup.close()
+        self.controller.next_screen()
 

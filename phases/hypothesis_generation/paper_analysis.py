@@ -6,8 +6,7 @@ from pydantic import BaseModel
 from phases.paper_search.paper import Paper
 from phases.hypothesis_generation.hypothesis_models import PaperFindings, FindingsExtractionResult
 from utils.lazy_model_loader import LazyModelMixin
-from utils.file_utils import save_json, load_json
-from utils.pdf_converter_pymupdf_marker import preprocess_markdown
+from utils.file_utils import save_json, load_json, preprocess_markdown
 
 class PaperAnalyzer(LazyModelMixin):
     """Analyzes papers to extract key findings using section-aware extraction"""

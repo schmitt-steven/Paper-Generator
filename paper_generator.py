@@ -26,14 +26,21 @@ from settings import Settings
 class PaperGenerator: 
 
     # Add setting to clear cache
-
     # TODO: Remove table of contents from tex
     # Check: Paper Concept still needed?
     # TODO: Add review/improvement loop to the paper writing process
+    # TODO: Change text fields to use format like in file selection, with Copy and "Open in Editor" buttons 
+    # TODO: Regenerate button to regernate the NEXT step
+
+    # Only use a single paper.json
+    # Paper Selection flow:User clicks "Next" → Download PDFs (searched only) → Convert to markdown (all) → Save to papers.json → Generate hypotheses
+    # Fix paper loading - if paper json is there, load it!
+
+    
+    # Fix auto search - last search on s2 yielded shitty results!
 
     def generate_paper(self):
-
-        # Load user requirements (always loaded as it's needed for hypothesis check)
+        # Load user requirements
         user_requirements = load_user_requirements("user_files/user_requirements.md")
         user_provided_hypothesis = bool(user_requirements.hypothesis and user_requirements.hypothesis.strip())
 
@@ -95,7 +102,7 @@ class PaperGenerator:
         #######################################################
         if Settings.LOAD_PAPER_RANKING:
             # Load set of papers that are already ranked, filtered and have markdown
-            loaded_papers: List[Paper] = LiteratureSearch.load_papers("output/papers_filtered_with_markdown.json")
+            loaded_papers: List[Paper] = LiteratureSearch.load_papers("output/papers.json")
             # Filter: include papers that have markdown text (both user-provided and searched need markdown)
             loaded_papers_with_markdown: List[Paper] = []
             for p in loaded_papers:
@@ -205,7 +212,7 @@ class PaperGenerator:
         experiment_result = None
         
         if Settings.LOAD_EXPERIMENT_RESULT:
-            experiment_result_file = Path("output/experiments") / f"experiment_result_{selected_hypothesis.id}.json"
+            experiment_result_file = Path("output/experiments") / "experiment_result.json"
             if not experiment_result_file.exists():
                 raise FileNotFoundError(
                     f"Experiment result not found at {experiment_result_file}. "
@@ -228,7 +235,7 @@ class PaperGenerator:
         # Check experiment can be run (generate plan/code or use existing)
         elif Settings.LOAD_EXPERIMENT_PLAN and Settings.LOAD_EXPERIMENT_CODE:
             # Try to run existing experiment code if available
-            experiment_code_file = Path("output/experiments") / f"experiment_{selected_hypothesis.id}.py"
+            experiment_code_file = Path("output/experiments") / "experiment.py"
             
             if experiment_code_file.exists():
                 try:

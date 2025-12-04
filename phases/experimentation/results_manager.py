@@ -27,21 +27,21 @@ class ResultsManager:
             "reasoning": evaluation.reasoning
         }
 
-        filename = f"hypothesis_evaluation_{evaluation.hypothesis_id}.json"
+        filename = "hypothesis_evaluation.json"
         eval_path = save_json(eval_data, filename, self.base_output_dir)
 
         return eval_path
     
     @staticmethod
     def load_previous_results(
-        hypothesis_id: str,
+        hypothesis_id: str = None,  # Kept for backward compatibility but not used
         run_id: Optional[int] = None,
         base_dir: str = "output/experiments"
     ) -> Dict[str, Any]:
         """Load previous experiment results for comparison."""
 
         result_data = {}
-        eval_path = os.path.join(base_dir, f"hypothesis_evaluation_{hypothesis_id}.json")
+        eval_path = os.path.join(base_dir, "hypothesis_evaluation.json")
         if os.path.exists(eval_path):
             path_obj = Path(eval_path)
             result_data = load_json(path_obj.name, str(path_obj.parent))

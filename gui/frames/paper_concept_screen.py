@@ -1,8 +1,13 @@
 import tkinter as tk
 from tkinter import ttk
+from pathlib import Path
+
 from ..base_frame import BaseFrame, create_styled_text
 from phases.context_analysis.paper_conception import PaperConception, PaperConcept
 from utils.file_utils import save_markdown
+
+
+# No longer checking for papers.json - user will search on paper selection screen
 
 
 class PaperConceptScreen(BaseFrame):
@@ -15,19 +20,24 @@ class PaperConceptScreen(BaseFrame):
         self.code_snippets_text: tk.Text
         self.open_questions_text: tk.Text
         
+        # Always show "Continue" - user will search on paper selection screen
+        next_text = "Continue"
+        
         super().__init__(
             parent,
             controller,
             title="Paper Concept",
-            next_text="Continue"
+            next_text=next_text,
+            has_regenerate=True,
+            regenerate_text="Regenerate"
         )
 
     def create_content(self):
         # Info text
         self._create_info_section()
         
-        # Load the paper concept
-        self._load_concept()
+        # Don't load concept yet - wait until screen is shown
+        # This prevents loading on app startup
 
     def _create_info_section(self):
         """Create the info text section."""
@@ -93,12 +103,8 @@ class PaperConceptScreen(BaseFrame):
         
         return text_widget
 
-    def on_next(self):
-        """Save the edited content and proceed."""
-        if self.concept is None:
-            super().on_next()
-            return
-        
+    def _save_concept(self) -> PaperConcept:
+        """Save the edited content and return updated concept."""
         # Get content from text widgets
         description = self.description_text.get("1.0", "end-1c").strip()
         code_snippets = self.code_snippets_text.get("1.0", "end-1c").strip()
@@ -126,5 +132,29 @@ class PaperConceptScreen(BaseFrame):
         except Exception as e:
             print(f"[PaperConcept] Failed to save: {e}")
         
+        # Return updated concept for use in generation
+        return PaperConcept(
+            description=description,
+            code_snippets=code_snippets,
+            open_questions=open_questions
+        )
+
+    def on_next(self):
+        """Save the edited content and proceed to next screen."""
+        if self.concept is None:
+            super().on_next()
+            return
+        
+        # Always save first
+        self._save_concept()
+        
+        # Continue to next screen - user will search for papers on paper selection screen
         super().on_next()
+    
+    def on_show(self):
+        """Called when screen is shown - load concept if not already loaded."""
+        # Only load if we haven't loaded yet
+        if not hasattr(self, 'concept') or self.concept is None:
+            if Path(self.file_path).exists():
+                self._load_concept()
 

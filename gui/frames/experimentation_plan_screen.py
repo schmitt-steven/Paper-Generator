@@ -1,31 +1,42 @@
 import tkinter as tk
 from tkinter import ttk
+import threading
+from pathlib import Path
 
-from ..base_frame import BaseFrame, create_styled_text
+from ..base_frame import BaseFrame, ProgressPopup, create_styled_text
 from utils.file_utils import load_markdown, save_markdown
+from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
+from phases.context_analysis.paper_conception import PaperConception
+from phases.experimentation.experiment_runner import ExperimentRunner
 
 
 EXPERIMENTS_DIR = "output/experiments"
 EXPERIMENTAL_PLAN_FILE = "experimental_plan.md"
-
+HYPOTHESES_FILE = "output/hypotheses.json"
 
 class ExperimentationPlanScreen(BaseFrame):
     def __init__(self, parent, controller):
         self.plan_text: tk.Text
         
+        # Check if experiment result exists to set button text
+        experiment_result_file = Path("output/experiments/experiment_result.json")
+        next_text = "Continue" if experiment_result_file.exists() else "Run Experiments"
+        
         super().__init__(
             parent=parent,
             controller=controller,
             title="Experimentation Plan",
-            next_text="Save & Continue",
+            next_text=next_text,
+            has_regenerate=True,
+            regenerate_text="Regenerate"
         )
 
     def create_content(self):
         # Info text
         self._create_info_section()
         
-        # Load and display the experimental plan
-        self._load_plan()
+        # Don't load plan yet - wait until screen is shown
+        # This prevents loading on app startup
 
     def _create_info_section(self):
         """Create the info text section."""
@@ -90,10 +101,9 @@ class ExperimentationPlanScreen(BaseFrame):
         self.plan_text.pack(fill="both", expand=True)
         self.plan_text.insert("1.0", content)
 
-    def on_next(self):
-        """Save the edited plan and proceed."""
+    def _save_plan(self):
+        """Save the edited plan."""
         if not hasattr(self, 'plan_text'):
-            super().on_next()
             return
         
         # Get content from text widget
@@ -104,5 +114,80 @@ class ExperimentationPlanScreen(BaseFrame):
             print(f"[ExperimentationPlan] Saved changes to {EXPERIMENTS_DIR}/{EXPERIMENTAL_PLAN_FILE}")
         except Exception as e:
             print(f"[ExperimentationPlan] Failed to save: {e}")
+
+    def on_next(self):
+        """Save the edited plan and proceed or run experiments."""
+        # Always save first
+        self._save_plan()
         
-        super().on_next()
+        # Check if output exists (simplified filename without hypothesis ID)
+        experiment_result_file = Path("output/experiments/experiment_result.json")
+        if experiment_result_file.exists():
+            super().on_next()
+        else:
+            self._run_generation()
+
+    def _run_generation(self):
+        """Run experiment with progress popup."""
+        popup = ProgressPopup(self.controller, "Running Experiments...")
+        
+        def task():
+            try:
+                # Load hypothesis
+                self.after(0, lambda: popup.update_status("Loading hypothesis..."))
+                hypotheses = HypothesisBuilder.load_hypotheses(HYPOTHESES_FILE)
+                selected_hypothesis = None
+                for hyp in hypotheses:
+                    if hyp.selected_for_experimentation:
+                        selected_hypothesis = hyp
+                        break
+                if selected_hypothesis is None and hypotheses:
+                    selected_hypothesis = hypotheses[0]
+                
+                if selected_hypothesis is None:
+                    raise ValueError("No hypothesis found")
+                
+                # Load paper concept
+                self.after(0, lambda: popup.update_status("Loading paper concept..."))
+                paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
+                
+                # Run experiment
+                self.after(0, lambda: popup.update_status("Running experiment..."))
+                experiment_runner = ExperimentRunner()
+                result = experiment_runner.run_experiment(
+                    selected_hypothesis,
+                    paper_concept,
+                    load_existing_plan=True,  # Use the plan we just saved
+                    load_existing_code=False  # Generate new code
+                )
+                
+                # Check verdict
+                verdict = result.hypothesis_evaluation.verdict.lower()
+                if verdict in ["disproven", "inconclusive"]:
+                    self.after(0, lambda: popup.show_error(
+                        f"Hypothesis was {verdict}.\n\nReasoning: {result.hypothesis_evaluation.reasoning}"
+                    ))
+                else:
+                    # Success - close popup and proceed
+                    self.after(0, lambda: self._on_generation_success(popup))
+                
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                self.after(0, lambda err=str(e): popup.show_error(err))
+        
+        thread = threading.Thread(target=task, daemon=True)
+        thread.start()
+
+    def _on_generation_success(self, popup: ProgressPopup):
+        """Handle successful generation."""
+        popup.close()
+        self.controller.next_screen()
+    
+    def on_show(self):
+        """Called when screen is shown - load plan if not already loaded."""
+        # Only load if we haven't loaded yet
+        if not hasattr(self, 'plan_text'):
+            plan_path = Path(EXPERIMENTS_DIR) / EXPERIMENTAL_PLAN_FILE
+            if plan_path.exists():
+                self._load_plan()

@@ -130,7 +130,7 @@ class UserPaperLoader(LazyModelMixin):
             shutil.copy2(pdf_path, dest_path)
             
             if s2_paper:
-                print(f"    Found on S2 via {search_method}: {s2_paper.id}")
+                print(f"    Found paper on Semantic Scholar: {s2_paper.id}")
                 
                 paper = Paper(
                     id=paper_id,
@@ -149,7 +149,7 @@ class UserPaperLoader(LazyModelMixin):
                     pdf_path=str(dest_path.resolve().relative_to(Path.cwd()))
                 )
             else:
-                print(f"    Not found on S2")
+                print(f"    Paper not found on Semantic Scholar")
                 title = self._extract_title_from_pdf(str(pdf_path))
                 
                 paper = Paper(
