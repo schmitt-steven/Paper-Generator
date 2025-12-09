@@ -3,8 +3,10 @@
 \graphicspath{{images/}}
 \DeclareGraphicsExtensions{.pdf,.jpeg,.jpg,.png}
 
-\usepackage{libertinus}
-\usepackage[libertine]{newtxmath}  % This loads amsmath automatically
+% \usepackage{libertinus}
+% \usepackage[libertine]{newtxmath}  % This loads amsmath automatically
+\usepackage{lmodern}
+\usepackage{amsmath}
 \usepackage{algorithmic}
 \usepackage{array}
 \usepackage{dblfloatfix}
@@ -51,6 +53,9 @@
       urlcolor=darkblue,
       pdftex
    ]{hyperref}
+
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
 
 % Settings for source code listings
 \lstset{
