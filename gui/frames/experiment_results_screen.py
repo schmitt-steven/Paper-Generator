@@ -371,12 +371,15 @@ class ExperimentResultsScreen(BaseFrame):
                 # Write paper
                 self.after(0, lambda: popup.update_status("Writing paper sections"))
                 paper_writing_pipeline = PaperWritingPipeline()
+                def status_update(msg):
+                    self.after(0, lambda: popup.update_status(msg))
+
                 paper_writing_pipeline.write_paper(
                     paper_concept=paper_concept,
                     experiment_result=experiment_result,
                     papers=papers_with_markdown,
                     user_requirements=user_requirements,
-                    user_req_file="user_files/user_requirements.md" 
+                    status_callback=status_update
                 )
                 
                 # Success - close popup and proceed

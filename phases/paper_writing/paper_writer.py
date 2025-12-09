@@ -21,7 +21,9 @@ class PaperWriter:
         context: PaperConcept,
         experiment: ExperimentResult,
         evidence_by_section: Dict[Section, Sequence[Evidence]],
+
         user_requirements: Optional[UserRequirements] = None,
+        writing_prompts: Optional[Dict[str, str]] = None,
     ) -> Tuple[PaperDraft, Dict[str, str]]:
         """Generate all paper sections using provided evidence. Returns (draft, prompts_by_section)."""
 
@@ -42,6 +44,13 @@ class PaperWriter:
                 previous_sections=sections,
                 user_requirements=user_requirements,
             )
+            
+            # Use existing prompt if available (override the built one if needed, or just use it)
+            # Actually, if we have a pre-loaded prompt, we should probably use THAT one for generation.
+            # But we also want to return it.
+            if writing_prompts and section_type.value in writing_prompts:
+                 prompt = writing_prompts[section_type.value]
+            
             prompts_by_section[section_type.value] = prompt
             sections[section_type] = self.generate_section(
                 section_type=section_type,
@@ -50,6 +59,7 @@ class PaperWriter:
                 evidence=evidence_by_section.get(section_type, []),
                 previous_sections=sections,
                 user_requirements=user_requirements,
+                existing_prompt=prompt,
             )
 
         # Generate acknowledgements if enabled and user provided content
@@ -89,14 +99,19 @@ class PaperWriter:
         context: PaperConcept,
         experiment: Optional[ExperimentResult],
         evidence: Sequence[Evidence],
+
         previous_sections: Optional[Dict[Section, str]] = None,
         temperature: float = 0.5,
         user_requirements: Optional[UserRequirements] = None,
+        existing_prompt: Optional[str] = None,
     ) -> str:
         """Generate a single section given context and evidence."""
 
         model = lms.llm(Settings.PAPER_WRITING_MODEL)
-        prompt = self._build_section_prompt(section_type, context, experiment, evidence, previous_sections, user_requirements)
+        if existing_prompt:
+             prompt = existing_prompt
+        else:
+             prompt = self._build_section_prompt(section_type, context, experiment, evidence, previous_sections, user_requirements)
         response = model.respond(
             prompt,
             config={
