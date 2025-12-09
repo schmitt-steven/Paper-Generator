@@ -2,6 +2,7 @@ import textwrap
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from phases.context_analysis.paper_conception import PaperConcept
+from phases.context_analysis.user_requirements import UserRequirements
 from phases.experimentation.experiment_state import ExperimentResult, Plot
 from phases.paper_writing.data_models import Evidence, PaperDraft, Section
 from utils.llm_utils import remove_thinking_blocks
@@ -20,6 +21,7 @@ class PaperWriter:
         context: PaperConcept,
         experiment: ExperimentResult,
         evidence_by_section: Dict[Section, Sequence[Evidence]],
+        user_requirements: Optional[UserRequirements] = None,
     ) -> Tuple[PaperDraft, Dict[str, str]]:
         """Generate all paper sections using provided evidence. Returns (draft, prompts_by_section)."""
 
@@ -38,6 +40,7 @@ class PaperWriter:
                 experiment=experiment,
                 evidence=evidence_by_section.get(section_type, []),
                 previous_sections=sections,
+                user_requirements=user_requirements,
             )
             prompts_by_section[section_type.value] = prompt
             sections[section_type] = self.generate_section(
@@ -46,7 +49,15 @@ class PaperWriter:
                 experiment=experiment,
                 evidence=evidence_by_section.get(section_type, []),
                 previous_sections=sections,
+                user_requirements=user_requirements,
             )
+
+        # Generate acknowledgements if enabled and user provided content
+        acknowledgements = None
+        if Settings.GENERATE_ACKNOWLEDGEMENTS and user_requirements and user_requirements.acknowledgements:
+            print("Writing Acknowledgements section...")
+            acknowledgements = self.generate_acknowledgements(user_requirements.acknowledgements)
+            prompts_by_section[Section.ACKNOWLEDGEMENTS.value] = self._build_acknowledgements_prompt(user_requirements.acknowledgements)
 
         # Use settings title if provided, otherwise generate one
         if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
@@ -68,6 +79,7 @@ class PaperWriter:
             results=sections[Section.RESULTS],
             discussion=sections[Section.DISCUSSION],
             conclusion=sections[Section.CONCLUSION],
+            acknowledgements=acknowledgements,
         )
         return draft, prompts_by_section
 
@@ -79,11 +91,12 @@ class PaperWriter:
         evidence: Sequence[Evidence],
         previous_sections: Optional[Dict[Section, str]] = None,
         temperature: float = 0.5,
+        user_requirements: Optional[UserRequirements] = None,
     ) -> str:
         """Generate a single section given context and evidence."""
 
         model = lms.llm(Settings.PAPER_WRITING_MODEL)
-        prompt = self._build_section_prompt(section_type, context, experiment, evidence, previous_sections)
+        prompt = self._build_section_prompt(section_type, context, experiment, evidence, previous_sections, user_requirements)
         response = model.respond(
             prompt,
             config={
@@ -99,6 +112,7 @@ class PaperWriter:
         experiment: Optional[ExperimentResult],
         evidence: Sequence[Evidence],
         previous_sections: Optional[Dict[Section, str]] = None,
+        user_requirements: Optional[UserRequirements] = None,
     ) -> str:
         """Create the generation prompt for a specific section."""
 
@@ -106,6 +120,26 @@ class PaperWriter:
         context_block = self._format_context(context, experiment)
         evidence_block = self._format_evidence_for_prompt(evidence)
         previous_sections_block = self._format_previous_sections(section_type, previous_sections or {})
+        
+        # Map Section enum to UserRequirements field
+        section_to_requirement = {
+            Section.ABSTRACT: "abstract",
+            Section.INTRODUCTION: "introduction",
+            Section.RELATED_WORK: "related_work",
+            Section.METHODS: "methods",
+            Section.RESULTS: "results",
+            Section.DISCUSSION: "discussion",
+            Section.CONCLUSION: "conclusion",
+        }
+        
+        # Get section-specific user requirements if available
+        user_requirements_block = ""
+        if user_requirements:
+            requirement_field = section_to_requirement.get(section_type)
+            if requirement_field:
+                requirement_text = getattr(user_requirements, requirement_field, None)
+                if requirement_text and requirement_text.strip():
+                    user_requirements_block = f"""[USER REQUIREMENTS]\n{requirement_text.strip()}"""
         
         prompt = textwrap.dedent(f"""\
             [ROLE]
@@ -128,6 +162,8 @@ class PaperWriter:
 
             [SECTION GUIDELINES]
             {guidelines}
+            
+            {user_requirements_block}
 
            [WRITING REQUIREMENTS — STRICT]
             - Produce a cohesive, original, publication-quality academic narrative.
@@ -258,8 +294,8 @@ class PaperWriter:
         if experiment:
             sections.extend([
                 format_if_present("Hypothesis", experiment.hypothesis.description),
-                format_if_present("Expected improvement", experiment.hypothesis.expected_improvement),
-                format_if_present("Experimental plan", experiment.experimental_plan),
+                format_if_present("Success criteria", experiment.hypothesis.success_criteria),
+                format_if_present("Experiment plan", experiment.experiment_plan),
                 format_if_present("Key execution output", experiment.execution_result.stdout),
                 format_if_present("Verdict", experiment.hypothesis_evaluation.verdict),
                 format_if_present("Verdict reasoning", experiment.hypothesis_evaluation.reasoning),
@@ -317,6 +353,11 @@ class PaperWriter:
             Section.CONCLUSION: textwrap.dedent("""\
                 Summarize: what you did, what you found (with key metrics), broader implications (realistic, not grandiose), one actionable next step.
                 No new information. No citations."""),
+            
+            Section.ACKNOWLEDGEMENTS: textwrap.dedent("""\
+                Format and polish the provided acknowledgements text into a professional academic style.
+                Keep the original meaning and intent, but ensure proper grammar, flow, and academic tone.
+                No citations needed. Keep it concise and appropriate for an academic paper."""),
         }
 
         return section_guidelines.get(section_type, "")
@@ -324,7 +365,7 @@ class PaperWriter:
     def _get_results_guidelines(self, experiment: Optional[ExperimentResult]) -> str:
         """Get Results section guidelines, including figure integration if plots are available."""
 
-        section_guidelines = """Present experimental outcomes with relevant metrics or observations.
+        section_guidelines = """Present experiment outcomes with relevant metrics or observations.
         Compare results against expected improvements or baselines if available.
         Never fabricate data or results."""
 
@@ -399,4 +440,49 @@ class PaperWriter:
         )
         title = remove_thinking_blocks(response.content).strip().strip('"').strip("'")
         return title
+
+    def generate_acknowledgements(self, user_acknowledgements: str, temperature: float = 0.3) -> str:
+        """Generate acknowledgements section by formatting/polishing user-provided text."""
+        
+        model = lms.llm(Settings.PAPER_WRITING_MODEL)
+        prompt = self._build_acknowledgements_prompt(user_acknowledgements)
+        response = model.respond(
+            prompt,
+            config={
+                "temperature": temperature,
+            },
+        )
+        return remove_thinking_blocks(response.content).strip()
+
+    def _build_acknowledgements_prompt(self, user_acknowledgements: str) -> str:
+        """Create the prompt for generating acknowledgements section."""
+        
+        guidelines = self.get_section_guidelines(Section.ACKNOWLEDGEMENTS)
+        
+        prompt = textwrap.dedent(f"""\
+            [ROLE]
+            You are an expert academic writer.
+
+            [TASK]
+            Format and polish the provided acknowledgements text into a professional academic acknowledgements section.
+
+            [USER PROVIDED ACKNOWLEDGEMENTS]
+            {user_acknowledgements}
+
+            [SECTION GUIDELINES]
+            {guidelines}
+
+            [WRITING REQUIREMENTS]
+            - Preserve the original meaning and intent of the user's text
+            - Ensure proper grammar, flow, and academic tone
+            - Keep it concise and appropriate for an academic paper
+            - Do NOT add citations or references
+            - Do NOT include section headings (e.g., "## Acknowledgements")
+            - Output ONLY the polished acknowledgements text
+
+            [GENERATION RULES]
+            - Do NOT reference the guidelines or instructions
+            - Output ONLY the final acknowledgements content without any markdown headings""")
+        
+        return prompt
 

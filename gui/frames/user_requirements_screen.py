@@ -1,5 +1,5 @@
 from tkinter import ttk
-from ..base_frame import BaseFrame, create_styled_text
+from ..base_frame import BaseFrame, create_text_area
 import os
 
 class UserRequirementsScreen(BaseFrame):
@@ -43,17 +43,17 @@ class UserRequirementsScreen(BaseFrame):
             # Special handling for grouping headers
             if title in ["General Information", "Section Specifications"]:
                 frame = ttk.Frame(self.scrollable_frame, padding="10")
-                frame.pack(fill="x", padx=10, pady=10)
-                ttk.Label(frame, text=title, font=("SF Pro", 16, "bold")).pack(anchor="w")
+                frame.pack(fill="x", pady=10)
+                ttk.Label(frame, text=title, font=("SF Pro", 18, "bold")).pack(anchor="w")
                 # ttk.Separator(frame, orient="horizontal").pack(fill="x", pady=5)
                 
                 self.sections.append((header, None))
                 return
 
             frame = ttk.LabelFrame(self.scrollable_frame, text=title, padding="10")
-            frame.pack(fill="x", padx=10, pady=5)
+            frame.pack(fill="x", pady=5)
             
-            text_widget = create_styled_text(frame, height=6)
+            text_widget = create_text_area(frame, height=6)
             text_widget.pack(fill="x", expand=True)
             text_widget.insert("1.0", "".join(text_lines).strip())
             

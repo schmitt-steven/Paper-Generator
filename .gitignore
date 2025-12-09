@@ -36,10 +36,9 @@ ENV/
 *~
 .DS_Store
 
-# Keep all JSON files tracked (including settings.py and output files)
-
-# Old code (archive)
 old_code/
+TODO.md
+
 
 # Logs
 *.log

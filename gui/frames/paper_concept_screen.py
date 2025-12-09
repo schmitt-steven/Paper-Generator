@@ -2,12 +2,9 @@ import tkinter as tk
 from tkinter import ttk
 from pathlib import Path
 
-from ..base_frame import BaseFrame, create_styled_text
+from ..base_frame import BaseFrame, create_text_area
 from phases.context_analysis.paper_conception import PaperConception, PaperConcept
 from utils.file_utils import save_markdown
-
-
-# No longer checking for papers.json - user will search on paper selection screen
 
 
 class PaperConceptScreen(BaseFrame):
@@ -20,14 +17,11 @@ class PaperConceptScreen(BaseFrame):
         self.code_snippets_text: tk.Text
         self.open_questions_text: tk.Text
         
-        # Always show "Continue" - user will search on paper selection screen
-        next_text = "Continue"
-        
         super().__init__(
             parent,
             controller,
             title="Paper Concept",
-            next_text=next_text,
+            next_text="Continue",
             has_regenerate=True,
             regenerate_text="Regenerate"
         )
@@ -35,9 +29,6 @@ class PaperConceptScreen(BaseFrame):
     def create_content(self):
         # Info text
         self._create_info_section()
-        
-        # Don't load concept yet - wait until screen is shown
-        # This prevents loading on app startup
 
     def _create_info_section(self):
         """Create the info text section."""
@@ -75,9 +66,9 @@ class PaperConceptScreen(BaseFrame):
             return
         
         # Create the three sections
-        self.description_text = self._create_section("Description", self.concept.description, height=12)
-        self.code_snippets_text = self._create_section("Code Snippets", self.concept.code_snippets, height=10)
-        self.open_questions_text = self._create_section("Questions for Literature Search", self.concept.open_questions, height=6)
+        self.description_text = self._create_section("Description", self.concept.description, height=20)
+        self.code_snippets_text = self._create_section("Important Code Snippets", self.concept.code_snippets, height=15)
+        self.open_questions_text = self._create_section("Questions for Literature Search", self.concept.open_questions, height=15)
 
     def _show_error(self, message: str):
         """Display an error message."""
@@ -97,7 +88,7 @@ class PaperConceptScreen(BaseFrame):
         frame = ttk.LabelFrame(self.scrollable_frame, text=title, padding="10")
         frame.pack(fill="x", pady=10)
         
-        text_widget = create_styled_text(frame, height=height)
+        text_widget = create_text_area(frame, height=height)
         text_widget.pack(fill="x", expand=True)
         text_widget.insert("1.0", content)
         

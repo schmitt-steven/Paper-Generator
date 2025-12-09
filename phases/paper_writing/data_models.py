@@ -13,6 +13,7 @@ class Section(str, Enum):
     RESULTS = "Results"
     DISCUSSION = "Discussion"
     CONCLUSION = "Conclusion"
+    ACKNOWLEDGEMENTS = "Acknowledgements"
 
 
 @dataclass
@@ -26,6 +27,7 @@ class PaperDraft:
     results: str
     discussion: str
     conclusion: str
+    acknowledgements: Optional[str] = None
 
 
 @dataclass

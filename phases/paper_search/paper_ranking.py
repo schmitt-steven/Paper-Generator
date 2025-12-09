@@ -2,9 +2,9 @@ from typing import List, Dict
 import numpy as np
 from datetime import datetime
 from phases.paper_search.paper import Paper, RankingScores
-from utils.lazy_model_loader import LazyModelMixin
+from utils.lazy_model_loader import LazyEmbeddingMixin
 
-class PaperRanker(LazyModelMixin):
+class PaperRanker(LazyEmbeddingMixin):
     """
     Ranks papers by composite score based on:
     - Semantic relevance (embedding similarity to context)
@@ -20,7 +20,6 @@ class PaperRanker(LazyModelMixin):
             embedding_model_name: Name of the LM Studio embedding model
         """
         self.embedding_model_name = embedding_model_name
-        self._embedding_model = None
     
     def rank_papers(
         self,
@@ -128,7 +127,7 @@ class PaperRanker(LazyModelMixin):
         Age-aware citation normalization: rewards impact velocity.
         RELAXED version: more papers reach 0.6+ range.
         """
-        pub_date = datetime.fromisoformat(published.replace('Z', '+00:00'))
+        pub_date = self._parse_date(published)
         current_date = datetime.now(pub_date.tzinfo) if pub_date.tzinfo else datetime.now()
         age_years = max((current_date - pub_date).days / 365.25, 0.1)
         
@@ -166,6 +165,38 @@ class PaperRanker(LazyModelMixin):
         
         return np.clip(score, 0.0, 1.0)
     
+    def _parse_date(self, published: str) -> datetime:
+        """Parse date string in various formats (ISO, year-only, year-month)."""
+        if not published:
+            return datetime.now()  # Fallback for missing dates
+        
+        published = published.strip()
+        
+        # Try full ISO format first (e.g., "2024-05-05" or "2024-05-05T00:00:00Z")
+        try:
+            return datetime.fromisoformat(published.replace('Z', '+00:00'))
+        except ValueError:
+            pass
+        
+        # Try year-month (e.g., "2024-05")
+        if len(published) == 7 and '-' in published:
+            try:
+                return datetime.strptime(published, "%Y-%m")
+            except ValueError:
+                pass
+        
+        # Try year only (e.g., "2012")
+        if len(published) == 4 and published.isdigit():
+            return datetime(int(published), 6, 15)  # Assume mid-year
+        
+        # Last resort: try to extract a 4-digit year
+        import re
+        year_match = re.search(r'\b(19|20)\d{2}\b', published)
+        if year_match:
+            return datetime(int(year_match.group()), 6, 15)
+        
+        return datetime.now()  # Fallback
+    
     def _calculate_recency(self, published: str) -> float:
         """
         Calculate recency score with 4-year half-life.
@@ -180,7 +211,7 @@ class PaperRanker(LazyModelMixin):
         Returns:
             Recency score (0-1)
         """
-        pub_date = datetime.fromisoformat(published.replace('Z', '+00:00'))
+        pub_date = self._parse_date(published)
         current_date = datetime.now(pub_date.tzinfo) if pub_date.tzinfo else datetime.now()
         age_years = (current_date - pub_date).days / 365.25
         

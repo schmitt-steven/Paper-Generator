@@ -21,41 +21,6 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
         self.top_limitations = top_limitations
         self.num_papers_analyzed = num_papers_analyzed
         
-        # Known incompatible pairs
-        self.incompatible_pairs = [
-            ("deterministic", "stochastic"),
-            ("model-free", "model-based"),
-            ("online", "offline"),
-            ("on-policy", "off-policy"),
-        ]
-    
-    def check_method_compatibility(self, method_a: str, method_b: str) -> Tuple[bool, str]:
-        """
-        Check if two methods are compatible for combination.
-        
-        Returns: (is_compatible, reason)
-        """
-        method_a_lower = method_a.lower()
-        method_b_lower = method_b.lower()
-        
-        # First: Check known incompatible pairs
-        for incompat_a, incompat_b in self.incompatible_pairs:
-            if ((incompat_a in method_a_lower and incompat_b in method_b_lower) or
-                (incompat_b in method_a_lower and incompat_a in method_b_lower)):
-                return False, f"Incompatible: {incompat_a} vs {incompat_b}"
-        
-        # Second: Check redundancy with embeddings
-        emb_a = np.array(self.embedding_model.embed(method_a))
-        emb_b = np.array(self.embedding_model.embed(method_b))
-        
-        similarity = np.dot(emb_a, emb_b) / (np.linalg.norm(emb_a) * np.linalg.norm(emb_b))
-        
-        if similarity > 0.95:
-            return False, f"Too similar (redundant): similarity={similarity:.2f}"
-        
-        # Methods are compatible
-        return True, "Compatible"
-    
     def validate_hypotheses(self, hypotheses: List[Hypothesis]) -> List[Hypothesis]:
         """
         Validate a list of hypotheses and filter to only valid ones.
@@ -73,20 +38,6 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
             if not hypothesis.description or len(hypothesis.description) < 20:
                 is_valid = False
                 reason = "Description too short or missing"
-            
-            # Has baseline (measurability)
-            elif not hypothesis.baseline_to_beat:
-                is_valid = False
-                reason = "No clear baseline to beat (not measurable)"
-            
-            # Check method compatibility if combination mentioned
-            elif "+" in hypothesis.method_combination or "and" in hypothesis.method_combination.lower():
-                methods = [m.strip() for m in hypothesis.method_combination.replace("+", " and ").split(" and ")]
-                if len(methods) >= 2:
-                    compatible, compat_reason = self.check_method_compatibility(methods[0], methods[1])
-                    if not compatible:
-                        is_valid = False
-                        reason = f"Method incompatibility: {compat_reason}"
             
             # Has rationale
             elif not hypothesis.rationale or len(hypothesis.rationale) < 20:
@@ -127,12 +78,13 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
             5. Use qualitative descriptions instead (e.g., "improved convergence", "better sample efficiency", "reduced memory usage")
 
             For each hypothesis provide:
-            - id: unique identifier (e.g., "hyp_001")
+            - id: unique identifier (e.g., "hyp_001", "hyp_002", etc.) - REQUIRED, must NOT be empty
             - description: Clear, testable statement (NO percentages or specific numbers unless preliminary results exist)
             - rationale: Why this hypothesis addresses the limitation (reference literature limitations)
-            - method_combination: What methods/approaches to combine
-            - expected_improvement: Qualitative improvement expected (avoid percentages)
-            - baseline_to_beat: What baseline to compare against (if applicable)
+            - success_criteria: Clear, measurable criterion or criteria for determining if the hypothesis is validated. 
+              CRITICAL: Do NOT include specific numbers, percentages, multipliers, or quantitative targets (e.g., "10x faster", "50% improvement", "reduces error by 20%"). 
+              These are impossible to know before running experiments and are pure speculation. 
+              Instead, use qualitative, observable criteria (e.g., "shows improved convergence", "demonstrates better sample efficiency", "exhibits reduced memory usage", "achieves stable performance")
 
             Research Context:
             {self.paper_concept.description}
@@ -166,9 +118,7 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
                     id=hyp_data.get("id", f"hyp_{i:03d}"),
                     description=hyp_data.get("description", ""),
                     rationale=hyp_data.get("rationale", ""),
-                    method_combination=hyp_data.get("method_combination", ""),
-                    expected_improvement=hyp_data.get("expected_improvement", ""),
-                    baseline_to_beat=hyp_data.get("baseline_to_beat")
+                    success_criteria=hyp_data.get("success_criteria", "")
                 )
                 hypotheses.append(hypothesis)
             
@@ -202,10 +152,21 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
             Task: Convert this raw hypothesis into a structured format.
             
             REQUIREMENTS:
-            1. Extract/Infer a clear description, rationale, method combination, expected improvement, and baseline.
+            1. Extract/Infer a clear description, rationale, and success criteria.
             2. If information is missing, infer reasonable defaults based on the context or mark as "Not specified".
             3. Ensure the output is a valid Hypothesis object.
             4. Use the additional user requirements to better understand the context and intent of the hypothesis.
+            5. CRITICAL for success_criteria: Do NOT include specific numbers, percentages, multipliers, or quantitative targets (e.g., "10x faster", "50% improvement", "reduces error by 20%"). 
+               These are impossible to know before running experiments and are pure speculation. 
+               Instead, use qualitative, observable criteria (e.g., "shows improved convergence", "demonstrates better sample efficiency", "exhibits reduced memory usage", "achieves stable performance")
+            
+            For the structured hypothesis, provide:
+            - id: unique identifier (e.g., "user_hypothesis_01")
+            - description: Clear, testable statement extracted from the user's input
+            - rationale: Why this hypothesis is relevant (reference the research context if available)
+            - success_criteria: Clear, measurable criterion or criteria for determining if the hypothesis is validated.
+              CRITICAL: Do NOT include specific numbers, percentages, multipliers, or quantitative targets.
+              Use qualitative, observable criteria instead.
             
             Research Context:
             {self.paper_concept.description}
@@ -240,9 +201,7 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
                     id=hyp_data.get("id", f"user_hyp_{i:03d}"),
                     description=hyp_data.get("description", user_hypothesis_text), # Fallback to raw text
                     rationale=hyp_data.get("rationale", "User provided hypothesis"),
-                    method_combination=hyp_data.get("method_combination", "User specified method"),
-                    expected_improvement=hyp_data.get("expected_improvement", "As specified by user"),
-                    baseline_to_beat=hyp_data.get("baseline_to_beat"),
+                    success_criteria=hyp_data.get("success_criteria", "As specified by user"),
                     selected_for_experimentation=True # Auto-select user hypothesis
                 )
                 hypotheses.append(hypothesis)
@@ -254,9 +213,8 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
                     id="user_hyp_001",
                     description=user_hypothesis_text,
                     rationale="User provided hypothesis",
-                    method_combination="User specified",
-                    expected_improvement="Unknown",
-                    baseline_to_beat=None,
+                    methods="User specified",
+                    success_criteria="Unknown",
                     selected_for_experimentation=True
                 )]
 
@@ -272,9 +230,8 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
                 id="user_hyp_001",
                 description=user_hypothesis_text,
                 rationale="User provided hypothesis (Error in processing)",
-                method_combination="User specified",
-                expected_improvement="Unknown",
-                baseline_to_beat=None,
+                methods="User specified",
+                success_criteria="Unknown",
                 selected_for_experimentation=True
             )]
 
@@ -291,10 +248,7 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
                     "id": h.id,
                     "description": h.description,
                     "rationale": h.rationale,
-                    "method_combination": h.method_combination,
-                    "expected_improvement": h.expected_improvement,
-                    "expected_improvement": h.expected_improvement,
-                    "baseline_to_beat": h.baseline_to_beat,
+                    "success_criteria": h.success_criteria,
                     "selected_for_experimentation": h.selected_for_experimentation
                 }
                 for h in hypotheses
@@ -326,9 +280,7 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
                     id=hyp_data.get("id", ""),
                     description=hyp_data.get("description", ""),
                     rationale=hyp_data.get("rationale", ""),
-                    method_combination=hyp_data.get("method_combination", ""),
-                    expected_improvement=hyp_data.get("expected_improvement", ""),
-                    baseline_to_beat=hyp_data.get("baseline_to_beat"),
+                    success_criteria=hyp_data.get("success_criteria", ""),
                     selected_for_experimentation=hyp_data.get("selected_for_experimentation", False)
                 )
                 hypotheses.append(hypothesis)
@@ -379,22 +331,19 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
             f"ID: {h.id}\n"
             f"Description: {h.description}\n"
             f"Rationale: {h.rationale}\n"
-            f"Method Combination: {h.method_combination}\n"
-            f"Expected Improvement: {h.expected_improvement}\n"
-            f"Baseline to Beat: {h.baseline_to_beat or 'N/A'}"
+            f"Success Criteria: {h.success_criteria}"
             for h in hypotheses
         ])
         
         prompt = textwrap.dedent(f"""\
-            You are selecting the most feasible and best hypotheses for experimental testing.
+            You are selecting the most feasible and best hypotheses for experiment testing.
 
             CRITICAL REQUIREMENT: Each selected hypothesis MUST be testable via Python code! 
 
             A hypothesis is testable via Python code if:
             - It can be implemented and tested programmatically
             - It has clear, measurable success criteria
-            - It has a baseline to compare against (unless explicitly stated as exploratory)
-            - The expected improvement can be quantified through code execution
+            - The success can be quantified through code execution
             - It does NOT require human evaluation, surveys, or manual analysis
             - It does NOT require proprietary data or external APIs that cannot be simulated
 

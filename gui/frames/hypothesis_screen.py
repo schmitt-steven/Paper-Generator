@@ -4,7 +4,7 @@ import threading
 from pathlib import Path
 from typing import List, Optional
 
-from ..base_frame import BaseFrame, ProgressPopup, create_styled_text
+from ..base_frame import BaseFrame, ProgressPopup, create_text_area
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.hypothesis_generation.hypothesis_models import Hypothesis
 from phases.context_analysis.paper_conception import PaperConception
@@ -14,7 +14,7 @@ from phases.experimentation.experiment_runner import ExperimentRunner
 HYPOTHESES_FILE = "output/hypotheses.json"
 
 # Output file to check for dynamic button text
-EXPERIMENTAL_PLAN_FILE = Path("output/experiments/experimental_plan.md")
+EXPERIMENT_PLAN_FILE = Path("output/experiments/experiment_plan.md")
 
 
 class HypothesisScreen(BaseFrame):
@@ -26,12 +26,10 @@ class HypothesisScreen(BaseFrame):
         # Text widgets for each field
         self.description_text: tk.Text
         self.rationale_text: tk.Text
-        self.methods_text: tk.Text
-        self.expected_improvement_text: tk.Text
-        self.baseline_text: tk.Text
+        self.success_criteria_text: tk.Text
         
         # Dynamic button text based on whether output file exists
-        next_text = "Continue" if EXPERIMENTAL_PLAN_FILE.exists() else "Generate Experiment Plan"
+        next_text = "Continue" if EXPERIMENT_PLAN_FILE.exists() else "Generate Experiment Plan"
         
         super().__init__(
             parent=parent,
@@ -55,9 +53,9 @@ class HypothesisScreen(BaseFrame):
         explanation_frame.pack(fill="x", pady=(0, 10))
         
         explanation_text = (
-            "Review and edit the hypothesis below.\n"
-            "This hypothesis was generated based on the paper concept and literature analysis.\n"
-            "It will be used as the basis for the experimentation phase."
+            "Review the hypothesis below.\n"
+            "You can modify the generated hypothesis or create a completely new one.\n"
+            "It will be used as the basis for experimentation."
         )
 
         label = ttk.Label(
@@ -74,45 +72,57 @@ class HypothesisScreen(BaseFrame):
         label.bind("<Configure>", set_wraplength)
 
     def _load_hypothesis(self):
-        """Load hypotheses from file and display the selected one."""
-        # Only load if file exists
-        if not Path(HYPOTHESES_FILE).exists():
-            self._show_error(f"No hypotheses found: {HYPOTHESES_FILE}\n\nPlease complete the previous steps first.")
-            return
+        """Load hypotheses from file or create empty one for manual entry."""
+        # Try to load from file if it exists
+        if Path(HYPOTHESES_FILE).exists():
+            try:
+                self.hypotheses = HypothesisBuilder.load_hypotheses(HYPOTHESES_FILE)
+                if self.hypotheses:
+                    # Find the selected hypothesis, or use the first one
+                    self.current_hypothesis = None
+                    self.current_hypothesis_index = 0
+                    
+                    for i, hyp in enumerate(self.hypotheses):
+                        if hyp.selected_for_experimentation:
+                            self.current_hypothesis = hyp
+                            self.current_hypothesis_index = i
+                            break
+                    
+                    if self.current_hypothesis is None:
+                        self.current_hypothesis = self.hypotheses[0]
+                        self.current_hypothesis_index = 0
+                    
+                    # Create the editable sections
+                    self._create_hypothesis_fields()
+                    return
+            except Exception as e:
+                print(f"Error loading hypotheses: {e}")
         
-        try:
-            self.hypotheses = HypothesisBuilder.load_hypotheses(HYPOTHESES_FILE)
-        except Exception as e:
-            self._show_error(f"Error loading hypotheses: {e}")
-            return
+        # No file or empty file - create empty hypothesis for manual entry
+        self._create_empty_hypothesis()
+    
+    def _create_empty_hypothesis(self):
+        """Create an empty hypothesis for manual entry."""
+        empty_hypothesis = Hypothesis(
+            id="hyp_manual_001",
+            description="",
+            rationale="",
+            success_criteria="",
+            selected_for_experimentation=True
+        )
         
-        if not self.hypotheses:
-            self._show_error(f"No hypotheses found in {HYPOTHESES_FILE}\n\nPlease complete the previous steps first.")
-            return
-        
-        # Find the selected hypothesis, or use the first one
-        self.current_hypothesis = None
+        self.hypotheses = [empty_hypothesis]
+        self.current_hypothesis = empty_hypothesis
         self.current_hypothesis_index = 0
-        
-        for i, hyp in enumerate(self.hypotheses):
-            if hyp.selected_for_experimentation:
-                self.current_hypothesis = hyp
-                self.current_hypothesis_index = i
-                break
-        
-        if self.current_hypothesis is None:
-            self.current_hypothesis = self.hypotheses[0]
-            self.current_hypothesis_index = 0
         
         # Create the editable sections
         self._create_hypothesis_fields()
     
     def on_show(self):
         """Called when screen is shown - load hypothesis if not already loaded."""
-        # Only load if we haven't loaded yet and file exists
+        # Only load if we haven't loaded yet
         if not hasattr(self, 'current_hypothesis') or self.current_hypothesis is None:
-            if Path(HYPOTHESES_FILE).exists():
-                self._load_hypothesis()
+            self._load_hypothesis()
 
     def _show_error(self, message: str):
         """Display an error message."""
@@ -136,31 +146,19 @@ class HypothesisScreen(BaseFrame):
         self.description_text = self._create_section(
             "Description", 
             hyp.description, 
-            height=4
+            height=8
         )
         
         self.rationale_text = self._create_section(
             "Rationale", 
             hyp.rationale, 
-            height=4
+            height=8
         )
         
-        self.methods_text = self._create_section(
-            "Methods", 
-            hyp.method_combination, 
-            height=3
-        )
-        
-        self.expected_improvement_text = self._create_section(
-            "Expected Improvement", 
-            hyp.expected_improvement, 
-            height=3
-        )
-        
-        self.baseline_text = self._create_section(
-            "Baseline to Beat", 
-            hyp.baseline_to_beat or "", 
-            height=2
+        self.success_criteria_text = self._create_section(
+            "Success Criteria", 
+            hyp.success_criteria, 
+            height=8
         )
 
     def _create_section(self, title: str, content: str, height: int = 4) -> tk.Text:
@@ -168,7 +166,7 @@ class HypothesisScreen(BaseFrame):
         frame = ttk.LabelFrame(self.scrollable_frame, text=title, padding="10")
         frame.pack(fill="x", pady=10)
         
-        text_widget = create_styled_text(frame, height=height)
+        text_widget = create_text_area(frame, height=height)
         text_widget.pack(fill="x", expand=True)
         text_widget.insert("1.0", content)
         
@@ -182,18 +180,14 @@ class HypothesisScreen(BaseFrame):
         # Get content from text widgets
         description = self.description_text.get("1.0", "end-1c").strip()
         rationale = self.rationale_text.get("1.0", "end-1c").strip()
-        method_combination = self.methods_text.get("1.0", "end-1c").strip()
-        expected_improvement = self.expected_improvement_text.get("1.0", "end-1c").strip()
-        baseline_to_beat = self.baseline_text.get("1.0", "end-1c").strip() or None
+        success_criteria = self.success_criteria_text.get("1.0", "end-1c").strip()
         
         # Update the hypothesis object
         updated_hypothesis = Hypothesis(
             id=self.current_hypothesis.id,
             description=description,
             rationale=rationale,
-            method_combination=method_combination,
-            expected_improvement=expected_improvement,
-            baseline_to_beat=baseline_to_beat,
+            success_criteria=success_criteria,
             selected_for_experimentation=self.current_hypothesis.selected_for_experimentation
         )
         
@@ -222,26 +216,54 @@ class HypothesisScreen(BaseFrame):
             return
         
         # Check if output exists
-        if EXPERIMENTAL_PLAN_FILE.exists():
+        if EXPERIMENT_PLAN_FILE.exists():
             super().on_next()
         else:
             self._run_generation(updated_hypothesis)
 
     def _run_generation(self, hypothesis: Hypothesis):
         """Run experiment plan generation with progress popup."""
-        popup = ProgressPopup(self.controller, "Generating Experiment Plan...")
+        popup = ProgressPopup(self.controller, "Generating Experiment Plan")
         
         def task():
             try:
                 # Load paper concept
-                self.after(0, lambda: popup.update_status("Loading paper concept..."))
+                self.after(0, lambda: popup.update_status("Loading paper concept"))
                 paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
                 
-                # Generate experimental plan
-                self.after(0, lambda: popup.update_status("Generating experimental plan..."))
+                # Load user requirements
+                self.after(0, lambda: popup.update_status("Loading user requirements"))
+                from phases.context_analysis.user_requirements import UserRequirements
+                user_requirements = None
+                try:
+                    user_requirements = UserRequirements.load_user_requirements("user_files/user_requirements.md")
+                except FileNotFoundError:
+                    print("User requirements file not found, proceeding without it")
+                except Exception as e:
+                    print(f"Warning: Failed to load user requirements: {e}")
+                
+                # Load raw code files (needed for experiment plan - paper concept already has snippets)
+                self.after(0, lambda: popup.update_status("Loading code files"))
+                from phases.context_analysis.user_code_analysis import CodeAnalyzer
+                from settings import Settings
+                user_code = None
+                try:
+                    code_analyzer = CodeAnalyzer(model_name=Settings.CODE_ANALYSIS_MODEL)
+                    user_code = code_analyzer.load_code_files("user_files")
+                except Exception as e:
+                    print(f"Warning: Failed to load code files: {e}")
+                    user_code = None
+                
+                # Generate experiment plan
+                self.after(0, lambda: popup.update_status("Generating experiment plan"))
                 experiment_runner = ExperimentRunner()
-                experimental_plan = experiment_runner._generate_experimental_plan(hypothesis, paper_concept)
-                experiment_runner.save_experimental_plan(experimental_plan)
+                experiment_plan = experiment_runner._generate_experiment_plan(
+                    hypothesis, 
+                    paper_concept,
+                    user_requirements=user_requirements,
+                    user_code=user_code
+                )
+                experiment_runner.save_experiment_plan(experiment_plan)
                 
                 # Success - close popup and proceed
                 self.after(0, lambda: self._on_generation_success(popup))

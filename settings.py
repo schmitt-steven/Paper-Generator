@@ -154,6 +154,9 @@ class Settings:
     
     LOAD_LATEX =                 False
 
+    # Acknowledgements Generation
+    GENERATE_ACKNOWLEDGEMENTS = True  # Set to False to skip acknowledgements section entirely
+
 
 # Load settings from file on import (if file exists)
 Settings.load_from_file()

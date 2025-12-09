@@ -9,7 +9,7 @@ from typing import Optional, Any, List, Set
 from pathlib import Path
 from settings import Settings
 from phases.paper_search.paper import Paper
-from phases.paper_writing.data_models import PaperDraft
+from phases.paper_writing.data_models import PaperDraft, Section
 from utils.lazy_model_loader import LazyModelMixin
 from phases.latex_generation.bibliography import generate_literature_bib
 from phases.latex_generation.markdown_to_latex import MarkdownToLaTeX
@@ -214,6 +214,7 @@ class PaperConverter(LazyModelMixin):
             Section.RESULTS: "chapters/results.tex",
             Section.DISCUSSION: "chapters/discussion.tex",
             Section.CONCLUSION: "chapters/conclusion.tex",
+            Section.ACKNOWLEDGEMENTS: "acknowledgements.tex",
         }
         
         for section_type, filename in section_mapping.items():
@@ -227,12 +228,17 @@ class PaperConverter(LazyModelMixin):
                 Section.RESULTS: "results",
                 Section.DISCUSSION: "discussion",
                 Section.CONCLUSION: "conclusion",
+                Section.ACKNOWLEDGEMENTS: "acknowledgements",
             }
             attr_name = attr_map[section_type]
-            section_content = getattr(paper_draft, attr_name)
+            section_content = getattr(paper_draft, attr_name, None)
             
+            # Skip if content is None or empty
             if not section_content:
-                logger.warning(f"[PaperConverter] Empty section: {section_type.value}")
+                if section_type == Section.ACKNOWLEDGEMENTS:
+                    logger.info(f"[PaperConverter] Skipping {section_type.value} (not provided)")
+                else:
+                    logger.warning(f"[PaperConverter] Empty section: {section_type.value}")
                 continue
             
             # Convert to LaTeX

@@ -3,7 +3,7 @@ from tkinter import ttk
 import threading
 from pathlib import Path
 
-from ..base_frame import BaseFrame, ProgressPopup, create_styled_text
+from ..base_frame import BaseFrame, ProgressPopup, create_text_area
 from utils.file_utils import load_markdown, save_markdown
 from phases.paper_writing.paper_writing_pipeline import PaperWritingPipeline
 from phases.paper_search.literature_search import LiteratureSearch
@@ -102,9 +102,54 @@ class PaperDraftScreen(BaseFrame):
         frame = ttk.LabelFrame(self.scrollable_frame, text="Paper Draft", padding="10")
         frame.pack(fill="both", expand=True, pady=10)
         
-        self.draft_text = create_styled_text(frame, height=30)
-        self.draft_text.pack(fill="both", expand=True)
+        # Create text area without scrollbars - parent scrollable frame will handle scrolling
+        self.draft_text = tk.Text(
+            frame,
+            height=1,  # Start with minimal height
+            wrap="word",
+            font=("SF Pro", 14),
+            padx=8,
+            pady=8,
+            spacing2=4,
+            spacing3=4
+        )
+        # Don't attach any scrollbars - let parent frame handle scrolling
+        self.draft_text.pack(fill="x", expand=False)
         self.draft_text.insert("1.0", content)
+        
+        # Force geometry update so we can measure
+        self.draft_text.update_idletasks()
+        
+        # Count actual displayed lines (including wrapped ones)
+        count_result = self.draft_text.count("1.0", "end", "displaylines")
+        if count_result:
+            num_lines = count_result[0]
+            self.draft_text.config(height=num_lines)
+        
+        # Bind mousewheel to scroll the parent canvas when hovering over text area
+        def on_text_mousewheel(event):
+            # Forward the scroll event to the parent canvas
+            canvas = self._canvas
+            if canvas:
+                # Don't scroll if content fits
+                if self.scrollable_frame.winfo_reqheight() <= canvas.winfo_height():
+                    return "break"
+                
+                # Convert event to canvas coordinates and scroll
+                if event.num == 4:
+                    canvas.yview_scroll(-1, "units")
+                elif event.num == 5:
+                    canvas.yview_scroll(1, "units")
+                elif event.delta > 0:
+                    canvas.yview_scroll(-1, "units")
+                else:
+                    canvas.yview_scroll(1, "units")
+                return "break"  # Prevent default Text widget scrolling
+        
+        # Bind mousewheel events to the text widget
+        self.draft_text.bind("<MouseWheel>", on_text_mousewheel)  # Windows/macOS
+        self.draft_text.bind("<Button-4>", on_text_mousewheel)    # Linux scroll up
+        self.draft_text.bind("<Button-5>", on_text_mousewheel)    # Linux scroll down
 
     def _save_draft(self):
         """Save the edited draft."""
@@ -133,20 +178,20 @@ class PaperDraftScreen(BaseFrame):
 
     def _run_generation(self):
         """Run LaTeX conversion with progress popup."""
-        popup = ProgressPopup(self.controller, "Generating LaTeX...")
+        popup = ProgressPopup(self.controller, "Generating LaTeX")
         
         def task():
             try:
                 # Load paper draft
-                self.after(0, lambda: popup.update_status("Loading paper draft..."))
+                self.after(0, lambda: popup.update_status("Loading paper draft"))
                 paper_draft = PaperWritingPipeline.load_paper_draft(f"{OUTPUT_DIR}/{PAPER_DRAFT_FILE}")
                 
                 # Load indexed papers
-                self.after(0, lambda: popup.update_status("Loading indexed papers..."))
+                self.after(0, lambda: popup.update_status("Loading indexed papers"))
                 indexed_papers = LiteratureSearch.load_papers("output/papers.json")
                 
                 # Load experiment result
-                self.after(0, lambda: popup.update_status("Loading experiment results..."))
+                self.after(0, lambda: popup.update_status("Loading experiment results"))
                 hypotheses = HypothesisBuilder.load_hypotheses(HYPOTHESES_FILE)
                 selected_hypothesis = None
                 for hyp in hypotheses:
@@ -163,7 +208,7 @@ class PaperDraftScreen(BaseFrame):
                     experiment_result = ExperimentRunner.load_experiment_result(experiment_result_file)
                 
                 # Create metadata
-                self.after(0, lambda: popup.update_status("Generating LaTeX project..."))
+                self.after(0, lambda: popup.update_status("Generating LaTeX project"))
                 metadata = LaTeXMetadata.from_settings(generated_title=paper_draft.title)
                 
                 # Convert to LaTeX
@@ -176,7 +221,7 @@ class PaperDraftScreen(BaseFrame):
                 )
                 
                 # Compile LaTeX
-                self.after(0, lambda: popup.update_status("Compiling LaTeX to PDF..."))
+                self.after(0, lambda: popup.update_status("Compiling LaTeX to PDF"))
                 success = converter.compile_latex(latex_dir)
                 
                 if success:

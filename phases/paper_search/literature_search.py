@@ -18,9 +18,8 @@ from phases.context_analysis.paper_conception import PaperConcept
 
 
 class SearchQuery(BaseModel):
-    label: str
     query: str
-    description: str
+    year: Optional[str] = None  # Optional year filter (e.g., "2020-2024" or "2020")
 
 
 class SearchQueriesResult(BaseModel):
@@ -43,101 +42,104 @@ class LiteratureSearch(LazyModelMixin):
 
 
     def build_search_queries(self, paper_concept: PaperConcept) -> List[SearchQuery]:
-        """
-        Generate multiple search queries from paper concept for comprehensive literature search.
-        
-        Args:
-            paper_concept: PaperConcept object containing description, open questions, and code snippets
+        """Generate multiple search queries from paper concept for comprehensive literature search."""
+
+        prompt = textwrap.dedent(f"""\
+            Generate 15 Semantic Scholar search queries for academic literature review.
+
+            QUERY RULES:
+            - Use ONLY established academic terminology (no invented terms)
+            - Use "quoted phrases" for multi-word concepts
+            - Keep queries short: 2-5 words
+            - NO boolean operators (+, |, -)
+
+            QUERY CATEGORIES (generate queries for each):
+            1. FOUNDATIONAL (2-3 queries): Classic/seminal work, textbook concepts
+            Example: "temporal difference learning", "Bellman equation"
             
-        Returns:
-            List of SearchQuery objects with label, query, and description
-        """
+            2. SURVEYS (2-3 queries): Review papers, add "survey" or "review" keyword
+            Example: "reinforcement learning survey", "credit assignment review"
+            
+            3. CORE METHODS (4-5 queries): Directly related algorithms and techniques
+            Example: "eligibility traces", "n-step returns", "Q-learning convergence"
+            
+            4. RELATED APPROACHES (3-4 queries): Alternative methods, adjacent research
+            Example: "model-based reinforcement learning", "hindsight experience replay"
+            
+            5. APPLICATIONS/BENCHMARKS (2 queries): Practical use cases, evaluation
+            Example: "Atari deep reinforcement learning", "continuous control RL"
 
-        system_prompt = textwrap.dedent("""\
-            [TASK]
-            Generate Semantic Scholar search queries for a comprehensive literature search.
-
-            [SEMANTIC SCHOLAR QUERY SYNTAX]
-            - Plain text queries work best.
-            - Use + for AND (e.g., "reinforcement learning" + "sparse reward")
-            - Use | for OR (e.g., "DQN" | "Q-learning")
-            - Use - for NOT (e.g., "transformers" - "vision")
-            - Use "exact phrase" for multi-word terms.
-            - Filters: year:2020-2024, venue:NeurIPS, fieldsOfStudy:Computer Science
-
-            [CRITICAL CONSTRAINTS]
-            - Use standard terminology.
-            - Avoid overly complex boolean logic.
-            - Labels must be plain text, no URL encoding.
-            - Adhere to the SEMANTIC SCHOLAR QUERY SYNTAX.
-
-            [GOOD QUERY EXAMPLES]
-            "experience replay" + "Q-learning"
-            "reinforcement learning" + "sparse reward"
-            "transformer" + "attention" year:2015-2025
-
-            [REQUIREMENTS]
-            Generate 15 queries covering:
-            - Established methods (Dyna-Q, prioritized sweeping, eligibility traces, etc.)
-            - Core concepts (sample efficiency, sparse rewards, value propagation)
-            - Use standard terminology
-            - Alternative approaches (episodic memory, model-based planning)
-            - Surveys/foundational papers
-
-            Cast a wide net. Better to get 100 results and filter than 0 from a "perfect" query.
-
-            [OUTPUT FORMAT]
-            Return JSON array with objects containing: label, query, description
-        """)
-
-        # Combine all information into a single prompt
-        code_snippets_section = paper_concept.code_snippets if paper_concept.code_snippets else "No code snippets available."
-        
-        user_message = textwrap.dedent(f"""\
-            [PAPER CONCEPT DESCRIPTION]
+            RESEARCH TOPIC:
             {paper_concept.description}
 
-            [OPEN QUESTIONS FOR LITERATURE SEARCH]
-            {paper_concept.open_questions if paper_concept.open_questions else "No specific questions provided."}
+            OPEN QUESTIONS:
+            {paper_concept.open_questions if paper_concept.open_questions else "None"}
 
-            [CODE SNIPPETS]
-            {code_snippets_section}
+            CRITICAL: Use only real academic terms that appear in published papers. Do NOT invent terminology.
 
-            Generate comprehensive search queries based on all the above information.
-        """)
+            Output format:
+            {{"queries": [{{"query": "term here", "year": null}}, {{"query": "recent topic", "year": "2020-2024"}}]}}
+
+            Generate exactly 15 queries now:"""
+        )
 
         print("Generating search queries...")
-        full_prompt = system_prompt + "\n\n" + user_message
         
-        result = self.model.respond(
-            full_prompt,
-            response_format=SearchQueriesResult,
-            config={
-                'temperature': 0.5,
-            }
-        ).parsed
+        # Retry up to 3 times if we get empty results
+        max_attempts = 3
+        search_queries: List[SearchQuery] = []
         
-        # Convert dict results to SearchQuery objects
-        search_queries = [
-            SearchQuery(**query_obj) for query_obj in result['queries']
-        ]
+        for attempt in range(max_attempts):
+            result = self.model.respond(
+                prompt,
+                response_format=SearchQueriesResult,
+                config={
+                    'temperature': 0.3 + (attempt * 0.1),  # Slightly increase temperature on retry
+                }
+            ).parsed
+            
+            # Convert SearchQueriesResult to SearchQuery objects
+            # Handle both dict and object access (LM Studio may return either)
+            if isinstance(result, dict):
+                queries_list = result.get('queries', [])
+            elif hasattr(result, 'queries'):
+                queries_list = result.queries  # type: ignore
+            else:
+                queries_list = []
+            
+            search_queries = []
+            for q in queries_list:
+                if isinstance(q, dict):
+                    query_text = q.get('query', '').strip()
+                    if query_text:  # Only add non-empty queries
+                        search_queries.append(SearchQuery(query=query_text, year=q.get('year')))
+                elif hasattr(q, 'query'):
+                    query_text = getattr(q, 'query', '').strip()
+                    if query_text:
+                        search_queries.append(SearchQuery(query=query_text, year=getattr(q, 'year', None)))  # type: ignore
+            
+            if search_queries:
+                break  # Got valid queries, exit retry loop
+            
+            if attempt < max_attempts - 1:
+                print(f"  Got empty queries, retrying ({attempt + 2}/{max_attempts})...")
         
         print(f"Generated {len(search_queries)} search queries.")
         
-        # Automatically save
+        # Automatically save queries
         self.save_search_queries(search_queries, filename="search_queries.json", output_dir="output")
         
         return search_queries
     
 
     @staticmethod
-    def save_search_queries(queries: List[SearchQuery], filename: str = None, output_dir: str = "output"):
+    def save_search_queries(queries: List[SearchQuery], filename: Optional[str] = None, output_dir: str = "output"):
         """Save search queries to JSON file."""
         if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"search_queries_{timestamp}.json"
 
-        queries_data = [{"label": q.label, "query": q.query, "description": q.description} for q in queries]
+        queries_data = [{"query": q.query, "year": q.year} for q in queries]
         filepath = save_json(queries_data, filename, output_dir)
 
         print(f"Saved {len(queries)} search queries to {filepath}")
@@ -150,7 +152,16 @@ class LiteratureSearch(LazyModelMixin):
         path_obj = Path(filepath)
         data = load_json(path_obj.name, str(path_obj.parent))
 
-        queries = [SearchQuery(**q) for q in data]
+        queries = []
+        for q in data:
+            # Handle backward compatibility: old format had label/description, new format has query/year
+            if "query" in q:
+                # New format
+                queries.append(SearchQuery(query=q["query"], year=q.get("year")))
+            elif "label" in q and "query" in q:
+                # Old format - convert to new format
+                queries.append(SearchQuery(query=q["query"], year=q.get("year")))
+        
         print(f"Loaded {len(queries)} queries from {filepath}")
         return queries
 
@@ -286,19 +297,23 @@ class LiteratureSearch(LazyModelMixin):
         return merged
 
 
-    def execute_search(self, query: str, max_results: int = 20) -> List[Paper]:
+    def execute_search(self, query: str, max_results: int = 20, year: Optional[str] = None, fields_of_study: Optional[str] = None) -> List[Paper]:
         """
         Execute a single search on Semantic Scholar using the provided query string.
         
         Args:
             query: Search query string
-            max_results: Maximum number of results per query (default: 50)
+            max_results: Maximum number of results per query (default: 20)
+            year: Optional year filter (e.g., "2020-2024" or "2020")
+            fields_of_study: Optional comma-separated fields of study filter (e.g., "Computer Science,Mathematics")
             
         Returns:
             List of Paper objects
         """
-        print(f"Searching Semantic Scholar with: {query} (max_results={max_results})")
-        papers = self.s2_api.search_papers(query, max_results=max_results)
+        year_str = f" (year: {year})" if year else ""
+        fields_str = f" (fields: {fields_of_study})" if fields_of_study else ""
+        print(f"Searching Semantic Scholar with: {query}{year_str}{fields_str} (max_results={max_results})")
+        papers = self.s2_api.search_papers(query, max_results=max_results, year=year, fields_of_study=fields_of_study)
         print(f"Found {len(papers)} papers\n")
         return papers
     
@@ -308,6 +323,7 @@ class LiteratureSearch(LazyModelMixin):
         Execute multiple searches on Semantic Scholar using a list of SearchQuery objects.
         Includes delay between queries to respect rate limits.
         Automatically removes duplicate papers.
+        Uses default fields of study filter for auto-searched papers: Computer Science, Mathematics, Engineering
         
         Args:
             queries: List of SearchQuery objects
@@ -316,10 +332,20 @@ class LiteratureSearch(LazyModelMixin):
         Returns:
             List of unique Paper objects from all queries combined (duplicates removed)
         """
+        # Default fields of study for auto-searched papers
+        DEFAULT_FIELDS_OF_STUDY = "Computer Science,Mathematics,Engineering"
+        
         all_papers = []
         for i, query_obj in enumerate(queries, 1):
-            print(f"Executing query {i}/{len(queries)} ({query_obj.label})")
-            papers = self.execute_search(query_obj.query, max_results=max_results_per_query)
+            query_str = query_obj.query[:60] + "..." if len(query_obj.query) > 60 else query_obj.query
+            year_str = f" (year: {query_obj.year})" if query_obj.year else ""
+            print(f"Executing query {i}/{len(queries)}: {query_str}{year_str}")
+            papers = self.execute_search(
+                query_obj.query, 
+                max_results=max_results_per_query, 
+                year=query_obj.year,
+                fields_of_study=DEFAULT_FIELDS_OF_STUDY
+            )
             all_papers.extend(papers)
             
             # Add delay between queries to respect rate limit
@@ -329,9 +355,6 @@ class LiteratureSearch(LazyModelMixin):
         # Remove duplicates
         unique_papers = self.remove_duplicates(all_papers)
         print(f"Papers found: {len(all_papers)}, unique papers: {len(unique_papers)}")
-        
-        # Automatically save
-        self.save_papers(unique_papers, filename="papers.json", output_dir="output")
         
         return unique_papers
 
@@ -355,7 +378,7 @@ class LiteratureSearch(LazyModelMixin):
     
 
     @staticmethod
-    def save_papers(papers: List[Paper], filename: str = None, output_dir: str = "output"):
+    def save_papers(papers: List[Paper], filename: Optional[str] = None, output_dir: str = "output"):
         """Save papers to JSON file."""
         if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

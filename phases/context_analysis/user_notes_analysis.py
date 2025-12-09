@@ -97,7 +97,7 @@ class NotesAnalyzer(LazyModelMixin):
             - What are the important takeaways?
             - If no significant findings, use an empty string.
 
-            2. methodologies: Copy exact descriptions of approaches, algorithms, techniques, or experimental methods.
+            2. methodologies: Copy exact descriptions of approaches, algorithms, techniques, or experiment methods.
             - How were things implemented or tested?
             - What frameworks or tools were used?
             - If no methodologies, use an empty string."
@@ -107,7 +107,7 @@ class NotesAnalyzer(LazyModelMixin):
             - Mathematical formulations if present
             - If minimal technical content, use an empty string.
 
-            4. data_and_results: Copy exact datasets used, experimental results, performance metrics, or quantitative findings.
+            4. data_and_results: Copy exact datasets used, experiment results, performance metrics, or quantitative findings.
             - What data was analyzed?
             - What were the outcomes or measurements?
             - If no data/results, use an empty string.
