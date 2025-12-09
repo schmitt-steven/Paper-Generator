@@ -18,23 +18,44 @@ class SemanticScholarAPI:
         self._last_request_time = 0
     
     def _rate_limit(self):
-        """Enforce req/sec"""
+        """
+        Enforce rate limiting.
+        Without key: 5,000 requests per 5 minutes (~16/sec) - we use 2 sec to be conservative
+        With key: 1 request per second for search endpoint - we use 1 sec
+        """
         min_interval = 1.0 if self.api_key else 2.0
         elapsed = time.time() - self._last_request_time
         if elapsed < min_interval:
             time.sleep(min_interval - elapsed)
         self._last_request_time = time.time()
     
-    def search_papers(self, query: str, max_results: int = 50) -> List[Paper]:
-        """Search papers using S2 search endpoint. Only returns open access papers."""
+    def search_papers(self, query: str, max_results: int = 100, year: Optional[str] = None, fields_of_study: Optional[str] = None, open_access_only: bool = True) -> List[Paper]:
+        """
+        Search papers using S2 search endpoint.
+        
+        Args:
+            query: Search query string
+            max_results: Maximum number of results to return (max 100)
+            year: Optional year filter (e.g., "2020-2024" or "2020")
+            fields_of_study: Optional comma-separated fields of study filter (e.g., "Computer Science,Mathematics")
+            open_access_only: If True, filter results to only open access papers (client-side)
+        """
         self._rate_limit()
         
         params = {
             "query": query,
             "fields": ",".join(self.FIELDS),
             "limit": min(max_results, 100),
-            "openAccessPdf": True  # Filter to only open access papers with public PDFs
         }
+        
+        # Add year filter if provided
+        if year:
+            params["year"] = year
+        
+        # Add fields of study filter if provided
+        if fields_of_study:
+            params["fieldsOfStudy"] = fields_of_study
+        
         max_retries = 3
         backoff = 2
         
@@ -59,15 +80,36 @@ class SemanticScholarAPI:
                     backoff *= 3
                     continue
                 
-                response.raise_for_status()
+                # Check for other error status codes
+                if response.status_code != 200:
+                    error_text = response.text[:200] if response.text else "No error message"
+                    print(f"API error ({response.status_code}): {error_text}")
+                    if attempt == max_retries - 1:
+                        return []  # Return empty list instead of raising
+                    time.sleep(backoff)
+                    backoff *= 3
+                    continue
+                
                 data = response.json()
+                
+                # Check if we got data
+                if "data" not in data:
+                    print(f"Warning: No 'data' field in response. Response keys: {list(data.keys())}")
+                    if "message" in data:
+                        print(f"API message: {data['message']}")
+                    return []
                 
                 papers = []
                 for item in data.get("data", []):
                     paper = self._to_paper(item)
                     if paper:
+                        # Filter for open access papers if requested (client-side)
+                        if open_access_only and not paper.is_open_access:
+                            continue
                         papers.append(paper)
                 
+                # Add delay after successful call to avoid rate limiting on subsequent requests
+                time.sleep(0.5)
                 return papers
                 
             except requests.exceptions.RequestException as e:
@@ -75,7 +117,7 @@ class SemanticScholarAPI:
                 if attempt == max_retries - 1:
                     raise
                 time.sleep(backoff)
-                backoff *= 4
+                backoff *= 3
         
         return []
     
@@ -125,7 +167,11 @@ class SemanticScholarAPI:
                 
                 response.raise_for_status()
                 data = response.json()
-                return self._to_paper(data)
+                paper = self._to_paper(data)
+                
+                # Add delay to avoid rate limiting on subsequent requests
+                time.sleep(2)
+                return paper
                 
             except requests.exceptions.RequestException as e:
                 if attempt == max_retries - 1:

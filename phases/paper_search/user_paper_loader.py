@@ -59,7 +59,9 @@ class UserPaperLoader(LazyModelMixin):
         title = self._extract_title_from_pdf(str(pdf_path))
         print(f"    Extracted title: {title[:80]}...")
         
-        results = s2_api.search_papers(title, max_results=1)
+        # For user-provided papers, we don't care about open access status since we already have the PDF
+        # We just need the metadata, so search without open access filter
+        results = s2_api.search_papers(title, max_results=1, open_access_only=False)
         if results:
             return results[0], "title_search"
         

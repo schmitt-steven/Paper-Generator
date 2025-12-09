@@ -1,11 +1,15 @@
 from __future__ import annotations
-from typing import List, Sequence, Optional
+from typing import List, Sequence, Optional, Dict
+from pathlib import Path
+import re
 from phases.context_analysis.paper_conception import PaperConcept
+from phases.context_analysis.user_requirements import UserRequirements
 from phases.paper_search.paper import Paper
-from phases.paper_writing.data_models import PaperDraft, PaperChunk
+from phases.paper_writing.data_models import PaperDraft, PaperChunk, Section, Evidence
 from phases.paper_writing.paper_indexer import PaperIndexer
 from phases.paper_writing.query_builder import QueryBuilder
 from phases.paper_writing.paper_writer import PaperWriter
+from phases.paper_writing.evidence_gatherer import EvidenceGatherer
 from phases.experimentation.experiment_state import ExperimentResult
 from utils.lms_settings import LMSJITSettings
 from utils.file_utils import save_json, load_json, save_markdown, load_markdown
@@ -33,6 +37,7 @@ class PaperWritingPipeline:
         paper_concept: PaperConcept,
         experiment_result: ExperimentResult,
         papers: Sequence[Paper],
+        user_requirements: Optional[UserRequirements] = None,
     ) -> PaperDraft:
         """Run the full pipeline and return generated paper sections."""
 
@@ -72,6 +77,7 @@ class PaperWritingPipeline:
                     max_iterations=Settings.EVIDENCE_AGENTIC_ITERATIONS,
                     initial_chunks=Settings.EVIDENCE_INITIAL_CHUNKS,
                     filtered_chunks=Settings.EVIDENCE_FILTERED_CHUNKS,
+                    user_requirements=user_requirements,
                 )
 
                 evidence_by_section[section_type] = evidence
@@ -91,6 +97,7 @@ class PaperWritingPipeline:
             context=paper_concept,
             experiment=experiment_result,
             evidence_by_section=evidence_by_section,
+            user_requirements=user_requirements,
         )
         
         # Save writing prompts to output directory (use generated if not loaded)
@@ -152,6 +159,9 @@ class PaperWritingPipeline:
         markdown_content += f"## Results\n\n{paper_draft.results}\n\n"
         markdown_content += f"## Discussion\n\n{paper_draft.discussion}\n\n"
         markdown_content += f"## Conclusion\n\n{paper_draft.conclusion}\n"
+        
+        if paper_draft.acknowledgements:
+            markdown_content += f"\n## Acknowledgements\n\n{paper_draft.acknowledgements}\n"
 
         output_path = save_markdown(markdown_content, filename, output_dir)
 
@@ -189,6 +199,11 @@ class PaperWritingPipeline:
         draft_data = {'title': title}
         for field_name in ['abstract', 'introduction', 'related_work', 'methods', 'results', 'discussion', 'conclusion']:
             draft_data[field_name] = sections.get(field_name, '')
+        
+        # Handle acknowledgements (optional field)
+        acknowledgements_content = sections.get('acknowledgements', '')
+        if acknowledgements_content:
+            draft_data['acknowledgements'] = acknowledgements_content
 
         paper_draft = PaperDraft(**draft_data)
         print(f"[PaperWritingPipeline] Loaded paper draft from {filepath}")

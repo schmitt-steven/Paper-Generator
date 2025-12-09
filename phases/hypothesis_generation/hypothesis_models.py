@@ -31,9 +31,7 @@ class Hypothesis(BaseModel):
     id: str
     description: str
     rationale: str
-    method_combination: str
-    expected_improvement: str
-    baseline_to_beat: Optional[str]
+    success_criteria: str
     selected_for_experimentation: bool = False
 
 

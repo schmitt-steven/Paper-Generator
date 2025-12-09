@@ -8,21 +8,20 @@ Automatic academic paper generator using local language and embedding models.
 
 - #### Python Packages
     - `lmstudio`
-    - `feedparser`
-    - `requests`
-    - `pymupdf4llm`
+    - `pymupdf4llm` (for PDF parsing)
+    - `requests` (for Semantic Scholar API calls)
+    - `sv_ttk` (Tkinter theme)
     - Could be used by LLM for experiments:
         - `numpy`
         - `matplotlib`
         - `seaborn`
         - `pygame`
 
-
 - #### LaTeX (MacTeX or BasicTeX, TeX Live, MikTeX...)
 
 ### LM Studio
 
-The LM Studio App must be installed.
+The LM Studio App must be installed and running in the background.
 
 You need at least:
 - one LLM capable of tool use
@@ -51,7 +50,7 @@ Under App Settings → Developer → Local LLM Service (headless):\
 xcode-select --install
 
 # Install Python packages
-python3 -m pip install lmstudio numpy matplotlib seaborn pymupdf4llm feedparser requests
+python3 -m pip install lmstudio numpy matplotlib seaborn pymupdf4llm sv_ttk
 
 # Install LaTeX
 # MacTeX (full distribution, ~4GB)
@@ -60,27 +59,9 @@ brew install --cask mactex
 
 ## Usage
 
-First, put your files (notes, code, ...) related to the paper/topic into the `user_files/` folder.
+Run `python3 -m gui.app` from the root directory
 
-Adjust `settings.py`, then run:\
-`python3 paper_generator.py`
-
-All generated files are saved to output/
-
-
-## TODOs
-
-- Switch from Arxiv API to SemanticScholar API (more papers, more metadata, embeddings of abstracts, ...)
-- Add human-in-the-loop feature
-- Add review/improvement loop to the paper writing process
-- Try coding agent like SWE-agent or OpenHands
-- Add logic if hypothesis was disproven
-- Add logic to test multiple hypotheses
-- Improve logic for executing steps (e.g. run_from(X), run_only(X), run_steps([X, Y]), run_until(X))
-- Standardize saving/loading
-- Finetune prompts; update formatting (XML tags)
-- Use tokenizers instead of approximations
-...
+All generated files are saved to the `output` folder
 
 ## Algorithm
 

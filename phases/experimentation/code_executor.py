@@ -73,6 +73,24 @@ class CodeExecutor:
             # If execution succeeded, use all files that exist (they may have been regenerated)
             # If execution failed, only count new files
             if return_code == 0:
+                # Move any plots found in root directory to plots/ subdirectory
+                plots_dir = os.path.join(output_dir, "plots")
+                plots_in_root = [f for f in self._list_plot_files(output_dir) if os.path.dirname(f) == output_dir]
+                
+                import shutil
+                new_plot_paths = []
+                for plot_path in plots_in_root:
+                     file_name = os.path.basename(plot_path)
+                     dest_path = os.path.join(plots_dir, file_name)
+                     try:
+                         shutil.move(plot_path, dest_path)
+                         # Update path in our list
+                         new_plot_paths.append(dest_path)
+                     except Exception as e:
+                         print(f"Warning: Failed to move plot {file_name}: {e}")
+                
+                 # Re-list files after move
+                plot_files_after = self._list_plot_files(output_dir)
                 plot_files = plot_files_after
                 result_files = result_files_after
             else:

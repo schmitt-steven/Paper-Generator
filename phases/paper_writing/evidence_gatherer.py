@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Sequence, Set, Tuple
 import numpy as np
 
 from phases.context_analysis.paper_conception import PaperConcept
+from phases.context_analysis.user_requirements import UserRequirements
 from phases.experimentation.experiment_state import ExperimentResult
 from phases.paper_writing.data_models import Evidence, PaperChunk, Section, ScoreResult, SummaryBatchResult, ScoreBatchResult
 from utils.llm_utils import remove_thinking_blocks
@@ -215,6 +216,7 @@ class EvidenceGatherer:
             Your response MUST be a JSON object conforming to the `SummaryBatchResult` schema.
             You MUST return exactly {len(batch)} summaries, one for each item, in the same order as provided.
             Never skip any items.
+            IMPORTANT: Do NOT include any citation keys like [author2023], [sutton1990], or similar bracketed references in your summaries. Write plain text summaries without any citation markers.
 
             [CHUNKS]
             {"".join(items_text)}"""
@@ -325,6 +327,7 @@ class EvidenceGatherer:
         max_iterations: int = 5,
         initial_chunks: int = 20,
         filtered_chunks: int = 10,
+        user_requirements: Optional[UserRequirements] = None,
     ) -> Tuple[List[Evidence], str]:
         """Gather evidence using agentic iterative search with default queries as starting point."""
 
@@ -406,7 +409,7 @@ class EvidenceGatherer:
             
             return result
 
-        initial_prompt = self.build_agent_prompt(section_type, context, experiment, collected_evidence)
+        initial_prompt = self.build_agent_prompt(section_type, context, experiment, collected_evidence, user_requirements)
 
         try:
             # print(f"  [Agentic Search] Starting iterative evidence gathering...")
@@ -445,12 +448,33 @@ class EvidenceGatherer:
         context: PaperConcept,
         experiment: Optional[ExperimentResult],
         initial_evidence: Sequence[Evidence],
+        user_requirements: Optional[UserRequirements] = None,
     ) -> str:
         """Construct the system prompt used to guide the agentic evidence search."""
 
         objectives = self.get_section_objectives(section_type)
         context_text = self._format_section_context(context, experiment)
         evidence_text = self._format_evidence_for_prompt(initial_evidence)
+        
+        # Map Section enum to UserRequirements field
+        section_to_requirement = {
+            Section.ABSTRACT: "abstract",
+            Section.INTRODUCTION: "introduction",
+            Section.RELATED_WORK: "related_work",
+            Section.METHODS: "methods",
+            Section.RESULTS: "results",
+            Section.DISCUSSION: "discussion",
+            Section.CONCLUSION: "conclusion",
+        }
+        
+        # Get section-specific user requirements if available
+        user_requirements_block = ""
+        if user_requirements:
+            requirement_field = section_to_requirement.get(section_type)
+            if requirement_field:
+                requirement_text = getattr(user_requirements, requirement_field, None)
+                if requirement_text and requirement_text.strip():
+                    user_requirements_block = f"""[USER REQUIREMENTS]\n{requirement_text.strip()}"""
 
         return textwrap.dedent(f"""\
             [ROLE]
@@ -467,8 +491,10 @@ class EvidenceGatherer:
             [RESEARCH CONTEXT]
             {context_text}
 
-            [CURRENT EVIDENCE] ({len(initial_evidence)} items)
+            [CURRENT EVIDENCE]
             {evidence_text or 'No evidence yet.'}
+
+            {user_requirements_block}
 
             [AVAILABLE TOOL]
             search_evidence(query: str): retrieve additional information related to the query.
@@ -515,8 +541,9 @@ class EvidenceGatherer:
             context_parts.extend(
                 [
                     ("Hypothesis", getattr(experiment.hypothesis, "description", "")),
-                    ("Expected improvement", getattr(experiment.hypothesis, "expected_improvement", "")),
-                    ("Experimental plan", experiment.experimental_plan),
+                    ("Methods", getattr(experiment.hypothesis, "methods", "")),
+                    ("Success criteria", getattr(experiment.hypothesis, "success_criteria", "")),
+                    ("Experiment plan", experiment.experiment_plan),
                     ("Key execution outcome", getattr(experiment.execution_result, "stdout", "")),
                     ("Verdict", getattr(experiment.hypothesis_evaluation, "verdict", "")),
                 ]
@@ -543,7 +570,7 @@ class EvidenceGatherer:
             Position this research relative to prior contributions, identify gaps, and compare approaches.
             Organize by themes, methods, or chronological development.""",
             Section.METHODS: 
-            """Describe the experimental setup and methodology.
+            """Describe the experiment setup and methodology.
             Reference comparable techniques or baselines.""",
             Section.RESULTS: 
             """Compare the experiment outcomes with related benchmarks.

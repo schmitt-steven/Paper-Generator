@@ -39,7 +39,7 @@ class CodeGenerationResult:
 @dataclass
 class ExperimentFiles:
     """Loaded experiment files."""
-    experimental_plan: str
+    experiment_plan: str
     experiment_code: str
     plan_file_path: str
     code_file_path: str
@@ -72,7 +72,7 @@ class ExperimentResult:
     
     hypothesis: Hypothesis
 
-    experimental_plan: str
+    experiment_plan: str
     experiment_code: str
     
     execution_result: ExecutionResult

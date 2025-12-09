@@ -1,6 +1,5 @@
 import os
 import time
-import shutil
 import ssl
 import urllib.request as libreq
 from typing import List, Tuple
@@ -42,7 +41,8 @@ class PDFDownloader:
         Download selected papers as PDFs to specified folder.
         Creates a separate folder for each paper (named by paper ID) containing the PDF.
         Includes 1-second rate limiting.
-        Deletes existing papers in the base_folder before downloading new ones, but preserves user-provided papers (folders starting with "user_").
+        Skips papers that already have a PDF downloaded.
+        Updates paper.pdf_path after successful download.
         
         Args:
             papers: List of Paper objects to download
@@ -51,32 +51,13 @@ class PDFDownloader:
         Returns:
             Tuple of (successful_count, failed_count)
         """
-        
-        # Delete existing papers folder, but preserve user-provided papers (folders starting with "user_")
-        if os.path.exists(base_folder):
-            print(f"Cleaning existing papers in '{base_folder}' (preserving user-provided papers)...")
-            preserved_count = 0
-            # Delete all folders except those starting with "user_"
-            for item in os.listdir(base_folder):
-                item_path = os.path.join(base_folder, item)
-                if os.path.isdir(item_path):
-                    # Preserve if folder starts with "user_" (user-provided papers)
-                    if item.startswith("user_"):
-                        preserved_count += 1
-                        continue
-                    shutil.rmtree(item_path)
-                elif os.path.isfile(item_path):
-                    # Also delete any loose files
-                    os.remove(item_path)
-            if preserved_count > 0:
-                print(f"  Preserved {preserved_count} user-provided paper folder(s)")
-        
         # Create base folder if it doesn't exist
         os.makedirs(base_folder, exist_ok=True)
         
         print(f"Downloading {len(papers)} papers to '{base_folder}'...")
         successful = 0
         failed = 0
+        skipped = 0
         
         for i, paper in enumerate(papers, 1):
             # Use PDF URL from paper (provided by Semantic Scholar)
@@ -93,30 +74,40 @@ class PDFDownloader:
                 # Save PDF in paper's folder
                 filename = os.path.join(paper_folder, f"{safe_id}.pdf")
                 
+                # Skip if PDF already exists
+                if os.path.exists(filename):
+                    print(f"  [{i}/{len(papers)}] EXISTS: {paper.title[:50]}...")
+                    skipped += 1
+                    # Update pdf_path even if already exists
+                    paper.pdf_path = os.path.relpath(filename, os.getcwd())
+                    continue
+                
                 try:
                     PDFDownloader.download_pdf(pdf_url, filename)
                     print(f"  [{i}/{len(papers)}] {paper.title[:50]}...")
                     successful += 1
+                    # Update pdf_path after successful download
+                    paper.pdf_path = os.path.relpath(filename, os.getcwd())
                 except Exception as e:
                     print(f"  [{i}/{len(papers)}] FAILED: {paper.title[:50]}... ({e})")
                     # Log DOI and title for closed access papers
                     if "403" in str(e) or "Forbidden" in str(e):
-                        print(f"      → Closed access paper")
+                        print(f"      -> Closed access paper")
                         if paper.doi:
-                            print(f"      → DOI: {paper.doi}")
-                        print(f"      → Title: {paper.title}")
+                            print(f"      -> DOI: {paper.doi}")
+                        print(f"      -> Title: {paper.title}")
                     failed += 1
             else:
                 print(f"  [{i}/{len(papers)}] SKIPPED - no PDF URL")
                 # Log DOI and title for papers without PDF access
                 if paper.doi:
-                    print(f"      → DOI: {paper.doi}")
-                print(f"      → Title: {paper.title}")
+                    print(f"      -> DOI: {paper.doi}")
+                print(f"      -> Title: {paper.title}")
                 failed += 1
             
             # Add 1-second delay between downloads (except after last one)
             if i < len(papers):
                 time.sleep(1)
         
-        print(f"Download complete: {successful} successful, {failed} failed\n")
+        print(f"Download complete: {successful} downloaded, {skipped} already existed, {failed} failed\n")
         return successful, failed

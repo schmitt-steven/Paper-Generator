@@ -7,23 +7,23 @@ from tkinter import ttk
 MAX_WIDTH = 700
 
 # Text widget styling constants
-TEXT_FONT = ("SF Pro", 14)
-TEXT_SPACING = 4  # Line spacing (spacing between lines)
-TEXT_PADX = 8
-TEXT_PADY = 8
+TEXT_AREA_FONT = ("SF Pro", 14)
+TEXT_AREA_SPACING = 4  # Line spacing (spacing between lines)
+TEXT_AREA_PADX = 8
+TEXT_AREA_PADY = 8
 
 
-def create_styled_text(parent, height: int = 6, **kwargs) -> tk.Text:
-    """Create a consistently styled Text widget."""
+def create_text_area(parent, height: int = 6, **kwargs) -> tk.Text:
+    """Create a consistently styled multi-line text area widget."""
     text = tk.Text(
         parent,
         height=height,
         wrap="word",
-        font=TEXT_FONT,
-        padx=TEXT_PADX,
-        pady=TEXT_PADY,
-        spacing2=TEXT_SPACING,  # spacing between wrapped lines
-        spacing3=TEXT_SPACING,  # spacing between paragraphs
+        font=TEXT_AREA_FONT,
+        padx=TEXT_AREA_PADX,
+        pady=TEXT_AREA_PADY,
+        spacing2=TEXT_AREA_SPACING,  # spacing between wrapped lines
+        spacing3=TEXT_AREA_SPACING,  # spacing between paragraphs
         **kwargs
     )
     return text
@@ -37,117 +37,84 @@ def create_gray_button(parent, text: str, command, **kwargs) -> ttk.Label:
 
 
 class ProgressPopup(tk.Toplevel):
-    """
-    Modal progress popup with status updates and error handling.
+    """Simple modal progress popup."""
     
-    Usage:
-        popup = ProgressPopup(parent, "Generating...")
-        # In background thread, use parent.after() for thread-safe updates:
-        parent.after(0, lambda: popup.update_status("Processing..."))
-        # On success:
-        parent.after(0, popup.close)
-        # On error:
-        parent.after(0, lambda: popup.show_error("Something went wrong"))
-    """
-    
-    def __init__(self, parent: tk.Tk, initial_status: str = "Processing..."):
+    def __init__(self, parent: tk.Tk, initial_status: str = "Processing"):
         super().__init__(parent)
         self.parent = parent
         self._is_error = False
-        self._is_closing = False
+        self._disabled_buttons = []
         
-        # Remove window decorations and make it float above
-        self.overrideredirect(True)
-        self.attributes("-topmost", True)
+        # Disable all buttons in parent window
+        self._disable_parent_buttons()
         
-        # Semi-transparent overlay background
-        style = ttk.Style()
-        bg_color = style.lookup("TFrame", "background") or "#1c1c1c"
-        self.configure(bg=bg_color)
+        # Basic window setup
+        self.title("Processing...")
+        self.transient(parent)  # Stay on top of parent, minimize together
+        self.resizable(False, False)
         
-        # Make the toplevel cover the entire parent window
-        self._update_geometry()
-        # Bind to parent configure events to keep popup aligned
-        parent.bind("<Configure>", self._on_parent_configure, add="+")
+        # Set minimum size for the popup
+        self.minsize(200, 100)
         
-        # Create overlay frame (blocks clicks)
-        overlay = tk.Frame(self, bg=bg_color)
-        overlay.place(relx=0, rely=0, relwidth=1, relheight=1)
+        # Content
+        self.content_frame = ttk.Frame(self, padding=40)
+        self.content_frame.pack(fill="both", expand=True)
         
-        # Center dialog box
-        dialog_frame = ttk.Frame(self, padding=30)
-        dialog_frame.place(relx=0.5, rely=0.5, anchor="center")
+        self.status_label = ttk.Label(self.content_frame, text=initial_status, font=("SF Pro", 16))
+        self.status_label.pack(pady=(0, 15))
         
-        # Status label
-        self.status_label = ttk.Label(
-            dialog_frame,
-            text=initial_status,
-            font=("SF Pro", 16),
-            justify="center"
-        )
-        self.status_label.pack(pady=(0, 10))
-        
-        # Loading indicator (simple dots animation)
-        self.dots_label = ttk.Label(
-            dialog_frame,
-            text="",
-            font=("SF Pro", 14),
-            foreground="gray"
-        )
+        self.dots_label = ttk.Label(self.content_frame, text="", font=("SF Pro", 16), foreground="gray")
         self.dots_label.pack()
-        self._dots_count = 0
-        self._animate_dots()
         
-        # Error button (hidden initially)
-        self.close_btn = ttk.Button(
-            dialog_frame,
-            text="Close",
-            command=self.close
-        )
-        # Button is packed only when showing error
+        self.close_btn = ttk.Button(self.content_frame, text="Close", command=self.close)
+        # Only shown on error
         
-        # Make modal - grab all input
+        # Center on parent
+        self.update_idletasks()
+        x = parent.winfo_x() + (parent.winfo_width() - self.winfo_width()) // 2
+        y = parent.winfo_y() + (parent.winfo_height() - self.winfo_height()) // 2
+        self.geometry(f"+{x}+{y}")
+        
+        # Make modal
         self.grab_set()
         self.focus_set()
-    
-    def _update_geometry(self):
-        """Update popup to cover parent window."""
-        if not self.winfo_exists() or self._is_closing:
-            return
         
-        try:
-            # Wait for parent window to be fully mapped before getting geometry
-            self.parent.update_idletasks()
-            
-            x = self.parent.winfo_rootx()
-            y = self.parent.winfo_rooty()
-            w = self.parent.winfo_width()
-            h = self.parent.winfo_height()
-            
-            # Only update if we have valid dimensions
-            if w > 0 and h > 0:
-                self.geometry(f"{w}x{h}+{x}+{y}")
-                # Ensure popup stays on top
-                self.attributes("-topmost", True)
-                # Make sure it's still visible
-                self.lift()
-        except (tk.TclError, AttributeError):
-            # Parent window might be destroyed or not yet mapped
-            pass
+        # Handle window close (X button) to ensure buttons are re-enabled
+        self.protocol("WM_DELETE_WINDOW", self.close)
+        
+        # Animate dots
+        self._dots_count = 0
+        self._animate_dots()
     
-    def _on_parent_configure(self, event):
-        """Keep popup aligned with parent when parent moves/resizes."""
-        # Only update if popup still exists and isn't closing
-        if not self._is_closing and self.winfo_exists():
+    def _disable_parent_buttons(self):
+        """Find and disable all buttons in parent window."""
+        self._disabled_buttons = []
+        self._find_and_disable_buttons(self.parent)
+    
+    def _find_and_disable_buttons(self, widget):
+        """Recursively find and disable all buttons."""
+        for child in widget.winfo_children():
+            if isinstance(child, (ttk.Button, tk.Button)):
+                try:
+                    # Only disable if currently enabled
+                    if str(child.cget('state')) != 'disabled':
+                        child.config(state='disabled')
+                        self._disabled_buttons.append(child)
+                except:
+                    pass
+            # Recurse into child widgets
+            self._find_and_disable_buttons(child)
+    
+    def _enable_parent_buttons(self):
+        """Re-enable previously disabled buttons."""
+        for btn in self._disabled_buttons:
             try:
-                # Use after_idle to ensure geometry update happens after the configure event
-                self.after_idle(self._update_geometry)
-            except (tk.TclError, AttributeError):
-                # Popup might be destroyed during the update
+                btn.config(state='normal')
+            except:
                 pass
+        self._disabled_buttons = []
     
     def _animate_dots(self):
-        """Animate loading dots."""
         if self._is_error or not self.winfo_exists():
             return
         self._dots_count = (self._dots_count + 1) % 4
@@ -155,37 +122,72 @@ class ProgressPopup(tk.Toplevel):
         self.after(500, self._animate_dots)
     
     def update_status(self, status: str):
-        """Update the status text. Must be called from main thread (use after())."""
+        """Update status text. Call from main thread via parent.after(0, ...)"""
         if self.winfo_exists() and not self._is_error:
             self.status_label.config(text=status)
     
     def show_error(self, error_message: str):
-        """Show error state with close button. Must be called from main thread."""
+        """Show error with close button in a scrollable, copyable text widget."""
         if not self.winfo_exists():
             return
         self._is_error = True
-        self.status_label.config(text=f"Error: {error_message}", foreground="red")
+        
+        # Hide status and dots labels
+        self.status_label.pack_forget()
         self.dots_label.pack_forget()
-        self.close_btn.pack(pady=(15, 0))
+        
+        # Clear existing content frame and rebuild for error
+        self.content_frame.destroy()
+        self.content_frame = ttk.Frame(self, padding=20)
+        self.content_frame.pack(fill="both", expand=True)
+        
+        # Create error label
+        error_label = ttk.Label(self.content_frame, text="Error:", font=("SF Pro", 16, "bold"), foreground="red")
+        error_label.pack(anchor="w", pady=(0, 10))
+        
+        # Create scrollable text widget for error message
+        text_frame = ttk.Frame(self.content_frame)
+        text_frame.pack(fill="both", expand=True, pady=(0, 15))
+        
+        # Text widget with scrollbar
+        text_widget = tk.Text(
+            text_frame,
+            wrap="word",
+            font=("SF Pro", 14),
+            foreground="red",
+            height=15,
+            padx=10,
+            pady=10,
+            state="normal"
+        )
+        text_widget.pack(side="left", fill="both", expand=True)
+        
+        # Scrollbar
+        scrollbar = ttk.Scrollbar(text_frame, orient="vertical", command=text_widget.yview)
+        scrollbar.pack(side="right", fill="y")
+        text_widget.config(yscrollcommand=scrollbar.set)
+        
+        # Insert error message
+        text_widget.insert("1.0", error_message)
+        text_widget.config(state="disabled")  # Make read-only but still selectable/copyable
+        
+        # Make window resizable and larger for error display
+        self.resizable(True, True)
+        self.geometry("700x500")
+        
+        # Create/update close button
+        self.close_btn = ttk.Button(self.content_frame, text="Close", command=self.close)
+        self.close_btn.pack(pady=(10, 0))
     
     def close(self):
-        """Safe cleanup - always release grab before destroy."""
-        # Mark as closing to prevent configure events from trying to update
-        self._is_closing = True
+        """Close the popup and re-enable buttons."""
+        # Re-enable buttons first
+        self._enable_parent_buttons()
         
-        # Note: We don't unbind the configure event because Tkinter doesn't support
-        # unbinding a specific handler. Instead, _on_parent_configure checks _is_closing
-        # and does nothing if we're closing. This is safe because:
-        # 1. The flag prevents updates during cleanup
-        # 2. Once destroyed, winfo_exists() will return False anyway
-        
-        # Release grab safely
         try:
             self.grab_release()
         except:
             pass
-        
-        # Destroy the popup
         try:
             self.destroy()
         except:
@@ -256,12 +258,15 @@ class BaseFrame(ttk.Frame):
             nav_frame = ttk.Frame(nav_container, padding=(10, 10, 10, 10))
             nav_frame.grid(row=0, column=1, sticky="ew")
             
+            style = ttk.Style()
+            style.configure("Nav.TButton", font=("SF Pro", 16))
+            
             if self.has_back:
-                ttk.Button(nav_frame, text=self.back_text, command=self.on_back).pack(side="left")
+                ttk.Button(nav_frame, text=self.back_text, command=self.on_back, style="Nav.TButton").pack(side="left")
             if self.has_next:
-                ttk.Button(nav_frame, text=self.next_text, command=self.on_next).pack(side="right")
+                ttk.Button(nav_frame, text=self.next_text, command=self.on_next, style="Nav.TButton").pack(side="right")
             if self.has_regenerate:
-                ttk.Button(nav_frame, text=self.regenerate_text, command=self.on_regenerate).pack(side="right", padx=(0, 10))
+                ttk.Button(nav_frame, text=self.regenerate_text, command=self.on_regenerate, style="Nav.TButton").pack(side="right", padx=(0, 10))
 
     def _update_scrollregion(self, event=None):
         self._canvas.configure(scrollregion=self._canvas.bbox("all"))

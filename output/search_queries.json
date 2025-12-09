@@ -1,77 +1,62 @@
 [
   {
-    "label": "RBQL-like backward propagation with persistent memory",
-    "query": "\"backward propagation\" + \"persistent transition graph\" + \"reinforcement learning\" year:2015-2024",
-    "description": "Core method: RBQL-style backward propagation of rewards via persistent transition graphs in deterministic RL"
+    "query": "Bellman equation",
+    "year": null
   },
   {
-    "label": "model-free value iteration via observed transitions",
-    "query": "\"value iteration\" + \"model-free\" + \"observed transitions\" -\"dynamics model\" year:2015-2024",
-    "description": "Model-free methods using historical transitions for full-state Bellman updates without learned models"
+    "query": "Q-learning convergence",
+    "year": null
   },
   {
-    "label": "Dyna-Q vs direct transition reuse in model-based RL",
-    "query": "\"Dyna-Q\" + \"sample efficiency\" + (\"learned model\" | \"transition memory\") year:2015-2024",
-    "description": "Dyna-Q and similar methods: comparing learned models vs. direct transition reuse for sample efficiency"
+    "query": "sample complexity RL",
+    "year": null
   },
   {
-    "label": "backward induction + RETRACE + cross-episode updates",
-    "query": "\"RETRACE\" + \"backward induction\" + \"cross-episode\" + \"reinforcement learning\" year:2015-2024",
-    "description": "Backward induction in RL: RETRACE and related methods for multi-step backward updates"
+    "query": "reinforcement learning survey",
+    "year": null
   },
   {
-    "label": "sample efficiency + deterministic RL + sparse rewards",
-    "query": "\"sample efficiency\" + \"deterministic reinforcement learning\" + \"sparse reward\" year:2015-2024",
-    "description": "Sample efficiency in deterministic RL with sparse rewards: theoretical limits and algorithms"
+    "query": "model-free RL review",
+    "year": null
   },
   {
-    "label": "topological order + Bellman update + transition graph",
-    "query": "\"topological ordering\" + \"Bellman equation\" + \"transition graph\" + \"reinforcement learning\" year:2015-2024",
-    "description": "Topological ordering for Bellman updates in directed transition graphs"
+    "query": "eligibility traces",
+    "year": null
   },
   {
-    "label": "prioritized sweeping + eligibility traces + sample efficiency",
-    "query": "\"prioritized sweeping\" | \"eligibility traces\" + \"sample efficiency\" + \"reinforcement learning\" year:2015-2024",
-    "description": "Prioritized sweeping and eligibility traces as alternatives to RBQL for efficient value propagation"
+    "query": "n-step returns",
+    "year": null
   },
   {
-    "label": "episodic memory + reinforcement learning + value update",
-    "query": "\"episodic memory\" + \"reinforcement learning\" + \"value update\" year:2015-2024",
-    "description": "Episodic memory in RL: storing and reusing past trajectories for value function updates"
+    "query": "backward induction RL",
+    "year": null
   },
   {
-    "label": "model-based planning + no transition model + model-free",
-    "query": "\"model-based planning\" -\"transition model\" + \"model-free\" + \"dynamic programming\" year:2015-2024",
-    "description": "Model-based planning without explicit transition models: bridging model-free and DP"
+    "query": "transition graph RL",
+    "year": null
   },
   {
-    "label": "value propagation + sparse rewards + maze navigation",
-    "query": "\"value propagation\" + \"sparse reward\" + \"maze\" + \"convergence rate\" year:2015-2024",
-    "description": "Value propagation in sparse-reward mazes: benchmark algorithms and convergence analysis"
+    "query": "value iteration RL",
+    "year": null
   },
   {
-    "label": "survey + sample efficient reinforcement learning",
-    "query": "\"survey\" + \"sample efficient reinforcement learning\" year:2015-2024",
-    "description": "Survey papers on sample-efficient reinforcement learning methods"
+    "query": "Dyna-Q algorithm",
+    "year": null
   },
   {
-    "label": "dynamic programming + reinforcement learning + no transition model",
-    "query": "\"dynamic programming\" + \"reinforcement learning\" -\"full model\" year:2015-2024",
-    "description": "Dynamic programming in RL without full model knowledge: practical approximations"
+    "query": "RETRACE algorithm",
+    "year": null
   },
   {
-    "label": "Q-learning + delayed reward propagation + convergence analysis",
-    "query": "\"Q-learning\" + \"delayed reward\" + \"convergence analysis\" year:2015-2024",
-    "description": "Convergence analysis of Q-learning with delayed reward propagation"
+    "query": "sparse reward RL",
+    "year": null
   },
   {
-    "label": "R-MAX + persistent transitions + sample efficiency",
-    "query": "\"R-MAX\" + \"persistent transition\" + \"sample efficiency\" year:2015-2024",
-    "description": "R-MAX and similar algorithms: exploration bonuses vs. persistent transition reuse"
+    "query": "convergence rate RL",
+    "year": null
   },
   {
-    "label": "BFS + value function update + deterministic MDP",
-    "query": "\"BFS\" + \"value function\" + \"deterministic MDP\" + \"reinforcement learning\" year:2015-2024",
-    "description": "Breadth-first search for value function updates in deterministic MDPs"
+    "query": "deterministic MDP RL",
+    "year": "2020-2024"
   }
 ]

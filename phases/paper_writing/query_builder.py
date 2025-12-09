@@ -46,7 +46,7 @@ class QueryBuilder:
                 ("Hypothesis summary", self._safe_get(experiment, "hypothesis.description")),
                 ("Experiment outcomes", self._safe_get(experiment, "execution_result.stdout")),
                 ("Validation insights", self._safe_get(experiment, "validation_result.reasoning")),
-                ("Expected improvements", self._safe_get(experiment, "hypothesis.expected_improvement")),
+                ("Success criteria", self._safe_get(experiment, "hypothesis.success_criteria")),
             )
         ]
 
@@ -60,9 +60,7 @@ class QueryBuilder:
                 ("Research context", context.description),
                 ("Open questions", context.open_questions),
                 ("Hypothesis overview", self._safe_get(experiment, "hypothesis.description")),
-                ("Method differentiation", self._safe_get(experiment, "hypothesis.method_combination")),
-                ("Expected improvement", self._safe_get(experiment, "hypothesis.expected_improvement")),
-                ("Baseline to beat", self._safe_get(experiment, "hypothesis.baseline_to_beat")),
+                ("Success criteria", self._safe_get(experiment, "hypothesis.success_criteria")),
             )
         ]
 
@@ -74,10 +72,8 @@ class QueryBuilder:
         return [
             self._combine_segments(
                 ("Research domain", context.description),
-                ("Method combination", self._safe_get(experiment, "hypothesis.method_combination")),
-                ("Baseline approaches", self._safe_get(experiment, "hypothesis.baseline_to_beat")),
                 ("Research gap", context.open_questions),
-                ("Expected improvement", self._safe_get(experiment, "hypothesis.expected_improvement")),
+                ("Success criteria", self._safe_get(experiment, "hypothesis.success_criteria")),
                 ("Key techniques", context.code_snippets),
             )
         ]
@@ -89,9 +85,8 @@ class QueryBuilder:
     ) -> List[str]:
         return [
             self._combine_segments(
-                ("Experimental plan", self._safe_get(experiment, "experimental_plan")),
+                ("Experiment plan", self._safe_get(experiment, "experiment_plan")),
                 ("Implementation details", self._safe_get(experiment, "experiment_code")),
-                ("Method combination", self._safe_get(experiment, "hypothesis.method_combination")),
                 ("Key code snippets", context.code_snippets),
             )
         ]
@@ -140,7 +135,7 @@ class QueryBuilder:
                 ("Final verdict", self._safe_get(experiment, "hypothesis_evaluation.verdict")),
                 ("Supporting reasoning", self._safe_get(experiment, "hypothesis_evaluation.reasoning")),
                 ("Research description", context.description),
-                ("Key contributions", self._safe_get(experiment, "hypothesis.expected_improvement")),
+                ("Success criteria met", self._safe_get(experiment, "hypothesis.success_criteria")),
                 ("Implications", self._safe_get(experiment, "validation_result.reasoning")),
                 ("Future directions", context.open_questions),
             )

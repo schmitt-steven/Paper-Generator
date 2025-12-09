@@ -30,24 +30,37 @@ class PaperConception(LazyModelMixin):
 
     def _format_user_requirements_section(self) -> str:
         """Format user requirements into a readable section for the LLM prompt."""
-        sections = []
         req = self.user_requirements
         
-        sections.append(f"Introduction Requirements: {req.introduction}")
-        if req.related_work:
-            sections.append(f"Related Work Requirements: {req.related_work}")
-        if req.methods:
-            sections.append(f"Methods Requirements: {req.methods}")
-        if req.results:
-            sections.append(f"Results Requirements: {req.results}")
-        if req.discussion:
-            sections.append(f"Discussion Requirements: {req.discussion}")
-        if req.conclusion:
-            sections.append(f"Conclusion Requirements: {req.conclusion}")
-        if req.acknowledgements:
-            sections.append(f"Acknowledgements Requirements: {req.acknowledgements}")
-
-        return "\n".join(sections)
+        # Collect all non-empty fields
+        sections = []
+        
+        if req.topic and req.topic.strip():
+            sections.append(f"Topic: {req.topic}")
+        if req.hypothesis and req.hypothesis.strip():
+            sections.append(f"Hypothesis: {req.hypothesis}")
+        if req.abstract and req.abstract.strip():
+            sections.append(f"Abstract: {req.abstract}")
+        if req.introduction and req.introduction.strip():
+            sections.append(f"Introduction: {req.introduction}")
+        if req.related_work and req.related_work.strip():
+            sections.append(f"Related Work: {req.related_work}")
+        if req.methods and req.methods.strip():
+            sections.append(f"Methods: {req.methods}")
+        if req.results and req.results.strip():
+            sections.append(f"Results: {req.results}")
+        if req.discussion and req.discussion.strip():
+            sections.append(f"Discussion: {req.discussion}")
+        if req.conclusion and req.conclusion.strip():
+            sections.append(f"Conclusion: {req.conclusion}")
+        if req.acknowledgements and req.acknowledgements.strip():
+            sections.append(f"Acknowledgements: {req.acknowledgements}")
+        
+        # Return empty string if no requirements provided, otherwise format as a block
+        if not sections:
+            return ""
+        
+        return "[User Requirements]\n" + "\n".join(sections)
 
     def _format_code_snippets_section(self) -> str:
         """Extract and format code snippets prominently for the LLM."""
@@ -90,7 +103,7 @@ class PaperConception(LazyModelMixin):
             7. Methodology & Implementation (High-Level)
             8. Expected Contribution
             
-            Note: We are at the CONCEPT stage - no need for detailed proofs, experimental designs, or final paper titles yet.
+            Note: We are at the CONCEPT stage - no need for detailed proofs, experiment designs, or final paper titles yet.
 
             [STRICT REQUIREMENTS FOR EACH SECTION]
             1. Paper Specifications

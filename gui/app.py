@@ -29,7 +29,7 @@ class PaperGeneratorApp(tk.Tk):
             from ctypes import windll
             windll.shcore.SetProcessDpiAwareness(2)
         
-        # macOS/Linux: Scaling variables for high-DPI displays
+        # macOS/Linux: Scaling vars for high-DPI displays
         MACOS_SCALING = 1.0
         LINUX_SCALING = 1.0
         
@@ -51,13 +51,32 @@ class PaperGeneratorApp(tk.Tk):
         # Apply Sun Valley theme
         sv_ttk.set_theme("dark")
 
+        # Global font config
+        DEFAULT_FONT_SIZE = 16
+        TEXT_AREA_FONT_SIZE = 10
+        TEXT_FIELD_FONT_SIZE = 10
+        
+        # Set default font for all ttk widgets
         style = ttk.Style()
+        default_font = ("SF Pro", DEFAULT_FONT_SIZE)
+        text_field_font = ("SF Pro", TEXT_FIELD_FONT_SIZE)
+        
+        # Configure default fonts for common ttk widgets
+        style.configure("TLabel", font=default_font)
+        style.configure("TButton", font=default_font)
+        style.configure("TEntry", font=text_field_font)
+        style.configure("TFrame", font=default_font)
+        
+        # Override button styling (after setting default)
         style.layout("TButton", style.layout("Accent.TButton"))
-        style.configure("TButton", **style.configure("Accent.TButton"))
+        style.configure("TButton", font=default_font, **style.configure("Accent.TButton"))
         style.map("TButton", **style.map("Accent.TButton"))
 
         # Custom Listbox (Dropdown Menu) styling
-        style.configure("TCombobox", font=("SF Pro", 14))
+        style.configure("TCombobox", font=default_font)
+        
+        # Set default font for Text widgets (text areas)
+        self.option_add("*Text.Font", ("SF Pro", TEXT_AREA_FONT_SIZE))
         style.configure("ComboboxPopdownFrame", relief="flat", background="#2b2b2b")
         self.option_add("*TCombobox*Listbox*Font", ("SF Pro", 14))
         self.option_add("*TCombobox*Listbox*Background", "#2b2b2b")
@@ -69,7 +88,23 @@ class PaperGeneratorApp(tk.Tk):
         self.option_add("*TCombobox*Listbox*highlightThickness", 0)
         
         self.title("Paper Generator")
-        self.geometry("1000x800")
+        
+        # Start with window maximized
+        if sys.platform == "win32":
+            self.state('zoomed')
+        elif sys.platform == "darwin":
+            self.update_idletasks()
+            try:
+                self.wm_attributes('-zoomed', True)
+            except:
+                width = self.winfo_screenwidth()
+                height = self.winfo_screenheight()
+                self.geometry(f"{width}x{height}")
+        else:
+            self.update_idletasks()
+            width = self.winfo_screenwidth()
+            height = self.winfo_screenheight()
+            self.geometry(f"{width}x{height}")
         
         # Container that holds all the frames
         self.container = ttk.Frame(self)

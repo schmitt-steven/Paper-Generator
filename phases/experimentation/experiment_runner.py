@@ -3,6 +3,7 @@ import textwrap
 import traceback
 import re
 import json
+from settings import Settings
 from dataclasses import asdict, is_dataclass
 from typing import Optional, Tuple, List
 from pathlib import Path
@@ -10,6 +11,8 @@ from pydantic import BaseModel
 from utils.file_utils import save_json, load_json, save_markdown, load_markdown
 import lmstudio as lms
 from phases.context_analysis.paper_conception import PaperConcept
+from phases.context_analysis.user_requirements import UserRequirements
+from phases.context_analysis.user_code_analysis import CodeAnalyzer, UserCode
 from phases.hypothesis_generation.hypothesis_models import Hypothesis
 from phases.experimentation.experiment_state import (
     HypothesisEvaluation, ExecutionResult, CodeGenerationResult,
@@ -21,14 +24,13 @@ from utils.llm_utils import remove_thinking_blocks
 import lmstudio as lms
 
 
-EXPERIMENTAL_PLAN_FILE = "experimental_plan.md"
+EXPERIMENT_PLAN_FILE = "experiment_plan.md"
 
 
 class ExperimentRunner:
     """Conducts experiments to test hypotheses."""
     
     def __init__(self, base_output_dir: str = "output/experiments"):
-        from settings import Settings
         self.settings = Settings
         self.executor = CodeExecutor()
         self.results_manager = ResultsManager(base_output_dir)
@@ -48,19 +50,53 @@ class ExperimentRunner:
         code_content = re.sub(r'```', '', code_content)
         return code_content.strip()
     
+    def _format_user_code_files(self, user_code: List[UserCode]) -> str:
+        """Format user code files for inclusion in prompts."""
+        if not user_code:
+            return "No user code files provided"
+        
+        sections = ["[USER CODE FILES]"]
+        for code_file in user_code:
+            sections.append(f"\nFile: {code_file.file_name}")
+            sections.append(code_file.file_content)
+            sections.append("\n---")
+        
+        return "\n".join(sections)
+    
     def _write_experiment_code(
         self,
-        experimental_plan: str,
+        experiment_plan: str,
         hypothesis: Hypothesis,
         paper_concept: PaperConcept,
-        output_dir: str
+        output_dir: str,
+        user_requirements: Optional[UserRequirements] = None,
+        user_code: Optional[List[UserCode]] = None
     ) -> CodeGenerationResult:
         """Generate experiment code in chunks, save to file, execute, and return results."""
         
         try:
-            code_snippets_section = ""
-            if paper_concept.code_snippets:
-                code_snippets_section = f"\n\nAvailable Code Snippets (use only if helpful):\n{paper_concept.code_snippets}"
+            # Format user requirements section
+            user_requirements_section = ""
+            requirements_parts = []
+            if user_requirements:
+                if user_requirements.methods and user_requirements.methods.strip():
+                    requirements_parts.append(f"Methods: {user_requirements.methods}")
+                if user_requirements.results and user_requirements.results.strip():
+                    requirements_parts.append(f"Results: {user_requirements.results}")
+            
+            if requirements_parts:
+                user_requirements_section = "\n[USER REQUIREMENTS]\n" + "\n\n".join(requirements_parts)
+            else:
+                user_requirements_section = "\n[USER REQUIREMENTS]\nNo specific experimentation requirements provided"
+
+            # Format user code files section
+            user_code_section = ""
+            code_instructions = ""
+            if user_code:
+                user_code_section = f"\n{self._format_user_code_files(user_code)}"
+                code_instructions = "\n[CRITICAL: EXISTING CODE PROVIDED]\nYou MUST build upon and adapt the existing user code files above. Do NOT start from scratch. Extend, modify, and adapt the existing code to implement the experiment plan. Preserve working parts of the existing code and only modify what's necessary to test the hypothesis."
+            else:
+                user_code_section = "\n[USER CODE FILES]\nNo user code files provided - generate new code from scratch."
             
             # System prompt for all chunks
             system_prompt = textwrap.dedent(f"""\
@@ -76,9 +112,7 @@ class ExperimentRunner:
                 - Save results to JSON in current directory
                 - Print concise, meaningful output (~100-200 lines max)
                 - Output ONLY Python code, NO markdown formatting
-
-                [CONSTRAINTS]
-                Code MUST complete in under 5 minutes. Reduce iterations, computations, or parameter combinations if needed. Optimize loops and maintain scientific validity.
+                - Code MUST complete in under 5 minutes. Reduce iterations, computations, or parameter combinations if needed. Optimize loops and maintain scientific validity.
 
                 [AVAILABLE PACKAGES]
                 The following Python packages are available (optional - use if helpful):
@@ -91,30 +125,33 @@ class ExperimentRunner:
                 [HYPOTHESIS]
                 Description: {hypothesis.description}
                 Rationale: {hypothesis.rationale}
-                Expected Improvement: {hypothesis.expected_improvement}
-                Baseline: {hypothesis.baseline_to_beat}
+                Success Criteria: {hypothesis.success_criteria}
 
-                [CODE_SNIPPETS]
-                {code_snippets_section if code_snippets_section else "No code snippets provided"}
+                {user_requirements_section}
+                {user_code_section}
+                {code_instructions}
 
-                [EXPERIMENTAL_PLAN]
-                {experimental_plan}
-            """)
+                [EXPERIMENT_PLAN]
+                {experiment_plan}"""
+            )
 
             chat = lms.Chat(system_prompt)
             current_code = ""
             
-            # Chunk 1/4: Imports and structures
+            # Step 1/4: Imports and structures
             try:
                 print(f"Generating imports and data structures...")
-                chat.add_user_message("""Generate ONLY imports and data structure definitions.
+                chunk_message = """Generate ONLY imports and data structure definitions.
 
                 Include:
                 - All necessary imports
                 - Any classes or data structures needed
                 - Global constants
 
-                Do NOT include algorithm implementations, experiment logic, or visualization yet.""")
+                Do NOT include algorithm implementations, experiment logic, or visualization yet."""
+                if user_code:
+                    chunk_message += "\n\nIf user code files were provided above, preserve their imports and data structures, adding only what's missing for the experiment."
+                chat.add_user_message(chunk_message)
 
                 model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
                 response = model.respond(chat, config={"temperature": 0.4})
@@ -125,18 +162,21 @@ class ExperimentRunner:
                 traceback.print_exc()
                 raise
             
-            # Chunk 2/4: Algorithms
+            # Step 2/4: Algorithms
             try:
                 print(f"Generating algorithm implementations...")
-                chat.add_user_message("""Implement the code for the algorithm(s) being tested and merge it with the previous response.
+                chunk_message = """Implement the code for the algorithm(s) being tested and merge it with the previous response.
 
                 Include everything from the previous response, then add:
-                - The proposed method/algorithm being tested (as described in the experimental plan)
-                - The baseline/comparison method (as described in the experimental plan)
+                - The proposed method/algorithm being tested (as described in the experiment plan)
+                - The baseline/comparison method (as described in the experiment plan)
                 - Any helper functions needed for the algorithms
-                The most important part is to implement the algorithms as described in the experimental plan.
+                The most important part is to implement the algorithms as described in the experiment plan.
 
-                Output the COMPLETE code so far (imports and data structures + algorithms).""")
+                Output the COMPLETE code so far (imports and data structures + algorithms)."""
+                if user_code:
+                    chunk_message += "\n\nIf user code files were provided above, adapt and extend the existing algorithms from those files. Modify them as needed to test the hypothesis, but preserve working functionality."
+                chat.add_user_message(chunk_message)
 
                 model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
                 response = model.respond(chat, config={"temperature": 0.4})
@@ -147,14 +187,14 @@ class ExperimentRunner:
                 traceback.print_exc()
                 raise
             
-            # Chunk 3/4: Experiment setup and execution
+            # Step 3/4: Experiment setup and execution
             try:
                 print(f"Generating experiment execution logic...")
-                chat.add_user_message(textwrap.dedent("""\
+                chunk_message = textwrap.dedent("""\
                     Implement the code for the experiment setup and execution and merge it with the previous response.
 
                     Include everything from the previous response, then add:
-                    - Experiment setup and execution (as described in the experimental plan)
+                    - Experiment setup and execution (as described in the experiment plan)
                     - Running the proposed method and baseline/comparison method
                     - Metric collection and measurement
                     - Save results to JSON file in current directory
@@ -162,7 +202,10 @@ class ExperimentRunner:
 
                     Output the COMPLETE code so far (imports and data structures + algorithms + experiment).
                     Do NOT include visualization yet.
-                """))
+                """)
+                if user_code:
+                    chunk_message += "\n\nIf user code files were provided above, integrate the experiment logic with the existing code structure. Use existing functions and classes where possible."
+                chat.add_user_message(chunk_message)
 
                 model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
                 response = model.respond(chat, config={"temperature": 0.4})
@@ -173,10 +216,10 @@ class ExperimentRunner:
                 traceback.print_exc()
                 raise
             
-            # Chunk 4/4: Visualization/Plotting
+            # Step 4/4: Visualization/Plotting
             try:
                 print(f"Generating visualization code...")
-                chat.add_user_message(textwrap.dedent("""\
+                chunk_message = textwrap.dedent("""\
                     Generate the COMPLETE final code including everything from before PLUS visualization and summary.
 
                     Include everything from the previous response, then add:
@@ -186,7 +229,10 @@ class ExperimentRunner:
                     - Print concise summary of the results (NEVER guess the results, only print the actual results)
 
                     Output the COMPLETE, FINAL code (imports & data structures + algorithms + experiment + visualization).
-                """))
+                """)
+                if user_code:
+                    chunk_message += "\n\nIf user code files were provided above, ensure the final code integrates all existing functionality with the new experiment and visualization code."
+                chat.add_user_message(chunk_message)
 
                 model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
                 response = model.respond(chat, config={"temperature": 0.4})
@@ -366,7 +412,7 @@ class ExperimentRunner:
     def _validate_experiment_results(
         self,
         execution_result: ExecutionResult,
-        experimental_plan: str,
+        experiment_plan: str,
         hypothesis: Hypothesis,
         code_file_path: str
     ) -> ValidationResult:
@@ -386,51 +432,58 @@ class ExperimentRunner:
         
         system_prompt = textwrap.dedent(f"""\
             [ROLE]
-            You are an expert at validating scientific experiments.
+            You are an expert at debugging scientific experiment code and validating results.
 
             [TASK]
-            Evaluate whether an experiment's results are valid and meaningful based on the experimental plan and hypothesis.
+            Analyze experiment code and outputs to determine if the experiment ran correctly and produced valid results.
 
-            [VALIDATION_CRITERIA]
-            1. Did the experiment actually test the hypothesis?
-            2. Were the expected outputs generated (plots, JSON results)?
-            3. Are the results meaningful and complete?
-            4. Are the algorithms and experiment logic correct and complete?
-            5. Are there any obvious issues that make the experiment invalid?
-        """)
-                
-        # User message with execution results and code
+            [VALIDATION_APPROACH]
+            1. Check OUTPUTS first: Did the experiment produce the expected files and metrics?
+            2. Check RESULTS: Are the values plausible? (e.g., NaN, all zeros, identical values across conditions = red flag)
+            3. Check CODE only if results look wrong: Trace the specific bug causing the invalid output.
+            
+            [COMMON BUGS TO LOOK FOR]
+            - Global vs local variable confusion (function modifies wrong variable)
+            - Off-by-one errors in convergence checks
+            - Metrics that can never reach threshold (e.g., cumulative avg that's dragged down by early failures)
+            - Missing resets between runs (state pollution across trials)
+            - Algorithms that don't match their descriptions (e.g., "RBQL" that's actually just Q-learning)
+            
+            [IMPORTANT]
+            - Only report bugs you can trace to specific line numbers
+            - Don't guess or hallucinate issues that aren't in the code
+            - If results look wrong but you can't find the bug, say so honestly"""
+        )
+                    
         validation_prompt = textwrap.dedent(f"""\
-            [TASK]
-            Evaluate whether this experiment produced valid and meaningful results.
-
             [HYPOTHESIS]
-            Description: {hypothesis.description}
-            Rationale: {hypothesis.rationale}
-            Expected Improvement: {hypothesis.expected_improvement}
-            Baseline to Beat: {hypothesis.baseline_to_beat or "N/A"}
+            {hypothesis.description}
+            
+            Success Criteria: {hypothesis.success_criteria}
 
-            [EXPERIMENTAL_PLAN]
-            {experimental_plan}
+            [EXPERIMENT_PLAN]
+            {experiment_plan}
 
-            [EXECUTION_RESULTS]
+            [EXECUTION SUMMARY]
             - Return Code: {execution_result.return_code}
-            - Generated Plots: {plot_count} file(s) {f"({', '.join([os.path.basename(p) for p in execution_result.plot_files])})" if execution_result.plot_files else ""}
-            - Generated JSON results: {result_file_count} file(s)
+            - Plots Generated: {plot_count} ({', '.join([os.path.basename(p) for p in execution_result.plot_files]) if execution_result.plot_files else 'none'})
+            - JSON Results: {result_file_count} file(s)
 
-            [CODE_EXECUTED]
+            [STDOUT]
+            {stdout_summary}
+
+            [CODE]
             ```python
             {code_content}
             ```
 
-            [STDOUT_OUTPUT]
-            {stdout_summary}
-
-            [OUTPUT_REQUIREMENTS]
-            Provide a structured evaluation with:
-            - reasoning: Detailed explanation of why results are valid or invalid
-            - If invalid: concisely describe specific issues that need to be addressed in a few sentences.
-        """)
+            [VALIDATION TASK]
+            1. Are the results valid? (Yes/No)
+            2. If No: What specific bug causes the invalid results? Cite line numbers.
+            3. What fix is needed? (Be specific, not generic)
+            
+            Keep response concise. No fluff."""
+        )
         
         try:
             chat = lms.Chat(system_prompt)
@@ -495,7 +548,7 @@ class ExperimentRunner:
 
                 [REQUIREMENTS]
                 1. Address all issues identified in the validation feedback as well as possible.
-                2. Ensure the code actually tests the hypothesis as described in the experimental plan
+                2. Ensure the code actually tests the hypothesis as described in the experiment plan
                 3. Ensure plots are saved to "plots/" directory (relative to execution directory) - create this directory if needed using os.makedirs("plots", exist_ok=True)
                 4. Save detailed results/metrics to JSON file in the current directory (do NOT create an "output" directory - the code already runs from the output directory)
                 5. Ensure stdout output is concise and meaningful - key metrics, conclusions and results only, avoid loop spam
@@ -513,8 +566,7 @@ class ExperimentRunner:
                 [HYPOTHESIS]
                 Description: {hypothesis.description}
                 Rationale: {hypothesis.rationale}
-                Expected Improvement: {hypothesis.expected_improvement}
-                Baseline to Beat: {hypothesis.baseline_to_beat or "N/A"}
+                Success Criteria: {hypothesis.success_criteria}
 
                 [CURRENT_CODE]
                 ```python
@@ -560,7 +612,7 @@ class ExperimentRunner:
         self,
         plot_files: List[str],
         hypothesis: Hypothesis,
-        experimental_plan: str,
+        experiment_plan: str,
         stdout: str
     ) -> List[Plot]:
         """Generate captions for plot files using LM Studio VLM API."""
@@ -606,14 +658,13 @@ class ExperimentRunner:
                 [HYPOTHESIS]
                 Description: {hypothesis.description}
                 Rationale: {hypothesis.rationale}
-                Expected Improvement: {hypothesis.expected_improvement}
-                Baseline to Beat: {hypothesis.baseline_to_beat or "N/A"}
+                Success Criteria: {hypothesis.success_criteria}
 
-                [EXPERIMENTAL_PLAN]
-                {experimental_plan}
+                [EXPERIMENT_PLAN]
+                {experiment_plan}
 
                 [CODE_EXECUTION_OUTPUT]
-                {stdout[:1000] if len(stdout) > 1000 else stdout}
+                {stdout[:500] + '...[truncated during context limit]...' + stdout[-1500:] if len(stdout) > 2000 else stdout}
 
                 [PLOT_FILENAME]
                 {filename}
@@ -637,85 +688,104 @@ class ExperimentRunner:
         
         return plots
     
-    def _generate_experimental_plan(
+    def _generate_experiment_plan(
         self,
         hypothesis: Hypothesis,
-        paper_concept: PaperConcept
+        paper_concept: PaperConcept,
+        user_requirements: Optional[UserRequirements] = None,
+        user_code: Optional[List[UserCode]] = None
     ) -> str:
-        """Generate a detailed experimental plan for testing a hypothesis."""
+        """Generate a detailed experiment plan for testing a hypothesis."""
+
+        # Format user requirements section
+        user_requirements_section = ""
+        requirements_parts = []
+        if user_requirements:
+            if user_requirements.methods and user_requirements.methods.strip():
+                requirements_parts.append(f"Methods: {user_requirements.methods}")
+            if user_requirements.results and user_requirements.results.strip():
+                requirements_parts.append(f"Results: {user_requirements.results}")
+        
+        if requirements_parts:
+            user_requirements_section = "[USER REQUIREMENTS]\n" + "\n\n".join(requirements_parts)
+        else:
+            user_requirements_section = "[USER REQUIREMENTS]\nNo specific experimentation requirements provided"
+
+        # Format user code files section
+        user_code_section = ""
+        if user_code:
+            user_code_section = self._format_user_code_files(user_code)
+        else:
+            user_code_section = "[USER CODE FILES]\nNo user code files provided"
+
+        # Build instructions based on whether user code exists
+        code_instructions = ""
+        if user_code:
+            code_instructions = "\n[IMPORTANT: USER CODE PROVIDED]\nBuild upon and adapt the existing user code files provided below. Do not start from scratch - extend and modify the existing code to test the hypothesis. Identify what needs to be added, modified, or adapted in the existing code."
 
         prompt = textwrap.dedent(f"""\
             [TASK]
-            Create a detailed, concise experimental plan for testing a given hypothesis.
+            Create a detailed, concise experiment plan for testing a given hypothesis.
             The plan will be used to generate the experiment code in Python.
+            You must output only the plan/description. Do NOT generate the full code yet.
+            Focus on describing the experiment design, setup, metrics, and approach in natural language.
 
             [PLAN_REQUIREMENTS]
             Include:
             - Objective and success criteria
             - Required mathematical formulas/technical details
-            - Experimental setup
+            - Experiment setup
             - Metrics to measure
             - Implementation approach
             - Output requirements: 
               * Detailed results/metrics stored in JSON file
               * Concise, meaningful output to stdout (key metrics, conclusions)
               * Plot(s) for visualization
-
-            [CONSTRAINTS]
-            Experiment MUST complete in under 5 minutes. Use reasonable parameter ranges and reduce iterations/computations/parameter combinations if needed.
-
-            [AVAILABLE_PACKAGES]
-            The following Python packages are available (optional - use if helpful):
-            - numpy: Numerical computing, arrays, mathematical operations
-            - matplotlib: Plotting and visualization
-            - seaborn: Statistical data visualization (built on matplotlib)
-            - pygame: Game development and interactive simulations
-            These packages are available but not required - use them only if they help test the hypothesis.
+            - Experiment MUST complete in under 5 minutes. Use reasonable parameter ranges and reduce iterations/computations/parameter combinations if needed.
 
             [RESEARCH_CONTEXT]
             {paper_concept.description}
 
-            [CODE_SNIPPETS]
-            {paper_concept.code_snippets if paper_concept.code_snippets else "No code snippets provided"}
-
             [HYPOTHESIS]
             Description: {hypothesis.description}
             Rationale: {hypothesis.rationale}
-            Expected Improvement: {hypothesis.expected_improvement}
-            Baseline to Beat: {hypothesis.baseline_to_beat or "N/A"}
+            Success Criteria: {hypothesis.success_criteria}
 
-            [INSTRUCTIONS]
-            Be specific and actionable. Only use information actually present in the research context.""")
+            {user_requirements_section}
+
+            {user_code_section}
+            {code_instructions}"""
+        )
 
         try:
             model = lms.llm(self.settings.EXPERIMENT_PLAN_MODEL)
             result = model.respond(prompt, config={"temperature": 0.4})
             return remove_thinking_blocks(result.content)
         except Exception as e:
-            print(f"ERROR: Failed to generate experimental plan: {e}")
+            print(f"ERROR: Failed to generate experiment plan: {e}")
             traceback.print_exc()
             raise
     
-    def save_experimental_plan(
+    def save_experiment_plan(
         self,
-        experimental_plan: str
+        experiment_plan: str
     ) -> str:
-        """Save an experimental plan to a file."""
+        """Save an experiment plan to a file."""
 
-        file_path = save_markdown(experimental_plan, EXPERIMENTAL_PLAN_FILE, self.base_output_dir)
+        file_path = save_markdown(experiment_plan, EXPERIMENT_PLAN_FILE, self.base_output_dir)
         
         return file_path
     
-    def load_experimental_plan(
+    def load_experiment_plan(
         self
     ) -> str:
-        """Load an experimental plan from a file."""
+        """Load an experiment plan from a file."""
 
-        file_path = os.path.join(self.base_output_dir, EXPERIMENTAL_PLAN_FILE)
+        file_path = os.path.join(self.base_output_dir, EXPERIMENT_PLAN_FILE)
 
         path_obj = Path(file_path)
         if not path_obj.exists():
-            raise FileNotFoundError(f"Experimental plan not found: {file_path}")
+            raise FileNotFoundError(f"Experiment plan not found: {file_path}")
 
         plan_content = load_markdown(path_obj.name, str(path_obj.parent))
 
@@ -736,12 +806,12 @@ class ExperimentRunner:
         return code_content
     
     def load_experiment_files(self) -> ExperimentFiles:
-        """Load both experimental plan and experiment code files."""
+        """Load plan and experiment code files."""
         
         return ExperimentFiles(
-            experimental_plan=self.load_experimental_plan(),
+            experiment_plan=self.load_experiment_plan(),
             experiment_code=self.load_experiment_code(),
-            plan_file_path=os.path.join(self.base_output_dir, EXPERIMENTAL_PLAN_FILE),
+            plan_file_path=os.path.join(self.base_output_dir, EXPERIMENT_PLAN_FILE),
             code_file_path=os.path.join(self.base_output_dir, "experiment.py")
         )
     
@@ -818,7 +888,7 @@ class ExperimentRunner:
         
         experiment_result = ExperimentResult(
             hypothesis=hypothesis,
-            experimental_plan=data['experimental_plan'],
+            experiment_plan=data['experiment_plan'],
             experiment_code=experiment_code,
             execution_result=execution_result,
             validation_result=validation_result,
@@ -843,21 +913,56 @@ class ExperimentRunner:
         # Ensure output directory exists
         os.makedirs(self.base_output_dir, exist_ok=True)
         
-        # Generate or load experimental plan
+        # Clear plots directory if it exists to prevent mixing results
+        plots_dir = os.path.join(self.base_output_dir, "plots")
+        if os.path.exists(plots_dir):
+            for file in os.listdir(plots_dir):
+                file_path = os.path.join(plots_dir, file)
+                try:
+                    if os.path.isfile(file_path):
+                        os.unlink(file_path)
+                except Exception as e:
+                    print(f"Warning: Failed to delete {file_path}: {e}")
+        else:
+             os.makedirs(plots_dir, exist_ok=True)
+        
+        # Load user requirements and user code
+        user_requirements = None
+        user_code = None
         try:
-            plan_file_path = os.path.join(self.base_output_dir, EXPERIMENTAL_PLAN_FILE)
+            user_requirements = UserRequirements.load_user_requirements("user_files/user_requirements.md")
+        except FileNotFoundError:
+            print("User requirements file not found, proceeding without it")
+        except Exception as e:
+            print(f"Warning: Failed to load user requirements: {e}")
+        
+        try:
+            code_analyzer = CodeAnalyzer(model_name=self.settings.CODE_ANALYSIS_MODEL)
+            user_code = code_analyzer.load_code_files("user_files")
+        except Exception as e:
+            print(f"Warning: Failed to load user code files: {e}")
+            user_code = None
+        
+        # Generate or load experiment plan
+        try:
+            plan_file_path = os.path.join(self.base_output_dir, EXPERIMENT_PLAN_FILE)
             if load_existing_plan and os.path.exists(plan_file_path):
-                print(f"Loading existing experimental plan...")
-                experimental_plan = self.load_experimental_plan()
+                print(f"Loading existing experiment plan...")
+                experiment_plan = self.load_experiment_plan()
             else:
                 if load_existing_plan:
-                    print(f"Experimental plan not found, generating new plan...")
+                    print(f"Experiment plan not found, generating new plan...")
                 else:
-                    print(f"Generating new experimental plan...")
-                experimental_plan = self._generate_experimental_plan(hypothesis, paper_concept)
-                self.save_experimental_plan(experimental_plan)
+                    print(f"Generating new experiment plan...")
+                experiment_plan = self._generate_experiment_plan(
+                    hypothesis, 
+                    paper_concept,
+                    user_requirements=user_requirements,
+                    user_code=user_code
+                )
+                self.save_experiment_plan(experiment_plan)
         except Exception as e:
-            print(f"ERROR: Failed to generate/load experimental plan: {e}")
+            print(f"ERROR: Failed to generate/load experiment plan: {e}")
             traceback.print_exc()
             raise
         
@@ -892,10 +997,12 @@ class ExperimentRunner:
                 print(f"Experiment code not found, generating new code...")
             # Generate new code
             write_result = self._write_experiment_code(
-                experimental_plan,
+                experiment_plan,
                 hypothesis,
                 paper_concept,
-                self.base_output_dir
+                self.base_output_dir,
+                user_requirements=user_requirements,
+                user_code=user_code
             )
         
         code_file_path = write_result.code_file_path
@@ -961,7 +1068,7 @@ class ExperimentRunner:
                 total_validation_attempts += 1
                 validation_result = self._validate_experiment_results(
                     execution_result,
-                    experimental_plan,
+                    experiment_plan,
                     hypothesis,
                     code_file_path
                 )
@@ -1037,7 +1144,7 @@ class ExperimentRunner:
                     plot_captions = self._generate_plot_captions(
                         execution_result.plot_files,
                         hypothesis,
-                        experimental_plan,
+                        experiment_plan,
                         execution_result.stdout
                     )
                     print(f"Generated {len(plot_captions)} plot caption(s)")
@@ -1047,8 +1154,8 @@ class ExperimentRunner:
                 
                 # Truncate stdout if too long to prevent context overflow
                 stdout_summary = execution_result.stdout
-                if len(stdout_summary) > 1500:
-                    stdout_summary = stdout_summary[:1500] + "\n...[truncated]..."
+                if len(stdout_summary) > 2000:
+                    stdout_summary = stdout_summary[:500] + "\n...[truncated output]...\n" + stdout_summary[-1500:]
                 
                 # Build plot captions text for prompt
                 plot_captions_text = ""
@@ -1065,8 +1172,7 @@ class ExperimentRunner:
                     [HYPOTHESIS]
                     Description: {hypothesis.description}
                     Rationale: {hypothesis.rationale}
-                    Expected Improvement: {hypothesis.expected_improvement}
-                    Baseline to Beat: {hypothesis.baseline_to_beat or "N/A"}
+                    Success Criteria: {hypothesis.success_criteria}
 
                     [STDOUT_OUTPUT]
                     {stdout_summary}
@@ -1156,7 +1262,7 @@ class ExperimentRunner:
         # Create and return ExperimentResult
         experiment_result = ExperimentResult(
             hypothesis=hypothesis,
-            experimental_plan=experimental_plan,
+            experiment_plan=experiment_plan,
             experiment_code=experiment_code,
             execution_result=execution_result,
             validation_result=validation_result,

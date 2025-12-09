@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from ..base_frame import BaseFrame, ProgressPopup, create_gray_button
 from phases.context_analysis.user_code_analysis import CodeAnalyzer
 from phases.context_analysis.paper_conception import PaperConception
-from phases.context_analysis.user_requirements import load_user_requirements
+from phases.context_analysis.user_requirements import UserRequirements
 from settings import Settings
 
 
@@ -105,8 +105,8 @@ class CodeFilesScreen(BaseFrame):
         left_header = ttk.Frame(header_frame)
         left_header.pack(side="left")
         
-        ttk.Label(left_header, text="Your Code Files", font=("SF Pro", 14, "bold")).pack(side="left")
-        self.count_label = ttk.Label(left_header, text="0", font=("SF Pro", 14), foreground="gray")
+        ttk.Label(left_header, text="Your Code Files", font=("SF Pro", 18, "bold")).pack(side="left")
+        self.count_label = ttk.Label(left_header, text="0", font=("SF Pro", 18), foreground="gray")
         self.count_label.pack(side="left", padx=(10, 0))
         
         self.upload_btn = ttk.Button(header_frame, text="Upload", command=self._on_upload_click)
@@ -127,7 +127,7 @@ class CodeFilesScreen(BaseFrame):
         ttk.Label(
             self.files_list,
             text="No code files uploaded yet",
-            font=("SF Pro", 14),
+            font=("SF Pro", 16),
             foreground="gray"
         ).pack(pady=20)
 
@@ -146,7 +146,7 @@ class CodeFilesScreen(BaseFrame):
         ttk.Label(
             content_frame,
             text=code_file.filename,
-            font=("SF Pro", 14, "bold")
+            font=("SF Pro", 16)
         ).pack(anchor="w")
         
         # Line count
@@ -154,7 +154,7 @@ class CodeFilesScreen(BaseFrame):
         ttk.Label(
             content_frame,
             text=line_text,
-            font=("SF Pro", 12),
+            font=("SF Pro", 14),
             foreground="gray"
         ).pack(anchor="w", pady=(2, 0))
         
@@ -293,22 +293,22 @@ class CodeFilesScreen(BaseFrame):
 
     def _run_generation(self):
         """Run paper concept generation with progress popup."""
-        popup = ProgressPopup(self.controller, "Generating Paper Concept...")
+        popup = ProgressPopup(self.controller, "Generating Paper Concept")
         
         def task():
             try:
                 # Step 1: Load user requirements
-                self.after(0, lambda: popup.update_status("Loading user requirements..."))
-                user_requirements = load_user_requirements("user_files/user_requirements.md")
+                self.after(0, lambda: popup.update_status("Loading user requirements"))
+                user_requirements = UserRequirements.load_user_requirements("user_files/user_requirements.md")
                 
                 # Step 2: Analyze code files
-                self.after(0, lambda: popup.update_status("Analyzing code files..."))
+                self.after(0, lambda: popup.update_status("Analyzing code files"))
                 code_analyzer = CodeAnalyzer(model_name=Settings.CODE_ANALYSIS_MODEL)
                 code_files = code_analyzer.load_code_files("user_files")
                 analyzed_files = code_analyzer.analyze_all_files(code_files)
                 
                 # Step 3: Generate paper concept
-                self.after(0, lambda: popup.update_status("Building paper concept..."))
+                self.after(0, lambda: popup.update_status("Building paper concept"))
                 concept_builder = PaperConception(
                     model_name=Settings.PAPER_CONCEPTION_MODEL,
                     user_code=analyzed_files,

@@ -22,10 +22,10 @@ class SettingsScreen(BaseFrame):
         )
 
     def create_content(self):
-        # Guidance
-        guidance_frame = ttk.LabelFrame(self.scrollable_frame, text="Info", padding="10")
-        guidance_frame.pack(fill="x", padx=10, pady=5)
-        ttk.Label(guidance_frame, text="Configure the models for each phase of the paper generation process.\nEnsure LM Studio is running to populate model lists.", wraplength=600).pack(anchor="w")
+        # Info
+        #guidance_frame = ttk.LabelFrame(self.scrollable_frame, text="Info", padding="10")
+        #guidance_frame.pack(fill="x", padx=0, pady=5)
+        #ttk.Label(guidance_frame, text="Configure the models for each phase of the paper generation process.\nEnsure LM Studio is running to populate model lists.", wraplength=600).pack(anchor="w")
 
         # Context Analysis Phase
         self.create_phase_section("Context Analysis", [
@@ -77,7 +77,7 @@ class SettingsScreen(BaseFrame):
     def create_phase_section(self, title, settings):
         from settings import Settings
         frame = ttk.LabelFrame(self.scrollable_frame, text=title, padding="10")
-        frame.pack(fill="x", padx=10, pady=5)
+        frame.pack(fill="x", padx=0, pady=5)
 
         for setting in settings:
             # Handle different setting definitions
@@ -119,7 +119,7 @@ class SettingsScreen(BaseFrame):
     def create_latex_generation_section(self):
         from settings import Settings
         frame = ttk.LabelFrame(self.scrollable_frame, text="LaTeX Generation", padding="10")
-        frame.pack(fill="x", padx=10, pady=5)
+        frame.pack(fill="x", padx=0, pady=5)
 
         # LaTeX Generation Model
         row_frame = ttk.Frame(frame)
@@ -144,9 +144,8 @@ class SettingsScreen(BaseFrame):
         row_frame.pack(fill="x", pady=2)
         ttk.Label(row_frame, text="Paper Title", width=30).pack(side="left")
         self.title_var = tk.StringVar(value=Settings.LATEX_TITLE)
-        entry = ttk.Entry(row_frame, textvariable=self.title_var)
-        entry.pack(side="right", fill="x", expand=True)
-        # Placeholder logic could be added here or just label text
+        entry = ttk.Entry(row_frame, textvariable=self.title_var, width=60)
+        entry.pack(side="right", fill="x", expand=True, padx=(10, 0))
         ttk.Label(frame, text="(Leave empty for LLM generated title)", font=("SF Pro", 14, "italic")).pack(anchor="e")
 
         # Authors section
