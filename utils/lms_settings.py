@@ -3,6 +3,7 @@ import platform
 import os
 from pathlib import Path
 from typing import Optional
+import lmstudio as lms
 
 class LMSJITSettings:
     """
@@ -76,3 +77,17 @@ class LMSJITSettings:
             
             data["developer"]["unloadPreviousJITModelOnLoad"] = self.original_value
             self._write_settings(data)
+            
+            # Explicitly unload all models that were loaded during the JIT-disabled session
+            try:
+                loaded_models = lms.list_loaded_models()
+                if loaded_models:
+                    print(f"[LMSJITSettings] Unloading {len(loaded_models)} models...")
+                    for model in loaded_models:
+                        try:
+                            model.unload()
+                            print(f"[LMSJITSettings] Unloaded {model.identifier}")
+                        except Exception as e:
+                            print(f"[LMSJITSettings] Failed to unload {model.identifier}: {e}")
+            except Exception as e:
+                print(f"[LMSJITSettings] Error while unloading models: {e}")

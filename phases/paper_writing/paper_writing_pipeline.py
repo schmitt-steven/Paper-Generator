@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Sequence, Optional, Dict
+from typing import List, Sequence, Optional, Dict, Callable
 from pathlib import Path
 import re
 from phases.context_analysis.paper_conception import PaperConcept
@@ -38,10 +38,13 @@ class PaperWritingPipeline:
         experiment_result: ExperimentResult,
         papers: Sequence[Paper],
         user_requirements: Optional[UserRequirements] = None,
+        status_callback: Optional[Callable[[str], None]] = None,
     ) -> PaperDraft:
         """Run the full pipeline and return generated paper sections."""
 
         if not self._indexed_corpus:
+            if status_callback:
+                status_callback("Generating embeddings for papers...")
             self.index_papers(papers)
 
         print(f"\n{'='*80}")
@@ -66,7 +69,9 @@ class PaperWritingPipeline:
                 Section.CONCLUSION,
                 # Section.ABSTRACT,
             ):
-                print(f"[{section_type.value}] Gathering evidence for {section_type.value} section...")
+                print(f"[{section_type.value}] Gathering evidence for {section_type.value} section")
+                if status_callback:
+                    status_callback(f"Gathering evidence for {section_type.value} section")
                 default_queries = self.query_builder.build_default_queries(section_type, paper_concept, experiment_result)
 
                 evidence, _ = gatherer.gather_evidence(
@@ -87,17 +92,27 @@ class PaperWritingPipeline:
         print(f"{'='*80}\n")
         
         # Load prompts if setting is enabled
+        # Load prompts if setting is enabled
+        writing_prompts = None
         if Settings.LOAD_PAPER_WRITING_PROMPTS:
-            writing_prompts = self.load_section_writing_prompts()
-            print(f"[PaperWritingPipeline] Using loaded writing prompts for {len(writing_prompts)} sections")
+            try:
+                writing_prompts = self.load_section_writing_prompts()
+                print(f"[PaperWritingPipeline] Using loaded writing prompts for {len(writing_prompts)} sections")
+            except FileNotFoundError:
+                print(f"[PaperWritingPipeline] Warning: Prompts file not found despite setting enabled. Falling back to generation.")
+                writing_prompts = None
         else:
             writing_prompts = None
         
+        if status_callback:
+            status_callback("Drafting paper sections...")
+
         paper_draft, generated_prompts = self.writer.generate_paper_sections(
             context=paper_concept,
             experiment=experiment_result,
             evidence_by_section=evidence_by_section,
             user_requirements=user_requirements,
+            writing_prompts=writing_prompts,
         )
         
         # Save writing prompts to output directory (use generated if not loaded)

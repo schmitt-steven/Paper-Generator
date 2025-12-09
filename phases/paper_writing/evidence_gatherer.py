@@ -216,7 +216,13 @@ class EvidenceGatherer:
             Your response MUST be a JSON object conforming to the `SummaryBatchResult` schema.
             You MUST return exactly {len(batch)} summaries, one for each item, in the same order as provided.
             Never skip any items.
-            IMPORTANT: Do NOT include any citation keys like [author2023], [sutton1990], or similar bracketed references in your summaries. Write plain text summaries without any citation markers.
+            IMPORTANT:
+            - Content must be completely self-contained.
+            - REMOVE all in-text citations (e.g., [11], [Sutton1990]).
+            - REMOVE references to specific authors or papers mentioned in the text (e.g., avoid "As Sutton states..." or "In [1] it is shown...").
+            - Focus purely on the concepts, findings, and arguments presented.
+            - Do not mention that the text is "citing" other works.
+            - If the text says "We propose", summarize it as "The study proposes" or "The authors propose".
 
             [CHUNKS]
             {"".join(items_text)}"""

@@ -4,7 +4,7 @@
 \usepackage[utf8]{inputenx}
 
 %% Note: The title will be automatically replaced by the paper generator
-\newcommand{\dokumententitel}[0]{Recursive Backwards Q-Learning: Sample-Efficient Value Iteration via Backward BFS in Deterministic Environments}
+\newcommand{\dokumententitel}[0]{Recursive Backwards Q-Learning: Sample-Efficient Value Convergence in Deterministic Episodic Environments}
 
 \input{preamble}
 
@@ -15,20 +15,20 @@
 
 % Author names - will be set by the paper generator
 \author{
-  \IEEEauthorblockN{Qwen3}
+  \IEEEauthorblockN{Author 1}
   \IEEEauthorblockA{
-    University of Qwen\\
+    University of Test\\
     Department of Computer Science\\
-    Buckingham Palace, London, UK\\
-    Email: qwen.rocks@china.gov
+    Some Address\\
+    Email: some@mail.com
     }
   \and
-  \IEEEauthorblockN{Human}
+  \IEEEauthorblockN{Author 2}
   \IEEEauthorblockA{
-    Tech Corp\\
-    AI Department\\
-    Mannheim, Germany\\
-    Email: second@guy.com
+    University of Test\\
+    Department of Computer Science\\
+    Some Address\\
+    Email: some@other.mail.com
     }
 }
 
@@ -46,7 +46,7 @@
 \end{abstract}
 
 % Generate table of contents
-{\small\tableofcontents}
+{\small% \tableofcontents}
 
 % Sections
 % -------------------------------------------------------
@@ -56,6 +56,11 @@
 \input{chapters/results}
 \input{chapters/discussion}
 \input{chapters/conclusion}
+
+% Acknowledgements (if provided)
+\IfFileExists{acknowledgements.tex}{
+\input{acknowledgements}
+}{}
 
 % --------------------------------------------------------------------
 % Abbreviations
