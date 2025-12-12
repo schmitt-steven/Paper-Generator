@@ -15,8 +15,8 @@ class ExecutionResult:
     stdout: str
     stderr: str
     return_code: int
-    plot_files: List[str] = field(default_factory=list)
-    result_files: List[str] = field(default_factory=list)
+    plot_files: list[str] = field(default_factory=list)
+    result_files: list[str] = field(default_factory=list)
     
     @property
     def has_errors(self) -> bool:
@@ -79,7 +79,7 @@ class ExperimentResult:
     validation_result: ValidationResult
     hypothesis_evaluation: HypothesisEvaluation
     
-    plots: List[Plot] = field(default_factory=list)
+    plots: list[Plot] = field(default_factory=list)
     
     fix_attempts: int = 0
     validation_attempts: int = 0

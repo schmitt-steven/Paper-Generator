@@ -44,7 +44,7 @@ class UserRequirementsScreen(BaseFrame):
             if title in ["General Information", "Section Specifications"]:
                 frame = ttk.Frame(self.scrollable_frame, padding="10")
                 frame.pack(fill="x", pady=10)
-                ttk.Label(frame, text=title, font=("SF Pro", 18, "bold")).pack(anchor="w")
+                ttk.Label(frame, text=title, font=self.controller.fonts.sub_header_font).pack(anchor="w")
                 # ttk.Separator(frame, orient="horizontal").pack(fill="x", pady=5)
                 
                 self.sections.append((header, None))

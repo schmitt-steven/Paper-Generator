@@ -27,12 +27,12 @@ PAPERS_FILE = Path("output/papers.json")
 
 class PaperSelectionScreen(BaseFrame):
     def __init__(self, parent, controller):
-        self.user_papers: List[Paper] = []
-        self.searched_papers: List[Paper] = []
+        self.user_papers: list[Paper] = []
+        self.searched_papers: list[Paper] = []
         
         # Widget references
-        self.user_paper_widgets: Dict[str, ttk.Frame] = {}
-        self.searched_paper_widgets: Dict[str, ttk.Frame] = {}
+        self.user_paper_widgets: dict[str, ttk.Frame] = {}
+        self.searched_paper_widgets: dict[str, ttk.Frame] = {}
         
         # Buttons
         self.upload_btn: ttk.Button
@@ -114,12 +114,12 @@ class PaperSelectionScreen(BaseFrame):
         left_header = ttk.Frame(header_frame)
         left_header.pack(side="left")
         
-        ttk.Label(left_header, text=title, font=("SF Pro", 18, "bold")).pack(side="left")
-        count_label = ttk.Label(left_header, text=str(count), font=("SF Pro", 18), foreground="gray")
+        ttk.Label(left_header, text=title, font=self.controller.fonts.sub_header_font).pack(side="left")
+        count_label = ttk.Label(left_header, text=str(count), font=self.controller.fonts.sub_header_font, foreground="gray")
         count_label.pack(side="left", padx=(10, 0))
         
         style = ttk.Style()
-        style.configure("Section.TButton", font=("SF Pro", 16))
+        style.configure("Section.TButton", font=self.controller.fonts.default_font)
         
         action_btn = ttk.Button(header_frame, text=button_text, command=button_command, style="Section.TButton")
         action_btn.pack(side="right")
@@ -148,7 +148,7 @@ class PaperSelectionScreen(BaseFrame):
         self._show_empty_state(self.searched_papers_list, "Click 'Auto Search' to find related papers")
 
     def _show_empty_state(self, container: ttk.Frame, message: str):
-        ttk.Label(container, text=message, font=("SF Pro", 16), foreground="gray").pack(pady=20)
+        ttk.Label(container, text=message, font=self.controller.fonts.default_font, foreground="gray").pack(pady=20)
 
     def _create_paper_entry(self, parent: ttk.Frame, paper: Paper, 
                             on_remove: Callable, is_user_paper: bool) -> ttk.Frame:
@@ -159,17 +159,29 @@ class PaperSelectionScreen(BaseFrame):
         content_row.pack(fill="x")
         
         content_frame = ttk.Frame(content_row)
-        content_frame.pack(side="left", fill="x", expand=True)
+        content_frame.pack(side="left", fill="x", expand=True, padx=(10, 0))
         
-        title_label = ttk.Label(content_frame, text=paper.title, font=("SF Pro", 16, "normal"), wraplength=500)
-        title_label.pack(anchor="w")
+        title_label = ttk.Label(content_frame, text=paper.title, font=self.controller.fonts.default_font)
+        title_label.pack(anchor="w", fill="x")
         
         metadata = self._format_paper_metadata(paper)
-        metadata_label = ttk.Label(content_frame, text=metadata, font=("SF Pro", 14), foreground="gray")
-        metadata_label.pack(anchor="w", pady=(2, 0))
+        metadata_label = ttk.Label(content_frame, text=metadata, font=self.controller.fonts.text_area_font, foreground="gray")
+        metadata_label.pack(anchor="w", pady=(2, 0), fill="x")
         
         trash_btn = create_gray_button(content_row, text="\U0001F5D1", command=lambda: on_remove(paper.id), width=3)
-        trash_btn.pack(side="right", padx=(10, 0))
+        trash_btn.pack(side="right", padx=(30, 0))
+        
+        # Dynamic wraplength
+        def update_wraplength(event):
+            # Subtract padding/offsets if needed
+            # content_frame has padx=(10, 0), trash_btn has padx=(30, 0) and width ~30-40px?
+            # event.width is width of content_frame.
+            width = event.width
+            if width > 10: # Avoid tiny widths causing issues on init
+                title_label.config(wraplength=width)
+                metadata_label.config(wraplength=width)
+                
+        content_frame.bind("<Configure>", update_wraplength)
         
         for widget in [content_frame, title_label, metadata_label]:
             widget.bind("<Button-1>", lambda e, p=paper: self._on_paper_click(p, is_user_paper))
@@ -272,7 +284,7 @@ class PaperSelectionScreen(BaseFrame):
             traceback.print_exc()
             self.after(0, lambda: self._set_upload_loading(False))
 
-    def _on_upload_complete(self, new_papers: List[Paper]):
+    def _on_upload_complete(self, new_papers: list[Paper]):
         for paper in new_papers:
             self.user_papers.append(paper)
             print(f"[Papers] Added user paper: {paper.title[:60]}")
@@ -347,7 +359,7 @@ class PaperSelectionScreen(BaseFrame):
         thread = threading.Thread(target=task, daemon=True)
         thread.start()
 
-    def _on_search_complete(self, papers: List[Paper], popup: ProgressPopup):
+    def _on_search_complete(self, papers: list[Paper], popup: ProgressPopup):
         """Handle search completion - close popup and display papers."""
         popup.close()
         self.searched_papers = papers
@@ -473,7 +485,7 @@ class PaperSelectionScreen(BaseFrame):
             # No papers to process, no hypothesis - generate it
             self._run_hypothesis_generation(all_papers)
 
-    def _find_papers_needing_conversion(self, all_papers: List[Paper]) -> List[Paper]:
+    def _find_papers_needing_conversion(self, all_papers: list[Paper]) -> list[Paper]:
         """Find papers that need to be converted to markdown (have PDF but no markdown_text)."""
         papers_needing_conversion = []
         for paper in all_papers:
@@ -503,7 +515,7 @@ class PaperSelectionScreen(BaseFrame):
         
         return papers_needing_conversion
 
-    def _process_new_papers(self, all_papers: List[Paper], new_papers: List[Paper]):
+    def _process_new_papers(self, all_papers: list[Paper], new_papers: list[Paper]):
         """Download and convert new papers, save all, then continue or generate hypotheses."""
         popup = ProgressPopup(self.controller, "Processing New Papers")
         
@@ -550,7 +562,7 @@ class PaperSelectionScreen(BaseFrame):
         popup.close()
         self.controller.next_screen()
     
-    def _run_hypothesis_generation(self, all_papers: List[Paper], popup: Optional[ProgressPopup] = None):
+    def _run_hypothesis_generation(self, all_papers: list[Paper], popup: Optional[ProgressPopup] = None):
         """Run hypothesis generation from user input only."""
         # Create popup if not provided (called from on_next without processing)
         if popup is None:
@@ -575,7 +587,7 @@ class PaperSelectionScreen(BaseFrame):
                 
                 # Step 2: Filter by markdown availability
                 self.after(0, lambda: popup.update_status("Filtering papers with markdown"))
-                papers_with_markdown: List[Paper] = []
+                papers_with_markdown: list[Paper] = []
                 for p in all_papers:
                     if getattr(p, "markdown_text", None) and isinstance(p.markdown_text, str) and p.markdown_text.strip():
                         papers_with_markdown.append(p)

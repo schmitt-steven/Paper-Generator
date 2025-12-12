@@ -34,9 +34,9 @@ class PDFDownloader:
 
     @staticmethod
     def download_papers_as_pdfs(
-        papers: List[Paper], 
+        papers: list[Paper], 
         base_folder: str = "output/literature/"
-    ) -> Tuple[int, int]:
+    ) -> tuple[int, int]:
         """
         Download selected papers as PDFs to specified folder.
         Creates a separate folder for each paper (named by paper ID) containing the PDF.

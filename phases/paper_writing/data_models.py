@@ -37,7 +37,7 @@ class PaperChunk:
     paper: Paper
     chunk_text: str
     chunk_index: int
-    embedding: List[float] = field(default_factory=list)
+    embedding: list[float] = field(default_factory=list)
 
 
 class ScoreResult(BaseModel):
@@ -51,7 +51,7 @@ class SummaryItem(BaseModel):
 
 
 class SummaryBatchResult(BaseModel):
-    results: List[SummaryItem]
+    results: list[SummaryItem]
 
 
 class ScoreItem(BaseModel):
@@ -60,7 +60,7 @@ class ScoreItem(BaseModel):
 
 
 class ScoreBatchResult(BaseModel):
-    results: List[ScoreItem]
+    results: list[ScoreItem]
 
 
 @dataclass

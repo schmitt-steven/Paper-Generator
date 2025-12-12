@@ -24,9 +24,9 @@ class PaperWritingPipeline:
         self.query_builder = QueryBuilder()
         self.writer = PaperWriter()
 
-        self._indexed_corpus: Optional[List[PaperChunk]] = None
+        self._indexed_corpus: Optional[list[PaperChunk]] = None
 
-    def index_papers(self, papers: Sequence[Paper]) -> List[PaperChunk]:
+    def index_papers(self, papers: Sequence[Paper]) -> list[PaperChunk]:
         """Index papers into chunk embeddings and cache the result."""
 
         self._indexed_corpus = self.indexer.index_papers(papers)
@@ -55,7 +55,7 @@ class PaperWritingPipeline:
             indexed_corpus=self._indexed_corpus or [],
         )
 
-        evidence_by_section: Dict[Section, Sequence[Evidence]] = {}
+        evidence_by_section: dict[Section, Sequence[Evidence]] = {}
         # Generate sections in order: Methods -> Results -> Discussion -> Introduction -> Related Work -> Conclusion -> Abstract
         
         # Use context manager to ensure multiple models can be loaded for ALL sections
@@ -123,7 +123,7 @@ class PaperWritingPipeline:
 
     @staticmethod
     def _save_prompts(
-        prompts_by_section: Dict[str, str],
+        prompts_by_section: dict[str, str],
     ) -> None:
         """Save section writing prompts to a JSON file."""
 
@@ -141,7 +141,7 @@ class PaperWritingPipeline:
     @staticmethod
     def load_section_writing_prompts(
         filepath: str = "output/section_writing_prompts.json",
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """Load section writing prompts from a JSON file."""
 
         path_obj = Path(filepath)

@@ -12,7 +12,7 @@ from utils.file_utils import save_json, load_json
 class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
     """Generates and validates research hypotheses"""
     
-    def __init__(self, model_name: str, embedding_model_name: str, paper_concept: PaperConcept, top_limitations: List[Tuple[str, float]], num_papers_analyzed: int):
+    def __init__(self, model_name: str, embedding_model_name: str, paper_concept: PaperConcept, top_limitations: list[tuple[str, float]], num_papers_analyzed: int):
         self.model_name = model_name
         self._model = None  # Lazy-loaded via LazyModelMixin
         self.embedding_model_name = embedding_model_name
@@ -21,7 +21,7 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
         self.top_limitations = top_limitations
         self.num_papers_analyzed = num_papers_analyzed
         
-    def validate_hypotheses(self, hypotheses: List[Hypothesis]) -> List[Hypothesis]:
+    def validate_hypotheses(self, hypotheses: list[Hypothesis]) -> list[Hypothesis]:
         """
         Validate a list of hypotheses and filter to only valid ones.
         
@@ -52,7 +52,7 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
         
         return valid_hypotheses
     
-    def generate_hypotheses(self, n_hypotheses: int = 5) -> List[Hypothesis]:
+    def generate_hypotheses(self, n_hypotheses: int = 5) -> list[Hypothesis]:
         """
         Generate hypotheses and validate them.
         
@@ -138,7 +138,7 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
             print(f"Error generating hypotheses: {e}")
             # Return empty list on error
             return []
-    def create_hypothesis_from_user_input(self, user_requirements) -> List[Hypothesis]:
+    def create_hypothesis_from_user_input(self, user_requirements) -> list[Hypothesis]:
         """
         Create a Hypothesis object from a user-provided string.
         Uses LLM to structure the raw text into a proper Hypothesis object.
@@ -236,7 +236,7 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
             )]
 
     @staticmethod
-    def save_hypotheses(hypotheses: List[Hypothesis], filepath: str, num_papers_analyzed: int = 0):
+    def save_hypotheses(hypotheses: list[Hypothesis], filepath: str, num_papers_analyzed: int = 0):
         """Save hypotheses to JSON file."""
         path_obj = Path(filepath)
 
@@ -260,7 +260,7 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
         print(f"\nSaved {len(hypotheses)} hypotheses to {filepath}")
     
     @staticmethod
-    def load_hypotheses(filepath: str) -> List[Hypothesis]:
+    def load_hypotheses(filepath: str) -> list[Hypothesis]:
         """
         Load hypotheses from a JSON file.
 
@@ -298,7 +298,7 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
             print(f"Error loading hypotheses: {e}")
             return []
     
-    def select_best_hypotheses(self, hypotheses: List[Hypothesis], max_n: int) -> List[Hypothesis]:
+    def select_best_hypotheses(self, hypotheses: list[Hypothesis], max_n: int) -> list[Hypothesis]:
         """
         Select the most feasible and best hypotheses from a list, prioritizing testability via Python code.
         

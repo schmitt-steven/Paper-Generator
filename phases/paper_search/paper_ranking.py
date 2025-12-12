@@ -23,10 +23,10 @@ class PaperRanker(LazyEmbeddingMixin):
     
     def rank_papers(
         self,
-        papers: List[Paper],
+        papers: list[Paper],
         context: str,
-        weights: Dict[str, float] = None
-    ) -> List[Paper]:
+        weights: dict[str, float] = None
+    ) -> list[Paper]:
         """
         Rank papers by composite score and populate their ranking field.
         
@@ -220,7 +220,7 @@ class PaperRanker(LazyEmbeddingMixin):
         return recency
     
     @staticmethod
-    def print_ranked_papers(papers: List[Paper], n: int = 10):
+    def print_ranked_papers(papers: list[Paper], n: int = 10):
         """Print top N ranked papers by relevance and by final score."""
         if not papers:
             print("No papers to display")

@@ -24,7 +24,7 @@ class SearchQuery(BaseModel):
 
 class SearchQueriesResult(BaseModel):
     """Structured response format for multiple search queries"""
-    queries: List[SearchQuery]
+    queries: list[SearchQuery]
 
 
 class LiteratureSearch(LazyModelMixin):
@@ -41,7 +41,7 @@ class LiteratureSearch(LazyModelMixin):
         self.s2_api = SemanticScholarAPI()
 
 
-    def build_search_queries(self, paper_concept: PaperConcept) -> List[SearchQuery]:
+    def build_search_queries(self, paper_concept: PaperConcept) -> list[SearchQuery]:
         """Generate multiple search queries from paper concept for comprehensive literature search."""
 
         prompt = textwrap.dedent(f"""\
@@ -87,7 +87,7 @@ class LiteratureSearch(LazyModelMixin):
         
         # Retry up to 3 times if we get empty results
         max_attempts = 3
-        search_queries: List[SearchQuery] = []
+        search_queries: list[SearchQuery] = []
         
         for attempt in range(max_attempts):
             result = self.model.respond(
@@ -133,7 +133,7 @@ class LiteratureSearch(LazyModelMixin):
     
 
     @staticmethod
-    def save_search_queries(queries: List[SearchQuery], filename: Optional[str] = None, output_dir: str = "output"):
+    def save_search_queries(queries: list[SearchQuery], filename: Optional[str] = None, output_dir: str = "output"):
         """Save search queries to JSON file."""
         if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -147,7 +147,7 @@ class LiteratureSearch(LazyModelMixin):
     
 
     @staticmethod
-    def load_search_queries(filepath: str) -> List[SearchQuery]:
+    def load_search_queries(filepath: str) -> list[SearchQuery]:
         """Load search queries from JSON file."""
         path_obj = Path(filepath)
         data = load_json(path_obj.name, str(path_obj.parent))
@@ -178,7 +178,7 @@ class LiteratureSearch(LazyModelMixin):
         normalized = re.sub(r'\s+', ' ', normalized)
         return normalized.strip()
     
-    def _get_first_author(self, authors: List[str]) -> str:
+    def _get_first_author(self, authors: list[str]) -> str:
         """Extract first author name for comparison"""
         if not authors:
             return ""
@@ -229,7 +229,7 @@ class LiteratureSearch(LazyModelMixin):
         
         return False
     
-    def remove_duplicates(self, papers: List[Paper]) -> List[Paper]:
+    def remove_duplicates(self, papers: list[Paper]) -> list[Paper]:
         """
         Remove duplicate papers from the list based on paper ID.
         
@@ -254,9 +254,9 @@ class LiteratureSearch(LazyModelMixin):
     
     def detect_and_merge_duplicates(
         self, 
-        user_papers: List[Paper], 
-        searched_papers: List[Paper]
-    ) -> List[Paper]:
+        user_papers: list[Paper], 
+        searched_papers: list[Paper]
+    ) -> list[Paper]:
         """
         Detect duplicates between user-provided and searched papers, merge them.
         Prefers user-provided papers over searched papers when duplicates are found.
@@ -297,7 +297,7 @@ class LiteratureSearch(LazyModelMixin):
         return merged
 
 
-    def execute_search(self, query: str, max_results: int = 20, year: Optional[str] = None, fields_of_study: Optional[str] = None) -> List[Paper]:
+    def execute_search(self, query: str, max_results: int = 20, year: Optional[str] = None, fields_of_study: Optional[str] = None) -> list[Paper]:
         """
         Execute a single search on Semantic Scholar using the provided query string.
         
@@ -318,7 +318,7 @@ class LiteratureSearch(LazyModelMixin):
         return papers
     
 
-    def search_papers(self, queries: List[SearchQuery], max_results_per_query: int = 30) -> List[Paper]:
+    def search_papers(self, queries: list[SearchQuery], max_results_per_query: int = 30) -> list[Paper]:
         """
         Execute multiple searches on Semantic Scholar using a list of SearchQuery objects.
         Includes delay between queries to respect rate limits.
@@ -361,7 +361,7 @@ class LiteratureSearch(LazyModelMixin):
 
     def download_papers_as_pdfs(
         self, 
-        papers: List[Paper], 
+        papers: list[Paper], 
         base_folder: str = "output/literature/"
     ):
         """
@@ -378,7 +378,7 @@ class LiteratureSearch(LazyModelMixin):
     
 
     @staticmethod
-    def save_papers(papers: List[Paper], filename: Optional[str] = None, output_dir: str = "output"):
+    def save_papers(papers: list[Paper], filename: Optional[str] = None, output_dir: str = "output"):
         """Save papers to JSON file."""
         if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -414,7 +414,7 @@ class LiteratureSearch(LazyModelMixin):
     
 
     @staticmethod
-    def load_papers(filepath: str) -> List[Paper]:
+    def load_papers(filepath: str) -> list[Paper]:
         """Load papers from JSON file."""
         path_obj = Path(filepath)
         data = load_json(path_obj.name, str(path_obj.parent))

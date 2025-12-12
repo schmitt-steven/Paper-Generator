@@ -37,7 +37,7 @@ class ResultsManager:
         hypothesis_id: str = None,  # Kept for backward compatibility but not used
         run_id: Optional[int] = None,
         base_dir: str = "output/experiments"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Load previous experiment results for comparison."""
 
         result_data = {}

@@ -18,11 +18,11 @@ class Paper:
     id: str  # S2 paperId
     title: str
     published: str  # YYYY-MM-DD or YYYY
-    authors: List[str]
+    authors: list[str]
     summary: str
     pdf_url: Optional[str]
     doi: Optional[str]
-    fields_of_study: List[str]
+    fields_of_study: list[str]
     venue: Optional[str]
     citation_count: Optional[int] = None
     bibtex: Optional[str] = None
@@ -38,7 +38,7 @@ class Paper:
             self.citation_key = _generate_citation_key(self.bibtex, self.authors, self.published)
 
 
-def _generate_citation_key(bibtex: Optional[str], authors: List[str], published: str) -> str:
+def _generate_citation_key(bibtex: Optional[str], authors: list[str], published: str) -> str:
         """
         Generate a citation key for a paper.
         

@@ -30,7 +30,7 @@ class UserPaperLoader(LazyModelMixin):
         self.model_name = model_name
         self._model = None
     
-    def _get_id_variants_from_filename(self, filename: str) -> List[str]:
+    def _get_id_variants_from_filename(self, filename: str) -> list[str]:
         """Generate potential paper ID variants from filename to try on S2."""
         stem = Path(filename).stem
         variants = [stem]
@@ -43,7 +43,7 @@ class UserPaperLoader(LazyModelMixin):
         
         return variants
     
-    def _search_paper_on_s2(self, pdf_path: Path, s2_api: SemanticScholarAPI) -> Tuple[Optional[Paper], str]:
+    def _search_paper_on_s2(self, pdf_path: Path, s2_api: SemanticScholarAPI) -> tuple[Optional[Paper], str]:
         """Search for paper on Semantic Scholar."""
         # Try filename-based ID variants first
         id_variants = self._get_id_variants_from_filename(pdf_path.name)
@@ -185,7 +185,7 @@ class UserPaperLoader(LazyModelMixin):
         self, 
         folder_path: str = "user_files/papers/",
         s2_api: Optional[SemanticScholarAPI] = None
-    ) -> List[Paper]:
+    ) -> list[Paper]:
         """
         Load and process user-provided PDF papers from a folder.
         

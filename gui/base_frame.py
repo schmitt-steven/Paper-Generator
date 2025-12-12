@@ -7,7 +7,7 @@ from tkinter import ttk
 MAX_WIDTH = 700
 
 # Text widget styling constants
-TEXT_AREA_FONT = ("SF Pro", 14)
+
 TEXT_AREA_SPACING = 4  # Line spacing (spacing between lines)
 TEXT_AREA_PADX = 8
 TEXT_AREA_PADY = 8
@@ -19,11 +19,13 @@ def create_text_area(parent, height: int = 6, **kwargs) -> tk.Text:
         parent,
         height=height,
         wrap="word",
-        font=TEXT_AREA_FONT,
         padx=TEXT_AREA_PADX,
         pady=TEXT_AREA_PADY,
         spacing2=TEXT_AREA_SPACING,  # spacing between wrapped lines
         spacing3=TEXT_AREA_SPACING,  # spacing between paragraphs
+        highlightthickness=0,
+        borderwidth=0,
+        relief="flat",
         **kwargs
     )
     return text
@@ -60,10 +62,10 @@ class ProgressPopup(tk.Toplevel):
         self.content_frame = ttk.Frame(self, padding=40)
         self.content_frame.pack(fill="both", expand=True)
         
-        self.status_label = ttk.Label(self.content_frame, text=initial_status, font=("SF Pro", 16))
+        self.status_label = ttk.Label(self.content_frame, text=initial_status, font=self.parent.fonts.default_font)
         self.status_label.pack(pady=(0, 15))
         
-        self.dots_label = ttk.Label(self.content_frame, text="", font=("SF Pro", 16), foreground="gray")
+        self.dots_label = ttk.Label(self.content_frame, text="", font=self.parent.fonts.default_font, foreground="gray")
         self.dots_label.pack()
         
         self.close_btn = ttk.Button(self.content_frame, text="Close", command=self.close)
@@ -142,7 +144,7 @@ class ProgressPopup(tk.Toplevel):
         self.content_frame.pack(fill="both", expand=True)
         
         # Create error label
-        error_label = ttk.Label(self.content_frame, text="Error:", font=("SF Pro", 16, "bold"), foreground="red")
+        error_label = ttk.Label(self.content_frame, text="Error:", font=self.parent.fonts.header_font, foreground="red")
         error_label.pack(anchor="w", pady=(0, 10))
         
         # Create scrollable text widget for error message
@@ -153,7 +155,6 @@ class ProgressPopup(tk.Toplevel):
         text_widget = tk.Text(
             text_frame,
             wrap="word",
-            font=("SF Pro", 14),
             foreground="red",
             height=15,
             padx=10,
@@ -214,16 +215,21 @@ class BaseFrame(ttk.Frame):
         self.grid_columnconfigure(0, weight=1)
         
         # Header
-        header_frame = ttk.Frame(self, padding="10")
+        header_frame = ttk.Frame(self, padding=(10, 20))
         header_frame.grid(row=0, column=0, sticky="ew")
-        ttk.Label(header_frame, text=self.title, font=("SF Pro", 22, "bold")).pack()
+        ttk.Label(header_frame, text=self.title, font=self.controller.fonts.header_font).pack()
         ttk.Separator(self, orient="horizontal").grid(row=1, column=0, sticky="ew", pady=(0, 15))
         
         # Content container
         content_container = ttk.Frame(self)
+        self.content_container = content_container # Save ref for updates
         content_container.grid(row=2, column=0, sticky="nsew")
         content_container.grid_columnconfigure(0, weight=1)
-        content_container.grid_columnconfigure(1, weight=0, minsize=MAX_WIDTH)
+        
+        # Calculate dynamic width based on font
+        self.content_width = self.controller.fonts.measure_width(55) # Approx 55 chars wide
+        content_container.grid_columnconfigure(1, weight=0, minsize=self.content_width)
+        
         content_container.grid_columnconfigure(2, weight=1)
         content_container.grid_rowconfigure(0, weight=1)
         
@@ -250,16 +256,17 @@ class BaseFrame(ttk.Frame):
         if self.has_next or self.has_back or self.has_regenerate:
             ttk.Separator(self, orient="horizontal").grid(row=3, column=0, sticky="ew")
             nav_container = ttk.Frame(self)
+            self.nav_container = nav_container # Save ref
             nav_container.grid(row=4, column=0, sticky="ew")
             nav_container.grid_columnconfigure(0, weight=1)
-            nav_container.grid_columnconfigure(1, weight=0, minsize=MAX_WIDTH)
+            nav_container.grid_columnconfigure(1, weight=0, minsize=self.content_width)
             nav_container.grid_columnconfigure(2, weight=1)
             
-            nav_frame = ttk.Frame(nav_container, padding=(10, 10, 10, 10))
+            nav_frame = ttk.Frame(nav_container, padding=(10, 20, 10, 20))
             nav_frame.grid(row=0, column=1, sticky="ew")
             
             style = ttk.Style()
-            style.configure("Nav.TButton", font=("SF Pro", 16))
+            style.configure("Nav.TButton", font=self.controller.fonts.nav_button_font)
             
             if self.has_back:
                 ttk.Button(nav_frame, text=self.back_text, command=self.on_back, style="Nav.TButton").pack(side="left")
@@ -267,6 +274,22 @@ class BaseFrame(ttk.Frame):
                 ttk.Button(nav_frame, text=self.next_text, command=self.on_next, style="Nav.TButton").pack(side="right")
             if self.has_regenerate:
                 ttk.Button(nav_frame, text=self.regenerate_text, command=self.on_regenerate, style="Nav.TButton").pack(side="right", padx=(0, 10))
+
+        # Register for font updates
+        self.controller.fonts.add_callback(self._update_layout)
+
+    def _update_layout(self):
+        """Update layout when font size changes."""
+        self.content_width = self.controller.fonts.measure_width(55)
+        
+        if hasattr(self, 'content_container'):
+            self.content_container.grid_columnconfigure(1, minsize=self.content_width)
+            
+        if hasattr(self, 'nav_container'):
+            self.nav_container.grid_columnconfigure(1, minsize=self.content_width)
+            
+        # Also update window width calculation
+        self._canvas.event_generate("<Configure>")
 
     def _update_scrollregion(self, event=None):
         self._canvas.configure(scrollregion=self._canvas.bbox("all"))

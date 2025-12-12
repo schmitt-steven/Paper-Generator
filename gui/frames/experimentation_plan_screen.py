@@ -52,7 +52,7 @@ class ExperimentationPlanScreen(BaseFrame):
         label = ttk.Label(
             explanation_frame,
             text=explanation_text,
-            font=("SF Pro", 14),
+            font=self.controller.fonts.default_font,
             foreground="gray",
             justify="left"
         )
@@ -87,7 +87,7 @@ class ExperimentationPlanScreen(BaseFrame):
         ttk.Label(
             error_frame,
             text=message,
-            font=("SF Pro", 14),
+            font=self.controller.fonts.default_font,
             foreground="red",
             wraplength=500
         ).pack()
@@ -102,11 +102,14 @@ class ExperimentationPlanScreen(BaseFrame):
             frame,
             height=1,  # Start with minimal height
             wrap="word",
-            font=("SF Pro", 14),
+            font=self.controller.fonts.text_area_font,
             padx=8,
             pady=8,
             spacing2=4,
-            spacing3=4
+            spacing3=4,
+            highlightthickness=0,
+            borderwidth=0,
+            relief="flat"
         )
         # Don't attach any scrollbars - let parent frame handle scrolling
         self.plan_text.pack(fill="x", expand=False)

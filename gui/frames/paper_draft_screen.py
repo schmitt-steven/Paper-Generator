@@ -57,7 +57,7 @@ class PaperDraftScreen(BaseFrame):
         label = ttk.Label(
             explanation_frame,
             text=explanation_text,
-            font=("SF Pro", 14),
+            font=self.controller.fonts.default_font,
             foreground="gray",
             justify="left"
         )
@@ -92,7 +92,7 @@ class PaperDraftScreen(BaseFrame):
         ttk.Label(
             error_frame,
             text=message,
-            font=("SF Pro", 14),
+            font=self.controller.fonts.default_font,
             foreground="red",
             wraplength=500
         ).pack()
@@ -102,54 +102,41 @@ class PaperDraftScreen(BaseFrame):
         frame = ttk.LabelFrame(self.scrollable_frame, text="Paper Draft", padding="10")
         frame.pack(fill="both", expand=True, pady=10)
         
-        # Create text area without scrollbars - parent scrollable frame will handle scrolling
+        # Container for text + scrollbar
+        editor_container = ttk.Frame(frame)
+        editor_container.pack(fill="both", expand=True)
+
+        v_scroll = ttk.Scrollbar(editor_container, orient="vertical")
+        
+        # Create text area with fixed height
         self.draft_text = tk.Text(
-            frame,
-            height=1,  # Start with minimal height
+            editor_container,
+            height=35,  # Fixed height
             wrap="word",
-            font=("SF Pro", 14),
+            font=self.controller.fonts.text_area_font,
             padx=8,
             pady=8,
             spacing2=4,
-            spacing3=4
+            spacing3=4,
+            highlightthickness=0,
+            borderwidth=0,
+            relief="flat",
+            yscrollcommand=v_scroll.set
         )
-        # Don't attach any scrollbars - let parent frame handle scrolling
-        self.draft_text.pack(fill="x", expand=False)
+        
+        v_scroll.config(command=self.draft_text.yview)
+        
+        v_scroll.pack(side="right", fill="y")
+        self.draft_text.pack(side="left", fill="both", expand=True)
+        
         self.draft_text.insert("1.0", content)
         
-        # Force geometry update so we can measure
-        self.draft_text.update_idletasks()
-        
-        # Count actual displayed lines (including wrapped ones)
-        count_result = self.draft_text.count("1.0", "end", "displaylines")
-        if count_result:
-            num_lines = count_result[0]
-            self.draft_text.config(height=num_lines)
-        
-        # Bind mousewheel to scroll the parent canvas when hovering over text area
+        # Bind mousewheel to allow normal scrolling inside the text area
+        # We don't propagate to parent canvas anymore since it's a scrollable container itself
         def on_text_mousewheel(event):
-            # Forward the scroll event to the parent canvas
-            canvas = self._canvas
-            if canvas:
-                # Don't scroll if content fits
-                if self.scrollable_frame.winfo_reqheight() <= canvas.winfo_height():
-                    return "break"
-                
-                # Convert event to canvas coordinates and scroll
-                if event.num == 4:
-                    canvas.yview_scroll(-1, "units")
-                elif event.num == 5:
-                    canvas.yview_scroll(1, "units")
-                elif event.delta > 0:
-                    canvas.yview_scroll(-1, "units")
-                else:
-                    canvas.yview_scroll(1, "units")
-                return "break"  # Prevent default Text widget scrolling
-        
-        # Bind mousewheel events to the text widget
-        self.draft_text.bind("<MouseWheel>", on_text_mousewheel)  # Windows/macOS
-        self.draft_text.bind("<Button-4>", on_text_mousewheel)    # Linux scroll up
-        self.draft_text.bind("<Button-5>", on_text_mousewheel)    # Linux scroll down
+            pass
+            
+        # self.draft_text.bind("<MouseWheel>", on_text_mousewheel)
 
     def _save_draft(self):
         """Save the edited draft."""

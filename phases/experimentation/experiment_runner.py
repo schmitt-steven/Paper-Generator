@@ -50,7 +50,7 @@ class ExperimentRunner:
         code_content = re.sub(r'```', '', code_content)
         return code_content.strip()
     
-    def _format_user_code_files(self, user_code: List[UserCode]) -> str:
+    def _format_user_code_files(self, user_code: list[UserCode]) -> str:
         """Format user code files for inclusion in prompts."""
         if not user_code:
             return "No user code files provided"
@@ -70,7 +70,7 @@ class ExperimentRunner:
         paper_concept: PaperConcept,
         output_dir: str,
         user_requirements: Optional[UserRequirements] = None,
-        user_code: Optional[List[UserCode]] = None
+        user_code: Optional[list[UserCode]] = None
     ) -> CodeGenerationResult:
         """Generate experiment code in chunks, save to file, execute, and return results."""
         
@@ -283,7 +283,7 @@ class ExperimentRunner:
         chat: Optional[lms.Chat] = None,
         fix_attempt: int = 1,
         max_attempts: int = 5
-    ) -> Tuple[ExecutionResult, lms.Chat]:
+    ) -> tuple[ExecutionResult, lms.Chat]:
         """Fix errors in experiment code file based on execution output.
         
         Returns:
@@ -610,11 +610,11 @@ class ExperimentRunner:
     
     def _generate_plot_captions(
         self,
-        plot_files: List[str],
+        plot_files: list[str],
         hypothesis: Hypothesis,
         experiment_plan: str,
         stdout: str
-    ) -> List[Plot]:
+    ) -> list[Plot]:
         """Generate captions for plot files using LM Studio VLM API."""
         
         if not plot_files:
@@ -693,7 +693,7 @@ class ExperimentRunner:
         hypothesis: Hypothesis,
         paper_concept: PaperConcept,
         user_requirements: Optional[UserRequirements] = None,
-        user_code: Optional[List[UserCode]] = None
+        user_code: Optional[list[UserCode]] = None
     ) -> str:
         """Generate a detailed experiment plan for testing a hypothesis."""
 

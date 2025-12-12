@@ -11,7 +11,7 @@ class LaTeXMetadata:
     """Metadata for LaTeX document generation (IEEEtran format)."""
 
     title: str
-    authors: List[Dict[str, str]]  # List of author dictionaries
+    authors: list[dict[str, str]]  # List of author dictionaries
 
     @classmethod
     def from_settings(cls, generated_title: str) -> "LaTeXMetadata":

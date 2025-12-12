@@ -10,7 +10,7 @@ class MarkdownParseResult:
     pdf_name: str
     markdown_path: str
     markdown_text: str
-    pages: List[dict]
+    pages: list[dict]
     image_dir: str | None
     page_count: int
     pages_fixed_with_marker: list[int]
@@ -203,7 +203,7 @@ class PDFConverter:
             f.write(markdown_text)
     
     
-    def convert_all_papers(self, papers: List[Paper], base_folder: str = "output/literature/") -> List[Paper]:
+    def convert_all_papers(self, papers: list[Paper], base_folder: str = "output/literature/") -> list[Paper]:
         """Convert PDFs to markdown and update Paper objects with markdown text.
         
         Handles both:

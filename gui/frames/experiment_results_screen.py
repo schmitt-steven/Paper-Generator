@@ -51,7 +51,7 @@ class ExperimentResultsScreen(BaseFrame):
         label = ttk.Label(
             explanation_frame,
             text=explanation_text,
-            font=("SF Pro", 14),
+            font=self.controller.fonts.default_font,
             foreground="gray",
             justify="left"
         )
@@ -111,7 +111,7 @@ class ExperimentResultsScreen(BaseFrame):
         ttk.Label(
             error_frame,
             text=message,
-            font=("SF Pro", 14),
+            font=self.controller.fonts.default_font,
             foreground="red",
             wraplength=500
         ).pack()
@@ -127,13 +127,17 @@ class ExperimentResultsScreen(BaseFrame):
         hyp_frame = ttk.LabelFrame(self.results_container, text="Hypothesis", padding="10")
         hyp_frame.pack(fill="x", pady=10)
         
-        ttk.Label(
+        hyp_label = ttk.Label(
             hyp_frame,
             text=experiment_result.hypothesis.description,
-            font=("SF Pro", 14),
-            wraplength=600,
+            font=self.controller.fonts.text_area_font,
             justify="left"
-        ).pack(anchor="w")
+        )
+        hyp_label.pack(anchor="w", fill="x", padx=10, pady=5)
+        
+        def update_hyp_wrap(event):
+            hyp_label.config(wraplength=event.width - 20)
+        hyp_frame.bind("<Configure>", update_hyp_wrap)
 
         # Verdict section
         verdict_frame = ttk.LabelFrame(self.results_container, text="Verdict", padding="10")
@@ -143,19 +147,23 @@ class ExperimentResultsScreen(BaseFrame):
         ttk.Label(
             verdict_frame,
             text=verdict.upper(),
-            font=("SF Pro", 18, "bold"),
+            font=self.controller.fonts.sub_header_font,
             foreground=verdict_color
-        ).pack(anchor="w")
+        ).pack(anchor="w", padx=10, pady=5)
         
         # Reasoning
         reasoning_label = ttk.Label(
             verdict_frame,
             text=experiment_result.hypothesis_evaluation.reasoning,
-            font=("SF Pro", 14),
-            wraplength=600,
+            font=self.controller.fonts.text_area_font,
             justify="left"
         )
-        reasoning_label.pack(anchor="w", pady=(10, 0))
+        reasoning_label.pack(anchor="w", pady=(5, 5), fill="x", padx=10)
+        
+        def update_reasoning_wrap(event):
+             reasoning_label.config(wraplength=event.width - 20)
+        verdict_frame.bind("<Configure>", update_reasoning_wrap)
+
 
         # --- Plots Section ---
         self._create_plots_section()
@@ -169,14 +177,6 @@ class ExperimentResultsScreen(BaseFrame):
         from PIL import Image, ImageTk
         
         plots_dir = Path("output/experiments/plots")
-        # Also check root output/experiments for direct file saves if not in subfolder
-        # But experiment runner specifically puts them in output/experiments/plots usually, OR in base dir.
-        # Let's check both for safety or just the base dir if that's where they are.
-        # Based on previous tool outputs, plots are in output/experiments/comparison_plot.png etc.
-        # Actually in this specific comparison script case, they are in the CWD (Paper-Generator).
-        # But ideally the runner moves them? 
-        # The runner executes in base_output_dir. Let's look in output/experiments first.
-        
         search_dir = Path("output/experiments/plots")
         plot_files = []
         if search_dir.exists():
@@ -205,20 +205,44 @@ class ExperimentResultsScreen(BaseFrame):
                 img_label.image = tk_img # Keep reference!
                 img_label.pack(pady=5)
                 
-                name_label = ttk.Label(plots_frame, text=plot_path.name, font=("SF Pro", 10))
+                name_label = ttk.Label(plots_frame, text=plot_path.name, font=self.controller.fonts.small_font)
                 name_label.pack(pady=(0, 15))
             except Exception as e:
                 print(f"Error loading plot {plot_path}: {e}")
 
     def _create_code_section(self):
         """Create section to view/edit experiment code."""
-        from tkinter.scrolledtext import ScrolledText
         
         code_frame = ttk.LabelFrame(self.results_container, text="Experiment Code", padding="10")
         code_frame.pack(fill="both", expand=True, pady=10)
+
+        # Container for text + scrollbars
+        editor_container = ttk.Frame(code_frame)
+        editor_container.pack(fill="both", expand=True)
         
-        self.code_editor = ScrolledText(code_frame, height=20, font=("Menlo", 12))
-        self.code_editor.pack(fill="both", expand=True)
+        # Scrollbars
+        v_scroll = ttk.Scrollbar(editor_container, orient="vertical")
+        h_scroll = ttk.Scrollbar(editor_container, orient="horizontal")
+        
+        self.code_editor = tk.Text(
+            editor_container, 
+            height=35,  # Fixed height (increased)
+            font=self.controller.fonts.code_font,
+            highlightthickness=0,
+            borderwidth=0,
+            relief="flat",
+            wrap="none",
+            yscrollcommand=v_scroll.set,
+            xscrollcommand=h_scroll.set
+        )
+        
+        v_scroll.config(command=self.code_editor.yview)
+        h_scroll.config(command=self.code_editor.xview)
+        
+        # Grid layout for scrollbars
+        v_scroll.pack(side="right", fill="y")
+        h_scroll.pack(side="bottom", fill="x")
+        self.code_editor.pack(side="left", fill="both", expand=True)
         
         # Load code
         code_path = Path("output/experiments/experiment.py")
@@ -237,6 +261,15 @@ class ExperimentResultsScreen(BaseFrame):
                 self.code_editor.insert("1.0", f"# Error loading code: {e}")
         else:
              self.code_editor.insert("1.0", "# No experiment code found.")
+             
+        # Bind mousewheel for standard vertical scrolling
+        def on_text_mousewheel(event):
+            # Allow default scrolling behavior since we are scrolling inside the fixed area now
+            # Tkinter Text widget handles this usually, but sometimes needs help on Linux/Windows mix.
+            # For now, let's remove the 'return' block that prevented it.
+            pass
+             
+        # self.code_editor.bind("<MouseWheel>", on_text_mousewheel) # Rely on default bindings
 
     def save_code(self):
         """Save the code from editor to file."""
@@ -271,7 +304,7 @@ class ExperimentResultsScreen(BaseFrame):
         y = self.controller.winfo_y() + (self.controller.winfo_height() // 2) - 150
         popup.geometry(f"+{x}+{y}")
         
-        ttk.Label(popup, text="Choose how to regenerate the experiment.", font=("SF Pro", 14)).pack(pady=30)
+        ttk.Label(popup, text="Choose how to regenerate the experiment.", font=self.controller.fonts.default_font).pack(pady=30)
         
         def run_new_plan():
             popup.destroy()
