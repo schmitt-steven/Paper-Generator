@@ -19,7 +19,7 @@ EXPERIMENT_PLAN_FILE = Path("output/experiments/experiment_plan.md")
 
 class HypothesisScreen(BaseFrame):
     def __init__(self, parent, controller):
-        self.hypotheses: List[Hypothesis] = []
+        self.hypotheses: list[Hypothesis] = []
         self.current_hypothesis: Optional[Hypothesis] = None
         self.current_hypothesis_index: int = 0
         
@@ -61,7 +61,7 @@ class HypothesisScreen(BaseFrame):
         label = ttk.Label(
             explanation_frame,
             text=explanation_text,
-            font=("SF Pro", 14),
+            font=self.controller.fonts.default_font,
             foreground="gray",
             justify="left"
         )
@@ -132,7 +132,7 @@ class HypothesisScreen(BaseFrame):
         ttk.Label(
             error_frame,
             text=message,
-            font=("SF Pro", 14),
+            font=self.controller.fonts.default_font,
             foreground="red",
             wraplength=500
         ).pack()

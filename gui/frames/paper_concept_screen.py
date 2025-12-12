@@ -44,7 +44,7 @@ class PaperConceptScreen(BaseFrame):
         label = ttk.Label(
             explanation_frame,
             text=explanation_text,
-            font=("SF Pro", 14),
+            font=self.controller.fonts.default_font,
             foreground="gray",
             justify="left"
         )
@@ -78,7 +78,7 @@ class PaperConceptScreen(BaseFrame):
         ttk.Label(
             error_frame,
             text=message,
-            font=("SF Pro", 14),
+            font=self.controller.fonts.default_font,
             foreground="red",
             wraplength=500
         ).pack()

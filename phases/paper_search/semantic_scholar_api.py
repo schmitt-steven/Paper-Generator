@@ -29,7 +29,7 @@ class SemanticScholarAPI:
             time.sleep(min_interval - elapsed)
         self._last_request_time = time.time()
     
-    def search_papers(self, query: str, max_results: int = 100, year: Optional[str] = None, fields_of_study: Optional[str] = None, open_access_only: bool = True) -> List[Paper]:
+    def search_papers(self, query: str, max_results: int = 100, year: Optional[str] = None, fields_of_study: Optional[str] = None, open_access_only: bool = True) -> list[Paper]:
         """
         Search papers using S2 search endpoint.
         

@@ -20,11 +20,11 @@ class PaperWriter:
         self,
         context: PaperConcept,
         experiment: ExperimentResult,
-        evidence_by_section: Dict[Section, Sequence[Evidence]],
+        evidence_by_section: dict[Section, Sequence[Evidence]],
 
         user_requirements: Optional[UserRequirements] = None,
-        writing_prompts: Optional[Dict[str, str]] = None,
-    ) -> Tuple[PaperDraft, Dict[str, str]]:
+        writing_prompts: Optional[dict[str, str]] = None,
+    ) -> tuple[PaperDraft, dict[str, str]]:
         """Generate all paper sections using provided evidence. Returns (draft, prompts_by_section)."""
 
         section_order = (
@@ -100,7 +100,7 @@ class PaperWriter:
         experiment: Optional[ExperimentResult],
         evidence: Sequence[Evidence],
 
-        previous_sections: Optional[Dict[Section, str]] = None,
+        previous_sections: Optional[dict[Section, str]] = None,
         temperature: float = 0.5,
         user_requirements: Optional[UserRequirements] = None,
         existing_prompt: Optional[str] = None,
@@ -126,7 +126,7 @@ class PaperWriter:
         context: PaperConcept,
         experiment: Optional[ExperimentResult],
         evidence: Sequence[Evidence],
-        previous_sections: Optional[Dict[Section, str]] = None,
+        previous_sections: Optional[dict[Section, str]] = None,
         user_requirements: Optional[UserRequirements] = None,
     ) -> str:
         """Create the generation prompt for a specific section."""
@@ -231,7 +231,7 @@ class PaperWriter:
         return f"<evidence>\n{indented_items}\n</evidence>"
 
     @staticmethod
-    def _format_plots_for_prompt(plots: List[Plot]) -> str:
+    def _format_plots_for_prompt(plots: list[Plot]) -> str:
         """Format plots as figure references for Results section."""
         if not plots:
             return ""
@@ -257,7 +257,7 @@ class PaperWriter:
     @staticmethod
     def _format_previous_sections(
         section_type: Section,
-        previous_sections: Dict[Section, str],
+        previous_sections: dict[Section, str],
     ) -> str:
         """Format relevant previous sections as context for the current section."""
         

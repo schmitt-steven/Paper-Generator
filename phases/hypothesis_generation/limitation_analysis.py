@@ -118,7 +118,7 @@ class LimitationAnalyzer(LazyEmbeddingMixin):
         
         return final_score
     
-    def find_top_limitations(self, n: int = 10) -> List[Tuple[str, float]]:
+    def find_top_limitations(self, n: int = 10) -> list[tuple[str, float]]:
         """Find top N research limitations with scores"""
         if not self.common_limitations:
             return []
@@ -138,7 +138,7 @@ class LimitationAnalyzer(LazyEmbeddingMixin):
         
         return top_limitations
     
-    def print_limitations(self, n: int = 10, show_scores: bool = True, top_limitations: List[Tuple[str, float]] = None):
+    def print_limitations(self, n: int = 10, show_scores: bool = True, top_limitations: list[tuple[str, float]] = None):
         """
         Print top N research limitations in a formatted way.
         
@@ -168,7 +168,7 @@ class LimitationAnalyzer(LazyEmbeddingMixin):
         print(f"Total unique limitations after clustering: {len(self.common_limitations)}")
     
     @staticmethod
-    def save_limitations(top_limitations: List[Tuple[str, float]], filepath: str = "output/limitations.json", paper_concept_file: str = "output/paper_concept.md", num_papers_analyzed: int = 0):
+    def save_limitations(top_limitations: list[tuple[str, float]], filepath: str = "output/limitations.json", paper_concept_file: str = "output/paper_concept.md", num_papers_analyzed: int = 0):
         """Save limitations to JSON file."""
         path_obj = Path(filepath)
 
@@ -189,7 +189,7 @@ class LimitationAnalyzer(LazyEmbeddingMixin):
         print(f"Saved {len(top_limitations)} limitations to {filepath}")
     
     @staticmethod
-    def load_limitations(filepath: str = "output/limitations.json") -> List[Tuple[str, float]]:
+    def load_limitations(filepath: str = "output/limitations.json") -> list[tuple[str, float]]:
         """Load limitations from JSON file."""
         try:
             path_obj = Path(filepath)

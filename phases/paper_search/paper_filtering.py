@@ -8,10 +8,10 @@ class PaperFilter:
     
     @staticmethod
     def filter_by_score(
-        papers: List[Paper],
+        papers: list[Paper],
         min_score: float = 0.3,
         top_k: int = None
-    ) -> List[Paper]:
+    ) -> list[Paper]:
         """Filter papers by minimum score threshold or keep top-K."""
         if not papers:
             return []
@@ -31,12 +31,12 @@ class PaperFilter:
 
     @staticmethod
     def filter_diverse(
-        papers: List[Paper],
+        papers: list[Paper],
         n_cutting_edge: int = 20,
         n_hidden_gems: int = 15,
         n_classics: int = 15,
         n_well_rounded: int = 10
-    ) -> List[Paper]:
+    ) -> list[Paper]:
         """
         Get diverse mix of papers across different categories.
         

@@ -17,7 +17,7 @@ class QueryBuilder:
         section_type: Section,
         context: PaperConcept,
         experiment: Optional[ExperimentResult] = None,
-    ) -> List[str]:
+    ) -> list[str]:
         builder_map = {
             Section.ABSTRACT: self._build_abstract_queries,
             Section.INTRODUCTION: self._build_introduction_queries,
@@ -39,7 +39,7 @@ class QueryBuilder:
         self,
         context: PaperConcept,
         experiment: Optional[ExperimentResult],
-    ) -> List[str]:
+    ) -> list[str]:
         return [
             self._combine_segments(
                 ("Research concept overview", context.description),
@@ -54,7 +54,7 @@ class QueryBuilder:
         self,
         context: PaperConcept,
         experiment: Optional[ExperimentResult],
-    ) -> List[str]:
+    ) -> list[str]:
         return [
             self._combine_segments(
                 ("Research context", context.description),
@@ -68,7 +68,7 @@ class QueryBuilder:
         self,
         context: PaperConcept,
         experiment: Optional[ExperimentResult],
-    ) -> List[str]:
+    ) -> list[str]:
         return [
             self._combine_segments(
                 ("Research domain", context.description),
@@ -82,7 +82,7 @@ class QueryBuilder:
         self,
         context: PaperConcept,
         experiment: Optional[ExperimentResult],
-    ) -> List[str]:
+    ) -> list[str]:
         return [
             self._combine_segments(
                 ("Experiment plan", self._safe_get(experiment, "experiment_plan")),
@@ -95,7 +95,7 @@ class QueryBuilder:
         self,
         context: PaperConcept,
         experiment: Optional[ExperimentResult],
-    ) -> List[str]:
+    ) -> list[str]:
         stdout = self._safe_get(experiment, "execution_result.stdout")
         validation = self._safe_get(experiment, "validation_result.reasoning")
         plot_captions = self._join_plot_captions(self._safe_get(experiment, "plots"))
@@ -114,7 +114,7 @@ class QueryBuilder:
         self,
         context: PaperConcept,
         experiment: Optional[ExperimentResult],
-    ) -> List[str]:
+    ) -> list[str]:
         return [
             self._combine_segments(
                 ("Hypothesis verdict", self._safe_get(experiment, "hypothesis_evaluation.verdict")),
@@ -129,7 +129,7 @@ class QueryBuilder:
         self,
         context: PaperConcept,
         experiment: Optional[ExperimentResult],
-    ) -> List[str]:
+    ) -> list[str]:
         return [
             self._combine_segments(
                 ("Final verdict", self._safe_get(experiment, "hypothesis_evaluation.verdict")),
@@ -142,7 +142,7 @@ class QueryBuilder:
         ]
 
     @staticmethod
-    def _combine_segments(*segments: Tuple[str, Optional[str]]) -> str:
+    def _combine_segments(*segments: tuple[str, Optional[str]]) -> str:
         parts = []
         for label, value in segments:
             if value:

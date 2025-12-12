@@ -32,7 +32,7 @@ class PaperConverter(LazyModelMixin):
         self,
         paper_draft: PaperDraft,
         metadata: LaTeXMetadata,
-        indexed_papers: List[Paper],
+        indexed_papers: list[Paper],
         experiment_result: Optional[ExperimentResult] = None,
     ) -> Path:
         """Convert PaperDraft to LaTeX project."""
@@ -167,7 +167,7 @@ class PaperConverter(LazyModelMixin):
         )
         
         # Generate author blocks for IEEEtran format
-        author_blocks: List[str] = []
+        author_blocks: list[str] = []
         for i, author in enumerate(metadata.authors):
             # Build author block
             author_name = author.get("name", "Author Name")
@@ -263,7 +263,7 @@ class PaperConverter(LazyModelMixin):
             file_path.write_text(latex_content, encoding="utf-8")
             logger.info(f"[PaperConverter] Wrote {filename}")
 
-    def _generate_bibliography(self, latex_dir: Path, paper_draft: PaperDraft, indexed_papers: List[Paper]) -> None:
+    def _generate_bibliography(self, latex_dir: Path, paper_draft: PaperDraft, indexed_papers: list[Paper]) -> None:
         """Generate literature.bib from citations in PaperDraft."""
 
         # Extract from markdown format (before conversion)
@@ -277,7 +277,7 @@ class PaperConverter(LazyModelMixin):
     def _generate_abbreviations(self, latex_dir: Path, paper_draft: PaperDraft) -> None:
         """Extract abbreviation definitions from paper draft and generate abbreviations.tex."""
         definitions: dict[str, tuple[str, str]] = {}  # key -> (abbr, full)
-        keys: Set[str] = set()
+        keys: set[str] = set()
         
         def extract_abbrevs_from_text(text: str) -> None:
             """Extract "Full Form (ABBR)" patterns from text."""
@@ -388,7 +388,7 @@ class PaperConverter(LazyModelMixin):
         self._convert_abbreviations_to_ac(latex_dir, keys, definitions)
 
 
-    def _convert_abbreviations_to_ac(self, latex_dir: Path, keys: Set[str], definitions: dict[str, tuple[str, str]]) -> None:
+    def _convert_abbreviations_to_ac(self, latex_dir: Path, keys: set[str], definitions: dict[str, tuple[str, str]]) -> None:
         """Convert all abbreviation mentions to \ac{} format - LaTeX handles first occurrence expansion."""
         
         def process_file(file_path: Path) -> None:

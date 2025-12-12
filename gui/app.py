@@ -18,6 +18,8 @@ from .frames import (
     PaperDraftScreen,
     ResultScreen
 )
+from .fonts import FontManager
+from settings import Settings
 
 class PaperGeneratorApp(tk.Tk):
     def __init__(self):
@@ -52,41 +54,15 @@ class PaperGeneratorApp(tk.Tk):
         sv_ttk.set_theme("dark")
 
         # Global font config
-        DEFAULT_FONT_SIZE = 16
-        TEXT_AREA_FONT_SIZE = 10
-        TEXT_FIELD_FONT_SIZE = 10
+        self.fonts = FontManager(self, base_size=getattr(Settings, "FONT_SIZE_BASE", 16))
         
-        # Set default font for all ttk widgets
-        style = ttk.Style()
-        default_font = ("SF Pro", DEFAULT_FONT_SIZE)
-        text_field_font = ("SF Pro", TEXT_FIELD_FONT_SIZE)
+        # Configure styles initially
+        self.configure_styles()
         
-        # Configure default fonts for common ttk widgets
-        style.configure("TLabel", font=default_font)
-        style.configure("TButton", font=default_font)
-        style.configure("TEntry", font=text_field_font)
-        style.configure("TFrame", font=default_font)
-        
-        # Override button styling (after setting default)
-        style.layout("TButton", style.layout("Accent.TButton"))
-        style.configure("TButton", font=default_font, **style.configure("Accent.TButton"))
-        style.map("TButton", **style.map("Accent.TButton"))
+        # Register callback to re-configure styles when fonts change
+        # This ensures widgets like Combobox update their internal font references
+        self.fonts.add_callback(self.configure_styles)
 
-        # Custom Listbox (Dropdown Menu) styling
-        style.configure("TCombobox", font=default_font)
-        
-        # Set default font for Text widgets (text areas)
-        self.option_add("*Text.Font", ("SF Pro", TEXT_AREA_FONT_SIZE))
-        style.configure("ComboboxPopdownFrame", relief="flat", background="#2b2b2b")
-        self.option_add("*TCombobox*Listbox*Font", ("SF Pro", 14))
-        self.option_add("*TCombobox*Listbox*Background", "#2b2b2b")
-        self.option_add("*TCombobox*Listbox*Foreground", "#ffffff")
-        self.option_add("*TCombobox*Listbox*selectBackground", "#404040")
-        self.option_add("*TCombobox*Listbox*selectForeground", "#ffffff")
-        self.option_add("*TCombobox*Listbox*relief", "flat")
-        self.option_add("*TCombobox*Listbox*borderWidth", 5)
-        self.option_add("*TCombobox*Listbox*highlightThickness", 0)
-        
         self.title("Paper Generator")
         
         # Start with window maximized
@@ -133,6 +109,57 @@ class PaperGeneratorApp(tk.Tk):
         initial_frame.tkraise()
         if hasattr(initial_frame, 'on_show'):
             initial_frame.on_show()
+
+    def configure_styles(self):
+        """Configure ttk styles with current fonts."""
+        style = ttk.Style()
+        
+        # Configure default fonts for common ttk widgets
+        style.configure("TLabel", font=self.fonts.default_font)
+        style.configure("TButton", font=self.fonts.default_font)
+        style.configure("TEntry", font=self.fonts.text_field_font)
+        style.configure("TFrame", font=self.fonts.default_font)
+        style.configure("TLabelframe.Label", font=self.fonts.default_font)
+        
+        # Override button styling (after setting default)
+        # Note: We need to be careful not to reset layout if it's already set
+        # But configuring font is safe
+        try:
+             style.layout("TButton", style.layout("Accent.TButton"))
+             style.configure("TButton", font=self.fonts.default_font, **style.configure("Accent.TButton"))
+             style.map("TButton", **style.map("Accent.TButton"))
+        except:
+             pass # Theme might not be fully loaded or compatible
+        
+        # Custom Listbox (Dropdown Menu) styling
+        style.configure("TCombobox", font=self.fonts.default_font)
+        style.configure("TSpinbox", font=self.fonts.text_field_font)
+        style.configure("TEntry", font=self.fonts.text_field_font)
+        
+        # Explicitly set font for TCombobox sub-elements via option_add
+        # This is often needed for the Entry part of the Combobox to pick up changes
+        self.option_add("*TCombobox*Font", self.fonts.default_font)
+        self.option_add("*TCombobox.Font", self.fonts.default_font)
+        
+        # Ensure Entry and Spinbox widgets also use the correct font
+        self.option_add("*Entry.Font", self.fonts.text_field_font)
+        self.option_add("*Spinbox.Font", self.fonts.text_field_font)
+        # Add T-prefix variants for ttk widgets
+        self.option_add("*TEntry.Font", self.fonts.text_field_font)
+        self.option_add("*TSpinbox.Font", self.fonts.text_field_font)
+        
+        # Set default font for Text widgets (text areas)
+        self.option_add("*Text.Font", self.fonts.text_area_font)
+        style.configure("ComboboxPopdownFrame", relief="flat", background="#2b2b2b")
+        # For listbox inside combobox, we try to set it but it's tricky with ttk
+        self.option_add("*TCombobox*Listbox*Font", self.fonts.default_font)
+        self.option_add("*TCombobox*Listbox*Background", "#2b2b2b")
+        self.option_add("*TCombobox*Listbox*Foreground", "#ffffff")
+        self.option_add("*TCombobox*Listbox*selectBackground", "#404040")
+        self.option_add("*TCombobox*Listbox*selectForeground", "#ffffff")
+        self.option_add("*TCombobox*Listbox*relief", "flat")
+        self.option_add("*TCombobox*Listbox*borderWidth", 5)
+        self.option_add("*TCombobox*Listbox*highlightThickness", 0)
 
     def init_frames(self):
         for Frame in self.screen_order:

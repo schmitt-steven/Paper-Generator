@@ -22,6 +22,8 @@ class SettingsScreen(BaseFrame):
         )
 
     def create_content(self):
+        # Appearance (Font Size) - Moved to top
+        self.create_appearance_section()
         # Info
         #guidance_frame = ttk.LabelFrame(self.scrollable_frame, text="Info", padding="10")
         #guidance_frame.pack(fill="x", padx=0, pady=5)
@@ -74,6 +76,8 @@ class SettingsScreen(BaseFrame):
         self.create_latex_generation_section()
 
 
+
+
     def create_phase_section(self, title, settings):
         from settings import Settings
         frame = ttk.LabelFrame(self.scrollable_frame, text=title, padding="10")
@@ -90,7 +94,7 @@ class SettingsScreen(BaseFrame):
             row_frame = ttk.Frame(frame)
             row_frame.pack(fill="x", pady=2)
             
-            ttk.Label(row_frame, text=label_text, width=30).pack(side="left")
+            ttk.Label(row_frame, text=label_text, width=35).pack(side="left")
             
             var = tk.StringVar() # Or IntVar for spinbox, but StringVar works generally
             
@@ -125,7 +129,7 @@ class SettingsScreen(BaseFrame):
         row_frame = ttk.Frame(frame)
         row_frame.pack(fill="x", pady=2)
         
-        ttk.Label(row_frame, text="LaTeX Generation Model", width=30).pack(side="left")
+        ttk.Label(row_frame, text="LaTeX Generation Model", width=35).pack(side="left")
         
         var = tk.StringVar()
         current_value = getattr(Settings, "LATEX_GENERATION_MODEL", "")
@@ -142,11 +146,11 @@ class SettingsScreen(BaseFrame):
         # Title
         row_frame = ttk.Frame(frame)
         row_frame.pack(fill="x", pady=2)
-        ttk.Label(row_frame, text="Paper Title", width=30).pack(side="left")
+        ttk.Label(row_frame, text="Paper Title", width=35).pack(side="left")
         self.title_var = tk.StringVar(value=Settings.LATEX_TITLE)
         entry = ttk.Entry(row_frame, textvariable=self.title_var, width=60)
         entry.pack(side="right", fill="x", expand=True, padx=(10, 0))
-        ttk.Label(frame, text="(Leave empty for LLM generated title)", font=("SF Pro", 14, "italic")).pack(anchor="e")
+        ttk.Label(frame, text="(Leave empty for LLM generated title)", font=self.controller.fonts.default_font).pack(anchor="e")
 
         # Authors section
         authors_section = ttk.Frame(frame, style="Card.TFrame", padding=1)
@@ -156,7 +160,7 @@ class SettingsScreen(BaseFrame):
         header_frame = ttk.Frame(authors_section, padding=10)
         header_frame.pack(fill="x")
         
-        ttk.Label(header_frame, text="Authors", font=("SF Pro", 14, "bold")).pack(side="left")
+        ttk.Label(header_frame, text="Authors", font=self.controller.fonts.sub_header_font).pack(side="left")
         
         # Buttons
         button_frame = ttk.Frame(header_frame)
@@ -185,6 +189,42 @@ class SettingsScreen(BaseFrame):
         
         # Initialize button state
         self._update_remove_button_state()
+        
+    def create_appearance_section(self):
+        from settings import Settings
+        frame = ttk.LabelFrame(self.scrollable_frame, text="Appearance", padding="10")
+        frame.pack(fill="x", padx=0, pady=5)
+        
+        row_frame = ttk.Frame(frame)
+        row_frame.pack(fill="x", pady=2)
+        
+        ttk.Label(row_frame, text="Font Size", width=35).pack(side="left")
+        
+        self.font_size_var = tk.IntVar(value=getattr(Settings, "FONT_SIZE_BASE", 16))
+        
+        # Helper to update font immediately
+        def on_font_size_change(*args):
+            try:
+                val = self.font_size_var.get()
+                self.controller.fonts.update_base_size(int(val))
+            except ValueError:
+                pass
+
+        self.font_size_var.trace_add("write", on_font_size_change)
+        
+        # Spinbox
+        spinbox = ttk.Spinbox(
+            row_frame, 
+            from_=8, 
+            to=32, 
+            textvariable=self.font_size_var, 
+            width=5
+        )
+        spinbox.pack(side="right", expand=True, fill="x", padx=(10, 0))
+        
+        self.settings_vars["FONT_SIZE_BASE"] = self.font_size_var
+
+
 
     def add_author(self, data=None):
         # Add separator if not the first author
@@ -255,7 +295,8 @@ class SettingsScreen(BaseFrame):
                        "EVIDENCE_INITIAL_CHUNKS",
                        "EVIDENCE_FILTERED_CHUNKS",
                        "EVIDENCE_AGENTIC_ITERATIONS",
-                       "LATEX_GENERATION_MODEL"]:
+                       "LATEX_GENERATION_MODEL",
+                       "FONT_SIZE_BASE"]:
                 try:
                     value = int(value)
                 except ValueError:

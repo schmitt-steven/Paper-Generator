@@ -24,6 +24,8 @@ Describe RBQL algorithm precisely:
 3. On terminal state: build backward graph, BFS from terminal, update Q(s,a) = r + γ·max(Q(s'))
 4. Describe experiment setup: environment (simple grid or pong-like game), state space, action space, hyperparameters (γ, ε decay schedule), baseline (standard Q-learning with same ε schedule)
 
+peudo code
+
 ### Results
 Compare RBQL vs standard Q-learning on:
 - Episodes to convergence (optimal policy)

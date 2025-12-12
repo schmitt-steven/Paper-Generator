@@ -59,7 +59,7 @@ class Settings:
             print(f"[Settings] Failed to load settings: {e}")
     
     @classmethod
-    def get_all_settings(cls) -> Dict[str, Any]:
+    def get_all_settings(cls) -> dict[str, Any]:
         """Get all settings as a dictionary."""
         settings_dict = {}
         for key in dir(cls):
@@ -111,6 +111,10 @@ class Settings:
     
     # LaTeX Generation Phase
     LATEX_GENERATION_MODEL = "qwen/qwen3-next-80b"
+
+    # UI Settings
+    FONT_SIZE_BASE = 16
+
     
 
     # LaTeX Data

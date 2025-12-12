@@ -38,10 +38,10 @@ class EvidenceGatherer:
         target_section: Section,
         initial_chunks: int = 10,
         filtered_chunks: int = 5,
-        exclude_chunk_ids: Optional[Set[str]] = None,
+        exclude_chunk_ids: Optional[set[str]] = None,
         llm_model=None,
         embedding_model=None,
-    ) -> List[Evidence]:
+    ) -> list[Evidence]:
         """Run the full evidence retrieval pipeline for a query."""
 
         retrieved_chunks = self._vector_search(query, initial_chunks, exclude_chunk_ids, embedding_model)
@@ -54,9 +54,9 @@ class EvidenceGatherer:
         self,
         query: str,
         top_k: int,
-        exclude_chunk_ids: Optional[Set[str]] = None,
+        exclude_chunk_ids: Optional[set[str]] = None,
         embedding_model=None,
-    ) -> List[Tuple[PaperChunk, float]]:
+    ) -> list[tuple[PaperChunk, float]]:
         """Return top_k chunks by cosine similarity to the query embedding."""
 
         if embedding_model is None:
@@ -68,7 +68,7 @@ class EvidenceGatherer:
             return []
         normalized_query = query_embedding / query_norm
 
-        scored_chunks: List[Tuple[float, PaperChunk]] = []
+        scored_chunks: list[tuple[float, PaperChunk]] = []
         for normalized_chunk in self._normalized_chunks:
             if exclude_chunk_ids and normalized_chunk.chunk.chunk_id in exclude_chunk_ids:
                 continue
@@ -82,10 +82,10 @@ class EvidenceGatherer:
     def _summarize_chunks_batch(
         self,
         query: str,
-        chunks: List[Tuple[PaperChunk, float]],
+        chunks: list[tuple[PaperChunk, float]],
         batch_size: int = 5,
         llm_model=None,
-    ) -> List[Tuple[PaperChunk, float, str]]:
+    ) -> list[tuple[PaperChunk, float, str]]:
         """Summarize chunks in batches."""
         
         if not chunks:
@@ -93,7 +93,7 @@ class EvidenceGatherer:
         
         if llm_model is None:
             raise ValueError("llm_model must be provided")
-        results: List[Tuple[PaperChunk, float, str]] = []
+        results: list[tuple[PaperChunk, float, str]] = []
         total = len(chunks)
         print(f"    Summarizing {total} chunks in batches of {batch_size}...")
 
@@ -142,15 +142,15 @@ class EvidenceGatherer:
         self,
         query: str,
         target_section: Section,
-        chunks: List[Tuple[PaperChunk, float, str]],
+        chunks: list[tuple[PaperChunk, float, str]],
         batch_size: int = 5,
         llm_model=None,
-    ) -> List[Tuple[PaperChunk, float, str, float]]:
+    ) -> list[tuple[PaperChunk, float, str, float]]:
         """Score chunks in batches."""
         
         if llm_model is None:
             raise ValueError("llm_model must be provided")
-        results: List[Tuple[PaperChunk, float, str, float]] = []
+        results: list[tuple[PaperChunk, float, str, float]] = []
         total = len(chunks)
         print(f"    Scoring {total} chunks in batches of {batch_size}...")
 
@@ -192,7 +192,7 @@ class EvidenceGatherer:
                     
         return results
 
-    def _build_batch_summary_prompt(self, query: str, batch: List[Tuple[PaperChunk, float]]) -> str:
+    def _build_batch_summary_prompt(self, query: str, batch: list[tuple[PaperChunk, float]]) -> str:
         items_text = []
         for j, (chunk, _) in enumerate(batch):
             content = chunk.chunk_text
@@ -228,7 +228,7 @@ class EvidenceGatherer:
             {"".join(items_text)}"""
         )
 
-    def _build_batch_scoring_prompt(self, query: str, target_section: Section, batch: List[Tuple[PaperChunk, float, str]]) -> str:
+    def _build_batch_scoring_prompt(self, query: str, target_section: Section, batch: list[tuple[PaperChunk, float, str]]) -> str:
         items_text = []
         for j, (chunk, _, _) in enumerate(batch):
             content = chunk.chunk_text
@@ -265,8 +265,8 @@ class EvidenceGatherer:
         """)
 
     @staticmethod
-    def _normalize_corpus(indexed_corpus: Sequence[PaperChunk]) -> List[_NormalizedChunk]:
-        normalized: List[_NormalizedChunk] = []
+    def _normalize_corpus(indexed_corpus: Sequence[PaperChunk]) -> list[_NormalizedChunk]:
+        normalized: list[_NormalizedChunk] = []
         for chunk in indexed_corpus:
             if not chunk.embedding:
                 continue
@@ -287,12 +287,12 @@ class EvidenceGatherer:
     def _combine_scores(
         self,
         query: str,
-        chunks: List[Tuple[PaperChunk, float, str, float]],
+        chunks: list[tuple[PaperChunk, float, str, float]],
         filtered_chunks: int,
-    ) -> List[Evidence]:
+    ) -> list[Evidence]:
         """Combine vector and LLM scores and return top evidence."""
 
-        weighted: List[Evidence] = []
+        weighted: list[Evidence] = []
         for chunk, vector_score, summary, llm_score in chunks:
             combined = (0.3 * vector_score) + (0.7 * llm_score)
             weighted.append(
@@ -310,10 +310,10 @@ class EvidenceGatherer:
         return weighted[:filtered_chunks]
 
     @staticmethod
-    def _deduplicate_evidence(evidence_list: Sequence[Evidence]) -> List[Evidence]:
+    def _deduplicate_evidence(evidence_list: Sequence[Evidence]) -> list[Evidence]:
         """Keep the highest scoring evidence per chunk."""
 
-        best_by_chunk: Dict[str, Evidence] = {}
+        best_by_chunk: dict[str, Evidence] = {}
         for evidence in evidence_list:
             chunk_id = evidence.chunk.chunk_id
             existing = best_by_chunk.get(chunk_id)
@@ -334,15 +334,15 @@ class EvidenceGatherer:
         initial_chunks: int = 20,
         filtered_chunks: int = 10,
         user_requirements: Optional[UserRequirements] = None,
-    ) -> Tuple[List[Evidence], str]:
+    ) -> tuple[list[Evidence], str]:
         """Gather evidence using agentic iterative search with default queries as starting point."""
 
         # Step 1: Create embedding model FIRST and do all initial vector searches
         embedding_model = lms.embedding_model(Settings.PAPER_INDEXING_EMBEDDING_MODEL)
         
-        collected_evidence: List[Evidence] = []
-        seen_chunk_ids: Set[str] = set()
-        all_retrieved_chunks: List[Tuple[str, Section, List[Tuple[PaperChunk, float]]]] = []
+        collected_evidence: list[Evidence] = []
+        seen_chunk_ids: set[str] = set()
+        all_retrieved_chunks: list[tuple[str, Section, list[tuple[PaperChunk, float]]]] = []
         
         for query in default_queries:
             if not query:
@@ -368,7 +368,7 @@ class EvidenceGatherer:
         seen_chunk_ids.update(ev.chunk.chunk_id for ev in collected_evidence)
         executed_queries = {query.strip().lower() for query in default_queries if query}
         tool_calls = 0
-        tool_results: List[str] = []
+        tool_results: list[str] = []
 
         def search_evidence_tool(query: str) -> str:
             """Search for additional evidence using a custom query string."""
@@ -434,7 +434,7 @@ class EvidenceGatherer:
         return collected_evidence, final_prompt
 
     @staticmethod
-    def _reconstruct_full_prompt(initial_prompt: str, tool_results: List[str]) -> str:
+    def _reconstruct_full_prompt(initial_prompt: str, tool_results: list[str]) -> str:
         """Reconstruct the full prompt as the LLM saw it, including tool call results."""
         if not tool_results:
             return initial_prompt
@@ -520,7 +520,7 @@ class EvidenceGatherer:
         if not evidence:
             return "No evidence available."
         
-        lines: List[str] = []
+        lines: list[str] = []
         for idx, item in enumerate(evidence, 1):
             citation_key = item.chunk.paper.citation_key or "unknown"
             year = item.chunk.paper.published or "n.d."

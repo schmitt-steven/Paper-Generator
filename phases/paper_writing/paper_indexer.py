@@ -28,7 +28,7 @@ class PaperIndexer:
         self.min_tokens_per_chunk = min_tokens_per_chunk
         self.overlap_tokens = overlap_tokens
 
-    def index_papers(self, papers: Sequence[Paper]) -> List[PaperChunk]:
+    def index_papers(self, papers: Sequence[Paper]) -> list[PaperChunk]:
         """Parse and chunk papers into indexed PaperChunk records."""
 
         print(f"\n{'='*80}")
@@ -41,7 +41,7 @@ class PaperIndexer:
             if existing_embeddings:
                 # We have embeddings, but we still need to rebuild chunk_specs to create PaperChunk objects
                 # Do minimal processing - just chunk without printing stats
-                chunk_specs: List[tuple[Paper, int, str, str]] = []
+                chunk_specs: list[tuple[Paper, int, str, str]] = []
                 for paper in papers:
                     if not paper.markdown_text:
                         continue
@@ -71,7 +71,7 @@ class PaperIndexer:
         
         print(f"\nBuilding indexed corpus from {len(chunk_specs)} chunks...")
 
-        indexed_chunks: List[PaperChunk] = []
+        indexed_chunks: list[PaperChunk] = []
         for spec, embedding in zip(chunk_specs, embeddings):
             paper, chunk_idx, chunk_id, chunk_text = spec
             indexed_chunks.append(
@@ -86,9 +86,9 @@ class PaperIndexer:
 
         return indexed_chunks
     
-    def _process_and_embed_papers(self, papers: Sequence[Paper]) -> tuple[List[tuple[Paper, int, str, str]], List[List[float]]]:
+    def _process_and_embed_papers(self, papers: Sequence[Paper]) -> tuple[list[tuple[Paper, int, str, str]], list[list[float]]]:
         """Process papers (preprocess, strip refs, chunk) and generate embeddings."""
-        chunk_specs: List[tuple[Paper, int, str, str]] = []
+        chunk_specs: list[tuple[Paper, int, str, str]] = []
         total_tokens_saved = 0
         papers_with_refs_stripped = 0
         
@@ -127,15 +127,15 @@ class PaperIndexer:
         
         return chunk_specs, embeddings
 
-    def _chunk_document(self, document_text: str) -> List[str]:
+    def _chunk_document(self, document_text: str) -> list[str]:
         """Chunk document text into overlapping windows while preserving structures."""
 
         blocks = self._split_into_blocks(document_text)
         if not blocks:
             return []
 
-        chunks: List[str] = []
-        current_blocks: List[str] = []
+        chunks: list[str] = []
+        current_blocks: list[str] = []
         current_tokens = 0
 
         for block in blocks:
@@ -161,10 +161,10 @@ class PaperIndexer:
 
         return chunks
 
-    def _split_into_blocks(self, text: str) -> List[str]:
+    def _split_into_blocks(self, text: str) -> list[str]:
         """Split text into blocks, keeping code fences intact."""
 
-        blocks: List[str] = []
+        blocks: list[str] = []
         last_end = 0
 
         for match in self.CODE_BLOCK_PATTERN.finditer(text):
@@ -179,14 +179,14 @@ class PaperIndexer:
         return [block for block in blocks if block]
 
     @staticmethod
-    def _split_paragraph_blocks(text: str) -> List[str]:
+    def _split_paragraph_blocks(text: str) -> list[str]:
         paragraphs = [paragraph.strip() for paragraph in text.split("\n\n")]
         return [paragraph for paragraph in paragraphs if paragraph]
 
-    def _collect_overlap_blocks(self, blocks: Sequence[str]) -> List[str]:
+    def _collect_overlap_blocks(self, blocks: Sequence[str]) -> list[str]:
         """Collect blocks from the end until the overlap token budget is met."""
 
-        overlap_blocks: List[str] = []
+        overlap_blocks: list[str] = []
         accumulated_tokens = 0
 
         for block in reversed(blocks):
@@ -210,14 +210,14 @@ class PaperIndexer:
         safe_paper_id = paper_id.replace("/", "_").replace(":", "_")
         return f"{safe_paper_id}_chunk{chunk_idx:02d}"
 
-    def _embed_texts(self, texts: Sequence[str]) -> List[List[float]]:
+    def _embed_texts(self, texts: Sequence[str]) -> list[list[float]]:
         """Embed texts in batches."""
         if not texts:
             return []
         
         embedding_model = lms.embedding_model(Settings.PAPER_INDEXING_EMBEDDING_MODEL)
         batch_size = Settings.PAPER_EMBEDDING_BATCH_SIZE
-        all_embeddings: List[List[float]] = []
+        all_embeddings: list[list[float]] = []
         
         num_batches = (len(texts) + batch_size - 1) // batch_size
         
@@ -236,7 +236,7 @@ class PaperIndexer:
 
 
 
-    def save_embeddings(self, embeddings: List[List[float]]) -> None:
+    def save_embeddings(self, embeddings: list[list[float]]) -> None:
         """Save embeddings to JSON file."""
         try:
             path_obj = Path(self.EMBEDDINGS_FILE)
@@ -245,7 +245,7 @@ class PaperIndexer:
         except Exception as e:
             print(f"Error saving embeddings: {e}")
 
-    def load_embeddings(self) -> Optional[List[List[float]]]:
+    def load_embeddings(self) -> Optional[list[list[float]]]:
         """Load embeddings from JSON file if it exists."""
         path_obj = Path(self.EMBEDDINGS_FILE)
         if not path_obj.exists():

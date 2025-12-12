@@ -48,7 +48,7 @@ class NotesAnalyzer(LazyModelMixin):
         self._model = None  # Lazy-loaded via LazyModelMixin
 
     @staticmethod
-    def load_user_notes(folder_path: str, extensions: List[str] = None) -> List[UserNotes]:
+    def load_user_notes(folder_path: str, extensions: list[str] = None) -> list[UserNotes]:
         """Load documents from the specified folder."""
         if extensions is None:
             extensions = list(NotesAnalyzer.SUPPORTED_EXTENSIONS.keys())
@@ -142,7 +142,7 @@ class NotesAnalyzer(LazyModelMixin):
         print(f"Completed analyzing {user_notes.file_name}")
         return user_notes
 
-    def analyze_all_user_notes(self, user_notes: List[UserNotes]) -> List[UserNotes]:
+    def analyze_all_user_notes(self, user_notes: list[UserNotes]) -> list[UserNotes]:
         """Analyze all loaded documents."""
         analyzed_documents = []
         for document in user_notes:
@@ -151,7 +151,7 @@ class NotesAnalyzer(LazyModelMixin):
         return analyzed_documents
 
     @staticmethod
-    def get_analysis_report(analyzed_notes: List[UserNotes]) -> str:
+    def get_analysis_report(analyzed_notes: list[UserNotes]) -> str:
         report = "=== User Notes Analysis Report ===\n"
         for doc in analyzed_notes:
             report += f"File: {doc.file_path}\n"

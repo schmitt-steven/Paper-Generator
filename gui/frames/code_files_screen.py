@@ -33,8 +33,8 @@ class CodeFile:
 
 class CodeFilesScreen(BaseFrame):
     def __init__(self, parent, controller):
-        self.code_files: List[CodeFile] = []
-        self.file_widgets: Dict[str, ttk.Frame] = {}
+        self.code_files: list[CodeFile] = []
+        self.file_widgets: dict[str, ttk.Frame] = {}
         
         # UI elements (initialized in create_content)
         self.upload_btn: ttk.Button
@@ -76,7 +76,7 @@ class CodeFilesScreen(BaseFrame):
         label = ttk.Label(
             explanation_frame,
             text=explanation_text,
-            font=("SF Pro", 14),
+            font=self.controller.fonts.default_font,
             foreground="gray",
             justify="left"
         )
@@ -105,8 +105,8 @@ class CodeFilesScreen(BaseFrame):
         left_header = ttk.Frame(header_frame)
         left_header.pack(side="left")
         
-        ttk.Label(left_header, text="Your Code Files", font=("SF Pro", 18, "bold")).pack(side="left")
-        self.count_label = ttk.Label(left_header, text="0", font=("SF Pro", 18), foreground="gray")
+        ttk.Label(left_header, text="Your Code Files", font=self.controller.fonts.sub_header_font).pack(side="left")
+        self.count_label = ttk.Label(left_header, text="0", font=self.controller.fonts.sub_header_font, foreground="gray")
         self.count_label.pack(side="left", padx=(10, 0))
         
         self.upload_btn = ttk.Button(header_frame, text="Upload", command=self._on_upload_click)
@@ -127,7 +127,7 @@ class CodeFilesScreen(BaseFrame):
         ttk.Label(
             self.files_list,
             text="No code files uploaded yet",
-            font=("SF Pro", 16),
+            font=self.controller.fonts.default_font,
             foreground="gray"
         ).pack(pady=20)
 
@@ -146,7 +146,7 @@ class CodeFilesScreen(BaseFrame):
         ttk.Label(
             content_frame,
             text=code_file.filename,
-            font=("SF Pro", 16)
+            font=self.controller.fonts.default_font
         ).pack(anchor="w")
         
         # Line count
@@ -154,7 +154,7 @@ class CodeFilesScreen(BaseFrame):
         ttk.Label(
             content_frame,
             text=line_text,
-            font=("SF Pro", 14),
+            font=self.controller.fonts.text_area_font,
             foreground="gray"
         ).pack(anchor="w", pady=(2, 0))
         

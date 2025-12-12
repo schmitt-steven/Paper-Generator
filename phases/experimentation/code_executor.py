@@ -105,7 +105,7 @@ class CodeExecutor:
             result_files=result_files
         )
     
-    def _list_plot_files(self, output_dir: str) -> List[str]:
+    def _list_plot_files(self, output_dir: str) -> list[str]:
         """List all plot files (PNG, SVG, PDF) in output directory."""
         plot_extensions = {'.png', '.svg', '.pdf', '.jpg', '.jpeg'}
         plot_files = []
@@ -124,7 +124,7 @@ class CodeExecutor:
         
         return sorted(plot_files)
     
-    def _list_result_files(self, output_dir: str) -> List[str]:
+    def _list_result_files(self, output_dir: str) -> list[str]:
         """List all result files (JSON, CSV) in output directory."""
         result_extensions = {'.json', '.csv'}
         result_files = []

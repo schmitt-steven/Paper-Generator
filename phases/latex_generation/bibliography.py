@@ -7,7 +7,7 @@ from phases.paper_writing.data_models import PaperDraft
 
 logger = logging.getLogger(__name__)
 
-def extract_citation_keys_from_markdown(md_text: str) -> Set[str]:
+def extract_citation_keys_from_markdown(md_text: str) -> set[str]:
     """
     Extract citation keys from markdown text (before LaTeX conversion).
     
@@ -36,7 +36,7 @@ def extract_citation_keys_from_markdown(md_text: str) -> Set[str]:
     return citation_keys
 
 
-def extract_citation_keys_from_latex(latex_text: str) -> Set[str]:
+def extract_citation_keys_from_latex(latex_text: str) -> set[str]:
     """
     Extract all citation keys from LaTeX text.
     
@@ -63,7 +63,7 @@ def extract_citation_keys_from_latex(latex_text: str) -> Set[str]:
     return citation_keys
 
 
-def extract_all_citations(paper_draft: PaperDraft, is_latex: bool = False) -> Set[str]:
+def extract_all_citations(paper_draft: PaperDraft, is_latex: bool = False) -> set[str]:
     """
     Extract all citation keys from all sections of a PaperDraft.
     
@@ -97,7 +97,7 @@ def extract_all_citations(paper_draft: PaperDraft, is_latex: bool = False) -> Se
     return all_keys
 
 
-def create_paper_mapping(indexed_papers: List[Paper]) -> Dict[str, Paper]:
+def create_paper_mapping(indexed_papers: list[Paper]) -> dict[str, Paper]:
     """
     Create a mapping from citation_key to Paper object.
     
@@ -211,7 +211,7 @@ def generate_bibtex_entry(paper: Paper) -> str:
 
 def generate_literature_bib(
     paper_draft: PaperDraft,
-    indexed_papers: List[Paper],
+    indexed_papers: list[Paper],
     is_latex: bool = False,
 ) -> str:
     """
