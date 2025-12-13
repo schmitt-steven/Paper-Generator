@@ -4,7 +4,7 @@ import threading
 from pathlib import Path
 from typing import List, Optional
 
-from ..base_frame import BaseFrame, ProgressPopup, create_text_area
+from ..base_frame import BaseFrame, ProgressPopup, create_scrollable_text_area
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.hypothesis_generation.hypothesis_models import Hypothesis
 from phases.context_analysis.paper_conception import PaperConception
@@ -37,7 +37,8 @@ class HypothesisScreen(BaseFrame):
             title="Hypothesis",
             next_text=next_text,
             has_regenerate=True,
-            regenerate_text="Regenerate"
+            regenerate_text="Regenerate",
+            header_file_path=HYPOTHESES_FILE
         )
 
     def create_content(self):
@@ -163,11 +164,17 @@ class HypothesisScreen(BaseFrame):
 
     def _create_section(self, title: str, content: str, height: int = 4) -> tk.Text:
         """Create a labeled section with an editable text area."""
-        frame = ttk.LabelFrame(self.scrollable_frame, text=title, padding="10")
-        frame.pack(fill="x", pady=10)
+        section_container = ttk.Frame(self.scrollable_frame, padding=(0, 0, 0, 15))
+        section_container.pack(fill="x")
         
-        text_widget = create_text_area(frame, height=height)
-        text_widget.pack(fill="x", expand=True)
+        ttk.Label(
+            section_container, 
+            text=title, 
+            font=self.controller.fonts.sub_header_font
+        ).pack(anchor="w", pady=(0, 10))
+        
+        container, text_widget = create_scrollable_text_area(section_container, height=height)
+        container.pack(fill="x", expand=True, padx=(15, 0))
         text_widget.insert("1.0", content)
         
         return text_widget

@@ -28,7 +28,8 @@ class ExperimentResultsScreen(BaseFrame):
             title="Experiment Results",
             next_text=next_text,
             has_regenerate=True,
-            regenerate_text="Regenerate"
+            regenerate_text="Regenerate",
+            header_file_path=Path("output/experiments/experiment_result.json")
         )
 
     def create_content(self):
@@ -124,45 +125,58 @@ class ExperimentResultsScreen(BaseFrame):
             widget.destroy()
 
         # Hypothesis description
-        hyp_frame = ttk.LabelFrame(self.results_container, text="Hypothesis", padding="10")
-        hyp_frame.pack(fill="x", pady=10)
+        hyp_container = ttk.Frame(self.results_container, padding=(0, 0, 0, 15))
+        hyp_container.pack(fill="x")
         
+        ttk.Label(
+            hyp_container, 
+            text="Hypothesis", 
+            font=self.controller.fonts.sub_header_font
+        ).pack(anchor="w", pady=(0, 10))
+
         hyp_label = ttk.Label(
-            hyp_frame,
+            hyp_container,
             text=experiment_result.hypothesis.description,
             font=self.controller.fonts.text_area_font,
             justify="left"
         )
-        hyp_label.pack(anchor="w", fill="x", padx=10, pady=5)
+        hyp_label.pack(anchor="w", fill="x", padx=(15, 0))
         
         def update_hyp_wrap(event):
             hyp_label.config(wraplength=event.width - 20)
-        hyp_frame.bind("<Configure>", update_hyp_wrap)
+        hyp_container.bind("<Configure>", update_hyp_wrap)
 
         # Verdict section
-        verdict_frame = ttk.LabelFrame(self.results_container, text="Verdict", padding="10")
-        verdict_frame.pack(fill="x", pady=10)
+        verdict_container = ttk.Frame(self.results_container, padding=(0, 0, 0, 15))
+        verdict_container.pack(fill="x")
+
+        ttk.Label(
+            verdict_container, 
+            text="Verdict", 
+            font=self.controller.fonts.sub_header_font
+        ).pack(anchor="w", pady=(0, 10))
+        
         verdict = experiment_result.hypothesis_evaluation.verdict
         verdict_color = "green" if verdict.lower() == "proven" else ("red" if verdict.lower() == "disproven" else "orange")
         ttk.Label(
-            verdict_frame,
+            verdict_container,
             text=verdict.upper(),
             font=self.controller.fonts.sub_header_font,
             foreground=verdict_color
-        ).pack(anchor="w", padx=10, pady=5)
+        ).pack(anchor="w", padx=(15, 0))
         
         # Reasoning
         reasoning_label = ttk.Label(
-            verdict_frame,
+            verdict_container,
             text=experiment_result.hypothesis_evaluation.reasoning,
             font=self.controller.fonts.text_area_font,
             justify="left"
         )
-        reasoning_label.pack(anchor="w", pady=(5, 5), fill="x", padx=10)
+        reasoning_label.pack(anchor="w", pady=(5, 0), fill="x", padx=(15, 0))
         
         def update_reasoning_wrap(event):
              reasoning_label.config(wraplength=event.width - 20)
-        verdict_frame.bind("<Configure>", update_reasoning_wrap)
+        verdict_container.bind("<Configure>", update_reasoning_wrap)
 
 
         # --- Plots Section ---
@@ -186,8 +200,14 @@ class ExperimentResultsScreen(BaseFrame):
         if not plot_files:
             return
 
-        plots_frame = ttk.LabelFrame(self.results_container, text="Generated Plots", padding="10")
-        plots_frame.pack(fill="x", pady=10)
+        plots_container = ttk.Frame(self.results_container, padding=(0, 0, 0, 15))
+        plots_container.pack(fill="x")
+
+        ttk.Label(
+            plots_container, 
+            text="Generated Plots", 
+            font=self.controller.fonts.sub_header_font
+        ).pack(anchor="w", pady=(0, 10))
 
         for plot_path in plot_files:
             try:
@@ -201,23 +221,33 @@ class ExperimentResultsScreen(BaseFrame):
                 
                 tk_img = ImageTk.PhotoImage(pil_img)
                 
-                img_label = ttk.Label(plots_frame, image=tk_img)
+                img_label = ttk.Label(plots_container, image=tk_img)
                 img_label.image = tk_img # Keep reference!
-                img_label.pack(pady=5)
+                img_label.pack(pady=5, padx=(15, 0))
                 
-                name_label = ttk.Label(plots_frame, text=plot_path.name, font=self.controller.fonts.small_font)
-                name_label.pack(pady=(0, 15))
+                name_label = ttk.Label(plots_container, text=plot_path.name, font=self.controller.fonts.small_font)
+                name_label.pack(pady=(0, 15), padx=(15, 0))
             except Exception as e:
                 print(f"Error loading plot {plot_path}: {e}")
 
     def _create_code_section(self):
         """Create section to view/edit experiment code."""
         
-        code_frame = ttk.LabelFrame(self.results_container, text="Experiment Code", padding="10")
-        code_frame.pack(fill="both", expand=True, pady=10)
+        section_container = ttk.Frame(self.results_container, padding=(0, 0, 0, 15))
+        section_container.pack(fill="both", expand=True)
+
+        ttk.Label(
+            section_container, 
+            text="Experiment Code", 
+            font=self.controller.fonts.sub_header_font
+        ).pack(anchor="w", pady=(0, 10))
+        
+        # Container with border (simulated)
+        border_container = tk.Frame(section_container, bg="#3e3e42", padx=1, pady=1)
+        border_container.pack(fill="both", expand=True, padx=(15, 0))
 
         # Container for text + scrollbars
-        editor_container = ttk.Frame(code_frame)
+        editor_container = ttk.Frame(border_container)
         editor_container.pack(fill="both", expand=True)
         
         # Scrollbars
@@ -232,6 +262,9 @@ class ExperimentResultsScreen(BaseFrame):
             borderwidth=0,
             relief="flat",
             wrap="none",
+            bg="#252526",
+            fg="#ffffff",
+            insertbackground="white",
             yscrollcommand=v_scroll.set,
             xscrollcommand=h_scroll.set
         )

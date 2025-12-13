@@ -1,16 +1,21 @@
 from tkinter.ttk import Frame
-
-
 import tkinter as tk
 from tkinter import ttk
+import os
+import subprocess
+import platform
 
 MAX_WIDTH = 700
 
 # Text widget styling constants
 
-TEXT_AREA_SPACING = 4  # Line spacing (spacing between lines)
-TEXT_AREA_PADX = 8
-TEXT_AREA_PADY = 8
+# Text widget styling constants
+TEXT_AREA_SPACING = 4
+TEXT_AREA_PADX = 10
+TEXT_AREA_PADY = 10
+TEXT_BG = "#252526"
+BORDER_COLOR = "#3e3e42"
+TEXT_FG = "#ffffff"
 
 
 def create_text_area(parent, height: int = 6, **kwargs) -> tk.Text:
@@ -21,14 +26,48 @@ def create_text_area(parent, height: int = 6, **kwargs) -> tk.Text:
         wrap="word",
         padx=TEXT_AREA_PADX,
         pady=TEXT_AREA_PADY,
-        spacing2=TEXT_AREA_SPACING,  # spacing between wrapped lines
-        spacing3=TEXT_AREA_SPACING,  # spacing between paragraphs
+        spacing2=TEXT_AREA_SPACING,
+        spacing3=TEXT_AREA_SPACING,
         highlightthickness=0,
         borderwidth=0,
         relief="flat",
+        bg=TEXT_BG,
+        fg=TEXT_FG,
+        insertbackground="white",
         **kwargs
     )
     return text
+
+
+def create_scrollable_text_area(parent, height: int = 6, **kwargs) -> tuple[tk.Frame, tk.Text]:
+    """
+    Create a consistently styled multi-line text area widget with a vertical scrollbar.
+    Returns (container_frame, text_widget).
+    Caller must pack/grid the container_frame, NOT the text_widget.
+    """
+    # Container with border (simulated by background color + padding)
+    container = tk.Frame(parent, bg=BORDER_COLOR, padx=1, pady=1)
+    
+    # Inner frame for contents (to hold text + scrollbar)
+    inner = ttk.Frame(container)
+    inner.pack(fill="both", expand=True)
+    
+    # Scrollbar
+    scrollbar = ttk.Scrollbar(inner, orient="vertical")
+    scrollbar.pack(side="right", fill="y")
+    
+    # Text widget
+    text = create_text_area(
+        inner, 
+        height=height, 
+        yscrollcommand=scrollbar.set,
+        **kwargs
+    )
+    text.pack(side="left", fill="both", expand=True)
+    
+    scrollbar.config(command=text.yview)
+    
+    return container, text
 
 
 def create_gray_button(parent, text: str, command, **kwargs) -> ttk.Label:
@@ -196,7 +235,7 @@ class ProgressPopup(tk.Toplevel):
 
 
 class BaseFrame(ttk.Frame):
-    def __init__(self, parent, controller, title="Screen", has_next=True, next_text="Next", has_back=True, back_text="Back", has_regenerate=False, regenerate_text="Regenerate"):
+    def __init__(self, parent, controller, title="Screen", has_next=True, next_text="Next", has_back=True, back_text="Back", has_regenerate=False, regenerate_text="Regenerate", header_file_path=None):
         super().__init__(parent)
         self.controller = controller
         self.title = title
@@ -206,6 +245,7 @@ class BaseFrame(ttk.Frame):
         self.back_text = back_text
         self.has_regenerate = has_regenerate
         self.regenerate_text = regenerate_text
+        self.header_file_path = header_file_path
         
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=0)
@@ -217,7 +257,41 @@ class BaseFrame(ttk.Frame):
         # Header
         header_frame = ttk.Frame(self, padding=(10, 20))
         header_frame.grid(row=0, column=0, sticky="ew")
-        ttk.Label(header_frame, text=self.title, font=self.controller.fonts.header_font).pack()
+        
+        # Shared container for Title + Buttons to center them together
+        center_container = ttk.Frame(header_frame)
+        center_container.pack(expand=True)
+        
+        # Title
+        ttk.Label(center_container, text=self.title, font=self.controller.fonts.header_font).pack(side="left")
+        
+        # Action Buttons
+        if self.header_file_path:
+            actions_frame = ttk.Frame(center_container)
+            actions_frame.pack(side="left", padx=(15, 0))
+            
+            # "Open in Editor" Button
+            ttk.Button(
+                actions_frame, 
+                text="Open in Editor", 
+                command=self._open_in_editor,
+                style="Accent.TButton" 
+            ).pack(side="left", padx=5)
+            
+            # "Show in Explorer" Button
+            ttk.Button(
+                actions_frame, 
+                text="Show in Explorer", 
+                command=self._show_in_explorer
+            ).pack(side="left", padx=5)
+
+            # "Reload" File Button
+            ttk.Button(
+                actions_frame, 
+                text="Reload", 
+                command=self.reload_content
+            ).pack(side="left", padx=5)
+
         ttk.Separator(self, orient="horizontal").grid(row=1, column=0, sticky="ew", pady=(0, 15))
         
         # Content container
@@ -340,4 +414,81 @@ class BaseFrame(ttk.Frame):
 
     def on_regenerate(self):
         self.controller.next_screen()
+
+    def on_show(self):
+        """
+        Called when the screen is shown. 
+        Subclasses can override this to load data lazily or refresh dynamic content.
+        """
+        pass
+
+    def _open_in_editor(self):
+        """Open the header file in the default editor."""
+        if not self.header_file_path or not os.path.exists(self.header_file_path):
+            print(f"File not found: {self.header_file_path}")
+            return
+            
+        print(f"Opening {self.header_file_path} in editor...")
+        path = os.path.abspath(self.header_file_path)
+        
+        if platform.system() == 'Windows':
+            os.startfile(path)
+        elif platform.system() == 'Darwin':
+            subprocess.call(('open', path))
+        else:
+            subprocess.call(('xdg-open', path))
+
+    def _show_in_explorer(self):
+        """Reveal the header file in the file explorer."""
+        if not self.header_file_path:
+             return
+             
+        print(f"Showing {self.header_file_path} in explorer...")
+        path = os.path.abspath(self.header_file_path)
+        path = os.path.normpath(path)
+        
+        if platform.system() == 'Windows':
+            subprocess.Popen(f'explorer /select,"{path}"')
+        elif platform.system() == 'Darwin':
+            subprocess.call(['open', '-R', path])
+        else:
+            # Linux - simple attempt to open folder
+            subprocess.call(['xdg-open', os.path.dirname(path)])
+
+    def reload_content(self):
+        """
+        Reload the content of the screen. 
+        Default implementation clears the scrollable frame and calls create_content() and on_show().
+        Subclasses can override this or ensure their create_content/on_show handles stateless re-loading.
+        """
+        print(f"Reloading screen: {self.title}")
+        
+        # Clear all widgets in scrollable frame
+        for widget in self.scrollable_frame.winfo_children():
+            widget.destroy()
+            
+        # Reset common state attributes if they exist to force re-fetches
+        # This is a heuristic to help subclasses that use 'if getattr(self, x) is None' checks
+        common_attrs = [
+            'draft_text', 
+            'plan_text', 
+            'concept', 
+            'hypotheses', 
+            'current_hypothesis',
+            '_results_loaded'
+        ]
+        for attr in common_attrs:
+            if hasattr(self, attr):
+                # We can't always delattr if it's defined in __init__, so setting to None is safer
+                # But some checks use hasattr. Let's try deleting them if they are dynamic.
+                try:
+                    delattr(self, attr)
+                except:
+                    setattr(self, attr, None)
+
+        # Re-create static content (info sections, etc.)
+        self.create_content()
+        
+        # Trigger on_show to load dynamic content
+        self.on_show()
 

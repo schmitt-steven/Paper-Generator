@@ -3,7 +3,7 @@ from tkinter import ttk
 import threading
 from pathlib import Path
 
-from ..base_frame import BaseFrame, ProgressPopup, create_text_area
+from ..base_frame import BaseFrame, ProgressPopup, create_scrollable_text_area
 from utils.file_utils import load_markdown, save_markdown
 from phases.paper_writing.paper_writing_pipeline import PaperWritingPipeline
 from phases.paper_search.literature_search import LiteratureSearch
@@ -33,7 +33,8 @@ class PaperDraftScreen(BaseFrame):
             title="Paper Draft",
             next_text=next_text,
             has_regenerate=True,
-            regenerate_text="Regenerate"
+            regenerate_text="Regenerate",
+            header_file_path=Path(OUTPUT_DIR) / PAPER_DRAFT_FILE
         )
 
     def create_content(self):
@@ -99,35 +100,22 @@ class PaperDraftScreen(BaseFrame):
 
     def _create_draft_section(self, content: str):
         """Create a labeled section with an editable text area for the draft."""
-        frame = ttk.LabelFrame(self.scrollable_frame, text="Paper Draft", padding="10")
-        frame.pack(fill="both", expand=True, pady=10)
+        section_container = ttk.Frame(self.scrollable_frame, padding=(0, 0, 0, 15))
+        section_container.pack(fill="both", expand=True)
+
+        ttk.Label(
+            section_container, 
+            text="Paper Draft", 
+            font=self.controller.fonts.sub_header_font
+        ).pack(anchor="w", pady=(0, 10))
         
         # Container for text + scrollbar
-        editor_container = ttk.Frame(frame)
-        editor_container.pack(fill="both", expand=True)
-
-        v_scroll = ttk.Scrollbar(editor_container, orient="vertical")
-        
-        # Create text area with fixed height
-        self.draft_text = tk.Text(
-            editor_container,
-            height=35,  # Fixed height
-            wrap="word",
-            font=self.controller.fonts.text_area_font,
-            padx=8,
-            pady=8,
-            spacing2=4,
-            spacing3=4,
-            highlightthickness=0,
-            borderwidth=0,
-            relief="flat",
-            yscrollcommand=v_scroll.set
+        container, self.draft_text = create_scrollable_text_area(
+            section_container,
+            height=35,
+            font=self.controller.fonts.text_area_font
         )
-        
-        v_scroll.config(command=self.draft_text.yview)
-        
-        v_scroll.pack(side="right", fill="y")
-        self.draft_text.pack(side="left", fill="both", expand=True)
+        container.pack(fill="both", expand=True, padx=(15, 0))
         
         self.draft_text.insert("1.0", content)
         
