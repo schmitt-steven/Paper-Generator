@@ -1,5 +1,5 @@
 from tkinter import ttk
-from ..base_frame import BaseFrame, create_text_area
+from ..base_frame import BaseFrame, create_scrollable_text_area
 import os
 
 class UserRequirementsScreen(BaseFrame):
@@ -11,7 +11,8 @@ class UserRequirementsScreen(BaseFrame):
             parent=parent,
             controller=controller,
             title="User Requirements",
-            next_text="Continue"
+            next_text="Continue",
+            header_file_path=self.file_path
         )
 
     def create_content(self):
@@ -42,19 +43,27 @@ class UserRequirementsScreen(BaseFrame):
             
             # Special handling for grouping headers
             if title in ["General Information", "Section Specifications"]:
-                frame = ttk.Frame(self.scrollable_frame, padding="10")
-                frame.pack(fill="x", pady=10)
-                ttk.Label(frame, text=title, font=self.controller.fonts.sub_header_font).pack(anchor="w")
+                frame = ttk.Frame(self.scrollable_frame, padding=(0, 10))
+                frame.pack(fill="x")
+                ttk.Label(frame, text=title, font=self.controller.fonts.header_font).pack(anchor="w")
                 # ttk.Separator(frame, orient="horizontal").pack(fill="x", pady=5)
                 
                 self.sections.append((header, None))
                 return
 
-            frame = ttk.LabelFrame(self.scrollable_frame, text=title, padding="10")
-            frame.pack(fill="x", pady=5)
+            # Container for the section
+            section_container = ttk.Frame(self.scrollable_frame, padding=(0, 0, 0, 15))
+            section_container.pack(fill="x")
             
-            text_widget = create_text_area(frame, height=6)
-            text_widget.pack(fill="x", expand=True)
+            # Standalone Header
+            ttk.Label(
+                section_container, 
+                text=title, 
+                font=self.controller.fonts.sub_header_font
+            ).pack(anchor="w", pady=(0, 10))
+            
+            container, text_widget = create_scrollable_text_area(section_container, height=6)
+            container.pack(fill="x", expand=True, padx=(15, 0))
             text_widget.insert("1.0", "".join(text_lines).strip())
             
             self.sections.append((header, text_widget))

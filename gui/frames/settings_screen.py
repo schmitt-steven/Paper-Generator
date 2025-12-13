@@ -78,10 +78,26 @@ class SettingsScreen(BaseFrame):
 
 
 
+    def _create_card_frame(self, parent, title):
+        """Helper to create a unified card-styled section with title and separator."""
+        card = ttk.Frame(parent, style="Card.TFrame", padding=1)
+        card.pack(fill="x", padx=0, pady=10)
+        
+        header = ttk.Frame(card, padding=10)
+        header.pack(fill="x")
+        ttk.Label(header, text=title, font=self.controller.fonts.sub_header_font).pack(side="left")
+        
+        ttk.Separator(card, orient="horizontal").pack(fill="x")
+        
+        content = ttk.Frame(card, padding=10)
+        content.pack(fill="x")
+        return content
+
     def create_phase_section(self, title, settings):
         from settings import Settings
-        frame = ttk.LabelFrame(self.scrollable_frame, text=title, padding="10")
-        frame.pack(fill="x", padx=0, pady=5)
+        
+        # content container from card
+        frame = self._create_card_frame(self.scrollable_frame, title)
 
         for setting in settings:
             # Handle different setting definitions
@@ -122,8 +138,9 @@ class SettingsScreen(BaseFrame):
 
     def create_latex_generation_section(self):
         from settings import Settings
-        frame = ttk.LabelFrame(self.scrollable_frame, text="LaTeX Generation", padding="10")
-        frame.pack(fill="x", padx=0, pady=5)
+        
+        # content container from card (for models and title)
+        frame = self._create_card_frame(self.scrollable_frame, "LaTeX Generation")
 
         # LaTeX Generation Model
         row_frame = ttk.Frame(frame)
@@ -152,9 +169,9 @@ class SettingsScreen(BaseFrame):
         entry.pack(side="right", fill="x", expand=True, padx=(10, 0))
         ttk.Label(frame, text="(Leave empty for LLM generated title)", font=self.controller.fonts.default_font).pack(anchor="e")
 
-        # Authors section
-        authors_section = ttk.Frame(frame, style="Card.TFrame", padding=1)
-        authors_section.pack(fill="x", pady=(20, 10))
+        # Authors section (Separate Card)
+        authors_section = ttk.Frame(self.scrollable_frame, style="Card.TFrame", padding=1)
+        authors_section.pack(fill="x", padx=0, pady=(20, 10))
         
         # Header row
         header_frame = ttk.Frame(authors_section, padding=10)
@@ -192,8 +209,9 @@ class SettingsScreen(BaseFrame):
         
     def create_appearance_section(self):
         from settings import Settings
-        frame = ttk.LabelFrame(self.scrollable_frame, text="Appearance", padding="10")
-        frame.pack(fill="x", padx=0, pady=5)
+        
+        # content container from card
+        frame = self._create_card_frame(self.scrollable_frame, "Appearance")
         
         row_frame = ttk.Frame(frame)
         row_frame.pack(fill="x", pady=2)
@@ -223,6 +241,18 @@ class SettingsScreen(BaseFrame):
         spinbox.pack(side="right", expand=True, fill="x", padx=(10, 0))
         
         self.settings_vars["FONT_SIZE_BASE"] = self.font_size_var
+
+        # Theme Toggle
+        # row_frame = ttk.Frame(frame)
+        # row_frame.pack(fill="x", pady=(10, 2))
+        
+        # ttk.Label(row_frame, text="Theme", width=35).pack(side="left")
+        
+        # ttk.Button(
+        #     row_frame, 
+        #     text="Switch to Light/Dark Mode", 
+        #     command=self.controller.toggle_theme
+        # ).pack(side="right", expand=True, fill="x", padx=(10, 0))
 
 
 

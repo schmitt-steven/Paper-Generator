@@ -3,7 +3,7 @@ from tkinter import ttk
 import threading
 from pathlib import Path
 
-from ..base_frame import BaseFrame, ProgressPopup, create_text_area
+from ..base_frame import BaseFrame, ProgressPopup, create_scrollable_text_area
 from utils.file_utils import load_markdown, save_markdown
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.context_analysis.paper_conception import PaperConception
@@ -25,10 +25,11 @@ class ExperimentationPlanScreen(BaseFrame):
         super().__init__(
             parent=parent,
             controller=controller,
-            title="Experimentation Plan",
+            title="Experiment Plan",
             next_text=next_text,
             has_regenerate=True,
-            regenerate_text="Regenerate"
+            regenerate_text="Regenerate",
+            header_file_path=Path(EXPERIMENTS_DIR) / EXPERIMENT_PLAN_FILE
         )
 
     def create_content(self):
@@ -94,60 +95,20 @@ class ExperimentationPlanScreen(BaseFrame):
 
     def _create_plan_section(self, content: str):
         """Create a labeled section with an editable text area for the plan."""
-        frame = ttk.LabelFrame(self.scrollable_frame, text="Experiment Plan", padding="10")
-        frame.pack(fill="both", expand=True, pady=10)
+        # Container
+        section_container = ttk.Frame(self.scrollable_frame, padding=(0, 0, 0, 15))
+        section_container.pack(fill="both", expand=True)
+
+        # Header
+        ttk.Label(
+            section_container, 
+            text="Description", 
+            font=self.controller.fonts.sub_header_font
+        ).pack(anchor="w", pady=(0, 10))
         
-        # Create text area without scrollbars - parent scrollable frame will handle scrolling
-        self.plan_text = tk.Text(
-            frame,
-            height=1,  # Start with minimal height
-            wrap="word",
-            font=self.controller.fonts.text_area_font,
-            padx=8,
-            pady=8,
-            spacing2=4,
-            spacing3=4,
-            highlightthickness=0,
-            borderwidth=0,
-            relief="flat"
-        )
-        # Don't attach any scrollbars - let parent frame handle scrolling
-        self.plan_text.pack(fill="x", expand=False)
+        container, self.plan_text = create_scrollable_text_area(section_container, height=25)
+        container.pack(fill="both", expand=True, padx=(15, 0))
         self.plan_text.insert("1.0", content)
-        
-        # Force geometry update so we can measure
-        self.plan_text.update_idletasks()
-        
-        # Count actual displayed lines (including wrapped ones)
-        count_result = self.plan_text.count("1.0", "end", "displaylines")
-        if count_result:
-            num_lines = count_result[0]
-            self.plan_text.config(height=num_lines)
-        
-        # Bind mousewheel to scroll the parent canvas when hovering over text area
-        def on_text_mousewheel(event):
-            # Forward the scroll event to the parent canvas
-            canvas = self._canvas
-            if canvas:
-                # Don't scroll if content fits
-                if self.scrollable_frame.winfo_reqheight() <= canvas.winfo_height():
-                    return "break"
-                
-                # Convert event to canvas coordinates and scroll
-                if event.num == 4:
-                    canvas.yview_scroll(-1, "units")
-                elif event.num == 5:
-                    canvas.yview_scroll(1, "units")
-                elif event.delta > 0:
-                    canvas.yview_scroll(-1, "units")
-                else:
-                    canvas.yview_scroll(1, "units")
-                return "break"  # Prevent default Text widget scrolling
-        
-        # Bind mousewheel events to the text widget
-        self.plan_text.bind("<MouseWheel>", on_text_mousewheel)  # Windows/macOS
-        self.plan_text.bind("<Button-4>", on_text_mousewheel)    # Linux scroll up
-        self.plan_text.bind("<Button-5>", on_text_mousewheel)    # Linux scroll down
 
     def _save_plan(self):
         """Save the edited plan."""
