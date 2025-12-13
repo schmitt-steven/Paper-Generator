@@ -29,6 +29,7 @@ class UserRequirementsScreen(BaseFrame):
 
         current_header = None
         current_text = []
+        self.current_card_frame = None
 
         def add_section_ui(header, text_lines):
             # Skip if header is None and text is empty (avoids duplicate default section)
@@ -41,29 +42,28 @@ class UserRequirementsScreen(BaseFrame):
             else:
                 title = "General Information"
             
-            # Special handling for grouping headers
+            # Special handling for grouping headers - these start new Cards
             if title in ["General Information", "Section Specifications"]:
-                frame = ttk.Frame(self.scrollable_frame, padding=(0, 10))
-                frame.pack(fill="x")
-                ttk.Label(frame, text=title, font=self.controller.fonts.header_font).pack(anchor="w")
-                # ttk.Separator(frame, orient="horizontal").pack(fill="x", pady=5)
-                
+                self.current_card_frame = self.create_card_frame(self.scrollable_frame, title)
                 self.sections.append((header, None))
                 return
 
+            # Parent is current card or scrollable frame if no card yet
+            parent = self.current_card_frame if self.current_card_frame else self.scrollable_frame
+            
             # Container for the section
-            section_container = ttk.Frame(self.scrollable_frame, padding=(0, 0, 0, 15))
+            section_container = ttk.Frame(parent, padding=(0, 0, 0, 15))
             section_container.pack(fill="x")
             
-            # Standalone Header
+            # Sub-header (smaller than card title)
             ttk.Label(
                 section_container, 
                 text=title, 
-                font=self.controller.fonts.sub_header_font
-            ).pack(anchor="w", pady=(0, 10))
+                font=self.controller.fonts.default_font # Use default font inside cards
+            ).pack(anchor="w", pady=(0, 5))
             
             container, text_widget = create_scrollable_text_area(section_container, height=6)
-            container.pack(fill="x", expand=True, padx=(15, 0))
+            container.pack(fill="x", expand=True, padx=(0, 0)) # No extra padx needed inside card
             text_widget.insert("1.0", "".join(text_lines).strip())
             
             self.sections.append((header, text_widget))

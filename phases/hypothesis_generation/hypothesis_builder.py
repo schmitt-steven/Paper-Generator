@@ -4,7 +4,36 @@ import numpy as np
 from typing import List, Tuple
 from pathlib import Path
 from phases.context_analysis.paper_conception import PaperConcept
-from phases.hypothesis_generation.hypothesis_models import Hypothesis, HypothesesList, HypothesesResult, SelectedHypotheses
+from phases.context_analysis.paper_conception import PaperConcept
+from pydantic import BaseModel
+from dataclasses import dataclass
+from typing import List, Dict, Tuple, Optional
+
+class Hypothesis(BaseModel):
+    """A testable research hypothesis"""
+    id: str
+    description: str
+    rationale: str
+    success_criteria: str
+    selected_for_experimentation: bool = False
+
+
+class HypothesesList(BaseModel):
+    """Simple container for LLM-generated hypotheses"""
+    hypotheses: list[Hypothesis]
+
+
+class HypothesesResult(BaseModel):
+    """Container for generated hypotheses with metadata"""
+    paper_concept_file: str
+    num_papers_analyzed: int
+    top_limitations_addressed: list[dict[str, float]]
+    hypotheses: list[Hypothesis]
+
+
+class SelectedHypotheses(BaseModel):
+    """Selected hypothesis IDs from a selection process"""
+    selected_ids: list[str]
 from utils.lazy_model_loader import LazyModelMixin, LazyEmbeddingMixin
 from utils.file_utils import save_json, load_json
 
@@ -21,123 +50,6 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
         self.top_limitations = top_limitations
         self.num_papers_analyzed = num_papers_analyzed
         
-    def validate_hypotheses(self, hypotheses: list[Hypothesis]) -> list[Hypothesis]:
-        """
-        Validate a list of hypotheses and filter to only valid ones.
-        
-        Returns: List of valid hypotheses
-        """
-        valid_hypotheses = []
-        
-        print("\nValidating hypotheses...")
-        for hypothesis in hypotheses:
-            is_valid = True
-            reason = ""
-            
-            # Has clear description
-            if not hypothesis.description or len(hypothesis.description) < 20:
-                is_valid = False
-                reason = "Description too short or missing"
-            
-            # Has rationale
-            elif not hypothesis.rationale or len(hypothesis.rationale) < 20:
-                is_valid = False
-                reason = "Rationale too short or missing"
-            
-            if is_valid:
-                valid_hypotheses.append(hypothesis)
-                print(f"{hypothesis.id}: {hypothesis.description[:60]}...")
-            else:
-                print(f"{hypothesis.id}: Rejected - {reason}")
-        
-        return valid_hypotheses
-    
-    def generate_hypotheses(self, n_hypotheses: int = 5) -> list[Hypothesis]:
-        """
-        Generate hypotheses and validate them.
-        
-        May generate more than N initially to ensure N valid hypotheses.
-        """
-        print(f"\nGenerating {n_hypotheses} hypotheses...")
-        
-        # Format limitations for prompt (use top 5)
-        limitations_text = "\n".join([f"- {limitation} (score: {score:.2f})" for limitation, score in self.top_limitations[:5]])
-        
-        # Get available code snippets
-        code_snippets = self.paper_concept.code_snippets if self.paper_concept.code_snippets else "No code provided"
-        
-        prompt = textwrap.dedent(f"""\
-            You are a research hypothesis generator.
-            Task: Generate {n_hypotheses} testable research hypotheses.
-
-            REQUIREMENTS for each hypothesis:
-            1. Can be tested programmatically!
-            2. Is testable and measurable with clear success criteria
-            3. Does NOT suggest incompatible method combinations (e.g., don't mix deterministic with stochastic)
-            4. Focuses on realistic improvements - DO NOT include specific percentages, multipliers, or numeric improvements
-            5. Use qualitative descriptions instead (e.g., "improved convergence", "better sample efficiency", "reduced memory usage")
-
-            For each hypothesis provide:
-            - id: unique identifier (e.g., "hyp_001", "hyp_002", etc.) - REQUIRED, must NOT be empty
-            - description: Clear, testable statement (NO percentages or specific numbers unless preliminary results exist)
-            - rationale: Why this hypothesis addresses the limitation (reference literature limitations)
-            - success_criteria: Clear, measurable criterion or criteria for determining if the hypothesis is validated. 
-              CRITICAL: Do NOT include specific numbers, percentages, multipliers, or quantitative targets (e.g., "10x faster", "50% improvement", "reduces error by 20%"). 
-              These are impossible to know before running experiments and are pure speculation. 
-              Instead, use qualitative, observable criteria (e.g., "shows improved convergence", "demonstrates better sample efficiency", "exhibits reduced memory usage", "achieves stable performance")
-
-            Research Context:
-            {self.paper_concept.description}
-
-            User provided implementations/code:
-            {code_snippets}
-
-            Some found research limitations (that could be inspiration, only use if it is relevant to the paper concept):
-            {limitations_text}
-
-            Generate exactly the {n_hypotheses} hypotheses now.
-        """)
-
-        try:
-            # Generate hypotheses using structured response
-            result = self.model.respond(
-                prompt,
-                response_format=HypothesesList,
-                config={"temperature": 0.7, "maxTokens": 2000}
-            )
-            
-            # LLM returns dict with "hypotheses" key containing list of hypothesis dicts
-            response_data = result.parsed
-            hypotheses_data = response_data.get("hypotheses", [])
-            
-            # Convert dict data to Hypothesis objects
-            hypotheses = []
-            for i, hyp_data in enumerate(hypotheses_data[:n_hypotheses], 1):
-                # hyp_data is a dict from the structured response
-                hypothesis = Hypothesis(
-                    id=hyp_data.get("id", f"hyp_{i:03d}"),
-                    description=hyp_data.get("description", ""),
-                    rationale=hyp_data.get("rationale", ""),
-                    success_criteria=hyp_data.get("success_criteria", "")
-                )
-                hypotheses.append(hypothesis)
-            
-            # Validate and filter
-            valid_hypotheses = self.validate_hypotheses(hypotheses)
-            
-            # Return top N valid
-            final_hypotheses = valid_hypotheses[:n_hypotheses]
-            
-            # Automatically save
-            if final_hypotheses:
-                HypothesisBuilder.save_hypotheses(final_hypotheses, filepath="output/hypotheses.json", num_papers_analyzed=self.num_papers_analyzed)
-            
-            return final_hypotheses
-        
-        except Exception as e:
-            print(f"Error generating hypotheses: {e}")
-            # Return empty list on error
-            return []
     def create_hypothesis_from_user_input(self, user_requirements) -> list[Hypothesis]:
         """
         Create a Hypothesis object from a user-provided string.
@@ -297,117 +209,5 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
         except Exception as e:
             print(f"Error loading hypotheses: {e}")
             return []
-    
-    def select_best_hypotheses(self, hypotheses: list[Hypothesis], max_n: int) -> list[Hypothesis]:
-        """
-        Select the most feasible and best hypotheses from a list, prioritizing testability via Python code.
-        
-        Args:
-            hypotheses: List of hypothesis objects to choose from
-            max_n: Maximum number of hypotheses to select
-        
-        Returns:
-            List of selected hypothesis objects (may be fewer than max_n if not enough feasible ones)
-        """
-        if not hypotheses:
-            return []
-        
-        # Check if any hypotheses are already selected
-        already_selected = [h for h in hypotheses if h.selected_for_experimentation]
-        if already_selected:
-            print(f"\nFound {len(already_selected)} already selected hypotheses.")
-            # If we have more than max_n, just take the first max_n (or could add logic to re-select)
-            return already_selected[:max_n]
-        
-        if len(hypotheses) <= max_n:
-            # If few hypotheses, select all of them
-            for h in hypotheses:
-                h.selected_for_experimentation = True
-            HypothesisBuilder.save_hypotheses(hypotheses, "output/hypotheses.json", num_papers_analyzed=self.num_papers_analyzed)
-            return hypotheses
-        
-        # Format hypotheses for prompt
-        hypotheses_text = "\n\n".join([
-            f"ID: {h.id}\n"
-            f"Description: {h.description}\n"
-            f"Rationale: {h.rationale}\n"
-            f"Success Criteria: {h.success_criteria}"
-            for h in hypotheses
-        ])
-        
-        prompt = textwrap.dedent(f"""\
-            You are selecting the most feasible and best hypotheses for experiment testing.
 
-            CRITICAL REQUIREMENT: Each selected hypothesis MUST be testable via Python code! 
-
-            A hypothesis is testable via Python code if:
-            - It can be implemented and tested programmatically
-            - It has clear, measurable success criteria
-            - The success can be quantified through code execution
-            - It does NOT require human evaluation, surveys, or manual analysis
-            - It does NOT require proprietary data or external APIs that cannot be simulated
-
-            Selection Criteria (in order of importance):
-            1. TESTABILITY VIA PYTHON CODE (MOST IMPORTANT - reject if not testable programmatically!)
-            2. Clear baseline to beat (measurability)
-            3. Scientific rigor and potential impact
-            4. Alignment with the paper concept
-
-            Instructions:
-            - You MUST select EXACTLY {max_n} hypothesis/hypotheses (or fewer if not enough are feasible)
-            - Do NOT select more than {max_n} hypotheses - this is a strict limit
-            - Select the {max_n} hypotheses that are MOST FEASIBLE to test via Python code
-            - If fewer than {max_n} hypotheses are feasible to test programmatically, select only the feasible ones
-            - Prioritize hypotheses that can be tested with clear metrics and comparisons
-            - Return ONLY the ID(s) of selected hypothesis/hypotheses
-
-            Paper concept:
-            {self.paper_concept.description}
-
-            Hypotheses to choose from:
-            {hypotheses_text}
-        """)
-
-        try:
-            result = self.model.respond(
-                prompt,
-                response_format=SelectedHypotheses,
-                config={"temperature": 0.2, "maxTokens": 500}
-            )
-            
-            selected_data = result.parsed
-            selected_ids = selected_data.get("selected_ids", [])
-            
-            # Enforce max_n limit - take only the first max_n IDs
-            if len(selected_ids) > max_n:
-                print(f"Warning: LLM selected {len(selected_ids)} hypotheses, limiting to {max_n}")
-                selected_ids = selected_ids[:max_n]
-            
-            # Filter hypotheses by selected IDs and update status
-            selected_hypotheses = []
-            id_to_hypothesis = {h.id: h for h in hypotheses}
-            
-            for hyp_id in selected_ids:
-                if hyp_id in id_to_hypothesis:
-                    h = id_to_hypothesis[hyp_id]
-                    h.selected_for_experimentation = True
-                    selected_hypotheses.append(h)
-
-            # Save the updated state (with selected flags)
-            HypothesisBuilder.save_hypotheses(hypotheses, "output/hypotheses.json", num_papers_analyzed=self.num_papers_analyzed)
-            
-            print(f"\nSelected {len(selected_hypotheses)} {'hypothesis' if len(selected_hypotheses) == 1 else 'hypotheses'} from {len(hypotheses)} candidates:")
-            for h in selected_hypotheses:
-                print(f"  - {h.id}: {h.description[:60]}...")
-            
-            return selected_hypotheses
-        
-        except Exception as e:
-            print(f"Error selecting hypotheses: {e}")
-            # Fallback: return first max_n hypotheses if selection fails
-            fallback = hypotheses[:max_n]
-            for h in fallback:
-                h.selected_for_experimentation = True
-            HypothesisBuilder.save_hypotheses(hypotheses, "output/hypotheses.json", num_papers_analyzed=self.num_papers_analyzed)
-            return fallback
 

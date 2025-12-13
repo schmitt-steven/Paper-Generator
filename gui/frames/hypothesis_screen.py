@@ -6,7 +6,7 @@ from typing import List, Optional
 
 from ..base_frame import BaseFrame, ProgressPopup, create_scrollable_text_area
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
-from phases.hypothesis_generation.hypothesis_models import Hypothesis
+from phases.hypothesis_generation.hypothesis_builder import Hypothesis
 from phases.context_analysis.paper_conception import PaperConception
 from phases.experimentation.experiment_runner import ExperimentRunner
 
