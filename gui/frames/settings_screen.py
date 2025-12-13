@@ -78,26 +78,14 @@ class SettingsScreen(BaseFrame):
 
 
 
-    def _create_card_frame(self, parent, title):
-        """Helper to create a unified card-styled section with title and separator."""
-        card = ttk.Frame(parent, style="Card.TFrame", padding=1)
-        card.pack(fill="x", padx=0, pady=10)
-        
-        header = ttk.Frame(card, padding=10)
-        header.pack(fill="x")
-        ttk.Label(header, text=title, font=self.controller.fonts.sub_header_font).pack(side="left")
-        
-        ttk.Separator(card, orient="horizontal").pack(fill="x")
-        
-        content = ttk.Frame(card, padding=10)
-        content.pack(fill="x")
-        return content
 
     def create_phase_section(self, title, settings):
         from settings import Settings
         
         # content container from card
-        frame = self._create_card_frame(self.scrollable_frame, title)
+        frame = self.create_card_frame(self.scrollable_frame, title)
+
+
 
         for setting in settings:
             # Handle different setting definitions
@@ -140,7 +128,9 @@ class SettingsScreen(BaseFrame):
         from settings import Settings
         
         # content container from card (for models and title)
-        frame = self._create_card_frame(self.scrollable_frame, "LaTeX Generation")
+        frame = self.create_card_frame(self.scrollable_frame, "LaTeX Generation")
+
+
 
         # LaTeX Generation Model
         row_frame = ttk.Frame(frame)
@@ -211,7 +201,9 @@ class SettingsScreen(BaseFrame):
         from settings import Settings
         
         # content container from card
-        frame = self._create_card_frame(self.scrollable_frame, "Appearance")
+        frame = self.create_card_frame(self.scrollable_frame, "Appearance")
+
+
         
         row_frame = ttk.Frame(frame)
         row_frame.pack(fill="x", pady=2)

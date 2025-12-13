@@ -14,8 +14,7 @@ from phases.paper_search.paper_ranking import PaperRanker
 from phases.paper_search.paper_filtering import PaperFilter
 from phases.context_analysis.paper_conception import PaperConception, PaperConcept
 from phases.context_analysis.user_requirements import UserRequirements
-from phases.hypothesis_generation.paper_analysis import PaperAnalyzer
-from phases.hypothesis_generation.limitation_analysis import LimitationAnalyzer
+
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from utils.pdf_downloader import PDFDownloader
 from utils.pdf_converter_pymupdf_marker import PDFConverter
@@ -608,37 +607,7 @@ class PaperSelectionScreen(BaseFrame):
                     hypothesis_builder.create_hypothesis_from_user_input(user_requirements)
                 # If no user hypothesis, skip generation - user can create manually on hypothesis screen
                 
-                # FUTURE: Automatic hypothesis generation from paper analysis
-                # findings: list[Any] = []
-                # top_limitations: list[Any] = []
-                # 
-                # if not user_provided_hypothesis:
-                #     # Extract findings
-                #     self.after(0, lambda: popup.update_status("Extracting findings from papers"))
-                #     analyzer = PaperAnalyzer(model_name=Settings.PAPER_ANALYSIS_MODEL)
-                #     findings = analyzer.extract_findings(papers_with_markdown)
-                #     
-                #     # Analyze limitations
-                #     self.after(0, lambda: popup.update_status("Analyzing limitations"))
-                #     limitation_analyzer = LimitationAnalyzer.build_from_findings(findings, paper_concept)
-                #     top_limitations = limitation_analyzer.find_top_limitations(n=10)
-                # 
-                # # Generate hypotheses
-                # self.after(0, lambda: popup.update_status("Generating hypotheses"))
-                # hypothesis_builder = HypothesisBuilder(
-                #     model_name=Settings.HYPOTHESIS_BUILDER_MODEL,
-                #     embedding_model_name=Settings.HYPOTHESIS_BUILDER_EMBEDDING_MODEL,
-                #     paper_concept=paper_concept,
-                #     top_limitations=top_limitations,
-                #     num_papers_analyzed=len(findings)
-                # )
-                # 
-                # if user_provided_hypothesis:
-                #     hypotheses = hypothesis_builder.create_hypothesis_from_user_input(user_requirements)
-                # else:
-                #     hypotheses = hypothesis_builder.generate_hypotheses(n_hypotheses=5)
-                #     if hypotheses:
-                #         hypothesis_builder.select_best_hypotheses(hypotheses, max_n=1)
+
                 
                 # Success - close popup and go to next screen
                 self.after(0, lambda: self._on_generation_success(popup))

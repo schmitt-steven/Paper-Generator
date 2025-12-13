@@ -13,13 +13,13 @@ import lmstudio as lms
 from phases.context_analysis.paper_conception import PaperConcept
 from phases.context_analysis.user_requirements import UserRequirements
 from phases.context_analysis.user_code_analysis import CodeAnalyzer, UserCode
-from phases.hypothesis_generation.hypothesis_models import Hypothesis
+from phases.hypothesis_generation.hypothesis_builder import Hypothesis
 from phases.experimentation.experiment_state import (
     HypothesisEvaluation, ExecutionResult, CodeGenerationResult,
     ExperimentFiles, ValidationResult, VerdictResult, ExperimentResult, Plot
 )
 from phases.experimentation.code_executor import CodeExecutor
-from phases.experimentation.results_manager import ResultsManager
+
 from utils.llm_utils import remove_thinking_blocks
 import lmstudio as lms
 
@@ -33,7 +33,7 @@ class ExperimentRunner:
     def __init__(self, base_output_dir: str = "output/experiments"):
         self.settings = Settings
         self.executor = CodeExecutor()
-        self.results_manager = ResultsManager(base_output_dir)
+
         self.base_output_dir = base_output_dir        
         os.makedirs(base_output_dir, exist_ok=True)
     
@@ -799,11 +799,43 @@ class ExperimentRunner:
         
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"Experiment code not found: {file_path}")
-        
+            
         with open(file_path, 'r', encoding='utf-8') as f:
-            code_content = f.read()
-        
-        return code_content
+            return f.read()
+
+    def save_hypothesis_evaluation(
+        self,
+        evaluation: HypothesisEvaluation
+    ) -> str:
+        """Save hypothesis evaluation (proven/disproven/inconclusive)."""
+
+        eval_data = {
+            "hypothesis_id": evaluation.hypothesis_id,
+            "verdict": evaluation.verdict,
+            "reasoning": evaluation.reasoning
+        }
+
+        filename = "hypothesis_evaluation.json"
+        eval_path = save_json(eval_data, filename, self.base_output_dir)
+
+        return eval_path
+    
+    @staticmethod
+    def load_previous_results(
+        hypothesis_id: str = None,  # Kept for backward compatibility but not used
+        run_id: Optional[int] = None,
+        base_dir: str = "output/experiments"
+    ) -> dict[str, Any]:
+        """Load previous experiment results for comparison."""
+
+        result_data = {}
+        eval_path = os.path.join(base_dir, "hypothesis_evaluation.json")
+        if os.path.exists(eval_path):
+            path_obj = Path(eval_path)
+            result_data = load_json(path_obj.name, str(path_obj.parent))
+
+        return result_data
+
     
     def load_experiment_files(self) -> ExperimentFiles:
         """Load plan and experiment code files."""
@@ -1240,7 +1272,7 @@ class ExperimentRunner:
                 reasoning=reasoning
             )
             
-            self.results_manager.save_hypothesis_evaluation(evaluation)
+            self.save_hypothesis_evaluation(evaluation)
         except Exception as e:
             print(f"ERROR: Failed to save evaluation: {e}")
             traceback.print_exc()

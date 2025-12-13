@@ -125,14 +125,9 @@ class ExperimentResultsScreen(BaseFrame):
             widget.destroy()
 
         # Hypothesis description
-        hyp_container = ttk.Frame(self.results_container, padding=(0, 0, 0, 15))
-        hyp_container.pack(fill="x")
-        
-        ttk.Label(
-            hyp_container, 
-            text="Hypothesis", 
-            font=self.controller.fonts.sub_header_font
-        ).pack(anchor="w", pady=(0, 10))
+        # Hypothesis description
+        hyp_container = self.create_card_frame(self.results_container, "Hypothesis")
+
 
         hyp_label = ttk.Label(
             hyp_container,
@@ -140,21 +135,16 @@ class ExperimentResultsScreen(BaseFrame):
             font=self.controller.fonts.text_area_font,
             justify="left"
         )
-        hyp_label.pack(anchor="w", fill="x", padx=(15, 0))
+        hyp_label.pack(anchor="w", fill="x", padx=(5, 0))
         
         def update_hyp_wrap(event):
             hyp_label.config(wraplength=event.width - 20)
         hyp_container.bind("<Configure>", update_hyp_wrap)
 
         # Verdict section
-        verdict_container = ttk.Frame(self.results_container, padding=(0, 0, 0, 15))
-        verdict_container.pack(fill="x")
+        # Verdict section
+        verdict_container = self.create_card_frame(self.results_container, "Verdict")
 
-        ttk.Label(
-            verdict_container, 
-            text="Verdict", 
-            font=self.controller.fonts.sub_header_font
-        ).pack(anchor="w", pady=(0, 10))
         
         verdict = experiment_result.hypothesis_evaluation.verdict
         verdict_color = "green" if verdict.lower() == "proven" else ("red" if verdict.lower() == "disproven" else "orange")
@@ -163,7 +153,7 @@ class ExperimentResultsScreen(BaseFrame):
             text=verdict.upper(),
             font=self.controller.fonts.sub_header_font,
             foreground=verdict_color
-        ).pack(anchor="w", padx=(15, 0))
+        ).pack(anchor="w", padx=(5, 0))
         
         # Reasoning
         reasoning_label = ttk.Label(
@@ -172,7 +162,7 @@ class ExperimentResultsScreen(BaseFrame):
             font=self.controller.fonts.text_area_font,
             justify="left"
         )
-        reasoning_label.pack(anchor="w", pady=(5, 0), fill="x", padx=(15, 0))
+        reasoning_label.pack(anchor="w", pady=(5, 0), fill="x", padx=(5, 0))
         
         def update_reasoning_wrap(event):
              reasoning_label.config(wraplength=event.width - 20)
@@ -200,14 +190,8 @@ class ExperimentResultsScreen(BaseFrame):
         if not plot_files:
             return
 
-        plots_container = ttk.Frame(self.results_container, padding=(0, 0, 0, 15))
-        plots_container.pack(fill="x")
+        plots_container = self.create_card_frame(self.results_container, "Generated Plots")
 
-        ttk.Label(
-            plots_container, 
-            text="Generated Plots", 
-            font=self.controller.fonts.sub_header_font
-        ).pack(anchor="w", pady=(0, 10))
 
         for plot_path in plot_files:
             try:
@@ -223,10 +207,10 @@ class ExperimentResultsScreen(BaseFrame):
                 
                 img_label = ttk.Label(plots_container, image=tk_img)
                 img_label.image = tk_img # Keep reference!
-                img_label.pack(pady=5, padx=(15, 0))
+                img_label.pack(pady=5, padx=(5, 0))
                 
                 name_label = ttk.Label(plots_container, text=plot_path.name, font=self.controller.fonts.small_font)
-                name_label.pack(pady=(0, 15), padx=(15, 0))
+                name_label.pack(pady=(0, 15), padx=(5, 0))
             except Exception as e:
                 print(f"Error loading plot {plot_path}: {e}")
 
@@ -347,7 +331,6 @@ class ExperimentResultsScreen(BaseFrame):
             popup.destroy()
             self._rerun_experiment_code()
             
-        # Buttons with fixed width or internal padding, not filling X
         ttk.Button(popup, text="Restart from experiment plan", command=run_new_plan).pack(pady=10, ipadx=20)
         ttk.Button(popup, text="Run current code", command=rerun_code).pack(pady=10, ipadx=20)
         ttk.Button(popup, text="Cancel", command=popup.destroy).pack(pady=30, ipadx=20)

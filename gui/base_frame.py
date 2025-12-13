@@ -492,3 +492,18 @@ class BaseFrame(ttk.Frame):
         # Trigger on_show to load dynamic content
         self.on_show()
 
+    def create_card_frame(self, parent, title):
+        """Helper to create a unified card-styled section with title and separator."""
+        card = ttk.Frame(parent, style="Card.TFrame", padding=1)
+        card.pack(fill="x", padx=0, pady=10)
+        
+        header = ttk.Frame(card, padding=10)
+        header.pack(fill="x")
+        ttk.Label(header, text=title, font=self.controller.fonts.sub_header_font).pack(side="left")
+        
+        ttk.Separator(card, orient="horizontal").pack(fill="x")
+        
+        content = ttk.Frame(card, padding=10)
+        content.pack(fill="x")
+        return content
+

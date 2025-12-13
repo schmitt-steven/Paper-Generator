@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Any
 from datetime import datetime
 from pydantic import BaseModel
-from phases.hypothesis_generation.hypothesis_models import Hypothesis
+from phases.hypothesis_generation.hypothesis_builder import Hypothesis
 
 class VerdictResult(BaseModel):
     """Structured verdict result for hypothesis evaluation."""
