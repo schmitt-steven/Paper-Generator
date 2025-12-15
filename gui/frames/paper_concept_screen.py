@@ -1,9 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
 from pathlib import Path
-
-from ..base_frame import BaseFrame, create_scrollable_text_area
+import threading
+from ..base_frame import BaseFrame, create_scrollable_text_area, ProgressPopup
 from phases.context_analysis.paper_conception import PaperConception, PaperConcept
+from phases.context_analysis.user_requirements import UserRequirements
+from phases.context_analysis.user_code_analysis import CodeAnalyzer
+from settings import Settings
 from utils.file_utils import save_markdown
 
 
@@ -157,4 +160,61 @@ class PaperConceptScreen(BaseFrame):
         if not hasattr(self, 'concept') or self.concept is None:
             if Path(self.file_path).exists():
                 self._load_concept()
+
+    def on_regenerate(self):
+        """Regenerate the paper concept from scratch."""
+        if not tk.messagebox.askyesno("Confirm Regeneration", 
+                                      "This will completely overwrite the current paper concept based on your code and requirements.\n\nDo you want to continue?"):
+            return
+
+        popup = ProgressPopup(self.controller, "Regenerating Paper Concept")
+        
+        def task():
+            try:
+                # 1. Load User Requirements
+                self.after(0, lambda: popup.update_status("Loading user requirements..."))
+                user_requirements = UserRequirements.load_user_requirements("user_files/user_requirements.md")
+                
+                # 2. Analyze Code
+                self.after(0, lambda: popup.update_status("Analyzing code files..."))
+                code_analyzer = CodeAnalyzer(model_name=Settings.CODE_ANALYSIS_MODEL)
+                # Hardcoded "user_files" as per project convention, can be made dynamic if needed
+                code_files = code_analyzer.load_code_files("user_files") 
+                analyzed_code = code_analyzer.analyze_all_files(code_files)
+                
+                # 3. Generate Paper Concept
+                self.after(0, lambda: popup.update_status("Generating concept (this may take a while)..."))
+                paper_conception = PaperConception(
+                    model_name=Settings.PAPER_CONCEPTION_MODEL,
+                    user_code=analyzed_code,
+                    user_requirements=user_requirements
+                )
+                
+                # This automatically saves to file
+                paper_conception.build_paper_concept()
+                
+                # 4. Reload UI
+                self.after(0, lambda: self._on_regeneration_complete(popup))
+                
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                self.after(0, lambda err=str(e): popup.show_error(err))
+
+        thread = threading.Thread(target=task, daemon=True)
+        thread.start()
+
+    def _on_regeneration_complete(self, popup: ProgressPopup):
+        """Handle regeneration completion."""
+        popup.close()
+        self._load_concept()
+        # Refresh the text areas with new content
+        self.description_text.delete("1.0", "end")
+        self.description_text.insert("1.0", self.concept.description)
+        
+        self.code_snippets_text.delete("1.0", "end")
+        self.code_snippets_text.insert("1.0", self.concept.code_snippets)
+        
+        self.open_questions_text.delete("1.0", "end")
+        self.open_questions_text.insert("1.0", self.concept.open_questions)
 

@@ -305,29 +305,24 @@ class ExperimentResultsScreen(BaseFrame):
 
     def on_regenerate(self):
         """Show popup to choose regeneration method."""
-        # Create a custom popup window
-        popup = tk.Toplevel(self)
-        popup.title("Regenerate Experiment")
-        popup.geometry("500x300")
+        # Use native dialog to choose action
+        # Yes = Restart from experiment plan
+        # No = Run current code
+        # Cancel = Do nothing
+        choice = tk.messagebox.askyesnocancel(
+            "Regenerate Experiment",
+            "Do you want to generate new experiment results?\n\n"
+            "Click 'Yes' to implement the experiment plan again, "
+            "click 'No' to only execute the current experiment code."
+        )
         
-        # Center popup
-        x = self.controller.winfo_x() + (self.controller.winfo_width() // 2) - 250
-        y = self.controller.winfo_y() + (self.controller.winfo_height() // 2) - 150
-        popup.geometry(f"+{x}+{y}")
-        
-        ttk.Label(popup, text="Choose how to regenerate the experiment.", font=self.controller.fonts.default_font).pack(pady=30)
-        
-        def run_new_plan():
-            popup.destroy()
+        if choice is True:
+            # Yes -> Restart plan
             self.controller.show_frame("ExperimentationPlanScreen")
-            
-        def rerun_code():
-            popup.destroy()
+        elif choice is False:
+            # No -> Run current code
             self._rerun_experiment_code()
-            
-        ttk.Button(popup, text="Restart from experiment plan", command=run_new_plan).pack(pady=10, ipadx=20)
-        ttk.Button(popup, text="Run current code", command=rerun_code).pack(pady=10, ipadx=20)
-        ttk.Button(popup, text="Cancel", command=popup.destroy).pack(pady=30, ipadx=20)
+        # None -> Cancel (do nothing)
 
     def _rerun_experiment_code(self):
         """Re-run the experiment using the current (potentially edited) code."""

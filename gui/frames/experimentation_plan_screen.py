@@ -8,6 +8,9 @@ from utils.file_utils import load_markdown, save_markdown
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.context_analysis.paper_conception import PaperConception
 from phases.experimentation.experiment_runner import ExperimentRunner
+from phases.context_analysis.user_requirements import UserRequirements
+from phases.context_analysis.user_code_analysis import CodeAnalyzer
+from settings import Settings
 
 
 EXPERIMENTS_DIR = "output/experiments"
@@ -188,3 +191,71 @@ class ExperimentationPlanScreen(BaseFrame):
             plan_path = Path(EXPERIMENTS_DIR) / EXPERIMENT_PLAN_FILE
             if plan_path.exists():
                 self._load_plan()
+
+    def on_regenerate(self):
+        """Regenerate the experiment plan from scratch."""
+        if not tk.messagebox.askyesno("Confirm Regeneration", 
+                                      "This will create a completely new experiment plan based on your hypothesis and code, overwriting the current one.\n\nDo you want to continue?"):
+            return
+
+        popup = ProgressPopup(self.controller, "Regenerating Experiment Plan")
+        
+        def task():
+            try:
+                # 1. Load context
+                self.after(0, lambda: popup.update_status("Loading context..."))
+                selected_hypothesis = HypothesisBuilder.load_hypothesis(HYPOTHESES_FILE)
+                if selected_hypothesis is None:
+                    raise ValueError("No hypothesis found")
+                
+                paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
+                
+                user_requirements = None
+                try:
+                    user_requirements = UserRequirements.load_user_requirements("user_files/user_requirements.md")
+                except:
+                    pass
+                
+                user_code = None
+                try:
+                    code_analyzer = CodeAnalyzer(model_name=Settings.CODE_ANALYSIS_MODEL)
+                    user_code = code_analyzer.load_code_files("user_files")
+                except:
+                    pass
+                
+                # 2. Generate Plan
+                self.after(0, lambda: popup.update_status("Generating new plan..."))
+                experiment_runner = ExperimentRunner()
+                
+                experiment_plan = experiment_runner._generate_experiment_plan(
+                    selected_hypothesis, 
+                    paper_concept,
+                    user_requirements=user_requirements,
+                    user_code=user_code
+                )
+                
+                # 3. Save Plan
+                experiment_runner.save_experiment_plan(experiment_plan)
+                
+                # 4. Reload UI
+                self.after(0, lambda: self._on_regeneration_complete(popup))
+                
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                self.after(0, lambda err=str(e): popup.show_error(err))
+
+        thread = threading.Thread(target=task, daemon=True)
+        thread.start()
+
+    def _on_regeneration_complete(self, popup: ProgressPopup):
+        """Handle regeneration completion."""
+        popup.close()
+        
+        # Refresh text widget
+        try:
+             content = load_markdown(EXPERIMENT_PLAN_FILE, EXPERIMENTS_DIR)
+             self.plan_text.delete("1.0", "end")
+             self.plan_text.insert("1.0", content)
+        except Exception as e:
+             print(f"Error refreshing plan text: {e}")
