@@ -156,53 +156,53 @@ class PaperWriter:
                 if requirement_text and requirement_text.strip():
                     user_requirements_block = f"""[USER REQUIREMENTS]\n{requirement_text.strip()}"""
         
-        prompt = textwrap.dedent(f"""\
-            [ROLE]
-            You are an expert academic writer.
+        prompt = f"""\
+[ROLE]
+You are an expert academic writer.
 
-            [TASK]
-            Write the complete {section_type.value} section of the paper based on the provided context.
+[TASK]
+Write the complete {section_type.value} section of the paper based on the provided context.
 
-            [SECTION TYPE]
-            {section_type.value}
+[SECTION TYPE]
+{section_type.value}
 
-            [RESEARCH CONTEXT]
-            {context_block}
+[RESEARCH CONTEXT]
+{context_block}
 
-            [PREVIOUS SECTIONS]
-            {previous_sections_block if previous_sections_block else ''}
+[PREVIOUS SECTIONS]
+{previous_sections_block if previous_sections_block else ''}
 
-            [EVIDENCE]
-            {evidence_block if evidence_block else 'No evidence available.'}
+[EVIDENCE]
+{evidence_block if evidence_block else 'No evidence available.'}
 
-            [SECTION GUIDELINES]
-            {guidelines}
-            
-            {user_requirements_block}
+[SECTION GUIDELINES]
+{guidelines}
 
-           [WRITING REQUIREMENTS — STRICT]
-            - Produce a cohesive, original, publication-quality academic narrative.
-            - CITATION FORMAT: Use square brackets with the EXACT, COMPLETE citation keys provided in the <citation_key> tags in the evidence section.
-            - CRITICAL: Copy the citation keys EXACTLY as they appear in <citation_key> tags. Do NOT shorten them, do NOT change them, do NOT generate simplified versions.
-            - CRITICAL: NEVER use numeric citations like [1], [2], [30]. These are strictly forbidden.
-            - CRITICAL: Do NOT invent citation keys. Do NOT generate "nameYear" format. Use ONLY the exact keys found in the <citation_key> tags.
-            - Example: If evidence shows <citation_key>Hoppe2019QgraphboundedQS</citation_key>, use [Hoppe2019QgraphboundedQS] exactly, NOT [Hoppe2019].
-            - Place citations immediately before final punctuation: "[exactKeyFromEvidence]."
-            - For multiple sources: "[exactKey1, exactKey2]."
-            - If a source in the evidence has "unknown" or "n.d." as a key, do NOT cite it.
-            - Cite external papers ONLY using the exact citation keys from the evidence in square brackets.
-            - Never fabricate evidence, results, or citations.
-            - Integrate and build upon previous sections to ensure full narrative coherence.
+{user_requirements_block}
 
-            [GENERATION RULES — DO NOT VIOLATE]
-            - Do NOT reference the guidelines or instructions.
-            - Do NOT comment on the evidence structure.
-            - Do NOT include section headings (e.g., "## Introduction", "# Abstract", etc.) in your output.
-            - Output ONLY the final written section content without any markdown headings.
+[WRITING REQUIREMENTS — STRICT]
+- Produce a cohesive, original, publication-quality academic narrative.
+- CITATION FORMAT: Use square brackets with the EXACT, COMPLETE citation keys provided in the <citation_key> tags in the evidence section.
+- CRITICAL: Copy the citation keys EXACTLY as they appear in <citation_key> tags. Do NOT shorten them, do NOT change them, do NOT generate simplified versions.
+- CRITICAL: NEVER use numeric citations like [1], [2], [30]. These are strictly forbidden.
+- CRITICAL: Do NOT invent citation keys. Do NOT generate "nameYear" format. Use ONLY the exact keys found in the <citation_key> tags.
+- Example: If evidence shows <citation_key>Hoppe2019QgraphboundedQS</citation_key>, use [Hoppe2019QgraphboundedQS] exactly, NOT [Hoppe2019].
+- Place citations immediately before final punctuation: "[exactKeyFromEvidence]."
+- For multiple sources: "[exactKey1, exactKey2]."
+- If a source in the evidence has "unknown" or "n.d." as a key, do NOT cite it.
+- Cite external papers ONLY using the exact citation keys from the evidence in square brackets.
+- Never fabricate evidence, results, or citations.
+- Integrate and build upon previous sections to ensure full narrative coherence.
 
-            [FINAL PRIORITY]
-            Your output must strictly follow the requirements and produce a polished academic section.
-        """)
+[GENERATION RULES — DO NOT VIOLATE]
+- Do NOT reference the guidelines or instructions.
+- Do NOT comment on the evidence structure.
+- Do NOT include section headings (e.g., "## Introduction", "# Abstract", etc.) in your output.
+- Output ONLY the final written section content without any markdown headings.
+
+[FINAL PRIORITY]
+Your output must strictly follow the requirements and produce a polished academic section.
+"""
         
         return prompt
 
@@ -423,27 +423,27 @@ class PaperWriter:
     ) -> str:
         """Generate a paper title based on abstract, introduction, and conclusion."""
 
-        prompt = textwrap.dedent(f"""\
-            [ROLE]
-            You are an expert academic writer.
-            
-            [TASK]
-            Create a concise, informative paper title based on the abstract and conclusion.
+        prompt = f"""\
+[ROLE]
+You are an expert academic writer.
 
-            [REQUIREMENTS]
-            - Be clear, concise and descriptive
-            - Use standard academic title formatting (title case)
-            - Avoid unnecessary words like 'A Study of' or 'An Investigation into'
-            - ONLY output the title text, without quotes, additional text or formatting
+[TASK]
+Create a concise, informative paper title based on the abstract and conclusion.
 
-            [ABSTRACT]
-            {abstract}
+[REQUIREMENTS]
+- Be clear, concise and descriptive
+- Use standard academic title formatting (title case)
+- Avoid unnecessary words like 'A Study of' or 'An Investigation into'
+- ONLY output the title text, without quotes, additional text or formatting
 
-            [CONCLUSION]
-            {conclusion}
+[ABSTRACT]
+{abstract}
 
-            Now generate only the title text."""
-        )
+[CONCLUSION]
+{conclusion}
+
+Now generate only the title text.
+"""
 
         model = lms.llm(Settings.PAPER_WRITING_MODEL)
         response = model.respond(
@@ -474,30 +474,31 @@ class PaperWriter:
         
         guidelines = self.get_section_guidelines(Section.ACKNOWLEDGEMENTS)
         
-        prompt = textwrap.dedent(f"""\
-            [ROLE]
-            You are an expert academic writer.
+        prompt = f"""\
+[ROLE]
+You are an expert academic writer.
 
-            [TASK]
-            Format and polish the provided acknowledgements text into a professional academic acknowledgements section.
+[TASK]
+Format and polish the provided acknowledgements text into a professional academic acknowledgements section.
 
-            [USER PROVIDED ACKNOWLEDGEMENTS]
-            {user_acknowledgements}
+[USER PROVIDED ACKNOWLEDGEMENTS]
+{user_acknowledgements}
 
-            [SECTION GUIDELINES]
-            {guidelines}
+[SECTION GUIDELINES]
+{guidelines}
 
-            [WRITING REQUIREMENTS]
-            - Preserve the original meaning and intent of the user's text
-            - Ensure proper grammar, flow, and academic tone
-            - Keep it concise and appropriate for an academic paper
-            - Do NOT add citations or references
-            - Do NOT include section headings (e.g., "## Acknowledgements")
-            - Output ONLY the polished acknowledgements text
+[WRITING REQUIREMENTS]
+- Preserve the original meaning and intent of the user's text
+- Ensure proper grammar, flow, and academic tone
+- Keep it concise and appropriate for an academic paper
+- Do NOT add citations or references
+- Do NOT include section headings (e.g., "## Acknowledgements")
+- Output ONLY the polished acknowledgements text
 
-            [GENERATION RULES]
-            - Do NOT reference the guidelines or instructions
-            - Output ONLY the final acknowledgements content without any markdown headings""")
+[GENERATION RULES]
+- Do NOT reference the guidelines or instructions
+- Output ONLY the final acknowledgements content without any markdown headings
+"""
         
         return prompt
 

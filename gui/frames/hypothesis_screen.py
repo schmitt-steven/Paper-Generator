@@ -11,7 +11,7 @@ from phases.context_analysis.paper_conception import PaperConception
 from phases.experimentation.experiment_runner import ExperimentRunner
 
 
-HYPOTHESES_FILE = "output/hypotheses.json"
+HYPOTHESIS_FILE = "output/hypothesis.md"
 
 # Output file to check for dynamic button text
 EXPERIMENT_PLAN_FILE = Path("output/experiments/experiment_plan.md")
@@ -38,7 +38,7 @@ class HypothesisScreen(BaseFrame):
             next_text=next_text,
             has_regenerate=True,
             regenerate_text="Regenerate",
-            header_file_path=HYPOTHESES_FILE
+            header_file_path=HYPOTHESIS_FILE
         )
 
     def create_content(self):
@@ -73,33 +73,18 @@ class HypothesisScreen(BaseFrame):
         label.bind("<Configure>", set_wraplength)
 
     def _load_hypothesis(self):
-        """Load hypotheses from file or create empty one for manual entry."""
-        # Try to load from file if it exists
-        if Path(HYPOTHESES_FILE).exists():
+        """Load hypothesis from file or create empty one for manual entry."""
+        if Path(HYPOTHESIS_FILE).exists():
             try:
-                self.hypotheses = HypothesisBuilder.load_hypotheses(HYPOTHESES_FILE)
-                if self.hypotheses:
-                    # Find the selected hypothesis, or use the first one
-                    self.current_hypothesis = None
-                    self.current_hypothesis_index = 0
-                    
-                    for i, hyp in enumerate(self.hypotheses):
-                        if hyp.selected_for_experimentation:
-                            self.current_hypothesis = hyp
-                            self.current_hypothesis_index = i
-                            break
-                    
-                    if self.current_hypothesis is None:
-                        self.current_hypothesis = self.hypotheses[0]
-                        self.current_hypothesis_index = 0
-                    
+                self.current_hypothesis = HypothesisBuilder.load_hypothesis(HYPOTHESIS_FILE)
+                if self.current_hypothesis:
                     # Create the editable sections
                     self._create_hypothesis_fields()
                     return
             except Exception as e:
-                print(f"Error loading hypotheses: {e}")
+                print(f"Error loading hypothesis: {e}")
         
-        # No file or empty file - create empty hypothesis for manual entry
+        # No file or load failed - create empty hypothesis
         self._create_empty_hypothesis()
     
     def _create_empty_hypothesis(self):
@@ -112,9 +97,7 @@ class HypothesisScreen(BaseFrame):
             selected_for_experimentation=True
         )
         
-        self.hypotheses = [empty_hypothesis]
         self.current_hypothesis = empty_hypothesis
-        self.current_hypothesis_index = 0
         
         # Create the editable sections
         self._create_hypothesis_fields()
@@ -198,13 +181,11 @@ class HypothesisScreen(BaseFrame):
             selected_for_experimentation=self.current_hypothesis.selected_for_experimentation
         )
         
-        # Replace in the list
-        self.hypotheses[self.current_hypothesis_index] = updated_hypothesis
-        
-        # Save all hypotheses back to file
+        # Save back to file
         try:
-            HypothesisBuilder.save_hypotheses(self.hypotheses, HYPOTHESES_FILE)
-            print(f"[Hypothesis] Saved changes to {HYPOTHESES_FILE}")
+            HypothesisBuilder.save_hypothesis(updated_hypothesis, HYPOTHESIS_FILE)
+            self.current_hypothesis = updated_hypothesis # Update current
+            print(f"[Hypothesis] Saved changes to {HYPOTHESIS_FILE}")
         except Exception as e:
             print(f"[Hypothesis] Failed to save: {e}")
         

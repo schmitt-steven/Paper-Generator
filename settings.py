@@ -15,64 +15,6 @@ class Settings:
     
     _SETTINGS_FILE = Path("user_settings.json")
     
-    @classmethod
-    def save_to_file(cls) -> None:
-        """Save current settings to user_settings.json file."""
-        settings_dict = {}
-        
-        # Get all class attributes (excluding private attributes and methods)
-        for key in dir(cls):
-            if key.startswith('_'):
-                continue
-            try:
-                value = getattr(cls, key)
-                # Only save non-callable attributes (skip methods)
-                if not callable(value):
-                    settings_dict[key] = value
-            except AttributeError:
-                continue
-        
-        try:
-            with open(cls._SETTINGS_FILE, 'w', encoding='utf-8') as f:
-                json.dump(settings_dict, f, indent=2, ensure_ascii=False)
-            print(f"[Settings] Saved settings to {cls._SETTINGS_FILE}")
-        except Exception as e:
-            print(f"[Settings] Failed to save settings: {e}")
-    
-    @classmethod
-    def load_from_file(cls) -> None:
-        """Load settings from user_settings.json file if it exists."""
-        if not cls._SETTINGS_FILE.exists():
-            return
-        
-        try:
-            with open(cls._SETTINGS_FILE, 'r', encoding='utf-8') as f:
-                settings_dict = json.load(f)
-            
-            # Update class attributes with loaded values
-            for key, value in settings_dict.items():
-                if hasattr(cls, key):
-                    setattr(cls, key, value)
-            
-            print(f"[Settings] Loaded settings from {cls._SETTINGS_FILE}")
-        except Exception as e:
-            print(f"[Settings] Failed to load settings: {e}")
-    
-    @classmethod
-    def get_all_settings(cls) -> dict[str, Any]:
-        """Get all settings as a dictionary."""
-        settings_dict = {}
-        for key in dir(cls):
-            if key.startswith('_'):
-                continue
-            try:
-                value = getattr(cls, key)
-                if not callable(value):
-                    settings_dict[key] = value
-            except AttributeError:
-                continue
-        return settings_dict
-    
     # Context Analysis Phase
     CODE_ANALYSIS_MODEL =    "qwen/qwen3-next-80b"  
     NOTES_ANALYSIS_MODEL =   "qwen/qwen3-next-80b"  
@@ -135,28 +77,65 @@ class Settings:
             "email": "second@guy.com"
         },
     ]
+
+    @classmethod
+    def save_to_file(cls) -> None:
+        """Save current settings to user_settings.json file."""
+        settings_dict = {}
+        
+        # Get all class attributes (excluding private attributes and methods)
+        for key in dir(cls):
+            if key.startswith('_'):
+                continue
+            try:
+                value = getattr(cls, key)
+                # Only save non-callable attributes (skip methods)
+                if not callable(value):
+                    settings_dict[key] = value
+            except AttributeError:
+                continue
+        
+        try:
+            with open(cls._SETTINGS_FILE, 'w', encoding='utf-8') as f:
+                json.dump(settings_dict, f, indent=2, ensure_ascii=False)
+            print(f"[Settings] Saved settings to {cls._SETTINGS_FILE}")
+        except Exception as e:
+            print(f"[Settings] Failed to save settings: {e}")
     
-
-    # Set to True to load existing files from output/ and skip the respective step
-    LOAD_PAPER_CONCEPT = True
-
-    LOAD_SEARCH_QUERIES = True
-    LOAD_PAPERS =         True
-    LOAD_PAPER_RANKING =  True
-
-    LOAD_FINDINGS =    True
-    LOAD_LIMITATIONS = True
-    LOAD_HYPOTHESES =  True
-
-    LOAD_EXPERIMENT_PLAN =   True
-    LOAD_EXPERIMENT_CODE =   True
-    LOAD_EXPERIMENT_RESULT = True
-
-    LOAD_PAPER_EMBEDDINGS =      True
-    LOAD_PAPER_WRITING_PROMPTS = True
-    LOAD_PAPER_DRAFT =           True
+    @classmethod
+    def load_from_file(cls) -> None:
+        """Load settings from user_settings.json file if it exists."""
+        if not cls._SETTINGS_FILE.exists():
+            return
+        
+        try:
+            with open(cls._SETTINGS_FILE, 'r', encoding='utf-8') as f:
+                settings_dict = json.load(f)
+            
+            # Update class attributes with loaded values
+            for key, value in settings_dict.items():
+                if hasattr(cls, key):
+                    setattr(cls, key, value)
+            
+            print(f"[Settings] Loaded settings from {cls._SETTINGS_FILE}")
+        except Exception as e:
+            print(f"[Settings] Failed to load settings: {e}")
     
-    LOAD_LATEX =                 False
+    @classmethod
+    def get_all_settings(cls) -> dict[str, Any]:
+        """Get all settings as a dictionary."""
+        settings_dict = {}
+        for key in dir(cls):
+            if key.startswith('_'):
+                continue
+            try:
+                value = getattr(cls, key)
+                if not callable(value):
+                    settings_dict[key] = value
+            except AttributeError:
+                continue
+        return settings_dict
+    
 
     # Acknowledgements Generation
     GENERATE_ACKNOWLEDGEMENTS = True  # Set to False to skip acknowledgements section entirely

@@ -15,7 +15,7 @@ from phases.experimentation.experiment_runner import ExperimentRunner
 
 PAPER_DRAFT_FILE = "paper_draft.md"
 OUTPUT_DIR = "output"
-HYPOTHESES_FILE = "output/hypotheses.json"
+HYPOTHESES_FILE = "output/hypothesis.md"
 
 LATEX_PAPER_FILE = Path("output/latex/paper.tex")
 
@@ -167,14 +167,12 @@ class PaperDraftScreen(BaseFrame):
                 
                 # Load experiment result
                 self.after(0, lambda: popup.update_status("Loading experiment results"))
-                hypotheses = HypothesisBuilder.load_hypotheses(HYPOTHESES_FILE)
-                selected_hypothesis = None
-                for hyp in hypotheses:
-                    if hyp.selected_for_experimentation:
-                        selected_hypothesis = hyp
-                        break
-                if selected_hypothesis is None and hypotheses:
-                    selected_hypothesis = hypotheses[0]
+                # Load hypothesis
+                self.after(0, lambda: popup.update_status("Loading hypothesis"))
+                selected_hypothesis = HypothesisBuilder.load_hypothesis(HYPOTHESES_FILE)
+                
+                if selected_hypothesis is None:
+                    raise ValueError("No hypothesis found")
                 
                 experiment_result = None
                 # Load experiment result (simplified filename without hypothesis ID)

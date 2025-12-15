@@ -4,6 +4,7 @@ import time
 from typing import List, Sequence, Iterable, Optional
 from pathlib import Path
 import lmstudio as lms
+import numpy as np  # Added for array handling if needed, though list is used for storage
 from settings import Settings
 from utils.file_utils import save_json, load_json, preprocess_markdown
 from phases.paper_search.paper import Paper
@@ -35,60 +36,72 @@ class PaperIndexer:
         print(f"INDEXING {len(papers)} PAPERS")
         print(f"{'='*80}\n")
         
-        # Try to load existing embeddings if enabled
-        if Settings.LOAD_PAPER_EMBEDDINGS:
-            existing_embeddings = self.load_embeddings()
-            if existing_embeddings:
-                # We have embeddings, but we still need to rebuild chunk_specs to create PaperChunk objects
-                # Do minimal processing - just chunk without printing stats
-                chunk_specs: list[tuple[Paper, int, str, str]] = []
-                for paper in papers:
-                    if not paper.markdown_text:
-                        continue
-                    cleaned_markdown = preprocess_markdown(paper.markdown_text)
-                    cleaned_markdown = self._strip_references_section(cleaned_markdown)
-                    chunks = self._chunk_document(cleaned_markdown)
-                    for chunk_idx, chunk_text in enumerate(chunks):
-                        chunk_id = self._build_chunk_id(paper.id, chunk_idx)
-                        chunk_specs.append((paper, chunk_idx, chunk_id, chunk_text))
-                
-                if len(existing_embeddings) == len(chunk_specs):
-                    print(f"Loaded {len(existing_embeddings)} existing embeddings from {self.EMBEDDINGS_FILE}")
-                    embeddings = existing_embeddings
-                else:
-                    print(f"Found {len(existing_embeddings)} embeddings but need {len(chunk_specs)}. Re-generating...")
-                    # Fall through to regenerate
-                    chunk_specs, embeddings = self._process_and_embed_papers(papers)
-            else:
-                # No embeddings file found, do full processing
-                chunk_specs, embeddings = self._process_and_embed_papers(papers)
-        else:
-            # Not loading embeddings, do full processing
-            chunk_specs, embeddings = self._process_and_embed_papers(papers)
-        
-        if not chunk_specs:
+        # 1. Generate all chunk definitions first
+        chunk_definitions = self._create_chunk_definitions(papers)
+        if not chunk_definitions:
             return []
+            
+        # 2. Load existing embeddings (dict)
+        existing_embeddings: dict[str, list[float]] = {}
+        # 2. Load existing embeddings (dict)
+        existing_embeddings: dict[str, list[float]] = {}
+        loaded = self.load_embeddings()
+        if loaded:
+            existing_embeddings = loaded
+            print(f"Loaded {len(existing_embeddings)} existing embeddings.")
         
-        print(f"\nBuilding indexed corpus from {len(chunk_specs)} chunks...")
+        # 3. Identify missing chunks
+        missing_chunks: list[tuple[Paper, int, str, str]] = []
+        for defn in chunk_definitions:
+            chunk_id = defn[2] # (paper, idx, id, text)
+            if chunk_id not in existing_embeddings:
+                missing_chunks.append(defn)
+        
+        # 4. Embed missing chunks
+        if missing_chunks:
+            print(f"Found {len(missing_chunks)} new chunks to embed.")
+            full_texts = [defn[3] for defn in missing_chunks]
+            new_embeddings_list = self._embed_texts(full_texts)
+            
+            if len(new_embeddings_list) != len(missing_chunks):
+                 print(f"Error: Mismatch in embeddings count. Expected {len(missing_chunks)}, got {len(new_embeddings_list)}")
+                 # Handle error or continue carefully? 
+                 # For now, zip will stop at shortest, which is safer than crashing but might lose data.
+            
+            # Update dictionary
+            for defn, embedding in zip(missing_chunks, new_embeddings_list):
+                 chunk_id = defn[2]
+                 existing_embeddings[chunk_id] = embedding
+            
+            # Save updated dictionary
+            self.save_embeddings(existing_embeddings)
+        else:
+            print("All chunks have existing embeddings. Skipping embedding generation.")
 
+        # 5. Build final list of PaperChunks
+        print(f"\nBuilding indexed corpus from {len(chunk_definitions)} chunks...")
         indexed_chunks: list[PaperChunk] = []
-        for spec, embedding in zip(chunk_specs, embeddings):
-            paper, chunk_idx, chunk_id, chunk_text = spec
-            indexed_chunks.append(
-                PaperChunk(
-                    chunk_id=chunk_id,
-                    paper=paper,
-                    chunk_text=chunk_text,
-                    chunk_index=chunk_idx,
-                    embedding=list(embedding),
+        
+        for paper, chunk_idx, chunk_id, chunk_text in chunk_definitions:
+            if chunk_id in existing_embeddings:
+                indexed_chunks.append(
+                    PaperChunk(
+                        chunk_id=chunk_id,
+                        paper=paper,
+                        chunk_text=chunk_text,
+                        chunk_index=chunk_idx,
+                        embedding=existing_embeddings[chunk_id],
+                    )
                 )
-            )
+            else:
+                # Should not happen unless embedding failed
+                print(f"Warning: No embedding found for {chunk_id}")
 
         return indexed_chunks
     
-    def _process_and_embed_papers(self, papers: Sequence[Paper]) -> tuple[list[tuple[Paper, int, str, str]], list[list[float]]]:
-        """Process papers (preprocess, strip refs, chunk) and generate embeddings."""
-        chunk_specs: list[tuple[Paper, int, str, str]] = []
+    def _create_chunk_definitions(self, papers: Sequence[Paper]) -> list[tuple[Paper, int, str, str]]:
+        """Process papers and create chunk definitions (without embedding)."""
+        chunk_definitions: list[tuple[Paper, int, str, str]] = []
         total_tokens_saved = 0
         papers_with_refs_stripped = 0
         
@@ -106,26 +119,24 @@ class PaperIndexer:
             if tokens_saved > 0:
                 total_tokens_saved += tokens_saved
                 papers_with_refs_stripped += 1
+                
             chunks = self._chunk_document(cleaned_markdown)
             for chunk_idx, chunk_text in enumerate(chunks):
                 chunk_id = self._build_chunk_id(paper.id, chunk_idx)
-                chunk_specs.append((paper, chunk_idx, chunk_id, chunk_text))
+                chunk_definitions.append((paper, chunk_idx, chunk_id, chunk_text))
 
-        if not chunk_specs:
-            return [], []
+        if not chunk_definitions:
+            return []
         
-        # Print summary of reference stripping
-        print(f"PREPROCESSING SUMMARY:")
-        print(f"  Papers processed: {len(papers)}")
-        print(f"  References stripped: {papers_with_refs_stripped}/{len(papers)} papers")
-        print(f"  Tokens saved: {total_tokens_saved:,}")
-        print(f"  Total chunks created: {len(chunk_specs)}\n")
-        
-        print(f"Creating embeddings for {len(chunk_specs)} chunks...")
-        embeddings = self._embed_texts([spec[3] for spec in chunk_specs])
-        self.save_embeddings(embeddings)
-        
-        return chunk_specs, embeddings
+        # Print summary of reference stripping (only if actually processing)
+        if chunk_definitions:  # Always print summary if we processed something
+            print(f"PREPROCESSING SUMMARY:")
+            print(f"  Papers processed: {len(papers)}")
+            print(f"  References stripped: {papers_with_refs_stripped}/{len(papers)} papers")
+            print(f"  Tokens saved: {total_tokens_saved:,}")
+            print(f"  Total chunks created: {len(chunk_definitions)}\n")
+            
+        return chunk_definitions
 
     def _chunk_document(self, document_text: str) -> list[str]:
         """Chunk document text into overlapping windows while preserving structures."""
@@ -236,7 +247,7 @@ class PaperIndexer:
 
 
 
-    def save_embeddings(self, embeddings: list[list[float]]) -> None:
+    def save_embeddings(self, embeddings: dict[str, list[float]]) -> None:
         """Save embeddings to JSON file."""
         try:
             path_obj = Path(self.EMBEDDINGS_FILE)
@@ -245,7 +256,7 @@ class PaperIndexer:
         except Exception as e:
             print(f"Error saving embeddings: {e}")
 
-    def load_embeddings(self) -> Optional[list[list[float]]]:
+    def load_embeddings(self) -> Optional[dict[str, list[float]]]:
         """Load embeddings from JSON file if it exists."""
         path_obj = Path(self.EMBEDDINGS_FILE)
         if not path_obj.exists():
@@ -253,7 +264,12 @@ class PaperIndexer:
 
         try:
             embeddings = load_json(path_obj.name, str(path_obj.parent))
-            return embeddings
+            # Validate structure - simple check if it looks like a dict
+            if isinstance(embeddings, dict):
+                 return embeddings
+            else:
+                 print(f"Warning: Embeddings file format mismatch (expected dict, got {type(embeddings)}). Ignoring.")
+                 return None
         except Exception as e:
             print(f"Error loading embeddings: {e}")
             return None

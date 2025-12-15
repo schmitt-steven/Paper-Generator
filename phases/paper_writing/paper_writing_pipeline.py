@@ -92,16 +92,13 @@ class PaperWritingPipeline:
         print(f"{'='*80}\n")
         
         # Load prompts if setting is enabled
-        # Load prompts if setting is enabled
+        # Try to load existing prompts to avoid re-generation
         writing_prompts = None
-        if Settings.LOAD_PAPER_WRITING_PROMPTS:
-            try:
-                writing_prompts = self.load_section_writing_prompts()
-                print(f"[PaperWritingPipeline] Using loaded writing prompts for {len(writing_prompts)} sections")
-            except FileNotFoundError:
-                print(f"[PaperWritingPipeline] Warning: Prompts file not found despite setting enabled. Falling back to generation.")
-                writing_prompts = None
-        else:
+        try:
+            writing_prompts = self.load_section_writing_prompts()
+            print(f"[PaperWritingPipeline] Using loaded writing prompts for {len(writing_prompts)} sections")
+        except FileNotFoundError:
+            print(f"[PaperWritingPipeline] Prompts file not found. Generating new prompts.")
             writing_prompts = None
         
         if status_callback:
@@ -124,36 +121,46 @@ class PaperWritingPipeline:
     @staticmethod
     def _save_prompts(
         prompts_by_section: dict[str, str],
+        filename: str = "section_writing_prompts.md",
+        output_dir: str = "output"
     ) -> None:
-        """Save section writing prompts to a JSON file."""
-
-        output_data = {
-            "sections": {
-                section_name: {"prompt": prompt}
-                for section_name, prompt in prompts_by_section.items()
-            }
-        }
-
-        output_path = save_json(output_data, "section_writing_prompts.json", "output")
+        """Save section writing prompts to a Markdown file."""
+        
+        content_parts = []
+        
+        # Sort by section order logic if possible, otherwise alphabetical or just iteration order
+        # Iteration order is usually preserving insertion order in modern Python, which works for us
+        
+        for section_name, prompt in prompts_by_section.items():
+             content_parts.append(f"# {section_name}\n\n{prompt.strip()}\n")
+             
+        markdown_content = "\n".join(content_parts)
+        
+        output_path = save_markdown(markdown_content, filename, output_dir)
 
         print(f"[PaperWritingPipeline] Saved section writing prompts to {output_path}")
 
     @staticmethod
     def load_section_writing_prompts(
-        filepath: str = "output/section_writing_prompts.json",
+        filepath: str = "output/section_writing_prompts.md",
     ) -> dict[str, str]:
-        """Load section writing prompts from a JSON file."""
+        """Load section writing prompts from a Markdown file."""
 
         path_obj = Path(filepath)
         if not path_obj.exists():
             raise FileNotFoundError(f"Section writing prompts file not found: {filepath}")
 
-        data = load_json(path_obj.name, str(path_obj.parent))
+        content = load_markdown(path_obj.name, str(path_obj.parent))
 
-        prompts = {
-            section_name: section_data["prompt"]
-            for section_name, section_data in data.get("sections", {}).items()
-        }
+        prompts = {}
+        # Pattern: # Section Name followed by content until next # or end
+        # Note: Section headers are Level 1 (#)
+        section_pattern = r'^#\s+(.+?)\s*\n(.*?)(?=\n#\s+|$)'
+        
+        for match in re.finditer(section_pattern, content, re.DOTALL | re.MULTILINE):
+            section_name = match.group(1).strip()
+            prompt_content = match.group(2).strip()
+            prompts[section_name] = prompt_content
 
         print(f"[PaperWritingPipeline] Loaded {len(prompts)} section writing prompts from {filepath}")
         return prompts

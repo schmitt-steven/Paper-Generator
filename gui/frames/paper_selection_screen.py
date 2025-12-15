@@ -21,7 +21,7 @@ from utils.pdf_converter_pymupdf_marker import PDFConverter
 from settings import Settings
 
 
-HYPOTHESES_FILE = Path("output/hypotheses.json")
+HYPOTHESES_FILE = Path("output/hypothesis.md")
 PAPERS_FILE = Path("output/papers.json")
 
 class PaperSelectionScreen(BaseFrame):

@@ -12,7 +12,7 @@ from phases.experimentation.experiment_runner import ExperimentRunner
 
 EXPERIMENTS_DIR = "output/experiments"
 EXPERIMENT_PLAN_FILE = "experiment_plan.md"
-HYPOTHESES_FILE = "output/hypotheses.json"
+HYPOTHESES_FILE = "output/hypothesis.md"
 
 class ExperimentationPlanScreen(BaseFrame):
     def __init__(self, parent, controller):
@@ -144,15 +144,10 @@ class ExperimentationPlanScreen(BaseFrame):
             try:
                 # Load hypothesis
                 self.after(0, lambda: popup.update_status("Loading hypothesis"))
-                hypotheses = HypothesisBuilder.load_hypotheses(HYPOTHESES_FILE)
-                selected_hypothesis = None
-                for hyp in hypotheses:
-                    if hyp.selected_for_experimentation:
-                        selected_hypothesis = hyp
-                        break
-                if selected_hypothesis is None and hypotheses:
-                    selected_hypothesis = hypotheses[0]
-                
+                # Load hypothesis
+                self.after(0, lambda: popup.update_status("Loading hypothesis"))
+                selected_hypothesis = HypothesisBuilder.load_hypothesis(HYPOTHESES_FILE)
+
                 if selected_hypothesis is None:
                     raise ValueError("No hypothesis found")
                 
