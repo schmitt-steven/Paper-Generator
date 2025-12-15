@@ -15,27 +15,55 @@ class Hypothesis(BaseModel):
     description: str
     rationale: str
     success_criteria: str
-    selected_for_experimentation: bool = False
+    selected_for_experimentation: bool = True  # Always true for single hypothesis flow
+
+    def to_markdown(self) -> str:
+        """Convert hypothesis to markdown format."""
+        return textwrap.dedent(f"""\
+            # Research Hypothesis
+
+            ## Description
+            {self.description}
+
+            ## Rationale
+            {self.rationale}
+
+            ## Success Criteria
+            {self.success_criteria}
+            """)
+
+    @classmethod
+    def from_markdown(cls, content: str, hyp_id: str = "user_hypothesis") -> "Hypothesis":
+        """Parse hypothesis from markdown content."""
+        sections = {}
+        current_section = None
+        current_content = []
+
+        for line in content.split('\n'):
+            line = line.strip()
+            if line.startswith('## '):
+                if current_section:
+                    sections[current_section] = '\n'.join(current_content).strip()
+                current_section = line[3:].lower().replace(' ', '_')
+                current_content = []
+            elif current_section:
+                current_content.append(line)
+        
+        if current_section:
+            sections[current_section] = '\n'.join(current_content).strip()
+
+        return cls(
+            id=hyp_id,
+            description=sections.get('description', ''),
+            rationale=sections.get('rationale', ''),
+            success_criteria=sections.get('success_criteria', ''),
+            selected_for_experimentation=True
+        )
 
 
-class HypothesesList(BaseModel):
-    """Simple container for LLM-generated hypotheses"""
-    hypotheses: list[Hypothesis]
 
-
-class HypothesesResult(BaseModel):
-    """Container for generated hypotheses with metadata"""
-    paper_concept_file: str
-    num_papers_analyzed: int
-    top_limitations_addressed: list[dict[str, float]]
-    hypotheses: list[Hypothesis]
-
-
-class SelectedHypotheses(BaseModel):
-    """Selected hypothesis IDs from a selection process"""
-    selected_ids: list[str]
 from utils.lazy_model_loader import LazyModelMixin, LazyEmbeddingMixin
-from utils.file_utils import save_json, load_json
+from utils.file_utils import save_markdown, load_markdown
 
 
 class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
@@ -50,7 +78,7 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
         self.top_limitations = top_limitations
         self.num_papers_analyzed = num_papers_analyzed
         
-    def create_hypothesis_from_user_input(self, user_requirements) -> list[Hypothesis]:
+    def create_hypothesis_from_user_input(self, user_requirements) -> Hypothesis:
         """
         Create a Hypothesis object from a user-provided string.
         Uses LLM to structure the raw text into a proper Hypothesis object.
@@ -107,107 +135,72 @@ class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
             response_data = result.parsed
             hypotheses_data = response_data.get("hypotheses", [])
             
-            hypotheses = []
-            for i, hyp_data in enumerate(hypotheses_data, 1):
+            # Take the first one or default
+            if hypotheses_data:
+                hyp_data = hypotheses_data[0]
                 hypothesis = Hypothesis(
-                    id=hyp_data.get("id", f"user_hyp_{i:03d}"),
-                    description=hyp_data.get("description", user_hypothesis_text), # Fallback to raw text
+                    id="user_hypothesis",
+                    description=hyp_data.get("description", user_hypothesis_text),
                     rationale=hyp_data.get("rationale", "User provided hypothesis"),
                     success_criteria=hyp_data.get("success_criteria", "As specified by user"),
-                    selected_for_experimentation=True # Auto-select user hypothesis
-                )
-                hypotheses.append(hypothesis)
-            
-            if not hypotheses:
-                # Fallback if LLM fails to return a list
-                print("Warning: LLM failed to structure user hypothesis. Creating basic object.")
-                hypotheses = [Hypothesis(
-                    id="user_hyp_001",
-                    description=user_hypothesis_text,
-                    rationale="User provided hypothesis",
-                    methods="User specified",
-                    success_criteria="Unknown",
                     selected_for_experimentation=True
-                )]
+                )
+            else:
+                raise ValueError("No hypothesis returned by LLM")
 
             # Save it
-            HypothesisBuilder.save_hypotheses(hypotheses, "output/hypotheses.json", num_papers_analyzed=self.num_papers_analyzed)
+            HypothesisBuilder.save_hypothesis(hypothesis, "output/hypothesis.md")
             
-            return hypotheses
+            return hypothesis
+
+        except Exception as e:
+            print(f"Error processing user hypothesis: {e}")
+            # Fallback
+            hyp = Hypothesis(
+                id="user_hypothesis",
+                description=user_hypothesis_text,
+                rationale="User provided hypothesis (Error in processing)",
+                success_criteria="Unknown",
+                selected_for_experimentation=True
+            )
+            HypothesisBuilder.save_hypothesis(hyp, "output/hypothesis.md")
+            return hyp
 
         except Exception as e:
             print(f"Error processing user hypothesis: {e}")
             # Fallback
             return [Hypothesis(
-                id="user_hyp_001",
+                id="user_hypothesis",
                 description=user_hypothesis_text,
                 rationale="User provided hypothesis (Error in processing)",
-                methods="User specified",
                 success_criteria="Unknown",
                 selected_for_experimentation=True
             )]
 
     @staticmethod
-    def save_hypotheses(hypotheses: list[Hypothesis], filepath: str, num_papers_analyzed: int = 0):
-        """Save hypotheses to JSON file."""
-        path_obj = Path(filepath)
-
-        result_dict = {
-            "paper_concept_file": "output/paper_concept.md",
-            "num_papers_analyzed": num_papers_analyzed,
-            "hypotheses": [
-                {
-                    "id": h.id,
-                    "description": h.description,
-                    "rationale": h.rationale,
-                    "success_criteria": h.success_criteria,
-                    "selected_for_experimentation": h.selected_for_experimentation
-                }
-                for h in hypotheses
-            ]
-        }
-
-        save_json(result_dict, path_obj.name, str(path_obj.parent))
-
-        print(f"\nSaved {len(hypotheses)} hypotheses to {filepath}")
-    
-    @staticmethod
-    def load_hypotheses(filepath: str) -> list[Hypothesis]:
-        """
-        Load hypotheses from a JSON file.
-
-        Args:
-            filepath: Path to the JSON file containing saved hypotheses
-
-        Returns:
-            List of Hypothesis objects
-        """
+    def save_hypothesis(hypothesis: Hypothesis, filepath: str):
+        """Save single hypothesis to Markdown file."""
         try:
             path_obj = Path(filepath)
-            data = load_json(path_obj.name, str(path_obj.parent))
-
-            hypotheses = []
-            for hyp_data in data.get("hypotheses", []):
-                hypothesis = Hypothesis(
-                    id=hyp_data.get("id", ""),
-                    description=hyp_data.get("description", ""),
-                    rationale=hyp_data.get("rationale", ""),
-                    success_criteria=hyp_data.get("success_criteria", ""),
-                    selected_for_experimentation=hyp_data.get("selected_for_experimentation", False)
-                )
-                hypotheses.append(hypothesis)
-
-            print(f"Loaded {len(hypotheses)} hypotheses from {filepath}")
-            return hypotheses
-
-        except FileNotFoundError:
-            print(f"Error: File not found: {filepath}")
-            return []
-        except json.JSONDecodeError as e:
-            print(f"Error: Invalid JSON in {filepath}: {e}")
-            return []
+            path_obj.parent.mkdir(parents=True, exist_ok=True)
+            path_obj.write_text(hypothesis.to_markdown(), encoding='utf-8')
+            print(f"\nSaved hypothesis to {filepath}")
         except Exception as e:
-            print(f"Error loading hypotheses: {e}")
-            return []
+            print(f"Error saving hypothesis: {e}")
+
+    @staticmethod
+    def load_hypothesis(filepath: str) -> Optional[Hypothesis]:
+        """Load single hypothesis from Markdown file."""
+        try:
+            path_obj = Path(filepath)
+            if not path_obj.exists():
+                return None
+            
+            content = path_obj.read_text(encoding='utf-8')
+            return Hypothesis.from_markdown(content)
+
+        except Exception as e:
+            print(f"Error loading hypothesis: {e}")
+            return None
 
 

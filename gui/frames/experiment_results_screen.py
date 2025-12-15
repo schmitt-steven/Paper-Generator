@@ -14,7 +14,7 @@ from phases.paper_writing.paper_writing_pipeline import PaperWritingPipeline
 
 
 PAPER_DRAFT_FILE = Path("output/paper_draft.md")
-HYPOTHESES_FILE = "output/hypotheses.json"
+HYPOTHESES_FILE = "output/hypothesis.md"
 
 
 class ExperimentResultsScreen(BaseFrame):
@@ -70,14 +70,8 @@ class ExperimentResultsScreen(BaseFrame):
         
         try:
             # Get selected hypothesis
-            hypotheses = HypothesisBuilder.load_hypotheses(HYPOTHESES_FILE)
-            selected_hypothesis = None
-            for hyp in hypotheses:
-                if hyp.selected_for_experimentation:
-                    selected_hypothesis = hyp
-                    break
-            if selected_hypothesis is None and hypotheses:
-                selected_hypothesis = hypotheses[0]
+            # Get selected hypothesis
+            selected_hypothesis = HypothesisBuilder.load_hypothesis(HYPOTHESES_FILE)
             
             if selected_hypothesis is None:
                 self._show_error("No hypothesis found")
@@ -347,8 +341,8 @@ class ExperimentResultsScreen(BaseFrame):
                 self.after(0, lambda: popup.update_status("Loading resources..."))
                 
                 # Load necessary objects
-                hypotheses = HypothesisBuilder.load_hypotheses(HYPOTHESES_FILE)
-                selected_hypothesis = next((h for h in hypotheses if h.selected_for_experimentation), hypotheses[0] if hypotheses else None)
+                # Load necessary objects
+                selected_hypothesis = HypothesisBuilder.load_hypothesis(HYPOTHESES_FILE)
                 paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
                 
                 # Check specifics for manual file override (hacky but needed for this specific task context)
@@ -392,14 +386,9 @@ class ExperimentResultsScreen(BaseFrame):
                 
                 # Load hypothesis
                 self.after(0, lambda: popup.update_status("Loading hypothesis"))
-                hypotheses = HypothesisBuilder.load_hypotheses(HYPOTHESES_FILE)
-                selected_hypothesis = None
-                for hyp in hypotheses:
-                    if hyp.selected_for_experimentation:
-                        selected_hypothesis = hyp
-                        break
-                if selected_hypothesis is None and hypotheses:
-                    selected_hypothesis = hypotheses[0]
+                # Load hypothesis
+                self.after(0, lambda: popup.update_status("Loading hypothesis"))
+                selected_hypothesis = HypothesisBuilder.load_hypothesis(HYPOTHESES_FILE)
                 
                 if selected_hypothesis is None:
                     raise ValueError("No hypothesis found")
