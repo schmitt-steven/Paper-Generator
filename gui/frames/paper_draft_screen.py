@@ -11,6 +11,8 @@ from phases.latex_generation.paper_converter import PaperConverter
 from phases.latex_generation.metadata import LaTeXMetadata
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.experimentation.experiment_runner import ExperimentRunner
+from phases.context_analysis.user_requirements import UserRequirements
+from settings import Settings
 
 
 PAPER_DRAFT_FILE = "paper_draft.md"
@@ -223,3 +225,78 @@ class PaperDraftScreen(BaseFrame):
             draft_path = Path(OUTPUT_DIR) / PAPER_DRAFT_FILE
             if draft_path.exists():
                 self._load_draft()
+
+    def on_regenerate(self):
+        """Regenerate the paper draft from scratch."""
+        if not tk.messagebox.askyesno("Confirm Regeneration", 
+                                      "This will regenerate the entire paper draft based on your experiments and literature. Any manual edits will be lost.\n\nDo you want to continue?"):
+            return
+
+        popup = ProgressPopup(self.controller, "Regenerating Paper Draft")
+        
+        def task():
+            try:
+                # 1. Load context
+                self.after(0, lambda: popup.update_status("Loading context..."))
+                
+                paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
+                
+                # Load indexed papers
+                indexed_papers = LiteratureSearch.load_papers("output/papers.json")
+                if not indexed_papers:
+                    raise ValueError("No indexed papers found. Please run literature search first.")
+                
+                # Load experiment result
+                experiment_result = None
+                experiment_result_file = "output/experiments/experiment_result.json"
+                if Path(experiment_result_file).exists():
+                    experiment_result = ExperimentRunner.load_experiment_result(experiment_result_file)
+                else:
+                    raise ValueError("No experiment results found. Please run experiments first.")
+                
+                user_requirements = None
+                try:
+                    user_requirements = UserRequirements.load_user_requirements("user_files/user_requirements.md")
+                except:
+                    pass
+                
+                # 2. Initialize pipeline
+                pipeline = PaperWritingPipeline()
+                
+                # 3. Write Paper
+                # We define a simple callback to update the popup status
+                def status_update(msg):
+                    self.after(0, lambda: popup.update_status(msg))
+                
+                self.after(0, lambda: popup.update_status("Starting paper generation..."))
+                
+                pipeline.write_paper(
+                    paper_concept=paper_concept,
+                    experiment_result=experiment_result,
+                    papers=indexed_papers,
+                    user_requirements=user_requirements,
+                    status_callback=status_update
+                )
+                
+                # 4. Reload UI
+                self.after(0, lambda: self._on_regeneration_complete(popup))
+                
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                self.after(0, lambda err=str(e): popup.show_error(err))
+
+        thread = threading.Thread(target=task, daemon=True)
+        thread.start()
+
+    def _on_regeneration_complete(self, popup: ProgressPopup):
+        """Handle regeneration completion."""
+        popup.close()
+        
+        # Refresh text widget
+        try:
+             content = load_markdown(PAPER_DRAFT_FILE, OUTPUT_DIR)
+             self.draft_text.delete("1.0", "end")
+             self.draft_text.insert("1.0", content)
+        except Exception as e:
+             print(f"Error refreshing draft text: {e}")

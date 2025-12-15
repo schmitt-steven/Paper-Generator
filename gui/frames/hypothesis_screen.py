@@ -8,7 +8,9 @@ from ..base_frame import BaseFrame, ProgressPopup, create_scrollable_text_area
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.hypothesis_generation.hypothesis_builder import Hypothesis
 from phases.context_analysis.paper_conception import PaperConception
+from phases.context_analysis.user_requirements import UserRequirements
 from phases.experimentation.experiment_runner import ExperimentRunner
+from settings import Settings
 
 
 HYPOTHESIS_FILE = "output/hypothesis.md"
@@ -268,3 +270,64 @@ class HypothesisScreen(BaseFrame):
         """Handle successful generation."""
         popup.close()
         self.controller.next_screen()
+
+    def on_regenerate(self):
+        """Regenerate the hypothesis from scratch."""
+        if not tk.messagebox.askyesno("Confirm Regeneration", 
+                                      "This will completely overwrite the current hypothesis based on your paper concept and requirements.\n\nDo you want to continue?"):
+            return
+
+        popup = ProgressPopup(self.controller, "Regenerating Hypothesis")
+        
+        def task():
+            try:
+                # 1. Load resources
+                self.after(0, lambda: popup.update_status("Loading resources..."))
+                paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
+                user_requirements = UserRequirements.load_user_requirements("user_files/user_requirements.md")
+                
+                # 2. Initialize Builder
+                self.after(0, lambda: popup.update_status("Initializing builder..."))
+                builder = HypothesisBuilder(
+                    model_name=Settings.HYPOTHESIS_BUILDER_MODEL,
+                    embedding_model_name=Settings.HYPOTHESIS_BUILDER_EMBEDDING_MODEL,
+                    paper_concept=paper_concept,
+                    top_limitations=[],
+                    num_papers_analyzed=0
+                )
+                
+                # 3. Generate Hypothesis
+                self.after(0, lambda: popup.update_status("Generating hypothesis..."))
+                # This automatically saves to file
+                builder.create_hypothesis_from_user_input(user_requirements)
+                
+                # 4. Reload UI
+                self.after(0, lambda: self._on_regeneration_complete(popup))
+                
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                self.after(0, lambda err=str(e): popup.show_error(err))
+
+        thread = threading.Thread(target=task, daemon=True)
+        thread.start()
+
+    def _on_regeneration_complete(self, popup: ProgressPopup):
+        """Handle regeneration completion."""
+        popup.close()
+        # Force reload from file
+        self._load_hypothesis()
+        
+        # Refresh widgets if they exist
+        if self.current_hypothesis:
+             if hasattr(self, 'description_text'):
+                 self.description_text.delete("1.0", "end")
+                 self.description_text.insert("1.0", self.current_hypothesis.description)
+                 
+                 self.rationale_text.delete("1.0", "end")
+                 self.rationale_text.insert("1.0", self.current_hypothesis.rationale)
+                 
+                 self.success_criteria_text.delete("1.0", "end")
+                 self.success_criteria_text.insert("1.0", self.current_hypothesis.success_criteria)
+             else:
+                 self._create_hypothesis_fields()
