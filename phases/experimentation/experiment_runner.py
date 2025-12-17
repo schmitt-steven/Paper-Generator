@@ -108,7 +108,7 @@ class ExperimentRunner:
 
                 [REQUIREMENTS]
                 - Write clean, concise Python code
-                - Save plots to plots/ directory (create with os.makedirs if needed)
+                - Save plots to plots/ directory as .svg files (create with os.makedirs if needed)
                 - Save results to JSON in current directory
                 - Print concise, meaningful output (~100-200 lines max)
                 - Output ONLY Python code, NO markdown formatting
@@ -225,7 +225,7 @@ class ExperimentRunner:
                     Include everything from the previous response, then add:
                     - Create plots/ directory
                     - Generate comparison plots
-                    - Save plots to plots/
+                    - Save plots to plots/ as .svg files
                     - Print concise summary of the results (NEVER guess the results, only print the actual results)
 
                     Output the COMPLETE, FINAL code (imports & data structures + algorithms + experiment + visualization).
@@ -549,7 +549,7 @@ class ExperimentRunner:
                 [REQUIREMENTS]
                 1. Address all issues identified in the validation feedback as well as possible.
                 2. Ensure the code actually tests the hypothesis as described in the experiment plan
-                3. Ensure plots are saved to "plots/" directory (relative to execution directory) - create this directory if needed using os.makedirs("plots", exist_ok=True)
+                3. Ensure plots are saved to "plots/" directory as .svg files (relative to execution directory) - create this directory if needed using os.makedirs("plots", exist_ok=True)
                 4. Save detailed results/metrics to JSON file in the current directory (do NOT create an "output" directory - the code already runs from the output directory)
                 5. Ensure stdout output is concise and meaningful - key metrics, conclusions and results only, avoid loop spam
                 6. Make sure the experiment is complete and meaningful (e.g., not too short, collects proper metrics, etc.)
@@ -740,7 +740,7 @@ class ExperimentRunner:
             - Output requirements: 
               * Detailed results/metrics stored in JSON file
               * Concise, meaningful output to stdout (key metrics, conclusions)
-              * Plot(s) for visualization
+              * Plot(s) for visualization (saved as .svg)
             - Experiment MUST complete in under 5 minutes. Use reasonable parameter ranges and reduce iterations/computations/parameter combinations if needed.
 
             [RESEARCH_CONTEXT]

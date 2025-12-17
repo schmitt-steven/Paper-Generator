@@ -15,7 +15,7 @@ class MarkdownToLaTeX:
         prompt = MarkdownToLaTeX._build_conversion_prompt(md_text)
         
         try:
-            response = llm.respond(prompt, config={"temperature": 0.1})
+            response = llm.respond(prompt, config={"temperature": 0.0})
             # Extract text from response
             if hasattr(response, "content"):
                 latex_text = response.content

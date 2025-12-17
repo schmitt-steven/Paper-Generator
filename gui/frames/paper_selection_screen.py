@@ -163,32 +163,84 @@ class PaperSelectionScreen(BaseFrame):
         title_label = ttk.Label(content_frame, text=paper.title, font=self.controller.fonts.default_font)
         title_label.pack(anchor="w", fill="x")
         
-        metadata = self._format_paper_metadata(paper)
-        metadata_label = ttk.Label(content_frame, text=metadata, font=self.controller.fonts.text_area_font, foreground="gray")
-        metadata_label.pack(anchor="w", pady=(2, 0), fill="x")
+        metadata_frame = ttk.Frame(content_frame)
+        metadata_frame.pack(anchor="w", pady=(2, 0), fill="x")
         
-        trash_btn = create_gray_button(content_row, text="\U0001F5D1", command=lambda: on_remove(paper.id), width=3)
-        trash_btn.pack(side="right", padx=(30, 0))
+        # 1. Status Tag (Colored)
+        status_text, status_color = self._get_paper_status(paper)
+        if status_text:
+            status_label = ttk.Label(metadata_frame, text=status_text, font=self.controller.fonts.text_area_font, foreground=status_color)
+            status_label.pack(side="left")
+            
+            # Separator if there is other metadata
+            ttk.Label(metadata_frame, text="  \u00B7  ", font=self.controller.fonts.text_area_font, foreground="gray").pack(side="left")
+
+        # 2. Bibliographic Metadata (Gray)
+        metadata = self._format_paper_bibliographic_info(paper)
+        metadata_label = ttk.Label(metadata_frame, text=metadata, font=self.controller.fonts.text_area_font, foreground="gray")
+        metadata_label.pack(side="left")
+        
+        # Button container (right-aligned)
+        btn_container = ttk.Frame(content_row)
+        btn_container.pack(side="right", padx=(10, 0))
+
+        # Upload button for closed access papers
+        if not is_user_paper and not paper.is_open_access:
+             # Check if we already have a PDF for this paper
+             has_local_pdf = False
+             if paper.pdf_path:
+                 has_local_pdf = True
+             elif paper.id:
+                 safe_id = "".join([c for c in paper.id if c.isalnum() or c in ('-', '_', '.')])
+                 expected_pdf_path = Path("output/literature") / safe_id / f"{safe_id}.pdf"
+                 if expected_pdf_path.exists():
+                     has_local_pdf = True
+             
+             if not has_local_pdf:
+                 # Use upload icon (Outbox tray)
+                 upload_btn = create_gray_button(btn_container, text="\U0001F4E4", command=lambda: self._on_upload_paper_pdf(paper), width=3)
+                 upload_btn.pack(side="left", padx=(0, 5))
+        
+        trash_btn = create_gray_button(btn_container, text="\U0001F5D1", command=lambda: on_remove(paper.id), width=3)
+        trash_btn.pack(side="left")
         
         # Dynamic wraplength
         def update_wraplength(event):
             # Subtract padding/offsets if needed
-            # content_frame has padx=(10, 0), trash_btn has padx=(30, 0) and width ~30-40px?
-            # event.width is width of content_frame.
             width = event.width
-            if width > 10: # Avoid tiny widths causing issues on init
+            if width > 10: 
                 title_label.config(wraplength=width)
                 metadata_label.config(wraplength=width)
                 
         content_frame.bind("<Configure>", update_wraplength)
         
-        for widget in [content_frame, title_label, metadata_label]:
+        for widget in [content_frame, title_label, metadata_label, metadata_frame]:
             widget.bind("<Button-1>", lambda e, p=paper: self._on_paper_click(p, is_user_paper))
             widget.configure(cursor="hand2")
         
         return entry_frame
 
-    def _format_paper_metadata(self, paper: Paper) -> str:
+    def _get_paper_status(self, paper: Paper) -> tuple[Optional[str], Optional[str]]:
+        """Return status text and color if applicable."""
+        if not paper.is_open_access and not paper.user_provided:
+             # Check if we have a PDF for this paper
+             has_local_pdf = False
+             if paper.pdf_path:
+                 has_local_pdf = True
+             elif paper.id:
+                 safe_id = "".join([c for c in paper.id if c.isalnum() or c in ('-', '_', '.')])
+                 expected_pdf_path = Path("output/literature") / safe_id / f"{safe_id}.pdf"
+                 if expected_pdf_path.exists():
+                     has_local_pdf = True
+            
+             if has_local_pdf:
+                 return "PDF Uploaded", "green"
+             else:
+                 return "Closed Access", "red"
+        
+        return None, None
+
+    def _format_paper_bibliographic_info(self, paper: Paper) -> str:
         parts = []
         
         if paper.authors:
@@ -233,6 +285,41 @@ class PaperSelectionScreen(BaseFrame):
             webbrowser.open(f"https://www.semanticscholar.org/paper/{paper.id}")
         elif paper.pdf_url:
             webbrowser.open(paper.pdf_url)
+
+    def _on_upload_paper_pdf(self, paper: Paper):
+        """Handle uploading a PDF for a specific closed-access paper."""
+        file_path = filedialog.askopenfilename(
+            title=f"Select PDF for '{paper.title[:30]}...'",
+            filetypes=[("PDF files", "*.pdf"), ("All files", "*.*")]
+        )
+        
+        if not file_path:
+            return
+
+        try:
+            # 1. Determine destination path
+            # Use safe ID for folder name
+            safe_id = "".join([c for c in paper.id if c.isalnum() or c in ('-', '_', '.')])
+            output_folder = Path("output/literature") / safe_id
+            output_folder.mkdir(parents=True, exist_ok=True)
+            dest_path = output_folder / f"{safe_id}.pdf"
+            
+            # 2. Copy file
+            shutil.copy2(file_path, dest_path)
+            
+            # 3. Update paper object
+            paper.pdf_path = str(dest_path.resolve().relative_to(Path.cwd()))
+            
+            # 4. Save and refresh
+            self._save_papers()
+            self._refresh_searched_papers_list() # Re-render appropriately
+            
+            print(f"[Papers] Uploaded PDF for: {paper.title[:60]}")
+            
+        except Exception as e:
+            print(f"Error uploading PDF for paper {paper.id}: {e}")
+            import traceback
+            traceback.print_exc()
 
     def _on_upload_click(self):
         if self.is_uploading:
