@@ -50,7 +50,7 @@ class PaperConverter(LazyModelMixin):
         
         self._generate_bibliography(latex_dir, paper_draft, indexed_papers)
         
-        self._generate_abbreviations(latex_dir, paper_draft)
+        # self._generate_abbreviations(latex_dir, paper_draft)
         
         if experiment_result:
             self._copy_plot_images(latex_dir, experiment_result)

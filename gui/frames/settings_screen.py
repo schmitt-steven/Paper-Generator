@@ -3,6 +3,7 @@ from tkinter import ttk
 from typing import override
 from ..base_frame import BaseFrame
 from utils.lm_studio_client import get_model_names
+from .section_guidelines_screen import SectionGuidelinesScreen
 
 class SettingsScreen(BaseFrame):
     def __init__(self, parent, controller):
@@ -62,7 +63,8 @@ class SettingsScreen(BaseFrame):
         ])
 
         # Paper Writing Phase
-        self.create_phase_section("Paper Writing", [
+        # Paper Writing Phase
+        paper_writing_frame = self.create_phase_section("Paper Writing", [
             ("PAPER_INDEXING_EMBEDDING_MODEL", "Paper Indexing Embedding Model", "dropdown", self.embedding_models),
             ("EVIDENCE_GATHERING_MODEL", "Evidence Gathering Model", "dropdown", self.llm_models),
             ("PAPER_WRITING_MODEL", "Paper Writing Model", "dropdown", self.llm_models),
@@ -71,6 +73,18 @@ class SettingsScreen(BaseFrame):
             ("EVIDENCE_FILTERED_CHUNKS", "Evidence Filtered Chunks", "spinbox", (1, 20)),
             ("EVIDENCE_AGENTIC_ITERATIONS", "Evidence Agentic Iterations", "spinbox", (1, 5)),
         ])
+        
+        # Add Edit Section Guidelines button to Paper Writing section
+        # Add Edit Section Guidelines button to Paper Writing section
+        # ttk.Separator(paper_writing_frame, orient="horizontal").pack(fill="x", pady=10)
+        
+        row_frame = ttk.Frame(paper_writing_frame)
+        row_frame.pack(fill="x", pady=2)
+        
+        ttk.Label(row_frame, text="Writing Guidelines", width=35).pack(side="left")
+        
+        guidelines_btn = ttk.Button(row_frame, text="Edit", command=lambda: self.controller.show_frame(SectionGuidelinesScreen))
+        guidelines_btn.pack(side="right", fill="x", expand=True, padx=(10, 0))
 
         # LaTeX Generation Section (combines model and data)
         self.create_latex_generation_section()
@@ -123,6 +137,7 @@ class SettingsScreen(BaseFrame):
                 var.set(current_value if current_value else min_val)
             
             self.settings_vars[key] = var
+        return frame
 
     def create_latex_generation_section(self):
         from settings import Settings

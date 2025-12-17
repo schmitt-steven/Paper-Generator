@@ -16,7 +16,8 @@ from .frames import (
     ExperimentationPlanScreen,
     ExperimentResultsScreen,
     PaperDraftScreen,
-    ResultScreen
+    ResultScreen,
+    SectionGuidelinesScreen
 )
 from .fonts import FontManager
 from settings import Settings
@@ -99,7 +100,8 @@ class PaperGeneratorApp(tk.Tk):
             ExperimentationPlanScreen,
             ExperimentResultsScreen,
             PaperDraftScreen,
-            ResultScreen
+            ResultScreen,
+            SectionGuidelinesScreen
         ]
         self.current_screen_index = 0
         

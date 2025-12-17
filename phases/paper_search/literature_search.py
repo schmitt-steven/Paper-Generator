@@ -297,7 +297,7 @@ class LiteratureSearch(LazyModelMixin):
         return merged
 
 
-    def execute_search(self, query: str, max_results: int = 20, year: Optional[str] = None, fields_of_study: Optional[str] = None) -> list[Paper]:
+    def execute_search(self, query: str, max_results: int = 20, year: Optional[str] = None, fields_of_study: Optional[str] = None, open_access_only: bool = False) -> list[Paper]:
         """
         Execute a single search on Semantic Scholar using the provided query string.
         
@@ -313,7 +313,7 @@ class LiteratureSearch(LazyModelMixin):
         year_str = f" (year: {year})" if year else ""
         fields_str = f" (fields: {fields_of_study})" if fields_of_study else ""
         print(f"Searching Semantic Scholar with: {query}{year_str}{fields_str} (max_results={max_results})")
-        papers = self.s2_api.search_papers(query, max_results=max_results, year=year, fields_of_study=fields_of_study)
+        papers = self.s2_api.search_papers(query, max_results=max_results, year=year, fields_of_study=fields_of_study, open_access_only=open_access_only)
         print(f"Found {len(papers)} papers\n")
         return papers
     

@@ -422,7 +422,7 @@ class EvidenceGatherer:
             llm_model.act(
                 initial_prompt,
                 tools=[search_evidence_tool],
-                config={"temperature": 0.4},
+                config={"temperature": 0.3},
             )
         except Exception as exc:
             # Surface issue but return whatever evidence we have

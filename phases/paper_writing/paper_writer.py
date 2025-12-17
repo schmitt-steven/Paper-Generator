@@ -5,6 +5,7 @@ from phases.context_analysis.paper_conception import PaperConcept
 from phases.context_analysis.user_requirements import UserRequirements
 from phases.experimentation.experiment_state import ExperimentResult, Plot
 from phases.paper_writing.data_models import Evidence, PaperDraft, Section
+from phases.paper_writing.section_guidelines import SectionGuidelinesLoader
 from utils.llm_utils import remove_thinking_blocks
 from settings import Settings
 import lmstudio as lms
@@ -101,7 +102,7 @@ class PaperWriter:
         evidence: Sequence[Evidence],
 
         previous_sections: Optional[dict[Section, str]] = None,
-        temperature: float = 0.5,
+        temperature: float = 0.3,
         user_requirements: Optional[UserRequirements] = None,
         existing_prompt: Optional[str] = None,
     ) -> str:
@@ -328,26 +329,30 @@ Your output must strictly follow the requirements and produce a polished academi
         These guidelines are combined with more context and evidence in _build_section_prompt().
         """
         
-        section_guidelines = {
-            Section.ABSTRACT: textwrap.dedent("""\
+        # Load custom guidelines
+        custom_guidelines = SectionGuidelinesLoader.load_guidelines()
+        
+        # Default fallback guidelines
+        default_guidelines = {
+            Section.ABSTRACT: textwrap.dedent("""\\
                 150-250 words. Structure: (1) problem/gap, (2) approach, (3) key result with metrics, (4) main implication. 
                 Be specific. NO citations."""),
             
-            Section.INTRODUCTION: textwrap.dedent("""\
+            Section.INTRODUCTION: textwrap.dedent("""\\
                 Open with the problem and its concrete impact.
                 Identify what's missing in current solutions using evidence.
                 State your contribution as specific, falsifiable claims.
                 End with brief paper roadmap.
                 Justify claims with evidence, don't just assert."""),
             
-            Section.RELATED_WORK: textwrap.dedent("""\
+            Section.RELATED_WORK: textwrap.dedent("""\\
                 Group by approach/theme, not chronologically. For each cluster:
                 - What they did (method + reported results)
                 - Limitations relative to this work
                 - Direct comparison where applicable
                 Avoid generic praise. Be precise about differences. Cite liberally."""),
             
-            Section.METHODS: textwrap.dedent("""\
+            Section.METHODS: textwrap.dedent("""\\
                 Reproducibility is the goal. If possible and relevant, include:
                 - Architecture/algorithm with justification for key choices
                 - Hyperparameters, dataset details, compute resources
@@ -358,24 +363,30 @@ Your output must strictly follow the requirements and produce a polished academi
             Section.RESULTS: 
             self._get_results_guidelines(experiment),
             
-            Section.DISCUSSION: textwrap.dedent("""\
+            Section.DISCUSSION: textwrap.dedent("""\\
                 Open by restating main finding in context of hypothesis.
                 Explain why it worked/failed using specific evidence and results. Acknowledge limitations honestly.
                 Compare to related work quantitatively where possible.
                 Speculation allowed but label it clearly.
                 End with concrete future directions, not vague "explore further."""),
             
-            Section.CONCLUSION: textwrap.dedent("""\
+            Section.CONCLUSION: textwrap.dedent("""\\
                 Summarize: what you did, what you found (with key metrics), broader implications (realistic, not grandiose), one actionable next step.
                 No new information. No citations."""),
             
-            Section.ACKNOWLEDGEMENTS: textwrap.dedent("""\
+            Section.ACKNOWLEDGEMENTS: textwrap.dedent("""\\
                 Format and polish the provided acknowledgements text into a professional academic style.
                 Keep the original meaning and intent, but ensure proper grammar, flow, and academic tone.
                 No citations needed. Keep it concise and appropriate for an academic paper."""),
         }
+        
+        # Use custom if available, else default
+        # Note: If custom file exists but is missing a section, we fall back to default for that section
+        guideline = custom_guidelines.get(section_type)
+        if not guideline:
+             guideline = default_guidelines.get(section_type, "")
 
-        return section_guidelines.get(section_type, "")
+        return guideline
 
     def _get_results_guidelines(self, experiment: Optional[ExperimentResult]) -> str:
         """Get Results section guidelines, including figure integration if plots are available."""
@@ -418,7 +429,7 @@ Your output must strictly follow the requirements and produce a polished academi
         introduction: str,
         conclusion: str,
         context: PaperConcept,
-        temperature: float = 0.4,
+        temperature: float = 0.3,
         max_tokens: int = 100,
     ) -> str:
         """Generate a paper title based on abstract, introduction, and conclusion."""
