@@ -687,7 +687,6 @@ class PaperSelectionScreen(BaseFrame):
                     self.after(0, lambda: popup.update_status("Creating hypothesis from user input"))
                     hypothesis_builder = HypothesisBuilder(
                         model_name=Settings.HYPOTHESIS_BUILDER_MODEL,
-                        embedding_model_name=Settings.HYPOTHESIS_BUILDER_EMBEDDING_MODEL,
                         paper_concept=paper_concept,
                         top_limitations=[],
                         num_papers_analyzed=0

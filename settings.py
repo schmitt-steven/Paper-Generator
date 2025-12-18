@@ -17,24 +17,20 @@ class Settings:
     
     # Context Analysis Phase
     CODE_ANALYSIS_MODEL =    "qwen/qwen3-next-80b"  
-    NOTES_ANALYSIS_MODEL =   "qwen/qwen3-next-80b"  
+
     PAPER_CONCEPTION_MODEL = "qwen3-next-80b-a3b-thinking-mlx"  
     
     # Paper Search Phase
     LITERATURE_SEARCH_MODEL =             "qwen/qwen3-next-80b"  
-    PAPER_ANALYSIS_MODEL =                "qwen/qwen3-next-80b"
     PAPER_RANKING_EMBEDDING_MODEL =       "text-embedding-qwen3-embedding-4b@q5_0"  # Must be an embedding model!
-    LIMITATION_ANALYSIS_EMBEDDING_MODEL = "text-embedding-qwen3-embedding-4b@q5_0"  # Must be an embedding model!
     
     # Hypothesis Generation Phase
     HYPOTHESIS_BUILDER_MODEL =           "qwen3-next-80b-a3b-thinking-mlx"
-    HYPOTHESIS_BUILDER_EMBEDDING_MODEL = "text-embedding-qwen3-embedding-4b@q5_0"  # Must be an embedding model!
+
     
     # Experimentation Phase
     EXPERIMENT_PLAN_MODEL =          "qwen3-next-80b-a3b-thinking-mlx"
     EXPERIMENT_CODE_WRITE_MODEL =    "qwen/qwen3-next-80b"  
-    EXPERIMENT_CODE_FIX_MODEL =      "qwen/qwen3-next-80b"  
-    EXPERIMENT_CODE_IMPROVE_MODEL =  "qwen/qwen3-next-80b" 
     EXPERIMENT_VALIDATION_MODEL =    "qwen3-next-80b-a3b-thinking-mlx" 
     EXPERIMENT_PLOT_CAPTION_MODEL =  "qwen/qwen3-vl-4b"  # Must be a VISION model!
     EXPERIMENT_VERDICT_MODEL =       "qwen3-next-80b-a3b-thinking-mlx"

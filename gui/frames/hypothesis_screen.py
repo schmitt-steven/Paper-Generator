@@ -290,7 +290,6 @@ class HypothesisScreen(BaseFrame):
                 self.after(0, lambda: popup.update_status("Initializing builder..."))
                 builder = HypothesisBuilder(
                     model_name=Settings.HYPOTHESIS_BUILDER_MODEL,
-                    embedding_model_name=Settings.HYPOTHESIS_BUILDER_EMBEDDING_MODEL,
                     paper_concept=paper_concept,
                     top_limitations=[],
                     num_papers_analyzed=0

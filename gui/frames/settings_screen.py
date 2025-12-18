@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from settings import Settings
 from typing import override
 from ..base_frame import BaseFrame
 from utils.lm_studio_client import get_model_names
@@ -23,8 +24,8 @@ class SettingsScreen(BaseFrame):
         )
 
     def create_content(self):
-        # Appearance (Font Size) - Moved to top
         self.create_appearance_section()
+
         # Info
         #guidance_frame = ttk.LabelFrame(self.scrollable_frame, text="Info", padding="10")
         #guidance_frame.pack(fill="x", padx=0, pady=5)
@@ -33,36 +34,34 @@ class SettingsScreen(BaseFrame):
         # Context Analysis Phase
         self.create_phase_section("Context Analysis", [
             ("CODE_ANALYSIS_MODEL", "Code Analysis Model", self.llm_models),
-            ("NOTES_ANALYSIS_MODEL", "Notes Analysis Model", self.llm_models),
+
             ("PAPER_CONCEPTION_MODEL", "Paper Conception Model", self.llm_models),
         ])
 
         # Paper Search Phase
         self.create_phase_section("Paper Search", [
             ("LITERATURE_SEARCH_MODEL", "Literature Search Model", self.llm_models),
-            ("PAPER_ANALYSIS_MODEL", "Paper Analysis Model", self.llm_models),
-            ("LIMITATION_ANALYSIS_EMBEDDING_MODEL", "Limitation Analysis Embedding Model", self.embedding_models),
+
+
             ("PAPER_RANKING_EMBEDDING_MODEL", "Paper Ranking Embedding Model", self.embedding_models),
         ])
 
         # Hypothesis Generation Phase
         self.create_phase_section("Hypothesis Generation", [
             ("HYPOTHESIS_BUILDER_MODEL", "Hypothesis Builder Model", self.llm_models),
-            ("HYPOTHESIS_BUILDER_EMBEDDING_MODEL", "Hypothesis Embedding Model", self.embedding_models),
+
         ])
 
         # Experimentation Phase
         self.create_phase_section("Experimentation", [
             ("EXPERIMENT_PLAN_MODEL", "Planning Model", self.llm_models),
             ("EXPERIMENT_CODE_WRITE_MODEL", "Coding Model", self.llm_models),
-            ("EXPERIMENT_CODE_FIX_MODEL", "Error Fixing Model", self.llm_models),
-            ("EXPERIMENT_CODE_IMPROVE_MODEL", "Code Improvement Model", self.llm_models),
-            ("EXPERIMENT_VALIDATION_MODEL", "Validation Model", self.llm_models),
+
+            ("EXPERIMENT_VALIDATION_MODEL", "Results Validation Model", self.llm_models),
             ("EXPERIMENT_PLOT_CAPTION_MODEL", "Plot Caption Model (Vision)", self.vision_models),
             ("EXPERIMENT_VERDICT_MODEL", "Verdict Model", self.llm_models),
         ])
 
-        # Paper Writing Phase
         # Paper Writing Phase
         paper_writing_frame = self.create_phase_section("Paper Writing", [
             ("PAPER_INDEXING_EMBEDDING_MODEL", "Paper Indexing Embedding Model", "dropdown", self.embedding_models),
@@ -73,11 +72,7 @@ class SettingsScreen(BaseFrame):
             ("EVIDENCE_FILTERED_CHUNKS", "Evidence Filtered Chunks", "spinbox", (1, 20)),
             ("EVIDENCE_AGENTIC_ITERATIONS", "Evidence Agentic Iterations", "spinbox", (1, 5)),
         ])
-        
-        # Add Edit Section Guidelines button to Paper Writing section
-        # Add Edit Section Guidelines button to Paper Writing section
-        # ttk.Separator(paper_writing_frame, orient="horizontal").pack(fill="x", pady=10)
-        
+              
         row_frame = ttk.Frame(paper_writing_frame)
         row_frame.pack(fill="x", pady=2)
         
@@ -140,12 +135,7 @@ class SettingsScreen(BaseFrame):
         return frame
 
     def create_latex_generation_section(self):
-        from settings import Settings
-        
-        # content container from card (for models and title)
         frame = self.create_card_frame(self.scrollable_frame, "LaTeX Generation")
-
-
 
         # LaTeX Generation Model
         row_frame = ttk.Frame(frame)
@@ -212,14 +202,9 @@ class SettingsScreen(BaseFrame):
         # Initialize button state
         self._update_remove_button_state()
         
-    def create_appearance_section(self):
-        from settings import Settings
-        
-        # content container from card
+    def create_appearance_section(self):        
         frame = self.create_card_frame(self.scrollable_frame, "Appearance")
 
-
-        
         row_frame = ttk.Frame(frame)
         row_frame.pack(fill="x", pady=2)
         
@@ -237,7 +222,6 @@ class SettingsScreen(BaseFrame):
 
         self.font_size_var.trace_add("write", on_font_size_change)
         
-        # Spinbox
         spinbox = ttk.Spinbox(
             row_frame, 
             from_=8, 

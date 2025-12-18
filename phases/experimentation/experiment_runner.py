@@ -379,7 +379,7 @@ class ExperimentRunner:
 
             print(f"Fixing experiment code (attempt {fix_attempt}/{max_attempts}): {code_file_path}")
             chat.add_user_message(user_message)
-            model = lms.llm(self.settings.EXPERIMENT_CODE_FIX_MODEL)
+            model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
             result = model.respond(chat, config={"temperature": 0.4})
             cleaned_code = remove_thinking_blocks(result.content)
             
@@ -580,7 +580,7 @@ class ExperimentRunner:
                 Output ONLY the improved Python code, NO further markdown or explanations. Your answer will be saved to a code file.
             """)
 
-            model = lms.llm(self.settings.EXPERIMENT_CODE_IMPROVE_MODEL)
+            model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
             result = model.respond(prompt, config={"temperature": 0.4})
             improved_code = remove_thinking_blocks(result.content)
             
