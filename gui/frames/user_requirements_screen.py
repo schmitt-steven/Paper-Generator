@@ -43,7 +43,7 @@ class UserRequirementsScreen(BaseFrame):
                 title = "General Information"
             
             # Special handling for grouping headers - these start new Cards
-            if title in ["General Information", "Section Specifications"]:
+            if title in ["General Information", "Section Requirements"]:
                 self.current_card_frame = self.create_card_frame(self.scrollable_frame, title)
                 self.sections.append((header, None))
                 return
@@ -52,7 +52,7 @@ class UserRequirementsScreen(BaseFrame):
             parent = self.current_card_frame if self.current_card_frame else self.scrollable_frame
             
             # Container for the section
-            section_container = ttk.Frame(parent, padding=(0, 0, 0, 15))
+            section_container = ttk.Frame(parent, padding=(15, 0, 15, 15))
             section_container.pack(fill="x")
             
             # Sub-header (smaller than card title)

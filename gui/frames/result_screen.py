@@ -14,6 +14,8 @@ from phases.latex_generation.paper_converter import PaperConverter
 
 PDF_PATH = "output/latex/result/paper.pdf"
 
+MAX_PREVIEW_PAGES = 1
+
 class ResultScreen(BaseFrame):
     def __init__(self, parent, controller):
         super().__init__(
@@ -83,7 +85,7 @@ class ResultScreen(BaseFrame):
                 return
 
             # Show pages
-            for page_num in range(len(doc)):
+            for page_num in range(min(len(doc), MAX_PREVIEW_PAGES)):
                 try:
                     page = doc.load_page(page_num)
                     # Force alpha=False to get RGB with white background (standard for papers)

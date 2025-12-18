@@ -249,17 +249,24 @@ class SettingsScreen(BaseFrame):
         
         self.settings_vars["FONT_SIZE_BASE"] = self.font_size_var
 
-        # Theme Toggle
-        # row_frame = ttk.Frame(frame)
-        # row_frame.pack(fill="x", pady=(10, 2))
+        # Theme Toggle (Switch)
+        row_frame = ttk.Frame(frame)
+        row_frame.pack(fill="x", pady=(10, 2))
         
-        # ttk.Label(row_frame, text="Theme", width=35).pack(side="left")
+        ttk.Label(row_frame, text="Dark Mode", width=35).pack(side="left")
         
-        # ttk.Button(
-        #     row_frame, 
-        #     text="Switch to Light/Dark Mode", 
-        #     command=self.controller.toggle_theme
-        # ).pack(side="right", expand=True, fill="x", padx=(10, 0))
+        self.dark_mode_var = tk.BooleanVar(value=True)  # Start in dark mode
+        
+        def on_toggle():
+            self.controller.toggle_theme()
+        
+        switch = ttk.Checkbutton(
+            row_frame, 
+            variable=self.dark_mode_var,
+            style="Switch.TCheckbutton",
+            command=on_toggle
+        )
+        switch.pack(side="right", padx=(10, 0))
 
 
 

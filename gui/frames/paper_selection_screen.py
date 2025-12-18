@@ -157,30 +157,7 @@ class PaperSelectionScreen(BaseFrame):
         content_row = ttk.Frame(entry_frame)
         content_row.pack(fill="x")
         
-        content_frame = ttk.Frame(content_row)
-        content_frame.pack(side="left", fill="x", expand=True, padx=(10, 0))
-        
-        title_label = ttk.Label(content_frame, text=paper.title, font=self.controller.fonts.default_font)
-        title_label.pack(anchor="w", fill="x")
-        
-        metadata_frame = ttk.Frame(content_frame)
-        metadata_frame.pack(anchor="w", pady=(2, 0), fill="x")
-        
-        # 1. Status Tag (Colored)
-        status_text, status_color = self._get_paper_status(paper)
-        if status_text:
-            status_label = ttk.Label(metadata_frame, text=status_text, font=self.controller.fonts.text_area_font, foreground=status_color)
-            status_label.pack(side="left")
-            
-            # Separator if there is other metadata
-            ttk.Label(metadata_frame, text="  \u00B7  ", font=self.controller.fonts.text_area_font, foreground="gray").pack(side="left")
-
-        # 2. Bibliographic Metadata (Gray)
-        metadata = self._format_paper_bibliographic_info(paper)
-        metadata_label = ttk.Label(metadata_frame, text=metadata, font=self.controller.fonts.text_area_font, foreground="gray")
-        metadata_label.pack(side="left")
-        
-        # Button container (right-aligned)
+        # Button container (right-aligned) - Pack FIRST to reserve space
         btn_container = ttk.Frame(content_row)
         btn_container.pack(side="right", padx=(10, 0))
 
@@ -203,6 +180,30 @@ class PaperSelectionScreen(BaseFrame):
         
         trash_btn = create_gray_button(btn_container, text="\U0001F5D1", command=lambda: on_remove(paper.id), width=3)
         trash_btn.pack(side="left")
+
+        # Content Frame (Title + Metadata) - Pack SECOND to fill remaining space
+        content_frame = ttk.Frame(content_row)
+        content_frame.pack(side="left", fill="x", expand=True, padx=(10, 0))
+        
+        title_label = ttk.Label(content_frame, text=paper.title, font=self.controller.fonts.default_font)
+        title_label.pack(anchor="w", fill="x")
+        
+        metadata_frame = ttk.Frame(content_frame)
+        metadata_frame.pack(anchor="w", pady=(2, 0), fill="x")
+        
+        # 1. Status Tag (Colored)
+        status_text, status_color = self._get_paper_status(paper)
+        if status_text:
+            status_label = ttk.Label(metadata_frame, text=status_text, font=self.controller.fonts.text_area_font, foreground=status_color)
+            status_label.pack(side="left")
+            
+            # Separator if there is other metadata
+            ttk.Label(metadata_frame, text="  \u00B7  ", font=self.controller.fonts.text_area_font, foreground="gray").pack(side="left")
+
+        # 2. Bibliographic Metadata (Gray)
+        metadata = self._format_paper_bibliographic_info(paper)
+        metadata_label = ttk.Label(metadata_frame, text=metadata, font=self.controller.fonts.text_area_font, foreground="gray")
+        metadata_label.pack(side="left")
         
         # Dynamic wraplength
         def update_wraplength(event):

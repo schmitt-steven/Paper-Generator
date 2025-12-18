@@ -39,7 +39,7 @@ class PaperConceptScreen(BaseFrame):
         explanation_frame = ttk.Frame(self.scrollable_frame)
         explanation_frame.pack(fill="x", pady=(0, 10))
         
-        explanation_text = (
+        info_text = (
             "Review and edit the paper concept below.\n"
             "This was generated based on your code and provided information.\n"
             "It will act as a basis for the automatic literature search and paper writing."
@@ -47,7 +47,7 @@ class PaperConceptScreen(BaseFrame):
 
         label = ttk.Label(
             explanation_frame,
-            text=explanation_text,
+            text=info_text,
             font=self.controller.fonts.default_font,
             foreground="gray",
             justify="left"
@@ -101,7 +101,7 @@ class PaperConceptScreen(BaseFrame):
         ).pack(anchor="w", pady=(0, 10))
         
         container, text_widget = create_scrollable_text_area(section_container, height=height)
-        container.pack(fill="x", expand=True, padx=(15, 0))
+        container.pack(fill="x", expand=True)
         text_widget.insert("1.0", content)
         
         return text_widget
