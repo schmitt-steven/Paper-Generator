@@ -52,6 +52,7 @@ class PaperGeneratorApp(tk.Tk):
                 pass
         
         # Apply Sun Valley theme
+        self.current_theme = "dark"
         sv_ttk.set_theme("dark")
 
         # Global font config
@@ -106,6 +107,10 @@ class PaperGeneratorApp(tk.Tk):
         self.current_screen_index = 0
         
         self.init_frames()
+        
+        # Defer application of custom theme colors to override defaults
+        self.after(100, self.apply_theme_colors)
+        
         # Show initial frame and call on_show
         initial_frame = self.frames[self.screen_order[0]]
         initial_frame.tkraise()
@@ -175,6 +180,8 @@ class PaperGeneratorApp(tk.Tk):
         # Call on_show if the frame has this method (for lazy loading)
         if hasattr(frame, 'on_show'):
             frame.on_show()
+        # Apply theme colors to newly shown frame (handles lazy-loaded widgets)
+        self.apply_theme_colors(frame)
 
     def next_screen(self):
         self.current_screen_index += 1
@@ -190,6 +197,64 @@ class PaperGeneratorApp(tk.Tk):
             previous_class = self.screen_order[self.current_screen_index]
             self.show_frame(previous_class)
 
+
+    def toggle_theme(self):
+        if self.current_theme == 'dark':
+            self.current_theme = 'light'
+        else:
+            self.current_theme = 'dark'
+        
+        sv_ttk.set_theme(self.current_theme)
+        # Re-configure styles to ensure consistency
+        self.configure_styles()
+        self.apply_theme_colors()
+
+    def apply_theme_colors(self, widget=None):
+        """Recursively apply theme colors to TextBorderFrame and Text widgets."""
+        if widget is None:
+            widget = self
+            
+        # Define colors
+        if self.current_theme == "dark":
+            text_bg = "#1a1a1a"     # Dark Gray (lighter than pure black)
+            text_fg = "#ffffff"
+            border_color = "#2A2A2A" # Subtle dark border
+            insert_bg = "#ffffff"
+        else:
+            text_bg = "#ffffff"     # Pure White
+            text_fg = "#1c1c1c"
+            border_color = "#cccccc" # Light Gray
+            insert_bg = "#1c1c1c"
+            
+        # Import wrapper class here
+        from .base_frame import TextBorderFrame
+        
+        # Apply to BorderFrame (The container)
+        if isinstance(widget, TextBorderFrame):
+            try:
+                widget.configure(background=border_color)
+            except:
+                pass
+                
+        # Apply to Text (The content)
+        if isinstance(widget, tk.Text):
+            try:
+                widget.configure(
+                    background=text_bg,
+                    foreground=text_fg,
+                    insertbackground=insert_bg,
+                    highlightthickness=0,
+                    relief="flat"
+                )
+            except:
+                pass
+                
+        # Recurse
+        for child in widget.winfo_children():
+            self.apply_theme_colors(child)
+
+
 if __name__ == "__main__":
     app: PaperGeneratorApp = PaperGeneratorApp()
     app.mainloop()
+

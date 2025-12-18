@@ -6,7 +6,7 @@ Recursive Backwards Q-Learning (RBQL): A model-based reinforcement learning algo
 ### Hypothesis
 RBQL converges to optimal policies significantly faster than standard Q-learning in deterministic, episodic environments by leveraging a persistent world model and backward reward propagation, eliminating the need for repeated visits to update Q-values.
 
-## Section Specifications
+## Section Requirements
 
 ### Abstract
 3-4 sentences summarizing: the problem (Q-learning inefficiency in deterministic tasks), the solution (RBQL with backward propagation), key results (faster convergence, fewer episodes to optimal policy), and implications.

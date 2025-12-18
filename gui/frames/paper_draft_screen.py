@@ -117,7 +117,7 @@ class PaperDraftScreen(BaseFrame):
             height=35,
             font=self.controller.fonts.text_area_font
         )
-        container.pack(fill="both", expand=True, padx=(15, 0))
+        container.pack(fill="both", expand=True)
         
         self.draft_text.insert("1.0", content)
         

@@ -4,7 +4,7 @@ from tkinter import ttk
 import threading
 from pathlib import Path
 from settings import Settings
-from ..base_frame import BaseFrame, ProgressPopup
+from ..base_frame import BaseFrame, ProgressPopup, TextBorderFrame
 from phases.context_analysis.paper_conception import PaperConception
 from phases.context_analysis.user_requirements import UserRequirements
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
@@ -221,8 +221,9 @@ class ExperimentResultsScreen(BaseFrame):
         ).pack(anchor="w", pady=(0, 10))
         
         # Container with border (simulated)
-        border_container = tk.Frame(section_container, bg="#3e3e42", padx=1, pady=1)
-        border_container.pack(fill="both", expand=True, padx=(15, 0))
+        # We use TextBorderFrame corresponding to our theming strategy
+        border_container = TextBorderFrame(section_container, padx=1, pady=1)
+        border_container.pack(fill="both", expand=True)
 
         # Container for text + scrollbars
         editor_container = ttk.Frame(border_container)
@@ -240,9 +241,6 @@ class ExperimentResultsScreen(BaseFrame):
             borderwidth=0,
             relief="flat",
             wrap="none",
-            bg="#252526",
-            fg="#ffffff",
-            insertbackground="white",
             yscrollcommand=v_scroll.set,
             xscrollcommand=h_scroll.set
         )

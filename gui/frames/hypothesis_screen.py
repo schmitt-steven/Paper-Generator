@@ -159,7 +159,7 @@ class HypothesisScreen(BaseFrame):
         ).pack(anchor="w", pady=(0, 10))
         
         container, text_widget = create_scrollable_text_area(section_container, height=height)
-        container.pack(fill="x", expand=True, padx=(15, 0))
+        container.pack(fill="x", expand=True)
         text_widget.insert("1.0", content)
         
         return text_widget

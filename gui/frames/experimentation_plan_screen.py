@@ -110,7 +110,7 @@ class ExperimentationPlanScreen(BaseFrame):
         ).pack(anchor="w", pady=(0, 10))
         
         container, self.plan_text = create_scrollable_text_area(section_container, height=25)
-        container.pack(fill="both", expand=True, padx=(15, 0))
+        container.pack(fill="both", expand=True)
         self.plan_text.insert("1.0", content)
 
     def _save_plan(self):

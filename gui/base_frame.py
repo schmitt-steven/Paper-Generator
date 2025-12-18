@@ -10,12 +10,15 @@ MAX_WIDTH = 700
 # Text widget styling constants
 
 # Text widget styling constants
+# Text widget styling constants
 TEXT_AREA_SPACING = 4
 TEXT_AREA_PADX = 10
 TEXT_AREA_PADY = 10
-TEXT_BG = "#252526"
-BORDER_COLOR = "#3e3e42"
-TEXT_FG = "#ffffff"
+
+
+class TextBorderFrame(tk.Frame):
+    """Custom Frame used as a border container for Text widgets."""
+    pass
 
 
 def create_text_area(parent, height: int = 6, **kwargs) -> tk.Text:
@@ -31,9 +34,6 @@ def create_text_area(parent, height: int = 6, **kwargs) -> tk.Text:
         highlightthickness=0,
         borderwidth=0,
         relief="flat",
-        bg=TEXT_BG,
-        fg=TEXT_FG,
-        insertbackground="white",
         **kwargs
     )
     return text
@@ -46,7 +46,8 @@ def create_scrollable_text_area(parent, height: int = 6, **kwargs) -> tuple[tk.F
     Caller must pack/grid the container_frame, NOT the text_widget.
     """
     # Container with border (simulated by background color + padding)
-    container = tk.Frame(parent, bg=BORDER_COLOR, padx=1, pady=1)
+    # We use TextBorderFrame so app.py can identify and style it
+    container = TextBorderFrame(parent, padx=1, pady=1)
     
     # Inner frame for contents (to hold text + scrollbar)
     inner = ttk.Frame(container)

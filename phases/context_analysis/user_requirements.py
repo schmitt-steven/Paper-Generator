@@ -68,7 +68,7 @@ class UserRequirements:
                     sections[current_section] = '\n'.join(section_content).strip()
                 current_section = 'hypothesis'
                 section_content = []
-            elif line.startswith('## Section Specifications'):
+            elif line.startswith('## Section Requirements'):
                 # Save previous section
                 if current_section and section_content:
                     sections[current_section] = '\n'.join(section_content).strip()
