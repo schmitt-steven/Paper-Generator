@@ -66,14 +66,12 @@ from utils.lazy_model_loader import LazyModelMixin, LazyEmbeddingMixin
 from utils.file_utils import save_markdown, load_markdown
 
 
-class HypothesisBuilder(LazyModelMixin, LazyEmbeddingMixin):
+class HypothesisBuilder(LazyModelMixin):
     """Generates and validates research hypotheses"""
     
-    def __init__(self, model_name: str, embedding_model_name: str, paper_concept: PaperConcept, top_limitations: list[tuple[str, float]], num_papers_analyzed: int):
+    def __init__(self, model_name: str, paper_concept: PaperConcept, top_limitations: list[tuple[str, float]], num_papers_analyzed: int):
         self.model_name = model_name
         self._model = None  # Lazy-loaded via LazyModelMixin
-        self.embedding_model_name = embedding_model_name
-        self._embedding_model = None  # Lazy-loaded via LazyEmbeddingMixin
         self.paper_concept = paper_concept
         self.top_limitations = top_limitations
         self.num_papers_analyzed = num_papers_analyzed
