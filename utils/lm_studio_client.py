@@ -1,5 +1,20 @@
 import lmstudio as lms
 
+
+def is_lm_studio_running() -> bool:
+    """Check if LM Studio is running and accessible.
+    
+    Returns:
+        True if LM Studio is running, False otherwise.
+    """
+    try:
+        # Try to list models - this will fail if LM Studio isn't running
+        lms.list_downloaded_models("llm")
+        return True
+    except Exception:
+        return False
+
+
 def get_model_names(model_type="llm", vision_only=False):
     """Fetch model keys from LM Studio.
     
