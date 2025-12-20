@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from settings import Settings
 from typing import override
 from ..base_frame import BaseFrame
@@ -312,6 +312,40 @@ class SettingsScreen(BaseFrame):
     
     @override
     def on_next(self):
+        # Define which settings are model dropdowns that require selection
+        model_settings = {
+            "CODE_ANALYSIS_MODEL": "Code Analysis Model",
+            "PAPER_CONCEPTION_MODEL": "Paper Conception Model",
+            "LITERATURE_SEARCH_MODEL": "Literature Search Model",
+            "PAPER_RANKING_EMBEDDING_MODEL": "Paper Ranking Embedding Model",
+            "HYPOTHESIS_BUILDER_MODEL": "Hypothesis Builder Model",
+            "EXPERIMENT_PLAN_MODEL": "Planning Model",
+            "EXPERIMENT_CODE_WRITE_MODEL": "Coding Model",
+            "EXPERIMENT_VALIDATION_MODEL": "Results Validation Model",
+            "EXPERIMENT_PLOT_CAPTION_MODEL": "Plot Caption Model (Vision)",
+            "EXPERIMENT_VERDICT_MODEL": "Verdict Model",
+            "PAPER_INDEXING_EMBEDDING_MODEL": "Paper Indexing Embedding Model",
+            "EVIDENCE_GATHERING_MODEL": "Evidence Gathering Model",
+            "PAPER_WRITING_MODEL": "Paper Writing Model",
+            "LATEX_GENERATION_MODEL": "LaTeX Generation Model",
+        }
+        
+        # Check for missing model selections
+        missing_models = []
+        for key, label in model_settings.items():
+            if key in self.settings_vars:
+                value = self.settings_vars[key].get()
+                if not value or value.strip() == "":
+                    missing_models.append(label)
+        
+        if missing_models:
+            messagebox.showwarning(
+                "Missing Model Selection",
+                "Please select a model for the following fields:\n\n" +
+                "\n".join(f"• {model}" for model in missing_models)
+            )
+            return  # Don't proceed to next screen
+        
         # Save settings to Settings class
         from settings import Settings
         

@@ -2,7 +2,7 @@ from tkinter.ttk import Style
 
 
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 import sv_ttk
 import sys
 import os
@@ -21,10 +21,22 @@ from .frames import (
 )
 from .fonts import FontManager
 from settings import Settings
+from utils.lm_studio_client import is_lm_studio_running
 
 class PaperGeneratorApp(tk.Tk):
     def __init__(self):
         super().__init__()
+
+        # Check if LM Studio is running before initializing the app
+        if not is_lm_studio_running():
+            self.withdraw()  # Hide the main window
+            messagebox.showwarning(
+                "LM Studio Not Running",
+                "LM Studio must be running in the background.\n\n"
+                "Please start LM Studio and try again."
+            )
+            self.destroy()
+            return
 
 
         # Windows DPI awareness (fixes blurry text on Windows)
@@ -157,16 +169,66 @@ class PaperGeneratorApp(tk.Tk):
         
         # Set default font for Text widgets (text areas)
         self.option_add("*Text.Font", self.fonts.text_area_font)
-        style.configure("ComboboxPopdownFrame", relief="flat", background="#2b2b2b")
-        # For listbox inside combobox, we try to set it but it's tricky with ttk
+        
+        # Theme-aware Combobox Listbox styling (store as instance vars for update_combobox_styles)
+        if self.current_theme == "dark":
+            self._listbox_bg = "#2b2b2b"
+            self._listbox_fg = "#ffffff"
+            self._listbox_select_bg = "#404040"
+            self._listbox_select_fg = "#ffffff"
+            self._listbox_border = "#404040"
+            popdown_bg = "#2b2b2b"
+        else:
+            self._listbox_bg = "#ffffff"
+            self._listbox_fg = "#1c1c1c"
+            self._listbox_select_bg = "#0078d4"
+            self._listbox_select_fg = "#ffffff"
+            self._listbox_border = "#cccccc"
+            popdown_bg = "#ffffff"
+        
+        style.configure("ComboboxPopdownFrame", relief="flat", background=popdown_bg)
+        # For listbox inside combobox
         self.option_add("*TCombobox*Listbox*Font", self.fonts.default_font)
-        self.option_add("*TCombobox*Listbox*Background", "#2b2b2b")
-        self.option_add("*TCombobox*Listbox*Foreground", "#ffffff")
-        self.option_add("*TCombobox*Listbox*selectBackground", "#404040")
-        self.option_add("*TCombobox*Listbox*selectForeground", "#ffffff")
-        self.option_add("*TCombobox*Listbox*relief", "flat")
-        self.option_add("*TCombobox*Listbox*borderWidth", 5)
-        self.option_add("*TCombobox*Listbox*highlightThickness", 0)
+        self.option_add("*TCombobox*Listbox*Background", self._listbox_bg)
+        self.option_add("*TCombobox*Listbox*Foreground", self._listbox_fg)
+        self.option_add("*TCombobox*Listbox*selectBackground", self._listbox_select_bg)
+        self.option_add("*TCombobox*Listbox*selectForeground", self._listbox_select_fg)
+        self.option_add("*TCombobox*Listbox*relief", "solid")
+        self.option_add("*TCombobox*Listbox*borderWidth", 1)
+        self.option_add("*TCombobox*Listbox*highlightThickness", 1)
+        self.option_add("*TCombobox*Listbox*highlightBackground", self._listbox_border)
+        self.option_add("*TCombobox*Listbox*highlightColor", self._listbox_border)
+
+    def update_combobox_styles(self, widget=None):
+        """Recursively update all Combobox dropdown listbox styles for theme changes."""
+        if widget is None:
+            widget = self
+        
+        # Check if this is a Combobox
+        if isinstance(widget, ttk.Combobox):
+            try:
+                # Get the popdown listbox and configure it directly
+                # The listbox is accessed via the popdown toplevel
+                popdown = widget.tk.call("ttk::combobox::PopdownWindow", widget)
+                listbox = popdown + ".f.l"
+                widget.tk.call(listbox, "configure",
+                    "-background", self._listbox_bg,
+                    "-foreground", self._listbox_fg,
+                    "-selectbackground", self._listbox_select_bg,
+                    "-selectforeground", self._listbox_select_fg,
+                    "-relief", "solid",
+                    "-borderwidth", 1,
+                    "-highlightthickness", 1,
+                    "-highlightbackground", self._listbox_border,
+                    "-highlightcolor", self._listbox_border,
+                    "-font", self.fonts.default_font
+                )
+            except:
+                pass  # Popdown may not exist yet if dropdown hasn't been opened
+        
+        # Recurse through children
+        for child in widget.winfo_children():
+            self.update_combobox_styles(child)
 
     def init_frames(self):
         for Frame in self.screen_order:
@@ -207,6 +269,8 @@ class PaperGeneratorApp(tk.Tk):
         sv_ttk.set_theme(self.current_theme)
         # Re-configure styles to ensure consistency
         self.configure_styles()
+        # Update existing Combobox dropdown listbox styles
+        self.update_combobox_styles()
         self.apply_theme_colors()
 
     def apply_theme_colors(self, widget=None):
