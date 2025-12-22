@@ -235,8 +235,98 @@ class ProgressPopup(tk.Toplevel):
             pass
 
 
+class InfoPopup(tk.Toplevel):
+    """Simple info popup with styled header and close button."""
+    
+    def __init__(self, parent: tk.Tk, screen_title: str, content: str):
+        super().__init__(parent)
+        self.parent = parent
+        
+        # Window setup
+        popup_title = f"About: {screen_title}"
+        self.title(popup_title)
+        self.transient(parent)
+        self.resizable(True, True)
+        self.minsize(500, 350)
+        
+        # Center on parent - wider and taller
+        width, height = 700, 500
+        self.geometry(f"{width}x{height}")
+        self.update_idletasks()
+        x = parent.winfo_x() + (parent.winfo_width() - width) // 2
+        y = parent.winfo_y() + (parent.winfo_height() - height) // 2
+        self.geometry(f"+{x}+{y}")
+        
+        # Get theme colors
+        is_dark = parent.current_theme == "dark"
+        header_bg = getattr(parent, '_card_header_bg', '#252525' if is_dark else '#f0f0f0')
+        header_fg = "#ffffff" if is_dark else "#1c1c1c"
+        
+        # Main container
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+        
+        # Header
+        header_frame = ttk.Frame(self, style="CardHeader.TFrame", padding=(15, 10))
+        header_frame.grid(row=0, column=0, sticky="ew")
+        
+        # Centered title
+        tk.Label(
+            header_frame,
+            text=popup_title,
+            font=parent.fonts.sub_header_font,
+            bg=header_bg,
+            fg=header_fg
+        ).pack(expand=True)
+        
+        ttk.Separator(self, orient="horizontal").grid(row=0, column=0, sticky="sew")
+        
+        # Content area
+        content_frame = ttk.Frame(self, padding=15)
+        content_frame.grid(row=1, column=0, sticky="nsew")
+        content_frame.grid_rowconfigure(0, weight=1)
+        content_frame.grid_columnconfigure(0, weight=1)
+        
+        # Text widget for content
+        text = tk.Text(
+            content_frame,
+            wrap="word",
+            font=parent.fonts.default_font,
+            padx=10,
+            pady=10,
+            relief="flat",
+            highlightthickness=0
+        )
+        text.grid(row=0, column=0, sticky="nsew")
+        text.insert("1.0", content)
+        text.config(state="disabled")
+        
+        # Apply theme colors to text
+        if is_dark:
+            text.configure(background="#1a1a1a", foreground="#ffffff")
+        else:
+            text.configure(background="#ffffff", foreground="#1c1c1c")
+        
+        # Scrollbar
+        scrollbar = ttk.Scrollbar(content_frame, orient="vertical", command=text.yview)
+        scrollbar.grid(row=0, column=1, sticky="ns")
+        text.config(yscrollcommand=scrollbar.set)
+        
+        # Footer with close button
+        ttk.Separator(self, orient="horizontal").grid(row=2, column=0, sticky="ew")
+        
+        footer_frame = ttk.Frame(self, style="CardHeader.TFrame", padding=(15, 10))
+        footer_frame.grid(row=3, column=0, sticky="ew")
+        
+        ttk.Button(footer_frame, text="Close", command=self.destroy).pack(side="right")
+        
+        # Grab focus
+        self.grab_set()
+        self.focus_set()
+
+
 class BaseFrame(ttk.Frame):
-    def __init__(self, parent, controller, title="Screen", has_next=True, next_text="Next", has_back=True, back_text="Back", has_regenerate=False, regenerate_text="Regenerate", header_file_path=None):
+    def __init__(self, parent, controller, title="Screen", has_next=True, next_text="Next", has_back=True, back_text="Back", has_regenerate=False, regenerate_text="Regenerate", header_file_path=None, info_content=None):
         super().__init__(parent)
         self.controller = controller
         self.title = title
@@ -247,6 +337,7 @@ class BaseFrame(ttk.Frame):
         self.has_regenerate = has_regenerate
         self.regenerate_text = regenerate_text
         self.header_file_path = header_file_path
+        self.info_content = info_content
         
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=0)
@@ -256,19 +347,39 @@ class BaseFrame(ttk.Frame):
         self.grid_columnconfigure(0, weight=1)
         
         # Header
-        header_frame = ttk.Frame(self, padding=(10, 20))
+        header_frame = ttk.Frame(self, style="NavBar.TFrame", padding=(10, 12))
         header_frame.grid(row=0, column=0, sticky="ew")
         
+        # Info button on right side (pack before center container)
+        if self.info_content:
+            # Info icon is larger than other icons
+            info_size = int(self.controller.fonts.base_size * 1.75)
+            info_btn = self.controller.icons.create_icon_label(
+                header_frame,
+                icon_name="info",
+                command=self._show_info_popup,
+                size=info_size
+            )
+            info_btn.pack(side="right", padx=(10, 15))
+        
         # Shared container for Title + Buttons to center them together
-        center_container = ttk.Frame(header_frame)
+        center_container = ttk.Frame(header_frame, style="NavBar.TFrame")
         center_container.pack(expand=True)
         
-        # Title
-        ttk.Label(center_container, text=self.title, font=self.controller.fonts.header_font).pack(side="left")
+        # Title - use tk.Label for reliable background color
+        navbar_bg = getattr(self.controller, '_navbar_bg', '#1a1a1a')
+        navbar_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
+        tk.Label(
+            center_container, 
+            text=self.title, 
+            font=self.controller.fonts.header_font,
+            bg=navbar_bg,
+            fg=navbar_fg
+        ).pack(side="left")
         
         # Action Buttons
         if self.header_file_path:
-            actions_frame = ttk.Frame(center_container)
+            actions_frame = ttk.Frame(center_container, style="NavBar.TFrame")
             actions_frame.pack(side="left", padx=(15, 0))
             
             # "Open in Editor" Button
@@ -330,14 +441,14 @@ class BaseFrame(ttk.Frame):
         # Nav bar
         if self.has_next or self.has_back or self.has_regenerate:
             ttk.Separator(self, orient="horizontal").grid(row=3, column=0, sticky="ew")
-            nav_container = ttk.Frame(self)
+            nav_container = ttk.Frame(self, style="NavBar.TFrame")
             self.nav_container = nav_container # Save ref
             nav_container.grid(row=4, column=0, sticky="ew")
             nav_container.grid_columnconfigure(0, weight=1)
             nav_container.grid_columnconfigure(1, weight=0, minsize=self.content_width)
             nav_container.grid_columnconfigure(2, weight=1)
             
-            nav_frame = ttk.Frame(nav_container, padding=(10, 20, 10, 20))
+            nav_frame = ttk.Frame(nav_container, style="NavBar.TFrame", padding=(10, 12, 10, 12))
             nav_frame.grid(row=0, column=1, sticky="ew")
             
             style = ttk.Style()
@@ -422,6 +533,11 @@ class BaseFrame(ttk.Frame):
         Subclasses can override this to load data lazily or refresh dynamic content.
         """
         pass
+    
+    def _show_info_popup(self):
+        """Show info popup with this screen's info_content."""
+        if self.info_content:
+            InfoPopup(self.controller, self.title, self.info_content)
 
     def _open_in_editor(self):
         """Open the header file in the default editor."""
@@ -498,9 +614,19 @@ class BaseFrame(ttk.Frame):
         card = ttk.Frame(parent, style="Card.TFrame", padding=1)
         card.pack(fill="x", padx=0, pady=10)
         
-        header = ttk.Frame(card, padding=10)
+        header = ttk.Frame(card, style="CardHeader.TFrame", padding=(10, 6))
         header.pack(fill="x")
-        ttk.Label(header, text=title, font=self.controller.fonts.sub_header_font).pack(side="left")
+        
+        # Use tk.Label instead of ttk.Label for reliable background color
+        header_bg = getattr(self.controller, '_card_header_bg', '#252525')
+        header_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
+        tk.Label(
+            header, 
+            text=title, 
+            font=self.controller.fonts.sub_header_font,
+            bg=header_bg,
+            fg=header_fg
+        ).pack(side="left")
         
         ttk.Separator(card, orient="horizontal").pack(fill="x")
         

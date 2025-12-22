@@ -1,5 +1,8 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+import shutil
+import os
+from pathlib import Path
 from settings import Settings
 from typing import override
 from ..base_frame import BaseFrame
@@ -20,16 +23,19 @@ class SettingsScreen(BaseFrame):
             controller=controller,
             title="Settings",
             next_text="Continue",
-            has_back=False
+            has_back=False,
+            info_content=(
+                "Welcome to the Settings Screen!\n\n"
+                "Here you can configure:\n\n"
+                "• Appearance - Dark/Light mode and font size\n"
+                "• Model Selection - Choose which LLM models to use for each phase\n"
+                "• Authors - Add authors for your generated papers\n\n"
+                "Make sure LM Studio is running with your desired models loaded."
+            )
         )
 
     def create_content(self):
         self.create_appearance_section()
-
-        # Info
-        #guidance_frame = ttk.LabelFrame(self.scrollable_frame, text="Info", padding="10")
-        #guidance_frame.pack(fill="x", padx=0, pady=5)
-        #ttk.Label(guidance_frame, text="Configure the models for each phase of the paper generation process.\nEnsure LM Studio is running to populate model lists.", wraplength=600).pack(anchor="w")
 
         # Context Analysis Phase
         self.create_phase_section("Context Analysis", [
@@ -83,9 +89,6 @@ class SettingsScreen(BaseFrame):
 
         # LaTeX Generation Section (combines model and data)
         self.create_latex_generation_section()
-
-
-
 
 
     def create_phase_section(self, title, settings):
@@ -168,14 +171,23 @@ class SettingsScreen(BaseFrame):
         authors_section = ttk.Frame(self.scrollable_frame, style="Card.TFrame", padding=1)
         authors_section.pack(fill="x", padx=0, pady=(20, 10))
         
-        # Header row
-        header_frame = ttk.Frame(authors_section, padding=10)
+        # Header row with styled background
+        header_frame = ttk.Frame(authors_section, style="CardHeader.TFrame", padding=10)
         header_frame.pack(fill="x")
         
-        ttk.Label(header_frame, text="Authors", font=self.controller.fonts.sub_header_font).pack(side="left")
+        # Use tk.Label for reliable background color (matching create_card_frame)
+        header_bg = getattr(self.controller, '_card_header_bg', '#252525')
+        header_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
+        tk.Label(
+            header_frame, 
+            text="Authors", 
+            font=self.controller.fonts.sub_header_font,
+            bg=header_bg,
+            fg=header_fg
+        ).pack(side="left")
         
-        # Buttons
-        button_frame = ttk.Frame(header_frame)
+        # Buttons (need matching background)
+        button_frame = ttk.Frame(header_frame, style="CardHeader.TFrame")
         button_frame.pack(side="right")
         
         self.remove_author_btn = ttk.Button(button_frame, text="Remove", command=self.remove_last_author)
@@ -203,13 +215,35 @@ class SettingsScreen(BaseFrame):
         self._update_remove_button_state()
         
     def create_appearance_section(self):        
-        frame = self.create_card_frame(self.scrollable_frame, "Appearance")
+        frame = self.create_card_frame(self.scrollable_frame, "General")
 
+        # Theme Toggle (Switch)
         row_frame = ttk.Frame(frame)
         row_frame.pack(fill="x", pady=2)
         
-        ttk.Label(row_frame, text="Font Size", width=35).pack(side="left")
+        ttk.Label(row_frame, text="Dark Mode", width=35).pack(side="left")
         
+        self.dark_mode_var = tk.BooleanVar(value=getattr(Settings, "DARK_MODE", True))
+        
+        def on_toggle():
+            self.controller.toggle_theme()
+            # Save the dark mode preference
+            Settings.DARK_MODE = self.dark_mode_var.get()
+            Settings.save_to_file()
+        
+        switch = ttk.Checkbutton(
+            row_frame, 
+            variable=self.dark_mode_var,
+            style="Switch.TCheckbutton",
+            command=on_toggle
+        )
+        switch.pack(side="right", padx=(10, 0))
+
+        # Font Size
+        row_frame = ttk.Frame(frame)
+        row_frame.pack(fill="x", pady=(10, 2))
+        
+        ttk.Label(row_frame, text="Font Size", width=35).pack(side="left")
         self.font_size_var = tk.IntVar(value=getattr(Settings, "FONT_SIZE_BASE", 16))
         
         # Helper to update font immediately
@@ -233,26 +267,77 @@ class SettingsScreen(BaseFrame):
         
         self.settings_vars["FONT_SIZE_BASE"] = self.font_size_var
 
-        # Theme Toggle (Switch)
+        # Clear Cache Button
         row_frame = ttk.Frame(frame)
         row_frame.pack(fill="x", pady=(10, 2))
         
-        ttk.Label(row_frame, text="Dark Mode", width=35).pack(side="left")
+        ttk.Label(row_frame, text="Clear Cache", width=35).pack(side="left")
         
-        self.dark_mode_var = tk.BooleanVar(value=True)  # Start in dark mode
-        
-        def on_toggle():
-            self.controller.toggle_theme()
-        
-        switch = ttk.Checkbutton(
-            row_frame, 
-            variable=self.dark_mode_var,
-            style="Switch.TCheckbutton",
-            command=on_toggle
+        clear_btn = ttk.Button(row_frame, text="Clear", command=self.clear_cache)
+        clear_btn.pack(side="right", fill="x", expand=True, padx=(10, 0))
+
+    def clear_cache(self):
+        """Clear all cached files: output folder contents and non-essential user_files."""
+        # Show native confirmation dialog
+        confirmed = messagebox.askyesno(
+            "Clear Cache",
+            "This will delete all files from the output folder and temporary files from user_files.\n\n"
+            "Section guidelines and user requirements will be preserved.\n\n"
+            "Are you sure you want to continue?",
+            icon="warning"
         )
-        switch.pack(side="right", padx=(10, 0))
-
-
+        
+        if not confirmed:
+            return
+        
+        deleted_count = 0
+        errors = []
+        
+        # Get the base directory (where settings.py is located)
+        base_dir = Path(__file__).parent.parent.parent
+        
+        # Clear output folder
+        output_dir = base_dir / "output"
+        if output_dir.exists():
+            for item in output_dir.iterdir():
+                try:
+                    if item.is_file():
+                        item.unlink()
+                        deleted_count += 1
+                    elif item.is_dir():
+                        shutil.rmtree(item)
+                        deleted_count += 1
+                except Exception as e:
+                    errors.append(f"{item.name}: {e}")
+        
+        # Clear user_files (except section_guidelines.md and user_requirements.md)
+        user_files_dir = base_dir / "user_files"
+        protected_files = {"section_guidelines.md", "user_requirements.md"}
+        
+        if user_files_dir.exists():
+            for item in user_files_dir.iterdir():
+                if item.name.lower() not in protected_files:
+                    try:
+                        if item.is_file():
+                            item.unlink()
+                            deleted_count += 1
+                        elif item.is_dir():
+                            shutil.rmtree(item)
+                            deleted_count += 1
+                    except Exception as e:
+                        errors.append(f"{item.name}: {e}")
+        
+        # Show result
+        if errors:
+            messagebox.showwarning(
+                "Cache Cleared with Errors",
+                f"Deleted {deleted_count} items.\n\nErrors:\n" + "\n".join(errors[:5])
+            )
+        else:
+            messagebox.showinfo(
+                "Cache Cleared",
+                f"Successfully deleted {deleted_count} items."
+            )
 
     def add_author(self, data=None):
         # Add separator if not the first author
@@ -312,7 +397,7 @@ class SettingsScreen(BaseFrame):
     
     @override
     def on_next(self):
-        # Define which settings are model dropdowns that require selection
+        # Model dropdowns that require selection
         model_settings = {
             "CODE_ANALYSIS_MODEL": "Code Analysis Model",
             "PAPER_CONCEPTION_MODEL": "Paper Conception Model",
@@ -344,7 +429,7 @@ class SettingsScreen(BaseFrame):
                 "Please select a model for the following fields:\n\n" +
                 "\n".join(f"• {model}" for model in missing_models)
             )
-            return  # Don't proceed to next screen
+            # return  # Don't proceed to next screen
         
         # Save settings to Settings class
         from settings import Settings
