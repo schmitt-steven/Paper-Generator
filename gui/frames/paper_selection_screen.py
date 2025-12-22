@@ -1,3 +1,4 @@
+import tkinter as tk
 from tkinter import ttk, filedialog
 import webbrowser
 import threading
@@ -106,15 +107,31 @@ class PaperSelectionScreen(BaseFrame):
         section_frame = ttk.Frame(parent, style="Card.TFrame", padding=1)
         section_frame.pack(fill="x", pady=10)
         
-        # Header row
-        header_frame = ttk.Frame(section_frame, padding=10)
+        # Header row with styled background
+        header_frame = ttk.Frame(section_frame, style="CardHeader.TFrame", padding=(10, 6))
         header_frame.pack(fill="x")
         
-        left_header = ttk.Frame(header_frame)
+        left_header = ttk.Frame(header_frame, style="CardHeader.TFrame")
         left_header.pack(side="left")
         
-        ttk.Label(left_header, text=title, font=self.controller.fonts.sub_header_font).pack(side="left")
-        count_label = ttk.Label(left_header, text=str(count), font=self.controller.fonts.sub_header_font, foreground="gray")
+        # Use tk.Label for reliable background color
+        header_bg = getattr(self.controller, '_card_header_bg', '#252525')
+        header_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
+        tk.Label(
+            left_header, 
+            text=title, 
+            font=self.controller.fonts.sub_header_font,
+            bg=header_bg,
+            fg=header_fg
+        ).pack(side="left")
+        
+        count_label = tk.Label(
+            left_header, 
+            text=str(count), 
+            font=self.controller.fonts.sub_header_font, 
+            fg="#666666",
+            bg=header_bg
+        )
         count_label.pack(side="left", padx=(10, 0))
         
         style = ttk.Style()
@@ -174,12 +191,21 @@ class PaperSelectionScreen(BaseFrame):
                      has_local_pdf = True
              
              if not has_local_pdf:
-                 # Use upload icon (Outbox tray)
-                 upload_btn = create_gray_button(btn_container, text="\U0001F4E4", command=lambda: self._on_upload_paper_pdf(paper), width=3)
-                 upload_btn.pack(side="left", padx=(0, 5))
+                 # Use upload icon with theme-aware coloring
+                 upload_btn = self.controller.icons.create_icon_label(
+                     btn_container,
+                     icon_name="upload",
+                     command=lambda: self._on_upload_paper_pdf(paper)
+                 )
+                 upload_btn.pack(side="left", padx=(0, 10))
         
-        trash_btn = create_gray_button(btn_container, text="\U0001F5D1", command=lambda: on_remove(paper.id), width=3)
-        trash_btn.pack(side="left")
+        # X button with theme-aware icon
+        x_btn = self.controller.icons.create_icon_label(
+            btn_container,
+            icon_name="x",
+            command=lambda: on_remove(paper.id)
+        )
+        x_btn.pack(side="left")
 
         # Content Frame (Title + Metadata) - Pack SECOND to fill remaining space
         content_frame = ttk.Frame(content_row)

@@ -95,18 +95,31 @@ class CodeFilesScreen(BaseFrame):
         )
         section_frame.pack(fill="x", pady=10)
         
-        inner_frame = ttk.Frame(section_frame, padding="10")
-        inner_frame.pack(fill="x", expand=True)
-        
-        # Header row
-        header_frame = ttk.Frame(section_frame, padding=10)
+        # Header row with styled background
+        header_frame = ttk.Frame(section_frame, style="CardHeader.TFrame", padding=(10, 6))
         header_frame.pack(fill="x")
         
-        left_header = ttk.Frame(header_frame)
+        left_header = ttk.Frame(header_frame, style="CardHeader.TFrame")
         left_header.pack(side="left")
         
-        ttk.Label(left_header, text="Your Code Files", font=self.controller.fonts.sub_header_font).pack(side="left")
-        self.count_label = ttk.Label(left_header, text="0", font=self.controller.fonts.sub_header_font, foreground="gray")
+        # Use tk.Label for reliable background color
+        header_bg = getattr(self.controller, '_card_header_bg', '#252525')
+        header_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
+        tk.Label(
+            left_header, 
+            text="Your Code Files", 
+            font=self.controller.fonts.sub_header_font,
+            bg=header_bg,
+            fg=header_fg
+        ).pack(side="left")
+        
+        self.count_label = tk.Label(
+            left_header, 
+            text="0", 
+            font=self.controller.fonts.sub_header_font, 
+            fg="#666666",
+            bg=header_bg
+        )
         self.count_label.pack(side="left", padx=(10, 0))
         
         self.upload_btn = ttk.Button(header_frame, text="Upload", command=self._on_upload_click)
@@ -158,14 +171,13 @@ class CodeFilesScreen(BaseFrame):
             foreground="gray"
         ).pack(anchor="w", pady=(2, 0))
         
-        # Trash button
-        trash_btn = create_gray_button(
+        # X button with theme-aware icon
+        x_btn = self.controller.icons.create_icon_label(
             content_row,
-            text="\U0001F5D1",
-            command=lambda: self._remove_file(code_file.filename),
-            width=3
+            icon_name="x",
+            command=lambda: self._remove_file(code_file.filename)
         )
-        trash_btn.pack(side="right", padx=(10, 0))
+        x_btn.pack(side="right", padx=(10, 0))
         
         return entry_frame
 

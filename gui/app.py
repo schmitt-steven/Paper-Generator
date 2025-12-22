@@ -20,6 +20,7 @@ from .frames import (
     SectionGuidelinesScreen
 )
 from .fonts import FontManager
+from .icons import IconManager
 from settings import Settings
 from utils.lm_studio_client import is_lm_studio_running
 
@@ -63,12 +64,16 @@ class PaperGeneratorApp(tk.Tk):
             except:
                 pass
         
-        # Apply Sun Valley theme
-        self.current_theme = "dark"
-        sv_ttk.set_theme("dark")
+        # Apply Sun Valley theme (use saved preference)
+        saved_dark_mode = getattr(Settings, "DARK_MODE", True)
+        self.current_theme = "dark" if saved_dark_mode else "light"
+        sv_ttk.set_theme(self.current_theme)
 
         # Global font config
         self.fonts = FontManager(self, base_size=getattr(Settings, "FONT_SIZE_BASE", 16))
+        
+        # Icon manager for theme-aware icons
+        self.icons = IconManager(self)
         
         # Configure styles initially
         self.configure_styles()
@@ -149,6 +154,19 @@ class PaperGeneratorApp(tk.Tk):
              style.map("TButton", **style.map("Accent.TButton"))
         except:
              pass # Theme might not be fully loaded or compatible
+        
+        # Card header styling (different background for the title row)
+        if self.current_theme == "dark":
+            self._card_header_bg = "#252525"  # Slightly lighter than card background
+            self._navbar_bg = "#1a1a1a"       # Match text area background
+        else:
+            self._card_header_bg = "#f0f0f0"  # Slightly darker than card background
+            self._navbar_bg = "#f1f1f1"       # Light gray for navbar in light mode
+        
+        style.configure("CardHeader.TFrame", background=self._card_header_bg)
+        style.configure("CardHeader.TLabel", background=self._card_header_bg)
+        style.configure("NavBar.TFrame", background=self._navbar_bg)
+        style.configure("NavBar.TLabel", background=self._navbar_bg)
         
         # Custom Listbox (Dropdown Menu) styling
         style.configure("TCombobox", font=self.fonts.default_font)
@@ -271,6 +289,9 @@ class PaperGeneratorApp(tk.Tk):
         self.configure_styles()
         # Update existing Combobox dropdown listbox styles
         self.update_combobox_styles()
+        # Update icons for new theme
+        self.icons._clear_cache()
+        self.icons.update_icon_labels()
         self.apply_theme_colors()
 
     def apply_theme_colors(self, widget=None):
@@ -284,11 +305,17 @@ class PaperGeneratorApp(tk.Tk):
             text_fg = "#ffffff"
             border_color = "#2A2A2A" # Subtle dark border
             insert_bg = "#ffffff"
+            card_header_bg = "#252525"
+            card_header_fg = "#ffffff"
+            canvas_bg = "#1c1c1c"
         else:
             text_bg = "#ffffff"     # Pure White
             text_fg = "#1c1c1c"
             border_color = "#cccccc" # Light Gray
             insert_bg = "#1c1c1c"
+            card_header_bg = "#f0f0f0"
+            card_header_fg = "#1c1c1c"
+            canvas_bg = "#fafafa"
             
         # Import wrapper class here
         from .base_frame import TextBorderFrame
@@ -297,6 +324,13 @@ class PaperGeneratorApp(tk.Tk):
         if isinstance(widget, TextBorderFrame):
             try:
                 widget.configure(background=border_color)
+            except:
+                pass
+        
+        # Apply to Canvas (scrollable area background)
+        if isinstance(widget, tk.Canvas):
+            try:
+                widget.configure(background=canvas_bg)
             except:
                 pass
                 
@@ -310,6 +344,30 @@ class PaperGeneratorApp(tk.Tk):
                     highlightthickness=0,
                     relief="flat"
                 )
+            except:
+                pass
+        
+        # Apply to tk.Label inside CardHeader.TFrame or NavBar.TFrame
+        if isinstance(widget, tk.Label):
+            try:
+                parent = widget.master
+                # Check if parent is using CardHeader.TFrame or NavBar.TFrame style
+                if isinstance(parent, ttk.Frame):
+                    style = str(parent.cget('style'))
+                    if 'CardHeader' in style:
+                        # Update background, but preserve gray foreground for count labels
+                        current_fg = str(widget.cget('fg'))
+                        if current_fg in ['gray', '#888888', '#666666']:
+                            # This is a count label - keep gray foreground
+                            widget.configure(background=card_header_bg, fg="#666666")
+                        else:
+                            # This is a title label - use theme foreground
+                            widget.configure(background=card_header_bg, foreground=card_header_fg)
+                    elif 'NavBar' in style:
+                        # NavBar uses _navbar_bg color (set in configure_styles)
+                        navbar_bg = self._navbar_bg
+                        navbar_fg = "#ffffff" if self.current_theme == "dark" else "#1c1c1c"
+                        widget.configure(background=navbar_bg, foreground=navbar_fg)
             except:
                 pass
                 
