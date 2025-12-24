@@ -36,35 +36,7 @@ class ExperimentationPlanScreen(BaseFrame):
         )
 
     def create_content(self):
-        # Info text
-        self._create_info_section()
-        
-        # Don't load plan yet - wait until screen is shown
-        # This prevents loading on app startup
-
-    def _create_info_section(self):
-        """Create the info text section."""
-        explanation_frame = ttk.Frame(self.scrollable_frame)
-        explanation_frame.pack(fill="x", pady=(0, 10))
-        
-        explanation_text = (
-            "Review and edit the experiment plan below.\n"
-            "This plan was generated based on your hypothesis and paper concept.\n"
-            "It describes how the experiments will be conducted to test the hypothesis."
-        )
-
-        label = ttk.Label(
-            explanation_frame,
-            text=explanation_text,
-            font=self.controller.fonts.default_font,
-            foreground="gray",
-            justify="left"
-        )
-        label.pack(anchor="w", fill="x")
-
-        def set_wraplength(event):
-            label.config(wraplength=event.width - 10)
-        label.bind("<Configure>", set_wraplength)
+        pass
 
     def _load_plan(self):
         """Load experiment plan from file and display it."""

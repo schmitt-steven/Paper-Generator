@@ -52,7 +52,6 @@ class CodeFilesScreen(BaseFrame):
 
     def create_content(self):
         # Explanation text
-        self._create_info_section()
         
         # Code files section
         self._create_files_section()
@@ -60,31 +59,6 @@ class CodeFilesScreen(BaseFrame):
     def on_show(self):
         """Called when screen is shown - load existing code files from user_files/."""
         self._load_existing_files()
-
-    def _create_info_section(self):
-        """Create the info text section."""
-        explanation_frame = ttk.Frame(self.scrollable_frame, padding=(0, 0, 0, 0))
-        explanation_frame.pack(fill="x", pady=(0, 10))
-        
-        explanation_text = (
-            "Optionally upload your code relevant to the paper you want to write about here.\n"
-            "Your code will be analyzed to better understand the topic of the paper.\n"
-            "Additionally, the code will be used as the basis for writing experiments.\n"
-            "Adding comments at critical points in the code could help the model understand the code better."
-        )
-
-        label = ttk.Label(
-            explanation_frame,
-            text=explanation_text,
-            font=self.controller.fonts.default_font,
-            foreground="gray",
-            justify="left"
-        )
-        label.pack(anchor="w", fill="x")
-
-        def set_wraplength(event):
-            label.config(wraplength=event.width-10)
-        label.bind("<Configure>", set_wraplength)
 
     def _create_files_section(self):
         """Create the code files upload section."""
