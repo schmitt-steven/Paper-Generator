@@ -34,33 +34,8 @@ class ExperimentResultsScreen(BaseFrame):
 
     def create_content(self):
         """Create the experiment results display."""
-        self._create_info_section()
         self.results_container = ttk.Frame(self.scrollable_frame)
         self.results_container.pack(fill="x", expand=True)
-
-    def _create_info_section(self):
-        """Create the info text section."""
-        explanation_frame = ttk.Frame(self.scrollable_frame)
-        explanation_frame.pack(fill="x", pady=(0, 10))
-        
-        explanation_text = (
-            "Review the experiment results below.\n"
-            "These results show how the hypothesis was tested and the outcome.\n"
-            "The paper draft will be generated based on these results."
-        )
-
-        label = ttk.Label(
-            explanation_frame,
-            text=explanation_text,
-            font=self.controller.fonts.default_font,
-            foreground="gray",
-            justify="left"
-        )
-        label.pack(anchor="w", fill="x")
-
-        def set_wraplength(event):
-            label.config(wraplength=event.width - 10)
-        label.bind("<Configure>", set_wraplength)
 
     def _load_and_display_results(self):
         """Load and display experiment results."""

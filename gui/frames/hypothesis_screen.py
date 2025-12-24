@@ -44,35 +44,7 @@ class HypothesisScreen(BaseFrame):
         )
 
     def create_content(self):
-        # Info text
-        self._create_info_section()
-        
-        # Don't load hypothesis yet - wait until screen is shown
-        # This prevents loading on app startup
-
-    def _create_info_section(self):
-        """Create the info text section."""
-        explanation_frame = ttk.Frame(self.scrollable_frame)
-        explanation_frame.pack(fill="x", pady=(0, 10))
-        
-        explanation_text = (
-            "Review the hypothesis below.\n"
-            "You can modify the generated hypothesis or create a completely new one.\n"
-            "It will be used as the basis for experimentation."
-        )
-
-        label = ttk.Label(
-            explanation_frame,
-            text=explanation_text,
-            font=self.controller.fonts.default_font,
-            foreground="gray",
-            justify="left"
-        )
-        label.pack(anchor="w", fill="x")
-
-        def set_wraplength(event):
-            label.config(wraplength=event.width - 10)
-        label.bind("<Configure>", set_wraplength)
+       pass
 
     def _load_hypothesis(self):
         """Load hypothesis from file or create empty one for manual entry."""

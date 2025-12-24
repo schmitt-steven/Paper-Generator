@@ -608,6 +608,9 @@ class BaseFrame(ttk.Frame):
         
         # Trigger on_show to load dynamic content
         self.on_show()
+        
+        # Re-apply theme colors to newly created widgets (TextBorderFrame, Text, etc.)
+        self.controller.apply_theme_colors(self)
 
     def create_card_frame(self, parent, title):
         """Helper to create a unified card-styled section with title and separator."""
