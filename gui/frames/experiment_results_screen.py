@@ -19,8 +19,9 @@ HYPOTHESES_FILE = "output/hypothesis.md"
 
 class ExperimentResultsScreen(BaseFrame):
     def __init__(self, parent, controller):
-        # Dynamic button text based on whether output file exists
-        next_text = "Continue" if PAPER_DRAFT_FILE.exists() else "Generate Paper Draft"
+        # Dynamic button text based on whether evidence file exists
+        from phases.paper_writing.evidence_manager import EVIDENCE_FILE
+        next_text = "Continue" if Path(EVIDENCE_FILE).exists() else "Gather Evidence"
         
         super().__init__(
             parent=parent,
@@ -267,11 +268,13 @@ class ExperimentResultsScreen(BaseFrame):
                 print(f"Error saving code: {e}")
 
     def on_next(self):
-        """Proceed or generate paper draft."""
+        """Proceed or gather evidence."""
         # Save code first
         self.save_code()
         
-        if PAPER_DRAFT_FILE.exists():
+        # Check if evidence already gathered
+        from phases.paper_writing.evidence_manager import EVIDENCE_FILE
+        if Path(EVIDENCE_FILE).exists():
             super().on_next()
         else:
             self._run_generation()
@@ -343,8 +346,8 @@ class ExperimentResultsScreen(BaseFrame):
         self._load_and_display_results()
 
     def _run_generation(self):
-        """Run paper draft generation with progress popup."""
-        popup = ProgressPopup(self.controller, "Generating Paper Draft")
+        """Gather evidence for paper writing with progress popup."""
+        popup = ProgressPopup(self.controller, "Gathering Evidence")
         
         def task():
             try:
@@ -352,16 +355,7 @@ class ExperimentResultsScreen(BaseFrame):
                 self.after(0, lambda: popup.update_status("Loading paper concept"))
                 paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
                 
-                # Load hypothesis
-                self.after(0, lambda: popup.update_status("Loading hypothesis"))
-                # Load hypothesis
-                self.after(0, lambda: popup.update_status("Loading hypothesis"))
-                selected_hypothesis = HypothesisBuilder.load_hypothesis(HYPOTHESES_FILE)
-                
-                if selected_hypothesis is None:
-                    raise ValueError("No hypothesis found")
-                
-                # Load experiment result (simplified filename without hypothesis ID)
+                # Load experiment result
                 self.after(0, lambda: popup.update_status("Loading experiment results"))
                 experiment_result_file = "output/experiments/experiment_result.json"
                 experiment_result = ExperimentRunner.load_experiment_result(experiment_result_file)
@@ -371,24 +365,67 @@ class ExperimentResultsScreen(BaseFrame):
                 papers_with_markdown = LiteratureSearch.load_papers("output/papers.json")
                 
                 # Load user requirements
-                self.after(0, lambda: popup.update_status("Loading user requirements"))
-                user_requirements = UserRequirements.load_user_requirements("user_files/user_requirements.md")
+                user_requirements = None
+                try:
+                    user_requirements = UserRequirements.load_user_requirements("user_files/user_requirements.md")
+                except:
+                    pass
                 
-                # Write paper
-                self.after(0, lambda: popup.update_status("Writing paper sections"))
+                # Initialize pipeline and gather evidence
+                # This only gathers evidence and saves to evidence.json
+                # Paper writing happens later on Paper Draft screen
                 paper_writing_pipeline = PaperWritingPipeline()
+                
                 def status_update(msg):
                     self.after(0, lambda: popup.update_status(msg))
-
-                paper_writing_pipeline.write_paper(
-                    paper_concept=paper_concept,
-                    experiment_result=experiment_result,
-                    papers=papers_with_markdown,
-                    user_requirements=user_requirements,
-                    status_callback=status_update
+                
+                # Index papers first
+                self.after(0, lambda: popup.update_status("Indexing papers for evidence search"))
+                paper_writing_pipeline.index_papers(papers_with_markdown)
+                
+                # Gather evidence for each section
+                from phases.paper_writing.evidence_gatherer import EvidenceGatherer
+                from phases.paper_writing.evidence_manager import save_evidence
+                from phases.paper_writing.data_models import Section
+                from settings import Settings
+                
+                gatherer = EvidenceGatherer(
+                    indexed_corpus=paper_writing_pipeline._indexed_corpus or [],
                 )
                 
-                # Success - close popup and proceed
+                evidence_by_section = {}
+                
+                for section_type in (
+                    Section.METHODS,
+                    Section.RESULTS,
+                    Section.DISCUSSION,
+                    Section.INTRODUCTION,
+                    Section.RELATED_WORK,
+                    Section.CONCLUSION,
+                ):
+                    self.after(0, lambda s=section_type: popup.update_status(f"Gathering evidence for {s.value}"))
+                    default_queries = paper_writing_pipeline.query_builder.build_default_queries(
+                        section_type, paper_concept, experiment_result
+                    )
+                    
+                    evidence, _ = gatherer.gather_evidence(
+                        section_type=section_type,
+                        context=paper_concept,
+                        experiment=experiment_result,
+                        default_queries=default_queries,
+                        max_iterations=Settings.EVIDENCE_AGENTIC_ITERATIONS,
+                        initial_chunks=Settings.EVIDENCE_INITIAL_CHUNKS,
+                        filtered_chunks=Settings.EVIDENCE_FILTERED_CHUNKS,
+                        user_requirements=user_requirements,
+                    )
+                    
+                    evidence_by_section[section_type] = evidence
+                
+                # Save evidence for Evidence Manager screen
+                self.after(0, lambda: popup.update_status("Saving evidence"))
+                save_evidence(evidence_by_section)
+                
+                # Success - proceed to Evidence Screen (not Paper Draft)
                 self.after(0, lambda: self._on_generation_success(popup))
                 
             except Exception as e:

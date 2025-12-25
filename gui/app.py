@@ -15,6 +15,7 @@ from .frames import (
     HypothesisScreen,
     ExperimentationPlanScreen,
     ExperimentResultsScreen,
+    EvidenceScreen,
     PaperDraftScreen,
     ResultScreen,
     SectionGuidelinesScreen
@@ -117,6 +118,7 @@ class PaperGeneratorApp(tk.Tk):
             HypothesisScreen,
             ExperimentationPlanScreen,
             ExperimentResultsScreen,
+            EvidenceScreen,
             PaperDraftScreen,
             ResultScreen,
             SectionGuidelinesScreen
@@ -351,23 +353,38 @@ class PaperGeneratorApp(tk.Tk):
         if isinstance(widget, tk.Label):
             try:
                 parent = widget.master
+                grandparent = parent.master if parent else None
+                
                 # Check if parent is using CardHeader.TFrame or NavBar.TFrame style
+                # Also check if grandparent is CardHeader (for nested tk.Frame containers)
+                is_card_header = False
+                is_navbar = False
+                
                 if isinstance(parent, ttk.Frame):
                     style = str(parent.cget('style'))
-                    if 'CardHeader' in style:
-                        # Update background, but preserve gray foreground for count labels
-                        current_fg = str(widget.cget('fg'))
-                        if current_fg in ['gray', '#888888', '#666666']:
-                            # This is a count label - keep gray foreground
-                            widget.configure(background=card_header_bg, fg="#666666")
-                        else:
-                            # This is a title label - use theme foreground
-                            widget.configure(background=card_header_bg, foreground=card_header_fg)
-                    elif 'NavBar' in style:
-                        # NavBar uses _navbar_bg color (set in configure_styles)
-                        navbar_bg = self._navbar_bg
-                        navbar_fg = "#ffffff" if self.current_theme == "dark" else "#1c1c1c"
-                        widget.configure(background=navbar_bg, foreground=navbar_fg)
+                    is_card_header = 'CardHeader' in style
+                    is_navbar = 'NavBar' in style
+                elif isinstance(parent, tk.Frame) and isinstance(grandparent, ttk.Frame):
+                    # Label inside tk.Frame inside CardHeader.TFrame
+                    style = str(grandparent.cget('style'))
+                    is_card_header = 'CardHeader' in style
+                    # Also update the tk.Frame's background
+                    parent.configure(background=card_header_bg)
+                
+                if is_card_header:
+                    # Update background, but preserve gray foreground for count labels
+                    current_fg = str(widget.cget('fg'))
+                    if current_fg in ['gray', '#888888', '#666666']:
+                        # This is a count label - keep gray foreground
+                        widget.configure(background=card_header_bg, fg="#666666")
+                    else:
+                        # This is a title label - use theme foreground
+                        widget.configure(background=card_header_bg, foreground=card_header_fg)
+                elif is_navbar:
+                    # NavBar uses _navbar_bg color (set in configure_styles)
+                    navbar_bg = self._navbar_bg
+                    navbar_fg = "#ffffff" if self.current_theme == "dark" else "#1c1c1c"
+                    widget.configure(background=navbar_bg, foreground=navbar_fg)
             except:
                 pass
                 

@@ -6,6 +6,8 @@ from .paper_selection_screen import PaperSelectionScreen
 from .hypothesis_screen import HypothesisScreen
 from .experimentation_plan_screen import ExperimentationPlanScreen
 from .experiment_results_screen import ExperimentResultsScreen
+from .evidence_screen import EvidenceScreen
 from .paper_draft_screen import PaperDraftScreen
 from .result_screen import ResultScreen
 from .section_guidelines_screen import SectionGuidelinesScreen
+

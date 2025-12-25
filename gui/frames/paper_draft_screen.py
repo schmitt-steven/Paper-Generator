@@ -191,20 +191,33 @@ class PaperDraftScreen(BaseFrame):
         self.controller.next_screen()
     
     def on_show(self):
-        """Called when screen is shown - load draft if not already loaded."""
-        # Only load if we haven't loaded yet
+        """Called when screen is shown - load draft."""
+        draft_path = Path(OUTPUT_DIR) / PAPER_DRAFT_FILE
+        
+        # Load draft if we haven't yet and it exists
         if not hasattr(self, 'draft_text'):
-            draft_path = Path(OUTPUT_DIR) / PAPER_DRAFT_FILE
             if draft_path.exists():
                 self._load_draft()
+            else:
+                # This shouldn't happen since Evidence Screen generates before navigating
+                print("[PaperDraftScreen] Warning: No paper draft found")
 
     def on_regenerate(self):
         """Regenerate the paper draft from scratch."""
         if not tk.messagebox.askyesno("Confirm Regeneration", 
                                       "This will regenerate the entire paper draft based on your experiments and literature. Any manual edits will be lost.\n\nDo you want to continue?"):
             return
+        
+        self._run_paper_generation(is_regeneration=True)
 
-        popup = ProgressPopup(self.controller, "Regenerating Paper Draft")
+    def _run_paper_generation(self, is_regeneration: bool = False):
+        """Generate paper draft from edited evidence.
+        
+        Args:
+            is_regeneration: True if regenerating (refresh text), False if initial (load draft)
+        """
+        title = "Regenerating Paper Draft" if is_regeneration else "Generating Paper Draft"
+        popup = ProgressPopup(self.controller, title)
         
         def task():
             try:
@@ -212,11 +225,6 @@ class PaperDraftScreen(BaseFrame):
                 self.after(0, lambda: popup.update_status("Loading context..."))
                 
                 paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
-                
-                # Load indexed papers
-                indexed_papers = LiteratureSearch.load_papers("output/papers.json")
-                if not indexed_papers:
-                    raise ValueError("No indexed papers found. Please run literature search first.")
                 
                 # Load experiment result
                 experiment_result = None
@@ -235,23 +243,24 @@ class PaperDraftScreen(BaseFrame):
                 # 2. Initialize pipeline
                 pipeline = PaperWritingPipeline()
                 
-                # 3. Write Paper
-                # We define a simple callback to update the popup status
+                # 3. Write Paper using edited evidence from evidence.json
                 def status_update(msg):
                     self.after(0, lambda: popup.update_status(msg))
                 
                 self.after(0, lambda: popup.update_status("Starting paper generation..."))
                 
-                pipeline.write_paper(
+                pipeline.write_paper_from_evidence(
                     paper_concept=paper_concept,
                     experiment_result=experiment_result,
-                    papers=indexed_papers,
                     user_requirements=user_requirements,
                     status_callback=status_update
                 )
                 
-                # 4. Reload UI
-                self.after(0, lambda: self._on_regeneration_complete(popup))
+                # 4. Complete
+                if is_regeneration:
+                    self.after(0, lambda: self._on_regeneration_complete(popup))
+                else:
+                    self.after(0, lambda: self._on_generation_complete(popup))
                 
             except Exception as e:
                 import traceback
@@ -260,6 +269,12 @@ class PaperDraftScreen(BaseFrame):
 
         thread = threading.Thread(target=task, daemon=True)
         thread.start()
+
+    def _on_generation_complete(self, popup: ProgressPopup):
+        """Handle initial generation completion."""
+        popup.close()
+        # Load the newly generated draft
+        self._load_draft()
 
     def _on_regeneration_complete(self, popup: ProgressPopup):
         """Handle regeneration completion."""
