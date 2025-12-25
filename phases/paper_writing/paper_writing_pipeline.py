@@ -10,6 +10,7 @@ from phases.paper_writing.paper_indexer import PaperIndexer
 from phases.paper_writing.query_builder import QueryBuilder
 from phases.paper_writing.paper_writer import PaperWriter
 from phases.paper_writing.evidence_gatherer import EvidenceGatherer
+from phases.paper_writing.evidence_manager import save_evidence, load_evidence
 from phases.experimentation.experiment_state import ExperimentResult
 from utils.lms_settings import LMSJITSettings
 from utils.file_utils import save_json, load_json, save_markdown, load_markdown
@@ -86,6 +87,9 @@ class PaperWritingPipeline:
                 )
 
                 evidence_by_section[section_type] = evidence
+
+        # Save evidence for the Evidence Manager screen
+        save_evidence(evidence_by_section)
 
         print(f"\n{'='*80}")
         print(f"WRITING PAPER SECTIONS")
@@ -237,3 +241,62 @@ class PaperWritingPipeline:
 
         self._indexed_corpus = None
 
+    def write_paper_from_evidence(
+        self,
+        paper_concept: PaperConcept,
+        experiment_result: ExperimentResult,
+        user_requirements: Optional[UserRequirements] = None,
+        status_callback: Optional[Callable[[str], None]] = None,
+        evidence_file: str = "output/evidence.json",
+    ) -> PaperDraft:
+        """
+        Write paper using pre-edited evidence from JSON file.
+        
+        This method skips evidence gathering and uses evidence that was
+        previously gathered and potentially edited by the user via the
+        Evidence Manager screen.
+        """
+        print(f"\n{'='*80}")
+        print(f"LOADING EDITED EVIDENCE")
+        print(f"{'='*80}\n")
+        
+        if status_callback:
+            status_callback("Loading edited evidence...")
+        
+        # Load evidence from file (user may have added/removed chunks)
+        try:
+            evidence_by_section = load_evidence(evidence_file)
+            total_chunks = sum(len(ev) for ev in evidence_by_section.values())
+            print(f"[PaperWritingPipeline] Loaded {total_chunks} evidence chunks from {evidence_file}")
+        except FileNotFoundError:
+            raise ValueError(f"Evidence file not found: {evidence_file}. Please run evidence gathering first.")
+        
+        print(f"\n{'='*80}")
+        print(f"WRITING PAPER SECTIONS")
+        print(f"{'='*80}\n")
+        
+        # Load prompts if setting is enabled
+        writing_prompts = None
+        try:
+            writing_prompts = self.load_section_writing_prompts()
+            print(f"[PaperWritingPipeline] Using loaded writing prompts for {len(writing_prompts)} sections")
+        except FileNotFoundError:
+            print(f"[PaperWritingPipeline] Prompts file not found. Generating new prompts.")
+            writing_prompts = None
+        
+        if status_callback:
+            status_callback("Drafting paper sections...")
+
+        paper_draft, generated_prompts = self.writer.generate_paper_sections(
+            context=paper_concept,
+            experiment=experiment_result,
+            evidence_by_section=evidence_by_section,
+            user_requirements=user_requirements,
+            writing_prompts=writing_prompts,
+        )
+        
+        # Save writing prompts to output directory
+        self._save_prompts(prompts_by_section=generated_prompts if writing_prompts is None else writing_prompts)
+        self._save_paper_draft(paper_draft=paper_draft)
+
+        return paper_draft

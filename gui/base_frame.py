@@ -281,8 +281,8 @@ class InfoPopup(tk.Toplevel):
         
         ttk.Separator(self, orient="horizontal").grid(row=0, column=0, sticky="sew")
         
-        # Content area
-        content_frame = ttk.Frame(self, padding=15)
+        # Content area (no outer padding)
+        content_frame = ttk.Frame(self)
         content_frame.grid(row=1, column=0, sticky="nsew")
         content_frame.grid_rowconfigure(0, weight=1)
         content_frame.grid_columnconfigure(0, weight=1)
@@ -432,9 +432,11 @@ class BaseFrame(ttk.Frame):
         self.scrollable_frame.bind("<Configure>", self._update_scrollregion)
         self._canvas.bind("<Configure>", self._update_window_width)
         
-        # Mousewheel - bind when mouse enters this frame, unbind when leaves
-        self.bind("<Enter>", self._bind_mousewheel)
-        self.bind("<Leave>", self._unbind_mousewheel)
+        # Mousewheel - bind globally with add="+" to not overwrite other frame bindings
+        # Each frame's handler will check if mouse is over it
+        self._canvas.bind_all("<MouseWheel>", self._on_mousewheel, add="+")  # Windows/macOS
+        self._canvas.bind_all("<Button-4>", self._on_mousewheel, add="+")    # Linux scroll up
+        self._canvas.bind_all("<Button-5>", self._on_mousewheel, add="+")    # Linux scroll down
         
         self.create_content()
         
@@ -483,24 +485,38 @@ class BaseFrame(ttk.Frame):
     def _update_window_width(self, event):
         self._canvas.itemconfig(self._window_id, width=event.width)
     
-    def _bind_mousewheel(self, event):
-        self._canvas.bind_all("<MouseWheel>", self._on_mousewheel)  # Windows/macOS
-        self._canvas.bind_all("<Button-4>", self._on_mousewheel)    # Linux scroll up
-        self._canvas.bind_all("<Button-5>", self._on_mousewheel)    # Linux scroll down
-    
-    def _unbind_mousewheel(self, event):
-        self._canvas.unbind_all("<MouseWheel>")
-        self._canvas.unbind_all("<Button-4>")
-        self._canvas.unbind_all("<Button-5>")
+    def _is_mouse_over_frame(self):
+        """Check if mouse pointer is currently over this frame's content area."""
+        try:
+            # Get the widget under the mouse pointer
+            x, y = self.winfo_pointerx(), self.winfo_pointery()
+            widget = self.winfo_containing(x, y)
+            
+            # Walk up the widget tree to see if we're inside this frame
+            while widget:
+                if widget is self:
+                    return True
+                if widget is self._canvas:
+                    return True
+                if widget is self.scrollable_frame:
+                    return True
+                widget = widget.master
+        except:
+            pass
+        return False
     
     def _on_mousewheel(self, event):
+        # Only scroll if mouse is over this frame's content area
+        if not self._is_mouse_over_frame():
+            return
+        
         # Don't scroll if content fits
         if self.scrollable_frame.winfo_reqheight() <= self._canvas.winfo_height():
             return
         
         # Don't hijack scroll from widgets that scroll themselves
         widget = event.widget
-        if widget.winfo_class() in ("Listbox", "Text", "TCombobox", "Treeview", "Canvas"):
+        if widget.winfo_class() in ("Listbox", "Text", "TCombobox", "Treeview"):
             return
         
         # Platform-specific delta

@@ -244,26 +244,46 @@ class SettingsScreen(BaseFrame):
         row_frame.pack(fill="x", pady=(10, 2))
         
         ttk.Label(row_frame, text="Font Size", width=35).pack(side="left")
-        self.font_size_var = tk.IntVar(value=getattr(Settings, "FONT_SIZE_BASE", 16))
+        
+        # Font size options: label -> base_size value
+        self.font_size_options = {
+            "Very Small": 15,
+            "Small": 18,
+            "Medium": 21,
+            "Large": 24,
+            "Very Large": 27,
+            "Ultra Large": 30
+        }
+        
+        # Find current option based on saved value
+        current_base_size = getattr(Settings, "FONT_SIZE_BASE", 16)
+        current_option = "Medium"  # Default
+        for label, size in self.font_size_options.items():
+            if size == current_base_size:
+                current_option = label
+                break
+        
+        self.font_size_var = tk.StringVar(value=current_option)
         
         # Helper to update font immediately
         def on_font_size_change(*args):
             try:
-                val = self.font_size_var.get()
-                self.controller.fonts.update_base_size(int(val))
-            except ValueError:
+                label = self.font_size_var.get()
+                size = self.font_size_options.get(label, 16)
+                self.controller.fonts.update_base_size(size)
+            except Exception:
                 pass
 
         self.font_size_var.trace_add("write", on_font_size_change)
         
-        spinbox = ttk.Spinbox(
+        dropdown = ttk.Combobox(
             row_frame, 
-            from_=8, 
-            to=32, 
-            textvariable=self.font_size_var, 
-            width=5
+            textvariable=self.font_size_var,
+            values=list(self.font_size_options.keys()),
+            state="readonly",
+            width=15
         )
-        spinbox.pack(side="right", expand=True, fill="x", padx=(10, 0))
+        dropdown.pack(side="right", expand=True, fill="x", padx=(10, 0))
         
         self.settings_vars["FONT_SIZE_BASE"] = self.font_size_var
 
@@ -441,14 +461,15 @@ class SettingsScreen(BaseFrame):
             if key in ["PAPER_EMBEDDING_BATCH_SIZE",
                        "EVIDENCE_INITIAL_CHUNKS",
                        "EVIDENCE_FILTERED_CHUNKS",
-                       "EVIDENCE_AGENTIC_ITERATIONS",
-                       "LATEX_GENERATION_MODEL",
-                       "FONT_SIZE_BASE"]:
+                       "EVIDENCE_AGENTIC_ITERATIONS"]:
                 try:
                     value = int(value)
                 except ValueError:
                     print(f"Warning: Invalid integer for {key}: {value}")
                     continue
+            elif key == "FONT_SIZE_BASE":
+                # Convert font size label to numeric value
+                value = self.font_size_options.get(value, 16)
             
             if hasattr(Settings, key):
                 setattr(Settings, key, value)
