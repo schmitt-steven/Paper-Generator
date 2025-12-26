@@ -15,6 +15,7 @@ from utils.pdf_downloader import PDFDownloader
 from utils.lazy_model_loader import LazyModelMixin
 from utils.file_utils import save_json, load_json
 from phases.context_analysis.paper_conception import PaperConcept
+from settings import Settings
 
 
 class SearchQuery(BaseModel):
@@ -38,7 +39,7 @@ class LiteratureSearch(LazyModelMixin):
         """
         self.model_name = model_name
         self._model = None
-        self.s2_api = SemanticScholarAPI()
+        self.s2_api = SemanticScholarAPI(api_key=Settings.SEMANTIC_SCHOLAR_API_KEY or None)
 
 
     def build_search_queries(self, paper_concept: PaperConcept) -> list[SearchQuery]:

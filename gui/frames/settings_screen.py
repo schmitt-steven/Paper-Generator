@@ -287,6 +287,18 @@ class SettingsScreen(BaseFrame):
         
         self.settings_vars["FONT_SIZE_BASE"] = self.font_size_var
 
+        # Semantic Scholar API Key
+        row_frame = ttk.Frame(frame)
+        row_frame.pack(fill="x", pady=(10, 2))
+        
+        ttk.Label(row_frame, text="Semantic Scholar API Key", width=35).pack(side="left")
+        
+        self.api_key_var = tk.StringVar(value=getattr(Settings, "SEMANTIC_SCHOLAR_API_KEY", ""))
+        api_key_entry = ttk.Entry(row_frame, textvariable=self.api_key_var, show="•")
+        api_key_entry.pack(side="right", fill="x", expand=True, padx=(10, 0))
+        
+        self.settings_vars["SEMANTIC_SCHOLAR_API_KEY"] = self.api_key_var
+
         # Clear Cache Button
         row_frame = ttk.Frame(frame)
         row_frame.pack(fill="x", pady=(10, 2))

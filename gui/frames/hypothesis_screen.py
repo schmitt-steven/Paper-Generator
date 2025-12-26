@@ -254,12 +254,12 @@ class HypothesisScreen(BaseFrame):
         def task():
             try:
                 # 1. Load resources
-                self.after(0, lambda: popup.update_status("Loading resources..."))
+                self.after(0, lambda: popup.update_status("Loading resources"))
                 paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
                 user_requirements = UserRequirements.load_user_requirements("user_files/user_requirements.md")
                 
                 # 2. Initialize Builder
-                self.after(0, lambda: popup.update_status("Initializing builder..."))
+                self.after(0, lambda: popup.update_status("Initializing builder"))
                 builder = HypothesisBuilder(
                     model_name=Settings.HYPOTHESIS_BUILDER_MODEL,
                     paper_concept=paper_concept,
@@ -268,7 +268,7 @@ class HypothesisScreen(BaseFrame):
                 )
                 
                 # 3. Generate Hypothesis
-                self.after(0, lambda: popup.update_status("Generating hypothesis..."))
+                self.after(0, lambda: popup.update_status("Generating hypothesis"))
                 # This automatically saves to file
                 builder.create_hypothesis_from_user_input(user_requirements)
                 

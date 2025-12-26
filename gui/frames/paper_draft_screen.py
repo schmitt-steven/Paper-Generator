@@ -76,17 +76,11 @@ class PaperDraftScreen(BaseFrame):
         """Create a labeled section with an editable text area for the draft."""
         section_container = ttk.Frame(self.scrollable_frame, padding=(0, 0, 0, 15))
         section_container.pack(fill="both", expand=True)
-
-        ttk.Label(
-            section_container, 
-            text="Paper Draft", 
-            font=self.controller.fonts.sub_header_font
-        ).pack(anchor="w", pady=(0, 10))
         
         # Container for text + scrollbar
         container, self.draft_text = create_scrollable_text_area(
             section_container,
-            height=35,
+            height=40,
             font=self.controller.fonts.text_area_font
         )
         container.pack(fill="both", expand=True)
@@ -204,8 +198,10 @@ class PaperDraftScreen(BaseFrame):
 
     def on_regenerate(self):
         """Regenerate the paper draft from scratch."""
-        if not tk.messagebox.askyesno("Confirm Regeneration", 
-                                      "This will regenerate the entire paper draft based on your experiments and literature. Any manual edits will be lost.\n\nDo you want to continue?"):
+        if not tk.messagebox.askyesno(
+            "Confirm Regeneration", 
+            "This will regenerate the entire paper draft based on your experiment results and evidence. Any manual edits will be lost.\n\nDo you want to continue?"
+        ):
             return
         
         self._run_paper_generation(is_regeneration=True)
@@ -222,7 +218,7 @@ class PaperDraftScreen(BaseFrame):
         def task():
             try:
                 # 1. Load context
-                self.after(0, lambda: popup.update_status("Loading context..."))
+                self.after(0, lambda: popup.update_status("Loading context"))
                 
                 paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
                 
@@ -247,7 +243,7 @@ class PaperDraftScreen(BaseFrame):
                 def status_update(msg):
                     self.after(0, lambda: popup.update_status(msg))
                 
-                self.after(0, lambda: popup.update_status("Starting paper generation..."))
+                self.after(0, lambda: popup.update_status("Starting paper generation"))
                 
                 pipeline.write_paper_from_evidence(
                     paper_concept=paper_concept,

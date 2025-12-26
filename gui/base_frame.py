@@ -358,7 +358,8 @@ class BaseFrame(ttk.Frame):
                 header_frame,
                 icon_name="info",
                 command=self._show_info_popup,
-                size=info_size
+                size=info_size,
+                hover_color="green"
             )
             info_btn.pack(side="right", padx=(10, 15))
         

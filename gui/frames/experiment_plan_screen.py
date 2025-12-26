@@ -17,7 +17,7 @@ EXPERIMENTS_DIR = "output/experiments"
 EXPERIMENT_PLAN_FILE = "experiment_plan.md"
 HYPOTHESES_FILE = "output/hypothesis.md"
 
-class ExperimentationPlanScreen(BaseFrame):
+class ExperimentPlanScreen(BaseFrame):
     def __init__(self, parent, controller):
         self.plan_text: tk.Text
         
@@ -73,15 +73,8 @@ class ExperimentationPlanScreen(BaseFrame):
         # Container
         section_container = ttk.Frame(self.scrollable_frame, padding=(0, 0, 0, 15))
         section_container.pack(fill="both", expand=True)
-
-        # Header
-        ttk.Label(
-            section_container, 
-            text="Description", 
-            font=self.controller.fonts.sub_header_font
-        ).pack(anchor="w", pady=(0, 10))
         
-        container, self.plan_text = create_scrollable_text_area(section_container, height=25)
+        container, self.plan_text = create_scrollable_text_area(section_container, height=40)
         container.pack(fill="both", expand=True)
         self.plan_text.insert("1.0", content)
 

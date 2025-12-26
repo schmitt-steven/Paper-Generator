@@ -90,14 +90,26 @@ class EvidenceChunkCard(ttk.Frame):
             anchor="w"
         ).pack(anchor="w")
         
-        # Remove button on right
-        remove_btn = ttk.Button(
+        # Remove button on right (minimalistic label-based)
+        remove_color = "#666666" if self.controller.current_theme == "dark" else "#888888"
+        hover_color = "#ff6b6b" if self.controller.current_theme == "dark" else "#e05555"
+        
+        remove_btn = tk.Label(
             header,
             text="✕",
-            width=3,
-            command=self._on_remove_click
+            font=("Segoe UI", 16),
+            bg=header_bg,
+            fg=remove_color,
+            cursor="hand2",
+            padx=8,
+            pady=2
         )
         remove_btn.grid(row=0, column=1, padx=(5, 0))
+        
+        # Hover effects
+        remove_btn.bind("<Enter>", lambda e: remove_btn.config(fg=hover_color))
+        remove_btn.bind("<Leave>", lambda e: remove_btn.config(fg=remove_color))
+        remove_btn.bind("<Button-1>", lambda e: self._on_remove_click())
         
         ttk.Separator(self, orient="horizontal").pack(fill="x")
         
@@ -105,7 +117,7 @@ class EvidenceChunkCard(ttk.Frame):
         text_frame = ttk.Frame(self)
         text_frame.pack(fill="both", expand=True)
         
-        text_bg = "#1a1a1a" if self.controller.current_theme == "dark" else "#ffffff"
+        text_bg = "#242424" if self.controller.current_theme == "dark" else "#ffffff"
         text_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
         
         scrollbar = ttk.Scrollbar(text_frame, orient="vertical")
@@ -330,9 +342,9 @@ class AddChunkDialog(tk.Toplevel):
         
         # Get theme colors
         is_dark = hasattr(self.parent, 'current_theme') and self.parent.current_theme == "dark"
-        text_bg = "#1a1a1a" if is_dark else "#ffffff"
+        text_bg = "#242424" if is_dark else "#ffffff"
         text_fg = "#ffffff" if is_dark else "#1c1c1c"
-        border_color = "#2A2A2A" if is_dark else "#cccccc"
+        border_color = "#404040" if is_dark else "#cccccc"
         
         # Border container
         border_frame = tk.Frame(text_frame, bg=border_color, padx=1, pady=1)
@@ -350,7 +362,7 @@ class AddChunkDialog(tk.Toplevel):
         
         self.text_input = tk.Text(
             inner_frame, 
-            height=12, 
+            height=20, 
             wrap="word", 
             font=("Segoe UI", 10),
             background=text_bg,
@@ -366,12 +378,12 @@ class AddChunkDialog(tk.Toplevel):
         self.text_input.grid(row=0, column=0, sticky="nsew")
         scrollbar.config(command=self.text_input.yview)
         
-        # Bottom button bar (Cancel left, Add Chunk right - like other screens)
+        # Bottom button bar (Cancel left, Add Evidence right - like other screens)
         btn_frame = ttk.Frame(main)
         btn_frame.grid(row=6, column=0, sticky="ew")
         
         ttk.Button(btn_frame, text="Cancel", command=self.destroy).pack(side="left")
-        ttk.Button(btn_frame, text="Add Chunk", command=self._submit, style="Accent.TButton").pack(side="right")
+        ttk.Button(btn_frame, text="Add Evidence", command=self._submit, style="Accent.TButton").pack(side="right")
     
     def _filter_papers(self, *args):
         """Filter paper dropdown based on typed text."""
@@ -427,7 +439,7 @@ class EvidenceScreen(BaseFrame):
         super().__init__(
             parent=parent,
             controller=controller,
-            title="Evidence Manager",
+            title="Evidence",
             has_next=True,
             next_text=next_text,
             has_back=True,
@@ -445,7 +457,7 @@ class EvidenceScreen(BaseFrame):
         self.content_container.grid_rowconfigure(0, weight=0)  # Stats bar doesn't expand
         self.content_container.grid_rowconfigure(1, weight=1)  # Canvas expands
         
-        # Sticky stats bar at row 0 (minimal padding)
+        # Sticky stats bar at row 0
         self.sticky_frame = ttk.Frame(self.content_container)
         self.sticky_frame.grid(row=0, column=1, sticky="ew", pady=(0, 12))
         
@@ -464,7 +476,7 @@ class EvidenceScreen(BaseFrame):
         
         ttk.Button(
             btn_frame,
-            text="+ Add Chunk",
+            text="Add Evidence",
             command=self._open_add_dialog,
             style="Accent.TButton"
         ).pack(side="left", padx=5)
@@ -486,7 +498,7 @@ class EvidenceScreen(BaseFrame):
             row=0, column=1, sticky="sew", pady=(30, 0)
         )
         
-        # Remove default padding from scrollable frame for cleaner layout
+        # Remove default padding from scrollable frame for consistent look
         self.scrollable_frame.configure(padding=(0, 12, 0, 10))
     
     def on_show(self):
@@ -548,7 +560,7 @@ class EvidenceScreen(BaseFrame):
             card.collapse()
     
     def _open_add_dialog(self):
-        """Open the add chunk dialog."""
+        """Open the Add Evidence dialog."""
         if not self.papers:
             messagebox.showwarning("No Papers", "No papers are loaded. Please complete prior steps first.")
             return
@@ -627,7 +639,7 @@ class EvidenceScreen(BaseFrame):
         def task():
             try:
                 # Load context
-                self.after(0, lambda: popup.update_status("Loading context..."))
+                self.after(0, lambda: popup.update_status("Loading context"))
                 paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
                 
                 # Load experiment result
@@ -647,7 +659,7 @@ class EvidenceScreen(BaseFrame):
                 def status_update(msg):
                     self.after(0, lambda: popup.update_status(msg))
                 
-                self.after(0, lambda: popup.update_status("Writing paper sections..."))
+                self.after(0, lambda: popup.update_status("Writing paper sections"))
                 
                 pipeline.write_paper_from_evidence(
                     paper_concept=paper_concept,
