@@ -12,6 +12,7 @@ from phases.paper_search.paper import Paper
 from phases.paper_search.semantic_scholar_api import SemanticScholarAPI
 from utils.lazy_model_loader import LazyModelMixin
 from phases.latex_generation.bibliography import generate_bibtex_entry
+from settings import Settings
 
 
 class PaperTitle(BaseModel):
@@ -114,7 +115,7 @@ class UserPaperLoader(LazyModelMixin):
             Paper object or None if processing failed
         """
         if s2_api is None:
-            s2_api = SemanticScholarAPI()
+            s2_api = SemanticScholarAPI(api_key=Settings.SEMANTIC_SCHOLAR_API_KEY or None)
         
         # Paper ID is always based on filename
         paper_id = f"user_{pdf_path.stem}"
@@ -197,7 +198,7 @@ class UserPaperLoader(LazyModelMixin):
             List of Paper objects
         """
         if s2_api is None:
-            s2_api = SemanticScholarAPI()
+            s2_api = SemanticScholarAPI(api_key=Settings.SEMANTIC_SCHOLAR_API_KEY or None)
         
         folder = Path(folder_path)
         if not folder.exists():

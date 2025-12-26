@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import ttk, filedialog, messagebox
 import webbrowser
 import threading
 import shutil
@@ -195,7 +195,8 @@ class PaperSelectionScreen(BaseFrame):
                  upload_btn = self.controller.icons.create_icon_label(
                      btn_container,
                      icon_name="upload",
-                     command=lambda: self._on_upload_paper_pdf(paper)
+                     command=lambda: self._on_upload_paper_pdf(paper),
+                     hover_color="green"
                  )
                  upload_btn.pack(side="left", padx=(0, 10))
         
@@ -415,6 +416,14 @@ class PaperSelectionScreen(BaseFrame):
     def _on_auto_search_click(self):
         if self.is_searching:
             return
+        
+        # Confirm if there are already searched papers (they will be replaced)
+        if self.searched_papers:
+            if not messagebox.askyesno(
+                "Confirm Auto Search",
+                "This will replace any existing found papers with new search results.\n\nDo you want to continue?"
+            ):
+                return
         
         self._set_search_loading(True)
         popup = ProgressPopup(self.controller, "Searching Papers")
@@ -679,7 +688,7 @@ class PaperSelectionScreen(BaseFrame):
         """Run hypothesis generation from user input only."""
         # Create popup if not provided (called from on_next without processing)
         if popup is None:
-            popup = ProgressPopup(self.controller, "Processing...")
+            popup = ProgressPopup(self.controller, "Processing")
         
         def task():
             try:

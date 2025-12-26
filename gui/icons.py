@@ -115,7 +115,7 @@ class IconManager:
         return img
     
     def create_icon_label(self, parent, icon_name: str, command=None, 
-                          size: int = None) -> tk.Label:
+                          size: int = None, hover_color: str | bool = "red") -> tk.Label:
         """
         Create a clickable label with an icon.
         
@@ -124,6 +124,7 @@ class IconManager:
             icon_name: Name of the icon
             command: Callback function when clicked
             size: Icon size in pixels (defaults to font-scaled size)
+            hover_color: Hover color type: 'red', 'green', or False to disable
             
         Returns:
             tk.Label configured as an icon button
@@ -141,7 +142,68 @@ class IconManager:
         if command:
             label.bind("<Button-1>", lambda e: command())
         
+        # Add hover effect
+        if hover_color:
+            hover_icon = self.get_icon_colored(icon_name, size, hover_type=hover_color)
+            label._hover_icon_ref = hover_icon  # Keep reference
+            
+            def on_enter(e):
+                if hasattr(label, '_hover_icon_ref') and label._hover_icon_ref:
+                    label.configure(image=label._hover_icon_ref)
+            
+            def on_leave(e):
+                if hasattr(label, '_icon_ref') and label._icon_ref:
+                    label.configure(image=label._icon_ref)
+            
+            label.bind("<Enter>", on_enter)
+            label.bind("<Leave>", on_leave)
+        
         return label
+    
+    def get_icon_colored(self, name: str, size: int = None, hover_type: str | bool = False) -> 'ImageTk.PhotoImage | None':
+        """
+        Get an icon with a specific color (for hover states).
+        
+        Args:
+            name: Icon name (without extension)
+            size: Icon size in pixels (defaults to font-scaled size)
+            hover_type: 'red' for red hover, 'green' for green hover, or False for theme color
+            
+        Returns:
+            PhotoImage ready for use in tkinter widgets
+        """
+        if size is None:
+            size = self.default_size
+        
+        # Determine color
+        if hover_type == "red":
+            color = "#ff6b6b" if self.app.current_theme == "dark" else "#e05555"
+        elif hover_type == "green":
+            color = "#4ade80" if self.app.current_theme == "dark" else "#22c55e"
+        else:
+            color = "#ffffff" if self.app.current_theme == "dark" else "#1c1c1c"
+        
+        # Check cache
+        cache_key = (name, color, size)
+        if cache_key in self._cache:
+            return self._cache[cache_key]
+        
+        # Load and colorize icon
+        icon_path = self.icons_dir / f"{name}.png"
+        if not icon_path.exists():
+            return None
+        
+        try:
+            img = Image.open(icon_path).convert("RGBA")
+            if img.size != (size, size):
+                img = img.resize((size, size), Image.Resampling.LANCZOS)
+            img = self._colorize(img, color)
+            photo = ImageTk.PhotoImage(img)
+            self._cache[cache_key] = photo
+            return photo
+        except Exception as e:
+            print(f"[Icons] Error loading icon {name}: {e}")
+            return None
     
     def _get_parent_bg(self, parent) -> str:
         """Get the background color of the parent widget, walking up hierarchy if needed."""

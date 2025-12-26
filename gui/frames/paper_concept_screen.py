@@ -147,11 +147,11 @@ class PaperConceptScreen(BaseFrame):
         def task():
             try:
                 # 1. Load User Requirements
-                self.after(0, lambda: popup.update_status("Loading user requirements..."))
+                self.after(0, lambda: popup.update_status("Loading user requirements"))
                 user_requirements = UserRequirements.load_user_requirements("user_files/user_requirements.md")
                 
                 # 2. Analyze Code
-                self.after(0, lambda: popup.update_status("Analyzing code files..."))
+                self.after(0, lambda: popup.update_status("Analyzing code files"))
                 code_analyzer = CodeAnalyzer(model_name=Settings.CODE_ANALYSIS_MODEL)
                 # Hardcoded "user_files" as per project convention, can be made dynamic if needed
                 code_files = code_analyzer.load_code_files("user_files") 

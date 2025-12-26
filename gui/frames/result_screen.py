@@ -125,8 +125,9 @@ class ResultScreen(BaseFrame):
                     lbl = ttk.Label(page_frame, image=tk_img)
                     lbl.pack()
                     
-                    # Separator between pages
-                    if page_num < len(doc) - 1:
+                    # Separator between pages (only if showing multiple preview pages)
+                    pages_to_show = min(len(doc), MAX_PREVIEW_PAGES)
+                    if page_num < pages_to_show - 1:
                         ttk.Separator(self.preview_container, orient="horizontal").pack(fill="x", padx=50, pady=10)
                 except Exception as e_page:
                     print(f"Error processing page {page_num}: {e_page}")

@@ -13,7 +13,7 @@ from .frames import (
     PaperConceptScreen,
     PaperSelectionScreen,
     HypothesisScreen,
-    ExperimentationPlanScreen,
+    ExperimentPlanScreen,
     ExperimentResultsScreen,
     EvidenceScreen,
     PaperDraftScreen,
@@ -116,7 +116,7 @@ class PaperGeneratorApp(tk.Tk):
             PaperConceptScreen,
             PaperSelectionScreen,
             HypothesisScreen,
-            ExperimentationPlanScreen,
+            ExperimentPlanScreen,
             ExperimentResultsScreen,
             EvidenceScreen,
             PaperDraftScreen,
@@ -162,8 +162,8 @@ class PaperGeneratorApp(tk.Tk):
             self._card_header_bg = "#252525"  # Slightly lighter than card background
             self._navbar_bg = "#1a1a1a"       # Match text area background
         else:
-            self._card_header_bg = "#f0f0f0"  # Slightly darker than card background
-            self._navbar_bg = "#f1f1f1"       # Light gray for navbar in light mode
+            self._card_header_bg = "#F6F6F6"  # Slightly darker than card background
+            self._navbar_bg = "#F6F6F6"       # Light gray for navbar in light mode
         
         style.configure("CardHeader.TFrame", background=self._card_header_bg)
         style.configure("CardHeader.TLabel", background=self._card_header_bg)
@@ -303,26 +303,26 @@ class PaperGeneratorApp(tk.Tk):
             
         # Define colors
         if self.current_theme == "dark":
-            text_bg = "#1a1a1a"     # Dark Gray (lighter than pure black)
+            text_bg = "#232324"
             text_fg = "#ffffff"
-            border_color = "#2A2A2A" # Subtle dark border
+            border_color = "#353639"
             insert_bg = "#ffffff"
             card_header_bg = "#252525"
             card_header_fg = "#ffffff"
             canvas_bg = "#1c1c1c"
         else:
-            text_bg = "#ffffff"     # Pure White
+            text_bg = "#ECECED"
             text_fg = "#1c1c1c"
-            border_color = "#cccccc" # Light Gray
+            border_color = "#cccccc"
             insert_bg = "#1c1c1c"
-            card_header_bg = "#f0f0f0"
+            card_header_bg = "#F6F6F6"
             card_header_fg = "#1c1c1c"
             canvas_bg = "#fafafa"
             
-        # Import wrapper class here
+        # Import wrapper class
         from .base_frame import TextBorderFrame
         
-        # Apply to BorderFrame (The container)
+        # Apply to BorderFrame (the container)
         if isinstance(widget, TextBorderFrame):
             try:
                 widget.configure(background=border_color)
@@ -336,7 +336,7 @@ class PaperGeneratorApp(tk.Tk):
             except:
                 pass
                 
-        # Apply to Text (The content)
+        # Apply to Text (the content)
         if isinstance(widget, tk.Text):
             try:
                 widget.configure(

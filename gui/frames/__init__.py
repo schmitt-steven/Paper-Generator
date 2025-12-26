@@ -4,7 +4,7 @@ from .code_files_screen import CodeFilesScreen
 from .paper_concept_screen import PaperConceptScreen
 from .paper_selection_screen import PaperSelectionScreen
 from .hypothesis_screen import HypothesisScreen
-from .experimentation_plan_screen import ExperimentationPlanScreen
+from .experiment_plan_screen import ExperimentPlanScreen
 from .experiment_results_screen import ExperimentResultsScreen
 from .evidence_screen import EvidenceScreen
 from .paper_draft_screen import PaperDraftScreen
