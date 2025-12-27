@@ -18,7 +18,8 @@ from .frames import (
     EvidenceScreen,
     PaperDraftScreen,
     ResultScreen,
-    SectionGuidelinesScreen
+    SectionGuidelinesScreen,
+    WritingPromptsScreen
 )
 from .fonts import FontManager
 from .icons import IconManager
@@ -252,6 +253,13 @@ class PaperGeneratorApp(tk.Tk):
 
     def init_frames(self):
         for Frame in self.screen_order:
+            frame = Frame(parent=self.container, controller=self)
+            self.frames[Frame] = frame
+            frame.grid(row=0, column=0, sticky="nsew")
+        
+        # Initialize additional frames not in main navigation
+        extra_frames = [WritingPromptsScreen]
+        for Frame in extra_frames:
             frame = Frame(parent=self.container, controller=self)
             self.frames[Frame] = frame
             frame.grid(row=0, column=0, sticky="nsew")

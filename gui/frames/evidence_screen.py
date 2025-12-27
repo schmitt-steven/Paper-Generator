@@ -302,7 +302,7 @@ class AddChunkDialog(tk.Toplevel):
         main.grid_columnconfigure(0, weight=1)
         
         # Section selection
-        ttk.Label(main, text="Target Section(s):", font=("Segoe UI", 10, "bold")).grid(
+        ttk.Label(main, text="Target Section(s):", font=self.parent.fonts.default_font).grid(
             row=0, column=0, sticky="w", pady=(0, 5)
         )
         
@@ -317,7 +317,7 @@ class AddChunkDialog(tk.Toplevel):
             cb.grid(row=i // 3, column=i % 3, sticky="w", padx=5, pady=2)
         
         # Paper selection
-        ttk.Label(main, text="Source Paper:", font=("Segoe UI", 10, "bold")).grid(
+        ttk.Label(main, text="Source Paper:", font=self.parent.fonts.default_font).grid(
             row=2, column=0, sticky="w", pady=(0, 5)
         )
         
@@ -331,7 +331,7 @@ class AddChunkDialog(tk.Toplevel):
         self.paper_var.trace_add('write', self._filter_papers)
         
         # Text input - styled like other screens
-        ttk.Label(main, text="Evidence / Summary / Quote(s):", font=("Segoe UI", 10, "bold")).grid(
+        ttk.Label(main, text="Evidence / Summary / Quote(s):", font=self.parent.fonts.default_font).grid(
             row=4, column=0, sticky="w", pady=(0, 5)
         )
         

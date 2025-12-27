@@ -347,6 +347,8 @@ class ExperimentResultsScreen(BaseFrame):
             borderwidth=0,
             relief="flat",
             wrap="none",
+            padx=10,
+            pady=5,
             yscrollcommand=v_scroll.set,
             xscrollcommand=h_scroll.set
         )

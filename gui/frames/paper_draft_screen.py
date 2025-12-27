@@ -4,6 +4,7 @@ import threading
 from pathlib import Path
 
 from ..base_frame import BaseFrame, ProgressPopup, create_scrollable_text_area
+from .writing_prompts_screen import WritingPromptsScreen
 from utils.file_utils import load_markdown, save_markdown
 from phases.paper_writing.paper_writing_pipeline import PaperWritingPipeline
 from phases.paper_search.literature_search import LiteratureSearch
@@ -12,6 +13,7 @@ from phases.latex_generation.metadata import LaTeXMetadata
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.experimentation.experiment_runner import ExperimentRunner
 from phases.context_analysis.user_requirements import UserRequirements
+from phases.context_analysis.paper_conception import PaperConception
 from settings import Settings
 
 
@@ -40,7 +42,44 @@ class PaperDraftScreen(BaseFrame):
         )
 
     def create_content(self):
-       pass
+        """Create the card container - content is added when draft loads."""
+        # Create the main card that will hold everything
+        self.card = ttk.Frame(self.scrollable_frame, style="Card.TFrame", padding=1)
+        self.card.pack(fill="both", expand=True)
+        
+        # Header with title and button
+        header = ttk.Frame(self.card, style="CardHeader.TFrame", padding=(10, 8))
+        header.pack(fill="x")
+        
+        # Get colors
+        header_bg = getattr(self.controller, '_card_header_bg', '#252525')
+        header_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
+        
+        # Title on left
+        tk.Label(
+            header,
+            text="Paper Draft",
+            font=self.controller.fonts.sub_header_font,
+            bg=header_bg,
+            fg=header_fg
+        ).pack(side="left")
+        
+        # Show Prompts button on right
+        ttk.Button(
+            header,
+            text="Show Prompts",
+            command=self._show_prompts
+        ).pack(side="right")
+        
+        ttk.Separator(self.card, orient="horizontal").pack(fill="x")
+        
+        # Content frame for the text area (no padding)
+        self.card_content = ttk.Frame(self.card, padding=0)
+        self.card_content.pack(fill="both", expand=True)
+    
+    def _show_prompts(self):
+        """Navigate to the Writing Prompts screen."""
+        self.controller.show_frame(WritingPromptsScreen)
 
     def _load_draft(self):
         """Load paper draft from file and display it."""
@@ -56,12 +95,12 @@ class PaperDraftScreen(BaseFrame):
             self._show_error(f"Error loading paper draft: {e}")
             return
         
-        # Create the editable text area
+        # Create the editable text area inside the card
         self._create_draft_section(draft_content)
 
     def _show_error(self, message: str):
         """Display an error message."""
-        error_frame = ttk.Frame(self.scrollable_frame, padding="20")
+        error_frame = ttk.Frame(self.card_content, padding="20")
         error_frame.pack(fill="x", pady=20)
         
         ttk.Label(
@@ -73,26 +112,16 @@ class PaperDraftScreen(BaseFrame):
         ).pack()
 
     def _create_draft_section(self, content: str):
-        """Create a labeled section with an editable text area for the draft."""
-        section_container = ttk.Frame(self.scrollable_frame, padding=(0, 0, 0, 15))
-        section_container.pack(fill="both", expand=True)
-        
-        # Container for text + scrollbar
+        """Create the text area inside the card content."""
+        # Container for text + scrollbar (no outer padding)
         container, self.draft_text = create_scrollable_text_area(
-            section_container,
+            self.card_content,
             height=40,
             font=self.controller.fonts.text_area_font
         )
         container.pack(fill="both", expand=True)
         
         self.draft_text.insert("1.0", content)
-        
-        # Bind mousewheel to allow normal scrolling inside the text area
-        # We don't propagate to parent canvas anymore since it's a scrollable container itself
-        def on_text_mousewheel(event):
-            pass
-            
-        # self.draft_text.bind("<MouseWheel>", on_text_mousewheel)
 
     def _save_draft(self):
         """Save the edited draft."""
