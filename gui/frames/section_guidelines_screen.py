@@ -24,11 +24,11 @@ class SectionGuidelinesScreen(BaseFrame):
         frame_name = f"section_frame_{section_enum.name}"
         
         # Determine valid parent (scrollable_frame might be re-created or not, we should use self.scrollable_frame)
-        container = ttk.Frame(self.scrollable_frame)
+        container = ttk.Frame(self.scrollable_frame, style="Scrollable.TFrame")
         container.pack(fill="x", expand=True, pady=10)
         
         # Title
-        ttk.Label(container, text=section_name, font=self.controller.fonts.sub_header_font).pack(anchor="w", pady=(0, 5))
+        ttk.Label(container, text=section_name, style="Scrollable.TLabel", font=self.controller.fonts.sub_header_font).pack(anchor="w", pady=(0, 5))
 
         # Create scrollable text area using the helper for consistent styling
         container_frame, text_area = create_scrollable_text_area(container, height=6)

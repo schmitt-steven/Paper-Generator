@@ -69,14 +69,56 @@ class ExperimentPlanScreen(BaseFrame):
         ).pack()
 
     def _create_plan_section(self, content: str):
-        """Create a labeled section with an editable text area for the plan."""
-        # Container
-        section_container = ttk.Frame(self.scrollable_frame, padding=(0, 0, 0, 15))
-        section_container.pack(fill="both", expand=True)
+        """Create an editable text area for the plan inside a card."""
+        # Create card manually to control padding
+        card = ttk.Frame(self.scrollable_frame, style="Card.TFrame", padding=1)
+        card.pack(fill="both", expand=True, pady=10)
         
-        container, self.plan_text = create_scrollable_text_area(section_container, height=40)
-        container.pack(fill="both", expand=True)
+        # Header
+        header = ttk.Frame(card, style="CardHeader.TFrame", padding=(10, 6))
+        header.pack(fill="x")
+        
+        header_bg = getattr(self.controller, '_card_header_bg', '#252525')
+        header_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
+        tk.Label(
+            header,
+            text="Experiment Plan",
+            font=self.controller.fonts.sub_header_font,
+            bg=header_bg,
+            fg=header_fg
+        ).pack(side="left")
+        
+        ttk.Separator(card, orient="horizontal").pack(fill="x")
+        
+        # Content with NO padding
+        content_frame = ttk.Frame(card, padding=0)
+        content_frame.pack(fill="both", expand=True)
+        
+        # Text area with scrollbar (no border wrapper)
+        inner = ttk.Frame(content_frame)
+        inner.pack(fill="both", expand=True)
+        
+        scrollbar = ttk.Scrollbar(inner, orient="vertical")
+        scrollbar.pack(side="right", fill="y")
+        
+        self.plan_text = tk.Text(
+            inner,
+            height=40,
+            wrap="word",
+            padx=10,
+            pady=10,
+            highlightthickness=0,
+            borderwidth=0,
+            relief="flat",
+            yscrollcommand=scrollbar.set
+        )
+        self.plan_text.pack(side="left", fill="both", expand=True)
+        scrollbar.config(command=self.plan_text.yview)
+        
         self.plan_text.insert("1.0", content)
+        
+        # Apply theme colors
+        self.controller.apply_theme_colors(self.plan_text)
 
     def _save_plan(self):
         """Save the edited plan."""

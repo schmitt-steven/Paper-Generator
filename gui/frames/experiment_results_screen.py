@@ -38,7 +38,7 @@ class ExperimentResultsScreen(BaseFrame):
 
     def create_content(self):
         """Create the experiment results display."""
-        self.results_container = ttk.Frame(self.scrollable_frame)
+        self.results_container = ttk.Frame(self.scrollable_frame, style="Scrollable.TFrame")
         self.results_container.pack(fill="x", expand=True)
 
     def _load_and_display_results(self):

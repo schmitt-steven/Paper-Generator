@@ -259,15 +259,15 @@ class InfoPopup(tk.Toplevel):
         
         # Get theme colors
         is_dark = parent.current_theme == "dark"
-        header_bg = getattr(parent, '_card_header_bg', '#252525' if is_dark else '#f0f0f0')
-        header_fg = "#ffffff" if is_dark else "#1c1c1c"
+        navbar_bg = getattr(parent, '_navbar_bg', '#0f0f0f' if is_dark else '#F6F6F6')
+        navbar_fg = "#ffffff" if is_dark else "#1c1c1c"
         
         # Main container
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
         
         # Header
-        header_frame = ttk.Frame(self, style="CardHeader.TFrame", padding=(15, 10))
+        header_frame = ttk.Frame(self, style="NavBar.TFrame", padding=(15, 10))
         header_frame.grid(row=0, column=0, sticky="ew")
         
         # Centered title
@@ -275,14 +275,14 @@ class InfoPopup(tk.Toplevel):
             header_frame,
             text=popup_title,
             font=parent.fonts.sub_header_font,
-            bg=header_bg,
-            fg=header_fg
+            bg=navbar_bg,
+            fg=navbar_fg
         ).pack(expand=True)
         
         ttk.Separator(self, orient="horizontal").grid(row=0, column=0, sticky="sew")
         
         # Content area (no outer padding)
-        content_frame = ttk.Frame(self)
+        content_frame = ttk.Frame(self, style="Scrollable.TFrame")
         content_frame.grid(row=1, column=0, sticky="nsew")
         content_frame.grid_rowconfigure(0, weight=1)
         content_frame.grid_columnconfigure(0, weight=1)
@@ -302,10 +302,11 @@ class InfoPopup(tk.Toplevel):
         text.config(state="disabled")
         
         # Apply theme colors to text
+        canvas_bg = getattr(parent, '_canvas_bg', '#131313' if is_dark else '#f9f9f9')
         if is_dark:
-            text.configure(background="#1a1a1a", foreground="#ffffff")
+            text.configure(background=canvas_bg, foreground="#ffffff")
         else:
-            text.configure(background="#ffffff", foreground="#1c1c1c")
+            text.configure(background=canvas_bg, foreground="#1c1c1c")
         
         # Scrollbar
         scrollbar = ttk.Scrollbar(content_frame, orient="vertical", command=text.yview)
@@ -315,7 +316,7 @@ class InfoPopup(tk.Toplevel):
         # Footer with close button
         ttk.Separator(self, orient="horizontal").grid(row=2, column=0, sticky="ew")
         
-        footer_frame = ttk.Frame(self, style="CardHeader.TFrame", padding=(15, 10))
+        footer_frame = ttk.Frame(self, style="NavBar.TFrame", padding=(15, 10))
         footer_frame.grid(row=3, column=0, sticky="ew")
         
         ttk.Button(footer_frame, text="Close", command=self.destroy).pack(side="right")
@@ -367,7 +368,7 @@ class BaseFrame(ttk.Frame):
         center_container = ttk.Frame(header_frame, style="NavBar.TFrame")
         center_container.pack(expand=True)
         
-        # Title - use tk.Label for reliable background color
+        # Title
         navbar_bg = getattr(self.controller, '_navbar_bg', '#1a1a1a')
         navbar_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
         tk.Label(
@@ -405,10 +406,10 @@ class BaseFrame(ttk.Frame):
                 command=self.reload_content
             ).pack(side="left", padx=5)
 
-        ttk.Separator(self, orient="horizontal").grid(row=1, column=0, sticky="ew", pady=(0, 15))
+        ttk.Separator(self, orient="horizontal").grid(row=1, column=0, sticky="ew")
         
         # Content container
-        content_container = ttk.Frame(self)
+        content_container = ttk.Frame(self, style="Scrollable.TFrame")
         self.content_container = content_container # Save ref for updates
         content_container.grid(row=2, column=0, sticky="nsew")
         content_container.grid_columnconfigure(0, weight=1)
@@ -426,7 +427,7 @@ class BaseFrame(ttk.Frame):
         self._canvas = tk.Canvas(content_container, highlightthickness=0, bg=bg_color)
         self._canvas.grid(row=0, column=1, sticky="nsew")
         
-        self.scrollable_frame = ttk.Frame(self._canvas, padding=(10, 10, 10, 10))
+        self.scrollable_frame = ttk.Frame(self._canvas, style="Scrollable.TFrame", padding=(10, 10, 10, 10))
         self._window_id = self._canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
         
         # Bindings

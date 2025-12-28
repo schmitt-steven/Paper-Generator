@@ -210,7 +210,7 @@ class PaperSelectionScreen(BaseFrame):
 
         # Content Frame (Title + Metadata) - Pack SECOND to fill remaining space
         content_frame = ttk.Frame(content_row)
-        content_frame.pack(side="left", fill="x", expand=True, padx=(10, 0))
+        content_frame.pack(side="left", fill="x", expand=True)
         
         title_label = ttk.Label(content_frame, text=paper.title, font=self.controller.fonts.default_font)
         title_label.pack(anchor="w", fill="x")
@@ -228,7 +228,7 @@ class PaperSelectionScreen(BaseFrame):
             ttk.Label(metadata_frame, text="  \u00B7  ", font=self.controller.fonts.text_area_font, foreground="gray").pack(side="left")
 
         # 2. Bibliographic Metadata (Gray)
-        metadata = self._format_paper_bibliographic_info(paper)
+        metadata = self._format_paper_bibliographic_info(paper, is_user_paper)
         metadata_label = ttk.Label(metadata_frame, text=metadata, font=self.controller.fonts.text_area_font, foreground="gray")
         metadata_label.pack(side="left")
         
@@ -268,7 +268,7 @@ class PaperSelectionScreen(BaseFrame):
         
         return None, None
 
-    def _format_paper_bibliographic_info(self, paper: Paper) -> str:
+    def _format_paper_bibliographic_info(self, paper: Paper, is_user_paper: bool = True) -> str:
         parts = []
         
         if paper.authors:
@@ -287,6 +287,10 @@ class PaperSelectionScreen(BaseFrame):
         
         if paper.citation_count is not None:
             parts.append(f"{paper.citation_count:,} citations")
+        
+        # Show similarity /relevance score for searched papers (from ranking.relevance_score)
+        if not is_user_paper and paper.ranking and paper.ranking.relevance_score is not None:
+            parts.append(f"Relevance: {paper.ranking.relevance_score:.2f}")
         
         return "  \u00B7  ".join(parts)
 

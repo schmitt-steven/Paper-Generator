@@ -121,12 +121,13 @@ class HypothesisScreen(BaseFrame):
 
     def _create_section(self, title: str, content: str, height: int = 4) -> tk.Text:
         """Create a labeled section with an editable text area."""
-        section_container = ttk.Frame(self.scrollable_frame, padding=(0, 0, 0, 15))
+        section_container = ttk.Frame(self.scrollable_frame, style="Scrollable.TFrame", padding=(0, 0, 0, 15))
         section_container.pack(fill="x")
         
         ttk.Label(
             section_container, 
             text=title, 
+            style="Scrollable.TLabel",
             font=self.controller.fonts.sub_header_font
         ).pack(anchor="w", pady=(0, 10))
         

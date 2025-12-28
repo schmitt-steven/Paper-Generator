@@ -160,16 +160,32 @@ class PaperGeneratorApp(tk.Tk):
         
         # Card header styling (different background for the title row)
         if self.current_theme == "dark":
-            self._card_header_bg = "#252525"  # Slightly lighter than card background
-            self._navbar_bg = "#1a1a1a"       # Match text area background
+            self._card_header_bg = "#252525"  
+            self._navbar_bg = "#0f0f0f"       
         else:
-            self._card_header_bg = "#F6F6F6"  # Slightly darker than card background
-            self._navbar_bg = "#F6F6F6"       # Light gray for navbar in light mode
+            self._card_header_bg = "#e8eef2"  # Icy light blue-gray
+            self._navbar_bg = "#d0dae0"       # Darker icy blue-gray for nav bars
         
         style.configure("CardHeader.TFrame", background=self._card_header_bg)
         style.configure("CardHeader.TLabel", background=self._card_header_bg)
         style.configure("NavBar.TFrame", background=self._navbar_bg)
         style.configure("NavBar.TLabel", background=self._navbar_bg)
+        
+        # Card body background (white in light mode for crisp sections)
+        if self.current_theme == "dark":
+            self._card_bg = None  # Use default theme
+        else:
+            self._card_bg = "#ffffff"  # Pure white for light mode cards
+            style.configure("Card.TFrame", background=self._card_bg)
+        
+        # Canvas/scrollable area background
+        if self.current_theme == "dark":
+            self._canvas_bg = "#131313"
+        else:
+            self._canvas_bg = "#f0f5f8"  # Lightest icy background
+        
+        style.configure("Scrollable.TFrame", background=self._canvas_bg)
+        style.configure("Scrollable.TLabel", background=self._canvas_bg)
         
         # Custom Listbox (Dropdown Menu) styling
         style.configure("TCombobox", font=self.fonts.default_font)
@@ -191,7 +207,7 @@ class PaperGeneratorApp(tk.Tk):
         # Set default font for Text widgets (text areas)
         self.option_add("*Text.Font", self.fonts.text_area_font)
         
-        # Theme-aware Combobox Listbox styling (store as instance vars for update_combobox_styles)
+        # Theme-aware Combobox Listbox styling (stored as instance vars for update_combobox_styles)
         if self.current_theme == "dark":
             self._listbox_bg = "#2b2b2b"
             self._listbox_fg = "#ffffff"
@@ -317,15 +333,13 @@ class PaperGeneratorApp(tk.Tk):
             insert_bg = "#ffffff"
             card_header_bg = "#252525"
             card_header_fg = "#ffffff"
-            canvas_bg = "#1c1c1c"
         else:
-            text_bg = "#ECECED"
+            text_bg = "#f5f8fa"  # Lighter icy text area background
             text_fg = "#1c1c1c"
-            border_color = "#cccccc"
+            border_color = "#c5d0d8"  # Icy border
             insert_bg = "#1c1c1c"
-            card_header_bg = "#F6F6F6"
+            card_header_bg = "#e8eef2"
             card_header_fg = "#1c1c1c"
-            canvas_bg = "#fafafa"
             
         # Import wrapper class
         from .base_frame import TextBorderFrame
@@ -340,7 +354,7 @@ class PaperGeneratorApp(tk.Tk):
         # Apply to Canvas (scrollable area background)
         if isinstance(widget, tk.Canvas):
             try:
-                widget.configure(background=canvas_bg)
+                widget.configure(background=self._canvas_bg)
             except:
                 pass
                 

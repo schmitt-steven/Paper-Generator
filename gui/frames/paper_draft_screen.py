@@ -113,15 +113,32 @@ class PaperDraftScreen(BaseFrame):
 
     def _create_draft_section(self, content: str):
         """Create the text area inside the card content."""
-        # Container for text + scrollbar (no outer padding)
-        container, self.draft_text = create_scrollable_text_area(
-            self.card_content,
+        # Text area with scrollbar (no border wrapper)
+        inner = ttk.Frame(self.card_content)
+        inner.pack(fill="both", expand=True)
+        
+        scrollbar = ttk.Scrollbar(inner, orient="vertical")
+        scrollbar.pack(side="right", fill="y")
+        
+        self.draft_text = tk.Text(
+            inner,
             height=40,
-            font=self.controller.fonts.text_area_font
+            wrap="word",
+            font=self.controller.fonts.text_area_font,
+            padx=10,
+            pady=10,
+            highlightthickness=0,
+            borderwidth=0,
+            relief="flat",
+            yscrollcommand=scrollbar.set
         )
-        container.pack(fill="both", expand=True)
+        self.draft_text.pack(side="left", fill="both", expand=True)
+        scrollbar.config(command=self.draft_text.yview)
         
         self.draft_text.insert("1.0", content)
+        
+        # Apply theme colors
+        self.controller.apply_theme_colors(self.draft_text)
 
     def _save_draft(self):
         """Save the edited draft."""

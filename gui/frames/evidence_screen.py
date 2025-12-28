@@ -302,7 +302,7 @@ class AddChunkDialog(tk.Toplevel):
         main.grid_columnconfigure(0, weight=1)
         
         # Section selection
-        ttk.Label(main, text="Target Section(s):", font=self.parent.fonts.default_font).grid(
+        ttk.Label(main, text="Target Section(s):", font=self.parent.fonts.small_font).grid(
             row=0, column=0, sticky="w", pady=(0, 5)
         )
         
@@ -317,7 +317,7 @@ class AddChunkDialog(tk.Toplevel):
             cb.grid(row=i // 3, column=i % 3, sticky="w", padx=5, pady=2)
         
         # Paper selection
-        ttk.Label(main, text="Source Paper:", font=self.parent.fonts.default_font).grid(
+        ttk.Label(main, text="Source Paper:", font=self.parent.fonts.small_font).grid(
             row=2, column=0, sticky="w", pady=(0, 5)
         )
         
@@ -331,7 +331,7 @@ class AddChunkDialog(tk.Toplevel):
         self.paper_var.trace_add('write', self._filter_papers)
         
         # Text input - styled like other screens
-        ttk.Label(main, text="Evidence / Summary / Quote(s):", font=self.parent.fonts.default_font).grid(
+        ttk.Label(main, text="Evidence / Summary / Quote(s):", font=self.parent.fonts.small_font).grid(
             row=4, column=0, sticky="w", pady=(0, 5)
         )
         
@@ -383,7 +383,7 @@ class AddChunkDialog(tk.Toplevel):
         btn_frame.grid(row=6, column=0, sticky="ew")
         
         ttk.Button(btn_frame, text="Cancel", command=self.destroy).pack(side="left")
-        ttk.Button(btn_frame, text="Add Evidence", command=self._submit, style="Accent.TButton").pack(side="right")
+        ttk.Button(btn_frame, text="Add", command=self._submit, style="Accent.TButton").pack(side="right")
     
     def _filter_papers(self, *args):
         """Filter paper dropdown based on typed text."""
@@ -458,20 +458,21 @@ class EvidenceScreen(BaseFrame):
         self.content_container.grid_rowconfigure(1, weight=1)  # Canvas expands
         
         # Sticky stats bar at row 0
-        self.sticky_frame = ttk.Frame(self.content_container)
-        self.sticky_frame.grid(row=0, column=1, sticky="ew", pady=(0, 12))
+        self.sticky_frame = ttk.Frame(self.content_container, style="Scrollable.TFrame")
+        self.sticky_frame.grid(row=0, column=1, sticky="ew", pady=(12, 12))
         
         # Stats label
         self.stats_label = ttk.Label(
             self.sticky_frame,
             text="",
+            style="Scrollable.TLabel",
             font=self.controller.fonts.default_font,
             foreground="gray"
         )
         self.stats_label.pack(side="left")
         
         # Buttons
-        btn_frame = ttk.Frame(self.sticky_frame)
+        btn_frame = ttk.Frame(self.sticky_frame, style="Scrollable.TFrame")
         btn_frame.pack(side="right")
         
         ttk.Button(

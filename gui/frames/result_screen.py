@@ -30,7 +30,7 @@ class ResultScreen(BaseFrame):
 
     def create_content(self):
         # Buttons Section
-        btn_frame = ttk.Frame(self.scrollable_frame)
+        btn_frame = ttk.Frame(self.scrollable_frame, style="Scrollable.TFrame")
         btn_frame.pack(fill="x", pady=20)
         
         # Grid connection for centering
