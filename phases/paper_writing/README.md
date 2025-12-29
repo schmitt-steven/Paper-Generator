@@ -1,104 +1,58 @@
-# Paper Writing Pipeline
+# Paper Writing Phase
 
-An agentic, RAG-based system for generating academic paper sections with indirect citations. Uses a 3-phase approach:
-1. Indexing a corpus of research papers into searchable chunks
-2. Agentic evidence search for each section of the paper
-3. Writing each section of the paper, one by one
-
-This system is inspired by **PaperQA**, an agent-driven tool that uses RAG to gather information. It's capable of answering scientific questions, summarizing papers and more. Check it out here: https://github.com/Future-House/paper-qa?tab=readme-ov-file
+RAG-based system for generating academic paper sections with indirect citations. Inspired by [PaperQA](https://github.com/Future-House/paper-qa).
 
 ## Components
 
-- **`PaperIndexer`**: Chunks and embeds papers into a searchable corpus
-- **`QueryBuilder`**: Constructs default queries for each section of the paper
-- **`EvidenceGatherer`**: Vector search, summarizing and scoring chunks, and agentic search
-- **`PaperWriter`**: Generates paper sections
-- **`PaperWritingPipeline`**: Orchestrates the entire process
+### Data Models ([data_models.py](data_models.py))
 
-## 1. PaperIndexer Class
+- `Section` - Enum of paper sections (Abstract, Introduction, etc.)
+- `PaperDraft` - Container for all generated sections
+- `PaperChunk` - Indexed chunk with embedding for retrieval
+- `Evidence` - Scored chunk with summary and source query
 
-Converts papers into searchable chunks with embeddings.
+### `PaperIndexer` ([paper_indexer.py](paper_indexer.py))
 
-### Process
-1. **Preprocessing**: Clean markdown text
-2. **Chunking**: Split papers into chunks with small token overlap
-3. **Embedding**: Create embeddings for chunks in batches (batch size can be changed in settings)
-4. **Caching**: Embeddings are saved automatically and can be loaded again (via LOAD_PAPER_EMBEDDINGS setting)
+Splits papers into overlapping text chunks and creates their embeddings.
 
-### Output
-- `List[PaperChunk]` with `chunk_id`, `paper`, `chunk_text`, `chunk_index`, `embedding`
+- First preprocesses markdown, strips references/bibliography
+- Then splits the text into overlapping chunks with configurable token size and overlap
+- Lastly embeds the chunks in batches, caching them to `output/paper_embeddings.json`
 
-### Data Structure
-```python
-PaperChunk {
-    chunk_id: str
-    paper: Paper  # source
-    chunk_text: str
-    chunk_index: int
-    embedding: List[float]
-}
-```
-## 2. EvidenceGatherer Class
+### `EvidenceGatherer` ([evidence_gatherer.py](evidence_gatherer.py))
 
-An LLM agent gathers evidence:
-1. Execute default queries (one per section)
-2. Agent analyzes evidence and identifies gaps
-3. Agent calls `search_evidence` tool with custom queries
-4. Continues until sufficient evidence or max iterations reached
+LLM agent that iteratively calls `search_evidence` tool until sufficient evidence is found (or max iterations reached).
 
-### Settings
-- `EVIDENCE_INITIAL_CHUNKS`: Chunks retrieved from vector search
-- `EVIDENCE_FILTERED_CHUNKS`: Final chunks after LLM filtering
-- `EVIDENCE_AGENTIC_ITERATIONS`: Max agent tool calls
+Each `search_evidence` call runs a retrieval pipeline:
+1. Vector search (cosine similarity) to find relevant chunks
+2. Batch summarization (LLM summarizes retrieved chunks)
+3. Batch scoring (LLM scores relevance 0.0-1.0)
+4. Combined scoring: `0.3 * vector_score + 0.7 * llm_score`
+5. Filtering: keep only chunks with highest combined scores
 
-### Search Evidence Process
+### `EvidenceManager` ([evidence_manager.py](evidence_manager.py))
 
-#### 1. Vector Search
-- Embed query, compute cosine similarity
-- Select most relevant chunks
-- Exclude already-seen chunks
+Utilities for saving/loading evidence by section to JSON.
 
-#### 2. Batch Summarization
-- Process chunks in batches
-- LLM summarizes each chunk in context of query
-- Uses structured output
+### `SectionGuidelinesLoader` ([section_guidelines.py](section_guidelines.py))
 
-#### 3. Batch Scoring
-- Process summarized chunks in batches
-- LLM scores relevance (0.0-1.0)
-- Uses structured output
+Loads user-defined writing guidelines from `user_files/section_guidelines.md`.
 
-#### 4. Combined Scoring & Selection
-- Combined score: `0.3 * vector_score + 0.7 * llm_score`
-- Sort by combined score, select top `filtered_chunks`
-- Return `Evidence` objects
+### `PaperWriter` ([paper_writer.py](paper_writer.py))
 
-### Output
-- `evidence: List[Evidence]` - Aggregated evidence from default queries + agent searches
+Generates paper sections in order: Methods → Results → Discussion → Introduction → Related Work → Conclusion → Abstract → Title
 
-### Evidence Structure
-```python
-class Evidence:
-    chunk: PaperChunk         # Source chunk
-    summary: str              # LLM summary
-    source_query: str         # Query that retrieved this
-    vector_score: float       # Cosine similarity
-    llm_score: float          # LLM relevance score
-    combined_score: float     # Weighted final score
-```
+- Builds prompts with context, evidence, and guidelines
+- Integrates figures/plots in Results section
+- Generates title from abstract, introduction, and conclusion (unles user provided one)
 
-## PaperWriter Class
+### `PaperWritingPipeline` ([paper_writing_pipeline.py](paper_writing_pipeline.py))
 
-Sections are generated in order: Methods → Results → Discussion → Introduction → Related Work → Conclusion → Abstract
+Handles the complete paper writing workflow: indexing → evidence gathering → section writing.
 
-### Process
-1. **Build Prompt**: Includes role, task, section type, research context, evidence, and guidelines
-2. **Generate**: LLM generates section with integrated citations
-3. **Title**: Generated after all sections using abstract, introduction, and conclusion
+## Output
 
-### Special Handling
-- **Results Section**: Includes figure integration instructions and captions
-
-
-### Output
-- `PaperDraft` with all sections and title
+- `output/paper_embeddings.json` - Cached chunk embeddings
+- `output/evidence.json` - Gathered evidence by section
+- `output/section_writing_prompts.md` - Prompts used for each section
+- `output/paper_draft.md` - Generated paper draft

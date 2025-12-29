@@ -1,16 +1,23 @@
 # Paper Generator
 
-Automatic academic paper generator using local language and embedding models.
+Automatic academic paper generator using local language and embedding models via LM Studio.
+
+The first generated papers can be found in the examples folder.
+
+Work in progresss, everything subject to change...
 
 ## Requirements
 
 - #### Python 3.10+
 
 - #### Python Packages
-    - `lmstudio`
-    - `pymupdf4llm` (for PDF parsing)
+    - `lmstudio` (LM Studio SDK)
+    - `pydantic` (data validation)
+    - `pymupdf4llm` (PDF parsing)
+    - `pymupdf` (PDF manipulation)
     - `requests` (for Semantic Scholar API calls)
     - `sv_ttk` (Tkinter theme)
+    - `Pillow` (image processing)
     - Could be used by LLM for experiments:
         - `numpy`
         - `matplotlib`
@@ -50,7 +57,7 @@ Under App Settings → Developer → Local LLM Service (headless):\
 xcode-select --install
 
 # Install Python packages
-python3 -m pip install lmstudio numpy matplotlib seaborn pymupdf4llm sv_ttk
+python3 -m pip install lmstudio pydantic pymupdf4llm pymupdf requests sv_ttk Pillow scipy numpy matplotlib seaborn pygame
 
 # Install LaTeX
 # MacTeX (full distribution, ~4GB)

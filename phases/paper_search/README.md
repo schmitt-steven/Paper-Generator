@@ -4,22 +4,44 @@ Searches, ranks, filters, and downloads academic papers.
 
 ## Components
 
-- **`LiteratureSearch`**: Generates search queries and searches arXiv
-- **`PaperRanker`**: Ranks papers by relevance, citations, and recency
-- **`PaperFilter`**: Filters papers for diverse selection
-- **`SemanticScholarAPI`**: Interfaces with Semantic Scholar API
+### `Paper` ([paper.py](paper.py))
 
-## Process
+Data class representing an academic paper with metadata, ranking scores, and citation info.
 
-1. Generate search queries from paper concept
-2. Search Semantic Scholar for papers
-3. Rank papers
-4. Filter for diverse paper types
-5. Download PDFs and convert to markdown
+### `SemanticScholarAPI` ([semantic_scholar_api.py](semantic_scholar_api.py))
+
+Wrapper of the Semantic Scholar API for searching and fetching papers.
+
+### `UserPaperLoader` ([user_paper_loader.py](user_paper_loader.py))
+
+Processes user-provided PDFs, copies them to `output/literature/user_{filename}/`, and fetches metadata from Semantic Scholar.
+
+### `LiteratureSearch` ([literature_search.py](literature_search.py))
+
+Handles the paper search process:
+- Generates search queries from paper concept using LLM
+- Executes searches via Semantic Scholar API
+- Removes duplicates and merges user papers with searched papers
+- Downloads PDFs and converts them to markdown
+
+### `PaperRanker` ([paper_ranking.py](paper_ranking.py))
+
+Ranks papers using embedding similarity and composite scoring:
+- Semantic relevance (embedding similarity to paper concept)
+- Citation score (age-aware citation impact)
+- Recency score
+
+### `PaperFilter` ([paper_filtering.py](paper_filtering.py))
+
+Filters papers for a diverse selection across categories:
+- "High Relevance" (top 10% by relevance, always included)
+- "Cutting Edge" (recent + highly relevant)
+- "Hidden Gems" (high relevance + low citations)
+- "Classics" (high citations + moderate relevance)
+- "Well-Rounded" (balanced across all metrics)
 
 ## Output
 
-- `output/search_queries.json` - Generated queries
-- `output/papers.json` - All papers (updated after ranking/filtering with markdown)
+- `output/search_queries.json` - Generated search queries
+- `output/papers.json` - All papers with metadata and rankings
 - `output/literature/` - Downloaded PDFs and markdown files
-
