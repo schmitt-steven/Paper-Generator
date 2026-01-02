@@ -7,6 +7,7 @@ from typing import List, Dict
 from dataclasses import dataclass
 
 from ..base_frame import BaseFrame, ProgressPopup, create_gray_button
+from ..info_texts import CODE_FILES_INFO
 from phases.context_analysis.user_code_analysis import CodeAnalyzer
 from phases.context_analysis.paper_conception import PaperConception
 from phases.context_analysis.user_requirements import UserRequirements
@@ -47,7 +48,8 @@ class CodeFilesScreen(BaseFrame):
             parent=parent,
             controller=controller,
             title="Code Files",
-            next_text=next_text
+            next_text=next_text,
+            info_content=CODE_FILES_INFO
         )
 
     def create_content(self):
@@ -69,14 +71,13 @@ class CodeFilesScreen(BaseFrame):
         )
         section_frame.pack(fill="x", pady=10)
         
-        # Header row with styled background
+        # Header row
         header_frame = ttk.Frame(section_frame, style="CardHeader.TFrame", padding=(10, 6))
         header_frame.pack(fill="x")
         
         left_header = ttk.Frame(header_frame, style="CardHeader.TFrame")
         left_header.pack(side="left")
         
-        # Use tk.Label for reliable background color
         header_bg = getattr(self.controller, '_card_header_bg', '#252525')
         header_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
         tk.Label(
@@ -99,7 +100,6 @@ class CodeFilesScreen(BaseFrame):
         self.upload_btn = ttk.Button(header_frame, text="Upload", command=self._on_upload_click)
         self.upload_btn.pack(side="right")
         
-        # Separator
         ttk.Separator(section_frame, orient="horizontal").pack(fill="x")
         
         # Files list container
@@ -145,7 +145,7 @@ class CodeFilesScreen(BaseFrame):
             foreground="gray"
         ).pack(anchor="w", pady=(2, 0))
         
-        # X button with theme-aware icon
+        # Remove button
         x_btn = self.controller.icons.create_icon_label(
             content_row,
             icon_name="x",
@@ -168,7 +168,7 @@ class CodeFilesScreen(BaseFrame):
                 code_file_paths.append(str(file_path))
         
         if code_file_paths:
-            # Process files (this will add them to self.code_files and refresh the display)
+            # Process files (will add them to self.code_files and refresh the display)
             self._process_files(tuple(code_file_paths))
     
     def _on_upload_click(self):
@@ -302,7 +302,7 @@ class CodeFilesScreen(BaseFrame):
                 )
                 concept_builder.build_paper_concept()
                 
-                # Success - close popup and proceed
+                # Close popup and continue
                 self.after(0, lambda: self._on_generation_success(popup))
                 
             except Exception as e:
@@ -317,4 +317,3 @@ class CodeFilesScreen(BaseFrame):
         """Handle successful generation."""
         popup.close()
         self.controller.next_screen()
-

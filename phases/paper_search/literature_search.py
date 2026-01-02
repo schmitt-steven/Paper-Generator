@@ -20,7 +20,7 @@ from settings import Settings
 
 class SearchQuery(BaseModel):
     query: str
-    year: Optional[str] = None  # Optional year filter (e.g., "2020-2024" or "2020")
+    year: Optional[str] = None  # Optional year filter (e.g. "2020-2024" or "2020")
 
 
 class SearchQueriesResult(BaseModel):
@@ -31,12 +31,7 @@ class SearchQueriesResult(BaseModel):
 class LiteratureSearch(LazyModelMixin):
     
     def __init__(self, model_name: str):
-        """
-        Initialize LiteratureSearch with a language model.
-        
-        Args:
-            model_name: Name of the LLM model to use for query generation
-        """
+        """Initialize LiteratureSearch with a language model."""
         self.model_name = model_name
         self._model = None
         self.s2_api = SemanticScholarAPI(api_key=Settings.SEMANTIC_SCHOLAR_API_KEY or None)
@@ -81,7 +76,7 @@ class LiteratureSearch(LazyModelMixin):
             Output format:
             {{"queries": [{{"query": "term here", "year": null}}, {{"query": "recent topic", "year": "2020-2024"}}]}}
 
-            Generate exactly 15 queries now:"""
+            Generate about 15 queries now:"""
         )
 
         print("Generating search queries...")
@@ -95,29 +90,18 @@ class LiteratureSearch(LazyModelMixin):
                 prompt,
                 response_format=SearchQueriesResult,
                 config={
-                    'temperature': 0.3 + (attempt * 0.1),  # Slightly increase temperature on retry
+                    'temperature': 0.2 + (attempt * 0.1),  # Slightly increase temperature on retry
                 }
             ).parsed
             
-            # Convert SearchQueriesResult to SearchQuery objects
-            # Handle both dict and object access (LM Studio may return either)
-            if isinstance(result, dict):
-                queries_list = result.get('queries', [])
-            elif hasattr(result, 'queries'):
-                queries_list = result.queries  # type: ignore
-            else:
-                queries_list = []
+            # LM Studio returns dicts for structured responses
+            queries_list = result.get('queries', [])
             
             search_queries = []
             for q in queries_list:
-                if isinstance(q, dict):
-                    query_text = q.get('query', '').strip()
-                    if query_text:  # Only add non-empty queries
-                        search_queries.append(SearchQuery(query=query_text, year=q.get('year')))
-                elif hasattr(q, 'query'):
-                    query_text = getattr(q, 'query', '').strip()
-                    if query_text:
-                        search_queries.append(SearchQuery(query=query_text, year=getattr(q, 'year', None)))  # type: ignore
+                query_text = q.get('query', '').strip()
+                if query_text:  # Only add non-empty queries
+                    search_queries.append(SearchQuery(query=query_text, year=q.get('year')))
             
             if search_queries:
                 break  # Got valid queries, exit retry loop
@@ -127,7 +111,7 @@ class LiteratureSearch(LazyModelMixin):
         
         print(f"Generated {len(search_queries)} search queries.")
         
-        # Automatically save queries
+        # Save queries to .json
         self.save_search_queries(search_queries, filename="search_queries.json", output_dir="output")
         
         return search_queries
@@ -412,7 +396,6 @@ class LiteratureSearch(LazyModelMixin):
 
         print(f"Saved {len(papers)} papers to {filepath}")
         return filepath
-    
 
     @staticmethod
     def load_papers(filepath: str) -> list[Paper]:
@@ -440,3 +423,4 @@ class LiteratureSearch(LazyModelMixin):
 
         print(f"Loaded {len(papers)} papers from {filepath}")
         return papers
+

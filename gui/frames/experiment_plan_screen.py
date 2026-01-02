@@ -4,6 +4,7 @@ import threading
 from pathlib import Path
 
 from ..base_frame import BaseFrame, ProgressPopup, create_scrollable_text_area
+from ..info_texts import EXPERIMENT_PLAN_INFO
 from utils.file_utils import load_markdown, save_markdown
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.context_analysis.paper_conception import PaperConception
@@ -32,7 +33,8 @@ class ExperimentPlanScreen(BaseFrame):
             next_text=next_text,
             has_regenerate=True,
             regenerate_text="Regenerate",
-            header_file_path=Path(EXPERIMENTS_DIR) / EXPERIMENT_PLAN_FILE
+            header_file_path=Path(EXPERIMENTS_DIR) / EXPERIMENT_PLAN_FILE,
+            info_content=EXPERIMENT_PLAN_INFO
         )
 
     def create_content(self):
@@ -52,7 +54,7 @@ class ExperimentPlanScreen(BaseFrame):
             self._show_error(f"Error loading experiment plan: {e}")
             return
         
-        # Create the editable text area
+        # Create editable text area
         self._create_plan_section(plan_content)
 
     def _show_error(self, message: str):
@@ -70,7 +72,6 @@ class ExperimentPlanScreen(BaseFrame):
 
     def _create_plan_section(self, content: str):
         """Create an editable text area for the plan inside a card."""
-        # Create card manually to control padding
         card = ttk.Frame(self.scrollable_frame, style="Card.TFrame", padding=1)
         card.pack(fill="both", expand=True, pady=10)
         
@@ -90,11 +91,11 @@ class ExperimentPlanScreen(BaseFrame):
         
         ttk.Separator(card, orient="horizontal").pack(fill="x")
         
-        # Content with NO padding
+        # Content
         content_frame = ttk.Frame(card, padding=0)
         content_frame.pack(fill="both", expand=True)
         
-        # Text area with scrollbar (no border wrapper)
+        # Text area with scrollbar
         inner = ttk.Frame(content_frame)
         inner.pack(fill="both", expand=True)
         
@@ -117,7 +118,6 @@ class ExperimentPlanScreen(BaseFrame):
         
         self.plan_text.insert("1.0", content)
         
-        # Apply theme colors
         self.controller.apply_theme_colors(self.plan_text)
 
     def _save_plan(self):
@@ -136,7 +136,6 @@ class ExperimentPlanScreen(BaseFrame):
 
     def on_next(self):
         """Save the edited plan and proceed or run experiments."""
-        # Always save first
         self._save_plan()
         
         # Check if output exists (simplified filename without hypothesis ID)
@@ -171,11 +170,11 @@ class ExperimentPlanScreen(BaseFrame):
                 result = experiment_runner.run_experiment(
                     selected_hypothesis,
                     paper_concept,
-                    load_existing_plan=True,  # Use the plan we just saved
+                    load_existing_plan=True,  # Use plan that was just saved
                     load_existing_code=False  # Generate new code
                 )
                 
-                # Continue to next screen regardless of verdict (disproven/inconclusive is still a valid result)
+                # Continue to next screen
                 self.after(0, lambda: self._on_generation_success(popup))
                 
             except Exception as e:
@@ -193,7 +192,6 @@ class ExperimentPlanScreen(BaseFrame):
     
     def on_show(self):
         """Called when screen is shown - load plan if not already loaded."""
-        # Only load if we haven't loaded yet
         if not hasattr(self, 'plan_text'):
             plan_path = Path(EXPERIMENTS_DIR) / EXPERIMENT_PLAN_FILE
             if plan_path.exists():

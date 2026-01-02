@@ -1,5 +1,6 @@
 from tkinter import ttk
 from ..base_frame import BaseFrame, create_scrollable_text_area
+from ..info_texts import USER_REQUIREMENTS_INFO
 import os
 
 class UserRequirementsScreen(BaseFrame):
@@ -12,7 +13,8 @@ class UserRequirementsScreen(BaseFrame):
             controller=controller,
             title="User Requirements",
             next_text="Continue",
-            header_file_path=self.file_path
+            header_file_path=self.file_path,
+            info_content=USER_REQUIREMENTS_INFO
         )
 
     def create_content(self):
@@ -32,17 +34,16 @@ class UserRequirementsScreen(BaseFrame):
         self.current_card_frame = None
 
         def add_section_ui(header, text_lines):
-            # Skip if header is None and text is empty (avoids duplicate default section)
+            # Skip if header is None and text is empty (avoid duplicate default section)
             if header is None and not "".join(text_lines).strip():
                 return
 
-            # Determine title for LabelFrame
             if header:
                 title = header.strip().lstrip("#").strip()
             else:
                 title = "General Information"
             
-            # Special handling for grouping headers - these start new Cards
+            # Special handling for grouping headers, these start new Cards
             if title in ["General Information", "Section Requirements"]:
                 self.current_card_frame = self.create_card_frame(self.scrollable_frame, title)
                 self.sections.append((header, None))
@@ -51,28 +52,27 @@ class UserRequirementsScreen(BaseFrame):
             # Parent is current card or scrollable frame if no card yet
             parent = self.current_card_frame if self.current_card_frame else self.scrollable_frame
             
-            # Container for the section
+            # Container for section
             section_container = ttk.Frame(parent, padding=(15, 0, 15, 15))
             section_container.pack(fill="x")
             
-            # Sub-header (smaller than card title)
+            # Sub-header
             ttk.Label(
                 section_container, 
                 text=title, 
-                font=self.controller.fonts.default_font # Use default font inside cards
+                font=self.controller.fonts.default_font
             ).pack(anchor="w", pady=(0, 5))
             
             container, text_widget = create_scrollable_text_area(section_container, height=6)
-            container.pack(fill="x", expand=True, padx=(0, 0)) # No extra padx needed inside card
+            container.pack(fill="x", expand=True, padx=(0, 0))
             text_widget.insert("1.0", "".join(text_lines).strip())
             
             self.sections.append((header, text_widget))
 
         for line in lines:
             if line.strip().startswith("#"):
-                # New section
                 add_section_ui(current_header, current_text)
-                current_header = line # Keep the newline and # characters
+                current_header = line
                 current_text = []
             else:
                 current_text.append(line)
@@ -94,7 +94,6 @@ class UserRequirementsScreen(BaseFrame):
             if text:
                 new_content.append(text + "\n\n")
             elif header:
-                 # Ensure spacing if text is empty but header exists
                  new_content.append("\n")
 
         try:

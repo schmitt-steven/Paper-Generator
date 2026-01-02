@@ -251,10 +251,3 @@ class CodeAnalyzer(LazyModelMixin):
             report.append("==== End of Code Analysis Report ====" + "\n")
 
         return "\n".join(report)
-
-
-if __name__ == "__main__":
-    code_analyzer = CodeAnalyzer(model_name="qwen/qwen3-coder-30b")
-    code_files = code_analyzer.load_code_files("user_files")
-    analyzed_files = code_analyzer.analyze_all_files(code_files)
-    print(code_analyzer.get_analysis_report(analyzed_files))

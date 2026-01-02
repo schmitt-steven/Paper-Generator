@@ -13,110 +13,16 @@ class MarkdownParseResult:
     pages: list[dict]
     image_dir: str | None
     page_count: int
-    pages_fixed_with_marker: list[int]
 
 
-# Idea: use LLM instead of Marker for math correction and/or table correction
 class PDFConverter:
-    """Convert PDFs with pymupdf4llm. Can use Marker to fix pages with broken math."""
+    """Convert PDFs with pymupdf4llm."""
 
-    def __init__(self, fix_math=False, extract_media=True):
-        self.fix_math = fix_math
+    def __init__(self, extract_media=True):
         self.extract_media = extract_media
-        
-        # Lazy load Marker models only if needed
-        self._marker_converter = None
-
-    def _get_marker_converter(self):
-        """Lazy load Marker converter (only loads if math fixing is needed)."""
-        # Lazy import marker only when needed
-        from marker.converters.pdf import PdfConverter
-        from marker.models import create_model_dict
-
-        if self._marker_converter is None:
-            print("Loading Marker models for math correction...")
-            model_dict = create_model_dict()
-            self._marker_converter = PdfConverter(artifact_dict=model_dict)
-        return self._marker_converter
-
-    def _detect_broken_math(self, text: str) -> bool:
-        """Detect if a page likely has broken mathematical notation."""
-        indicators = [
-            r'�',  # Replacement character
-            r'_\[.\]_',  # Broken subscripts like _[l]_
-            r'\(_\s+\*_',  # Broken function notation
-            r'∑\s*$',  # Summation at end of line
-            r'∫\s*$',  # Integral at end of line
-            r'_\s+_\s+_',  # Multiple isolated underscores
-            r'\|\s*\|',  # Broken absolute value bars
-            r'\[\]\s*\[\]',  # Multiple empty brackets
-        ]
-        
-        issue_count = sum(1 for pattern in indicators if re.search(pattern, text))
-        return issue_count >= 2
-
-
-    def _extract_page_with_marker(self, pdf_path: str, page_num: int, 
-                                base_name: str, image_dir: str | None) -> str:
-        """Use Marker to extract a single page with proper math formatting."""
-
-        import pymupdf
-        import tempfile
-        
-        tmp_path = None
-        
-        try:
-            # Create a temporary PDF with just this page
-            with pymupdf.open(pdf_path) as doc:
-                with pymupdf.open() as single_page_doc:
-                    single_page_doc.insert_pdf(doc, from_page=page_num, to_page=page_num)
-                    
-                    # Save to temp file (don't auto-delete on Windows)
-                    with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
-                        tmp_path = tmp.name
-                    
-                    # Save the single page PDF
-                    single_page_doc.save(tmp_path)
-            
-            # Lazy import marker output function
-            from marker.output import text_from_rendered
-            
-            converter = self._get_marker_converter()
-            rendered = converter(tmp_path)
-            markdown_text, _, images = text_from_rendered(rendered)
-            
-            # Only save images if extract_media is enabled
-            if self.extract_media and image_dir:
-                for marker_img_name, img in images.items():
-                    new_name = f"{base_name}-marker-p{page_num+1}-{marker_img_name}"
-                    new_path = os.path.join(image_dir, new_name)
-                    img.save(new_path)
-                    markdown_text = markdown_text.replace(
-                        f"![]({marker_img_name})",
-                        f"![](images/{new_name})"
-                    )
-            else:
-                # Remove image references if not extracting
-                markdown_text = re.sub(r'!\[\]\([^)]+\)', '', markdown_text)
-            
-            return markdown_text
-            
-        finally:
-            # Clean up temp file (with retry on Windows)
-            if tmp_path and os.path.exists(tmp_path):
-                try:
-                    os.unlink(tmp_path)
-                except PermissionError:
-                    import time
-                    time.sleep(0.1)
-                    try:
-                        os.unlink(tmp_path)
-                    except:
-                        pass
-
 
     def convert_to_markdown(self, file_path: str) -> MarkdownParseResult:
-        """Convert PDF to Markdown, using Marker for math-heavy pages.
+        """Convert PDF to Markdown.
         
         Expects PDF structure: output/literature/PAPER_ID/PAPER_ID.pdf
         Output goes to: output/literature/PAPER_ID/markdown/
@@ -159,21 +65,6 @@ class PDFConverter:
             use_glyphs=False,
         )
 
-        # Check for broken math and fix with Marker if enabled
-        pages_fixed = []
-        if self.fix_math:
-            print("Checking for pages with broken math...")
-            for i, page in enumerate(markdown_pages):
-                if self._detect_broken_math(page["text"]):
-                    print(f"Page {i+1} has broken math - fixing with Marker...")
-                    pages_fixed.append(i + 1)
-                    
-                    try:
-                        corrected_text = self._extract_page_with_marker(file_path, i, base_name, image_dir)
-                        page["text"] = corrected_text
-                    except Exception as e:
-                        print(f"Failed to fix page {i+1}: {e}")
-
         # Merge all pages
         markdown_text = "\n\n".join(page["text"] for page in markdown_pages)
         
@@ -194,7 +85,6 @@ class PDFConverter:
             pages=markdown_pages,
             image_dir=image_dir,
             page_count=len(markdown_pages),
-            pages_fixed_with_marker=pages_fixed
         )
 
     def _save_markdown(self, markdown_text: str, output_path: str) -> None:
@@ -217,6 +107,7 @@ class PDFConverter:
         Returns:
             List of Paper objects with markdown_text field populated
         """
+        
         print(f"\nConverting {len(papers)} papers to markdown...")
         
         for i, paper in enumerate(papers, 1):

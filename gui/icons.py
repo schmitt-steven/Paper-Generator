@@ -4,6 +4,15 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 from pathlib import Path
 from typing import Optional
+from enum import Enum
+
+
+class HoverColor(Enum):
+    """Hover colors for icon labels."""
+    NONE = None
+    RED = "red"
+    GREEN = "green"
+    BLUE = "blue"
 
 
 class IconManager:
@@ -23,7 +32,6 @@ class IconManager:
         # Register for font/theme changes
         self.app.fonts.add_callback(self._clear_cache)
     
-    @property
     def default_size(self) -> int:
         """Calculate icon size based on current font size."""
         base_size = self.app.fonts.base_size
@@ -46,7 +54,7 @@ class IconManager:
         """
         # Use font-scaled default if size not specified
         if size is None:
-            size = self.default_size
+            size = self.default_size()
             
         # Determine color based on current theme
         color = "#ffffff" if self.app.current_theme == "dark" else "#1c1c1c"
@@ -84,7 +92,7 @@ class IconManager:
     
     def _colorize(self, img: Image.Image, color: str) -> Image.Image:
         """
-        Colorize a template image (white on transparent) to the target color.
+        Colorize a template image (white on transparent) to another color.
         """
         # Parse hex color
         r = int(color[1:3], 16)
@@ -114,8 +122,11 @@ class IconManager:
         img.putdata(new_data)
         return img
     
-    def create_icon_label(self, parent, icon_name: str, command=None, 
-                          size: int = None, hover_color: str | bool = "red") -> tk.Label:
+    def create_icon_label(self, parent,
+                          icon_name: str,
+                          command=None,
+                          size: int = None,
+                          hover_color: HoverColor = HoverColor.RED) -> tk.Label:
         """
         Create a clickable label with an icon.
         
@@ -124,7 +135,7 @@ class IconManager:
             icon_name: Name of the icon
             command: Callback function when clicked
             size: Icon size in pixels (defaults to font-scaled size)
-            hover_color: Hover color type: 'red', 'green', or False to disable
+            hover_color: HoverColor enum value (RED, GREEN, BLUE, or NONE)
             
         Returns:
             tk.Label configured as an icon button
@@ -143,8 +154,8 @@ class IconManager:
             label.bind("<Button-1>", lambda e: command())
         
         # Add hover effect
-        if hover_color:
-            hover_icon = self.get_icon_colored(icon_name, size, hover_type=hover_color)
+        if hover_color != HoverColor.NONE:
+            hover_icon = self.get_icon_colored(icon_name, size, hover_color=hover_color)
             label._hover_icon_ref = hover_icon  # Keep reference
             
             def on_enter(e):
@@ -160,26 +171,28 @@ class IconManager:
         
         return label
     
-    def get_icon_colored(self, name: str, size: int = None, hover_type: str | bool = False) -> 'ImageTk.PhotoImage | None':
+    def get_icon_colored(self, name: str, size: int = None, hover_color: HoverColor = HoverColor.NONE) -> 'ImageTk.PhotoImage | None':
         """
         Get an icon with a specific color (for hover states).
         
         Args:
             name: Icon name (without extension)
             size: Icon size in pixels (defaults to font-scaled size)
-            hover_type: 'red' for red hover, 'green' for green hover, or False for theme color
+            hover_color: HoverColor enum value (RED, GREEN, BLUE, or NONE for theme color)
             
         Returns:
             PhotoImage ready for use in tkinter widgets
         """
         if size is None:
-            size = self.default_size
+            size = self.default_size()
         
         # Determine color
-        if hover_type == "red":
+        if hover_color == HoverColor.RED:
             color = "#ff6b6b" if self.app.current_theme == "dark" else "#e05555"
-        elif hover_type == "green":
+        elif hover_color == HoverColor.GREEN:
             color = "#4ade80" if self.app.current_theme == "dark" else "#22c55e"
+        elif hover_color == HoverColor.BLUE:
+            color = "#4a9eff" if self.app.current_theme == "dark" else "#0078d4"
         else:
             color = "#ffffff" if self.app.current_theme == "dark" else "#1c1c1c"
         
@@ -207,7 +220,7 @@ class IconManager:
     
     def _get_parent_bg(self, parent) -> str:
         """Get the background color of the parent widget, walking up hierarchy if needed."""
-        # Walk up the parent hierarchy to find a styled frame
+        # Walk up the parent tree to find styled frame
         widget = parent
         while widget is not None:
             try:
@@ -258,10 +271,10 @@ class IconManager:
         if widget is None:
             widget = self.app
         
-        # Check if this is an icon label we created
+        # Check if its an icon label we created
         if isinstance(widget, tk.Label) and hasattr(widget, '_icon_name'):
             icon_name = widget._icon_name
-            size = getattr(widget, '_icon_size', None) or self.default_size
+            size = getattr(widget, '_icon_size', None) or self.default_size()
             new_icon = self.get_icon(icon_name, size)
             if new_icon:
                 widget.configure(image=new_icon)

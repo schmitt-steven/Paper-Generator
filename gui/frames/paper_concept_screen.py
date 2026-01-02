@@ -3,6 +3,7 @@ from tkinter import ttk
 from pathlib import Path
 import threading
 from ..base_frame import BaseFrame, create_scrollable_text_area, ProgressPopup
+from ..info_texts import PAPER_CONCEPT_INFO
 from phases.context_analysis.paper_conception import PaperConception, PaperConcept
 from phases.context_analysis.user_requirements import UserRequirements
 from phases.context_analysis.user_code_analysis import CodeAnalyzer
@@ -27,7 +28,8 @@ class PaperConceptScreen(BaseFrame):
             next_text="Continue",
             has_regenerate=True,
             regenerate_text="Regenerate",
-            header_file_path=self.file_path
+            header_file_path=self.file_path,
+            info_content=PAPER_CONCEPT_INFO
         )
 
     def create_content(self):
@@ -44,7 +46,7 @@ class PaperConceptScreen(BaseFrame):
             self._show_error(f"Error loading paper concept: {e}")
             return
         
-        # Create the three sections
+        # Create sections
         self.description_text = self._create_section("Description", self.concept.description, height=20)
         self.code_snippets_text = self._create_section("Important Code Snippets", self.concept.code_snippets, height=15)
         self.open_questions_text = self._create_section("Questions for Literature Search", self.concept.open_questions, height=15)
@@ -66,7 +68,7 @@ class PaperConceptScreen(BaseFrame):
         """Create a labeled section with an editable text area."""
         # Container
         section_container = ttk.Frame(self.scrollable_frame, style="Scrollable.TFrame", padding=(0, 0, 0, 15))
-        section_container.pack(fill="x")
+        section_container.pack(fill="x", pady=(10 if title == "Description" else 0, 0))
         
         # Header
         ttk.Label(
@@ -124,15 +126,13 @@ class PaperConceptScreen(BaseFrame):
             super().on_next()
             return
         
-        # Always save first
         self._save_concept()
         
-        # Continue to next screen - user will search for papers on paper selection screen
+        # Show next screen
         super().on_next()
     
     def on_show(self):
         """Called when screen is shown - load concept if not already loaded."""
-        # Only load if we haven't loaded yet
         if not hasattr(self, 'concept') or self.concept is None:
             if Path(self.file_path).exists():
                 self._load_concept()

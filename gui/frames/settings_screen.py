@@ -6,6 +6,7 @@ from pathlib import Path
 from settings import Settings
 from typing import override
 from ..base_frame import BaseFrame
+from ..info_texts import SETTINGS_INFO
 from utils.lm_studio_client import get_model_names
 from .section_guidelines_screen import SectionGuidelinesScreen
 
@@ -24,14 +25,7 @@ class SettingsScreen(BaseFrame):
             title="Settings",
             next_text="Continue",
             has_back=False,
-            info_content=(
-                "Welcome to the Settings Screen!\n\n"
-                "Here you can configure:\n\n"
-                "• Appearance - Dark/Light mode and font size\n"
-                "• Model Selection - Choose which LLM models to use for each phase\n"
-                "• Authors - Add authors for your generated papers\n\n"
-                "Make sure LM Studio is running with your desired models loaded."
-            )
+            info_content=SETTINGS_INFO
         )
 
     def create_content(self):
@@ -94,13 +88,9 @@ class SettingsScreen(BaseFrame):
     def create_phase_section(self, title, settings):
         from settings import Settings
         
-        # content container from card
         frame = self.create_card_frame(self.scrollable_frame, title)
 
-
-
         for setting in settings:
-            # Handle different setting definitions
             if len(setting) == 3:
                 key, label_text, options = setting
                 setting_type = "dropdown"
@@ -112,9 +102,8 @@ class SettingsScreen(BaseFrame):
             
             ttk.Label(row_frame, text=label_text, width=35).pack(side="left")
             
-            var = tk.StringVar() # Or IntVar for spinbox, but StringVar works generally
+            var = tk.StringVar()
             
-            # Get current value from Settings
             current_value = getattr(Settings, key, "")
             
             if setting_type == "dropdown":
@@ -167,15 +156,14 @@ class SettingsScreen(BaseFrame):
         entry.pack(side="right", fill="x", expand=True, padx=(10, 0))
         ttk.Label(frame, text="(Leave empty for LLM generated title)", font=self.controller.fonts.default_font).pack(anchor="e")
 
-        # Authors section (Separate Card)
+        # Authors section
         authors_section = ttk.Frame(self.scrollable_frame, style="Card.TFrame", padding=1)
         authors_section.pack(fill="x", padx=0, pady=(20, 10))
         
-        # Header row with styled background
+        # Header row
         header_frame = ttk.Frame(authors_section, style="CardHeader.TFrame", padding=10)
         header_frame.pack(fill="x")
         
-        # Use tk.Label for reliable background color (matching create_card_frame)
         header_bg = getattr(self.controller, '_card_header_bg', '#252525')
         header_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
         tk.Label(
@@ -186,7 +174,7 @@ class SettingsScreen(BaseFrame):
             fg=header_fg
         ).pack(side="left")
         
-        # Buttons (need matching background)
+        # Buttons
         button_frame = ttk.Frame(header_frame, style="CardHeader.TFrame")
         button_frame.pack(side="right")
         
@@ -227,7 +215,7 @@ class SettingsScreen(BaseFrame):
         
         def on_toggle():
             self.controller.toggle_theme()
-            # Save the dark mode preference
+            # Save dark mode preference
             Settings.DARK_MODE = self.dark_mode_var.get()
             Settings.save_to_file()
         
@@ -310,7 +298,6 @@ class SettingsScreen(BaseFrame):
 
     def clear_cache(self):
         """Clear all cached files: output folder contents and non-essential user_files."""
-        # Show native confirmation dialog
         confirmed = messagebox.askyesno(
             "Clear Cache",
             "This will delete all files from the output folder and temporary files from user_files.\n\n"
@@ -325,7 +312,7 @@ class SettingsScreen(BaseFrame):
         deleted_count = 0
         errors = []
         
-        # Get the base directory (where settings.py is located)
+        # Get base directory (where settings.py is located)
         base_dir = Path(__file__).parent.parent.parent
         
         # Clear output folder
@@ -389,7 +376,6 @@ class SettingsScreen(BaseFrame):
             entry = ttk.Entry(row)
             entry.pack(side="right", fill="x", expand=True)
             if data:
-                # Field names in Settings are lowercase keys
                 entry.insert(0, data.get(field.lower(), ""))
             entries[field.lower()] = entry
         
@@ -407,14 +393,13 @@ class SettingsScreen(BaseFrame):
         # Find and remove the separator before this frame (if it exists)
         for widget in self.authors_container.winfo_children():
             if isinstance(widget, ttk.Separator):
-                # Check if this separator is right before the last frame
                 widget_index = self.authors_container.winfo_children().index(widget)
                 frame_index = self.authors_container.winfo_children().index(last_frame)
                 if widget_index == frame_index - 1:
                     widget.destroy()
                     break
         
-        # Remove the frame
+        # Remove frame
         last_frame.destroy()
         self.author_frames.pop()
         self._update_remove_button_state()
@@ -480,7 +465,7 @@ class SettingsScreen(BaseFrame):
                     print(f"Warning: Invalid integer for {key}: {value}")
                     continue
             elif key == "FONT_SIZE_BASE":
-                # Convert font size label to numeric value
+                # Convert font size label to number
                 value = self.font_size_options.get(value, 16)
             
             if hasattr(Settings, key):
@@ -505,5 +490,5 @@ class SettingsScreen(BaseFrame):
         # Save settings to file
         Settings.save_to_file()
 
-        # Proceed to next screen
+        # Show next screen
         super().on_next()

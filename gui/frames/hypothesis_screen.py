@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from ..base_frame import BaseFrame, ProgressPopup, create_scrollable_text_area
+from ..info_texts import HYPOTHESIS_INFO
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.hypothesis_generation.hypothesis_builder import Hypothesis
 from phases.context_analysis.paper_conception import PaperConception
@@ -40,7 +41,8 @@ class HypothesisScreen(BaseFrame):
             next_text=next_text,
             has_regenerate=True,
             regenerate_text="Regenerate",
-            header_file_path=HYPOTHESIS_FILE
+            header_file_path=HYPOTHESIS_FILE,
+            info_content=HYPOTHESIS_INFO
         )
 
     def create_content(self):
@@ -58,7 +60,7 @@ class HypothesisScreen(BaseFrame):
             except Exception as e:
                 print(f"Error loading hypothesis: {e}")
         
-        # No file or load failed - create empty hypothesis
+        # No file or load failed, create empty hypothesis
         self._create_empty_hypothesis()
     
     def _create_empty_hypothesis(self):
@@ -78,7 +80,6 @@ class HypothesisScreen(BaseFrame):
     
     def on_show(self):
         """Called when screen is shown - load hypothesis if not already loaded."""
-        # Only load if we haven't loaded yet
         if not hasattr(self, 'current_hypothesis') or self.current_hypothesis is None:
             self._load_hypothesis()
 
@@ -122,7 +123,7 @@ class HypothesisScreen(BaseFrame):
     def _create_section(self, title: str, content: str, height: int = 4) -> tk.Text:
         """Create a labeled section with an editable text area."""
         section_container = ttk.Frame(self.scrollable_frame, style="Scrollable.TFrame", padding=(0, 0, 0, 15))
-        section_container.pack(fill="x")
+        section_container.pack(fill="x", pady=(10 if title == "Description" else 0, 0))
         
         ttk.Label(
             section_container, 
@@ -147,7 +148,7 @@ class HypothesisScreen(BaseFrame):
         rationale = self.rationale_text.get("1.0", "end-1c").strip()
         success_criteria = self.success_criteria_text.get("1.0", "end-1c").strip()
         
-        # Update the hypothesis object
+        # Update hypothesis object
         updated_hypothesis = Hypothesis(
             id=self.current_hypothesis.id,
             description=description,
@@ -172,7 +173,7 @@ class HypothesisScreen(BaseFrame):
             super().on_next()
             return
         
-        # Always save first
+        # Save first
         updated_hypothesis = self._save_hypothesis()
         if updated_hypothesis is None:
             super().on_next()
@@ -228,7 +229,7 @@ class HypothesisScreen(BaseFrame):
                 )
                 experiment_runner.save_experiment_plan(experiment_plan)
                 
-                # Success - close popup and proceed
+                # Close popup and continue
                 self.after(0, lambda: self._on_generation_success(popup))
                 
             except Exception as e:
@@ -290,7 +291,7 @@ class HypothesisScreen(BaseFrame):
         # Force reload from file
         self._load_hypothesis()
         
-        # Refresh widgets if they exist
+        # Refresh widgets
         if self.current_hypothesis:
              if hasattr(self, 'description_text'):
                  self.description_text.delete("1.0", "end")

@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from typing import override
 from ..base_frame import BaseFrame, create_scrollable_text_area
+from ..info_texts import SECTION_GUIDELINES_INFO
 from phases.paper_writing.section_guidelines import SectionGuidelinesLoader
 from phases.paper_writing.data_models import Section
 
@@ -11,8 +12,9 @@ class SectionGuidelinesScreen(BaseFrame):
             parent=parent,
             controller=controller,
             title="Section Writing Guidelines",
-            next_text="Save", # Replaces "Next" button text
-            has_back=True
+            next_text="Save",
+            has_back=True,
+            info_content=SECTION_GUIDELINES_INFO
         )
         self.text_areas = {}
 
@@ -20,17 +22,16 @@ class SectionGuidelinesScreen(BaseFrame):
         pass
 
     def _create_section_editor(self, section_name: str, section_enum: Section, content: str):
-        # Check if we already have this section frame
         frame_name = f"section_frame_{section_enum.name}"
         
-        # Determine valid parent (scrollable_frame might be re-created or not, we should use self.scrollable_frame)
+        # Get valid parent
         container = ttk.Frame(self.scrollable_frame, style="Scrollable.TFrame")
         container.pack(fill="x", expand=True, pady=10)
         
         # Title
         ttk.Label(container, text=section_name, style="Scrollable.TLabel", font=self.controller.fonts.sub_header_font).pack(anchor="w", pady=(0, 5))
 
-        # Create scrollable text area using the helper for consistent styling
+        # Create scrollable text area
         container_frame, text_area = create_scrollable_text_area(container, height=6)
         container_frame.pack(fill="both", expand=True) # Helper returns a frame containing text+scrollbar
         
@@ -40,20 +41,23 @@ class SectionGuidelinesScreen(BaseFrame):
 
     @override
     def on_show(self):
-        # Clear existing content if any (to avoid duplicates if we re-create)
+        # Clear existing content (to avoid duplicates)
         for widget in self.scrollable_frame.winfo_children():
             widget.destroy()
             
         self.text_areas = {}
         
-        # Load guidelines
         guidelines = SectionGuidelinesLoader.load_guidelines()
         
-        # Define display order
         ordered_sections = [
-            Section.ABSTRACT, Section.INTRODUCTION, Section.RELATED_WORK,
-            Section.METHODS, Section.RESULTS, Section.DISCUSSION, 
-            Section.CONCLUSION, Section.ACKNOWLEDGEMENTS
+            Section.ABSTRACT,
+            Section.INTRODUCTION,
+            Section.RELATED_WORK,
+            Section.METHODS,
+            Section.RESULTS,
+            Section.DISCUSSION,
+            Section.CONCLUSION,
+            Section.ACKNOWLEDGEMENTS
         ]
         
         for section in ordered_sections:
@@ -72,11 +76,9 @@ class SectionGuidelinesScreen(BaseFrame):
         SectionGuidelinesLoader.save_guidelines(new_guidelines)
         
         messagebox.showinfo("Saved", "Section guidelines have been saved successfully.")
-        # Do NOT proceed to next screen (stay here)
         
     @override 
     def on_back(self):
-        # Go back to Settings screen specifically
         from .settings_screen import SettingsScreen
         self.controller.show_frame(SettingsScreen)
 

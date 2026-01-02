@@ -12,13 +12,8 @@ class PaperRanker(LazyEmbeddingMixin):
     - Recency (exponential decay)
     """
     
-    def __init__(self, embedding_model_name: str = "text-embedding-embeddinggemma-300m"):
-        """
-        Initialize PaperRanker with an embedding model.
-        
-        Args:
-            embedding_model_name: Name of the LM Studio embedding model
-        """
+    def __init__(self, embedding_model_name: str):
+        """nitialize PaperRanker with an embedding model."""
         self.embedding_model_name = embedding_model_name
     
     def rank_papers(
@@ -53,12 +48,12 @@ class PaperRanker(LazyEmbeddingMixin):
         print("Embedding context...")
         context_emb = self.embedding_model.embed(context)
         
-        # 2. Embed all papers (title + abstract)
+        # Embed all papers (title + abstract)
         print("Embedding papers...")
         paper_texts = [f"{p.title} {p.summary}" for p in papers]
         paper_embs = [self.embedding_model.embed(text) for text in paper_texts]
         
-        # 3. Calculate scores for each paper
+        # Calculate scores for each paper
         for paper, paper_emb in zip(papers, paper_embs):
             # Relevance score (0-1): cosine similarity
             relevance = self._cosine_similarity(context_emb, paper_emb)
@@ -136,7 +131,7 @@ class PaperRanker(LazyEmbeddingMixin):
         
         cites_per_year = citations / age_years
         
-        # Target: ~30 cites/year = 0.9, ~5 cites/year = 0.6, ~1 cite/year = 0.4
+        # ~30 cites/year = 0.9, ~5 cites/year = 0.6, ~1 cite/year = 0.4
         if cites_per_year >= 30:
             velocity_score = 0.9
         elif cites_per_year >= 10:
@@ -155,7 +150,7 @@ class PaperRanker(LazyEmbeddingMixin):
         else:
             recency_bonus = 0.0
         
-        # Maturity penalty for dead papers
+        # Penalty for "dead" papers
         if age_years > 4.0 and cites_per_year < 0.5:
             maturity_penalty = 0.2
         else:
@@ -189,7 +184,7 @@ class PaperRanker(LazyEmbeddingMixin):
         if len(published) == 4 and published.isdigit():
             return datetime(int(published), 6, 15)  # Assume mid-year
         
-        # Last resort: try to extract a 4-digit year
+        # Last option: try to extract a 4-digit year
         import re
         year_match = re.search(r'\b(19|20)\d{2}\b', published)
         if year_match:

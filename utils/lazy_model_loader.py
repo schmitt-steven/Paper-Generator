@@ -9,8 +9,7 @@ class LazyModelMixin:
     Mixin class for lazy loading of LLM models.
     
     Models are only loaded when first accessed, not during __init__.
-    This works well with LM Studio's "Only Keep Last JIT Loaded Model" server setting,
-    which conserves RAM.
+    This works well with LM Studio's "Only Keep Last JIT Loaded Model" server setting, which conserves RAM.
     """
     
     @property

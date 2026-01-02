@@ -17,39 +17,60 @@ Work in progress, everything subject to change...
 
 - **Python 3.10+**
 - **LaTeX** (MacTeX, TeX Live, MikTeX, etc.)
-- **LM Studio** running in background with:
+- **Inkscape** (for SVG plot support in LaTeX)
+- **LM Studio** running in background with at least 3 downloaded models:
   - One LLM capable of tool use
   - One VLM or multimodal model
   - One embedding model
 
-### Python Packages
+## Installation
 
-- `lmstudio` (LM Studio SDK)
-- `pydantic` (data validation)
-- `pymupdf4llm` (PDF parsing)
-- `pymupdf` (PDF manipulation)
-- `requests` (Semantic Scholar API)
-- `sv_ttk` (Tkinter theme)
-- `Pillow` (image processing)
-- Could be used by LLM for experiments:
-  - `numpy`, `matplotlib`, `seaborn`, `pygame`, `scipy`
-
-## Installation (macOS)
+### macOS
 
 ```bash
 # Install Xcode Command Line Tools
 xcode-select --install
 
-# Install Python packages
-python3 -m pip install lmstudio pydantic pymupdf4llm pymupdf requests sv_ttk Pillow scipy numpy matplotlib seaborn pygame
+# Install Homebrew (if not installed)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 # Install LaTeX (full distribution, ~4GB)
 brew install --cask mactex
+
+# Install Inkscape (for SVG support)
+brew install --cask inkscape
+
+# Install Python dependencies
+pip install -r requirements.txt
 ```
+
+### Linux (Ubuntu/Debian)
+
+```bash
+# Install LaTeX
+sudo apt-get install texlive-full
+
+# Install Inkscape
+sudo apt-get install inkscape
+
+# Install Python dependencies
+pip install -r requirements.txt
+```
+
+### Windows
+
+1. Install [MikTeX](https://miktex.org/download) or [TeX Live](https://tug.org/texlive/)
+2. Install [Inkscape](https://inkscape.org/release/)
+3. Install Python dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 ## Usage
 
 ```bash
+./main.py
+# or
 python3 main.py
 ```
 

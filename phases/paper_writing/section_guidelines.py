@@ -75,15 +75,13 @@ class SectionGuidelinesLoader:
             if s not in ordered_sections:
                 ordered_sections.append(s)
                 
-        for section in ordered_sections:
+        for i, section in enumerate(ordered_sections):
             if section in guidelines:
-                # Header formatting: "Abstract", "Related Work" (Title Case from value is decent enough)
                 header_name = section.value.title()
+                if i > 0:
+                    lines.append("")  # Blank line before ## (except first section)
                 lines.append(f"## {header_name}")
-                lines.append("")
                 lines.append(guidelines[section].strip())
-                lines.append("")
-                lines.append("")
         
         try:
             cls.FILE_PATH.write_text("\n".join(lines), encoding="utf-8")

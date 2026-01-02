@@ -9,7 +9,7 @@ class FontManager:
         # OS Detection and Configuration
         if sys.platform == "win32":
             self.font_family = "Bahnschrift"
-            self.size_offset = -3 # Windows fonts tend to be larger at same point size ?? or just preference
+            self.size_offset = -3
         elif sys.platform == "darwin":
             self.font_family = "SF Pro"
             self.size_offset = 0
@@ -35,8 +35,8 @@ class FontManager:
 
     def _init_fonts(self):
         """Initialize NamedFonts."""
-        # We hold references to these NamedFonts so they don't get garbage collected
-        # and so we can update them later.
+        # We hold the references to NamedFonts so they dont get garbage collected,
+        # and so we can update them later
         
         # Default Font (Labels, Buttons, etc.)
         self.default_font = tkfont.Font(

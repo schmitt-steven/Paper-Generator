@@ -14,14 +14,12 @@ from utils.lazy_model_loader import LazyModelMixin
 from phases.latex_generation.bibliography import generate_bibtex_entry
 from settings import Settings
 
+# Regex pattern for arXiv IDs: YYMM.NNNNN or YYMM.NNNNNvN (to strip version suffix)
+ARXIV_ID_PATTERN = re.compile(r'^(\d{4}\.\d{4,5})(v\d+)?$')
 
 class PaperTitle(BaseModel):
     """Structured output for title extraction"""
     title: str
-
-
-# Regex pattern for arXiv IDs: YYMM.NNNNN or YYMM.NNNNNvN (to strip version suffix)
-ARXIV_ID_PATTERN = re.compile(r'^(\d{4}\.\d{4,5})(v\d+)?$')
 
 
 class UserPaperLoader(LazyModelMixin):
@@ -60,8 +58,8 @@ class UserPaperLoader(LazyModelMixin):
         title = self._extract_title_from_pdf(str(pdf_path))
         print(f"    Extracted title: {title[:80]}...")
         
-        # For user-provided papers, we don't care about open access status since we already have the PDF
-        # We just need the metadata, so search without open access filter
+        # For user-provided papers, doesn't matter if open access status since we already got the PDF
+        # Just need the metadata, so search without open access filter
         results = s2_api.search_papers(title, max_results=1, open_access_only=False)
         if results:
             return results[0], "title_search"
@@ -117,7 +115,7 @@ class UserPaperLoader(LazyModelMixin):
         if s2_api is None:
             s2_api = SemanticScholarAPI(api_key=Settings.SEMANTIC_SCHOLAR_API_KEY or None)
         
-        # Paper ID is always based on filename
+        # A user provided paper's ID is always based on filename
         paper_id = f"user_{pdf_path.stem}"
         
         print(f"  Processing {pdf_path.name} -> {paper_id}")

@@ -68,17 +68,7 @@ class PaperFilter:
             selected_papers.append(paper)
             selected_ids.add(paper.id)
         
-        # OLD: Fixed threshold approach
-        # high_relevance = [
-        #     p for p in ranking_results 
-        #     if p.ranking.relevance_score > 0.9
-        # ]
-        # high_relevance.sort(key=lambda x: x.ranking.final_score, reverse=True)
-        # for paper in high_relevance:
-        #     selected_papers.append(paper)
-        #     selected_ids.add(paper.id)
-        
-        # Category 1: Cutting Edge
+        # Category 1: "Cutting Edge"
         cutting_edge = [
             p for p in ranking_results 
             if p.ranking.recency_score > 0.6 and p.ranking.relevance_score > 0.8
@@ -89,7 +79,7 @@ class PaperFilter:
             selected_papers.append(paper)
             selected_ids.add(paper.id)
         
-        # Category 2: Hidden Gems
+        # Category 2: "Hidden Gems"
         hidden_gems = [
             p for p in ranking_results 
             if p.ranking.relevance_score > 0.8 and p.ranking.citation_score < 0.3
@@ -100,7 +90,7 @@ class PaperFilter:
             selected_papers.append(paper)
             selected_ids.add(paper.id)
         
-        # Category 3: Classics
+        # Category 3: "Classics"
         classics = [
             p for p in ranking_results 
             if p.ranking.citation_score > 0.7 and p.ranking.relevance_score > 0.6
@@ -111,7 +101,7 @@ class PaperFilter:
             selected_papers.append(paper)
             selected_ids.add(paper.id)
         
-        # Category 4: Well-Rounded
+        # Category 4: "Well-Rounded"
         well_rounded = [
             p for p in ranking_results 
             if (p.ranking.relevance_score > 0.7 and

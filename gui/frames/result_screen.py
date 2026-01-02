@@ -10,6 +10,7 @@ from PIL import Image, ImageTk
 import pymupdf  # fitz
 
 from ..base_frame import BaseFrame, ProgressPopup
+from ..info_texts import RESULT_INFO
 from phases.latex_generation.paper_converter import PaperConverter
 
 PDF_PATH = "output/latex/result/paper.pdf"
@@ -24,7 +25,8 @@ class ResultScreen(BaseFrame):
             title="Result",
             has_next=False,
             has_regenerate=True,
-            regenerate_text="Recompile"
+            regenerate_text="Recompile",
+            info_content=RESULT_INFO
         )
         self.preview_images = [] # Keep references to prevent GC
 
@@ -94,8 +96,6 @@ class ResultScreen(BaseFrame):
                     if not pix.samples:
                          print(f"No pixel samples for page {page_num}")
                          continue
-
-                    #print(f"Page {page_num}: {pix.width}x{pix.height}, channels={pix.n}")
 
                     # Determine mode based on channels
                     mode = "RGB" if pix.n == 3 else "RGBA"

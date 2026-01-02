@@ -10,16 +10,14 @@ def save_markdown(content: str, filename: str, output_dir: str = None) -> str:
     if output_dir:
         target_dir = Path(output_dir)
     else:
-        # Use the current working directory
+        # Use current working directory
         target_dir = Path.cwd()
 
-    # Create directory if it doesn't exist
+    # Create dir if it doesn't exist
     target_dir.mkdir(parents=True, exist_ok=True)
 
-    # Create the full file path
     file_path = target_dir / filename
 
-    # Write the content to the file
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(content)
 
@@ -32,13 +30,11 @@ def load_markdown(filename: str, input_dir: str = None) -> str:
     if input_dir:
         source_dir = Path(input_dir)
     else:
-        # Use the current working directory
+        # Use current working directory
         source_dir = Path.cwd()
 
-    # Create the full file path
     file_path = source_dir / filename
 
-    # Read the content from the file
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
@@ -51,16 +47,13 @@ def save_json(data: dict | list | Any, filename: str, output_dir: str = None, in
     if output_dir:
         target_dir = Path(output_dir)
     else:
-        # Use the current working directory
+        # Use current working directory
         target_dir = Path.cwd()
 
-    # Create directory if it doesn't exist
     target_dir.mkdir(parents=True, exist_ok=True)
 
-    # Create the full file path
     file_path = target_dir / filename
 
-    # Write the JSON data to the file
     with open(file_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=indent, ensure_ascii=ensure_ascii)
 
@@ -73,13 +66,11 @@ def load_json(filename: str, input_dir: str = None) -> dict | list | Any:
     if input_dir:
         source_dir = Path(input_dir)
     else:
-        # Use the current working directory
+        # Use current working directory
         source_dir = Path.cwd()
 
-    # Create the full file path
     file_path = source_dir / filename
 
-    # Read the JSON data from the file
     with open(file_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
 
@@ -107,10 +98,10 @@ def preprocess_markdown(markdown: str) -> str:
     # Remove repeated special characters (e.g., "- - - - -" or "* * * *")
     markdown = re.sub(r'([\-\*_=])\s*\1{4,}', '', markdown)
     
-    # Remove single characters on their own lines (likely OCR artifacts)
+    # Remove single characters on their own lines (probably OCR artifacts)
     markdown = re.sub(r'^\s*[a-zA-Z0-9]\s*$', '', markdown, flags=re.MULTILINE)
     
-    # Remove likely page numbers (isolated small numbers, typically 1-999 for page numbers)
+    # Remove likely page numbers (isolated small numbers, usually page numbers)
     # Only remove if it's a small number (page numbers) and not part of content
     markdown = re.sub(r'^\s*\d{1,3}\s*$', '', markdown, flags=re.MULTILINE)
     

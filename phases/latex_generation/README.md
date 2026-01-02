@@ -4,7 +4,7 @@ Converts a `PaperDraft` object to a compilable LaTeX project and generates a PDF
 
 ## Components
 
-### `LaTeXMetadata` ([metadata.py](metadata.py))
+### `LaTeXMetadata` ([paper_converter.py](paper_converter.py))
 
 Document metadata (title, authors) loaded from settings.
 
@@ -14,7 +14,7 @@ Uses LLM to convert markdown sections to LaTeX format.
 
 ### Bibliography Functions ([bibliography.py](bibliography.py))
 
-- Extracts citation keys from markdown/LaTeX text
+- Extracts citation keys from markdown text
 - Creates paper mapping from citation keys to Paper objects
 - Generates `literature.bib` from cited papers
 

@@ -8,6 +8,7 @@ import platform
 from pathlib import Path
 from settings import Settings
 from ..base_frame import BaseFrame, ProgressPopup, TextBorderFrame, create_scrollable_text_area
+from ..info_texts import EXPERIMENT_RESULTS_INFO
 from phases.context_analysis.paper_conception import PaperConception
 from phases.context_analysis.user_requirements import UserRequirements
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
@@ -33,7 +34,8 @@ class ExperimentResultsScreen(BaseFrame):
             next_text=next_text,
             has_regenerate=True,
             regenerate_text="Regenerate",
-            header_file_path=Path("output/experiments/experiment_result.json")
+            header_file_path=Path("output/experiments/experiment_result.json"),
+            info_content=EXPERIMENT_RESULTS_INFO
         )
 
     def create_content(self):
@@ -653,4 +655,3 @@ class ExperimentResultsScreen(BaseFrame):
         if not hasattr(self, '_results_loaded') or not self._results_loaded:
             self._load_and_display_results()
             self._results_loaded = True
-

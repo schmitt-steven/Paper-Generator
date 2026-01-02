@@ -1,10 +1,11 @@
 % Normally nothing needs to be adjusted here
 \usepackage[pdftex]{graphicx}
+\usepackage{svg}
 \graphicspath{{images/}}
-\DeclareGraphicsExtensions{.pdf,.jpeg,.jpg,.png}
+\DeclareGraphicsExtensions{.svg,.pdf,.jpeg,.jpg,.png}
 
 % \usepackage{libertinus}
-% \usepackage[libertine]{newtxmath}  % This loads amsmath automatically
+% \usepackage[libertine]{newtxmath}
 \usepackage{lmodern}
 \usepackage{amsmath}
 \usepackage{algorithmic}
@@ -23,10 +24,10 @@
             citestyle=numeric-comp,]{biblatex}
 \usepackage{booktabs}
 \usepackage{xcolor}
-\usepackage{listings}       % Source Code listings
+\usepackage{listings} % Source Code listings
 \usepackage[printonlyused]{acronym}
 \usepackage{fancyvrb}
-\usepackage{tocloft}        % Better table of contents
+\usepackage{tocloft} % Better table of contents
 
 \definecolor{darkblue}{RGB}{59, 130, 246}
 \definecolor{comment}{RGB}{107, 114, 128} 
@@ -77,9 +78,9 @@
     prebreak=,
     postbreak=,
     numbers=none,
-    showspaces=false,      % No space symbols
-    showtabs=false,        % No tab symbols
-    showstringspaces=false,% Spaces in strings
+    showspaces=false,       % No space symbols
+    showtabs=false,         % No tab symbols
+    showstringspaces=false, % Spaces in strings
     morecomment=[s][\color{javadoccomment}]{/**}{*/},
 }
 
@@ -93,9 +94,6 @@
 \newcommand{\eg}[0]{e.\,g.}
 \newcommand{\ie}[0]{i.\,e.}
 \newcommand{\etal}[0]{et.\,al.}
-
-% Where is source code located?
-\newcommand{\srcloc}{src/}
 
 % Include bibliography
 \addbibresource{literature.bib}

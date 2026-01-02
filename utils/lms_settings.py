@@ -24,7 +24,7 @@ class LMSJITSettings:
             return home / "Library" / "Application Support" / "LM Studio" / "settings.json"
         elif system == "Windows":
             return home / "AppData" / "Roaming" / "LM Studio" / "settings.json"
-        else:  # Linux and others
+        else:  # Linux
             return home / ".cache" / "lm-studio" / "settings.json"
 
     def _read_settings(self) -> dict:

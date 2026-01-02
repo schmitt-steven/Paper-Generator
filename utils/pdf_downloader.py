@@ -9,13 +9,8 @@ class PDFDownloader:
     
     @staticmethod
     def download_pdf(pdf_url: str, filename: str):
-        """
-        Download a single PDF.
-        
-        Args:
-            pdf_url: URL to the PDF
-            filename: Path where PDF should be saved
-        """
+        """Download a single PDF."""
+
         # Create SSL context that doesn't verify certificates (for macOS compatibility)
         ssl_context = ssl.create_default_context()
         ssl_context.check_hostname = False

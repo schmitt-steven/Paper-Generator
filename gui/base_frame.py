@@ -5,16 +5,13 @@ import os
 import subprocess
 import platform
 
+from .icons import HoverColor
+
+
 MAX_WIDTH = 700
-
-# Text widget styling constants
-
-# Text widget styling constants
-# Text widget styling constants
 TEXT_AREA_SPACING = 4
 TEXT_AREA_PADX = 10
 TEXT_AREA_PADY = 10
-
 
 class TextBorderFrame(tk.Frame):
     """Custom Frame used as a border container for Text widgets."""
@@ -22,7 +19,7 @@ class TextBorderFrame(tk.Frame):
 
 
 def create_text_area(parent, height: int = 6, **kwargs) -> tk.Text:
-    """Create a consistently styled multi-line text area widget."""
+    """Creates a styled multi-line text area widget."""
     text = tk.Text(
         parent,
         height=height,
@@ -92,7 +89,7 @@ class ProgressPopup(tk.Toplevel):
         
         # Basic window setup
         self.title("Processing...")
-        self.transient(parent)  # Stay on top of parent, minimize together
+        self.transient(parent)
         self.resizable(False, False)
         
         # Set minimum size for the popup
@@ -109,7 +106,6 @@ class ProgressPopup(tk.Toplevel):
         self.dots_label.pack()
         
         self.close_btn = ttk.Button(self.content_frame, text="Close", command=self.close)
-        # Only shown on error
         
         # Center on parent
         self.update_idletasks()
@@ -121,7 +117,7 @@ class ProgressPopup(tk.Toplevel):
         self.grab_set()
         self.focus_set()
         
-        # Handle window close (X button) to ensure buttons are re-enabled
+        # Handle window close (X button) to ensure buttons are reenabled
         self.protocol("WM_DELETE_WINDOW", self.close)
         
         # Animate dots
@@ -144,7 +140,6 @@ class ProgressPopup(tk.Toplevel):
                         self._disabled_buttons.append(child)
                 except:
                     pass
-            # Recurse into child widgets
             self._find_and_disable_buttons(child)
     
     def _enable_parent_buttons(self):
@@ -212,7 +207,7 @@ class ProgressPopup(tk.Toplevel):
         text_widget.insert("1.0", error_message)
         text_widget.config(state="disabled")  # Make read-only but still selectable/copyable
         
-        # Make window resizable and larger for error display
+        # Make window resizable and larger
         self.resizable(True, True)
         self.geometry("700x500")
         
@@ -249,8 +244,8 @@ class InfoPopup(tk.Toplevel):
         self.resizable(True, True)
         self.minsize(500, 350)
         
-        # Center on parent - wider and taller
-        width, height = 700, 500
+        # Center on parent
+        width, height = 800, 600
         self.geometry(f"{width}x{height}")
         self.update_idletasks()
         x = parent.winfo_x() + (parent.winfo_width() - width) // 2
@@ -281,19 +276,18 @@ class InfoPopup(tk.Toplevel):
         
         ttk.Separator(self, orient="horizontal").grid(row=0, column=0, sticky="sew")
         
-        # Content area (no outer padding)
+        # Content area
         content_frame = ttk.Frame(self, style="Scrollable.TFrame")
         content_frame.grid(row=1, column=0, sticky="nsew")
         content_frame.grid_rowconfigure(0, weight=1)
         content_frame.grid_columnconfigure(0, weight=1)
         
-        # Text widget for content
         text = tk.Text(
             content_frame,
             wrap="word",
             font=parent.fonts.default_font,
-            padx=10,
-            pady=10,
+            padx=15,
+            pady=15,
             relief="flat",
             highlightthickness=0
         )
@@ -301,12 +295,9 @@ class InfoPopup(tk.Toplevel):
         text.insert("1.0", content)
         text.config(state="disabled")
         
-        # Apply theme colors to text
-        canvas_bg = getattr(parent, '_canvas_bg', '#131313' if is_dark else '#f9f9f9')
-        if is_dark:
-            text.configure(background=canvas_bg, foreground="#ffffff")
-        else:
-            text.configure(background=canvas_bg, foreground="#1c1c1c")
+        text_bg = "#242424" if is_dark else "#ffffff"
+        text_fg = "#ffffff" if is_dark else "#1c1c1c"
+        text.configure(background=text_bg, foreground=text_fg)
         
         # Scrollbar
         scrollbar = ttk.Scrollbar(content_frame, orient="vertical", command=text.yview)
@@ -321,13 +312,23 @@ class InfoPopup(tk.Toplevel):
         
         ttk.Button(footer_frame, text="Close", command=self.destroy).pack(side="right")
         
-        # Grab focus
         self.grab_set()
         self.focus_set()
 
 
 class BaseFrame(ttk.Frame):
-    def __init__(self, parent, controller, title="Screen", has_next=True, next_text="Next", has_back=True, back_text="Back", has_regenerate=False, regenerate_text="Regenerate", header_file_path=None, info_content=None):
+    def __init__(self,
+                 parent,
+                 controller,
+                 title="Screen",
+                 has_next=True,
+                 next_text="Next",
+                 has_back=True,
+                 back_text="Back",
+                 has_regenerate=False,
+                 regenerate_text="Regenerate",
+                 header_file_path=None,
+                 info_content=None):
         super().__init__(parent)
         self.controller = controller
         self.title = title
@@ -351,16 +352,15 @@ class BaseFrame(ttk.Frame):
         header_frame = ttk.Frame(self, style="NavBar.TFrame", padding=(10, 12))
         header_frame.grid(row=0, column=0, sticky="ew")
         
-        # Info button on right side (pack before center container)
+        # Info button on right side
         if self.info_content:
-            # Info icon is larger than other icons
             info_size = int(self.controller.fonts.base_size * 1.75)
             info_btn = self.controller.icons.create_icon_label(
                 header_frame,
                 icon_name="info",
                 command=self._show_info_popup,
                 size=info_size,
-                hover_color="green"
+                hover_color=HoverColor.BLUE
             )
             info_btn.pack(side="right", padx=(10, 15))
         
@@ -415,7 +415,7 @@ class BaseFrame(ttk.Frame):
         content_container.grid_columnconfigure(0, weight=1)
         
         # Calculate dynamic width based on font
-        self.content_width = self.controller.fonts.measure_width(55) # Approx 55 chars wide
+        self.content_width = self.controller.fonts.measure_width(55)
         content_container.grid_columnconfigure(1, weight=0, minsize=self.content_width)
         
         content_container.grid_columnconfigure(2, weight=1)
@@ -435,7 +435,7 @@ class BaseFrame(ttk.Frame):
         self._canvas.bind("<Configure>", self._update_window_width)
         
         # Mousewheel - bind globally with add="+" to not overwrite other frame bindings
-        # Each frame's handler will check if mouse is over it
+        # Each frame's _on_mousewheel checks if mouse is over it
         self._canvas.bind_all("<MouseWheel>", self._on_mousewheel, add="+")  # Windows/macOS
         self._canvas.bind_all("<Button-4>", self._on_mousewheel, add="+")    # Linux scroll up
         self._canvas.bind_all("<Button-5>", self._on_mousewheel, add="+")    # Linux scroll down
@@ -446,7 +446,7 @@ class BaseFrame(ttk.Frame):
         if self.has_next or self.has_back or self.has_regenerate:
             ttk.Separator(self, orient="horizontal").grid(row=3, column=0, sticky="ew")
             nav_container = ttk.Frame(self, style="NavBar.TFrame")
-            self.nav_container = nav_container # Save ref
+            self.nav_container = nav_container
             nav_container.grid(row=4, column=0, sticky="ew")
             nav_container.grid_columnconfigure(0, weight=1)
             nav_container.grid_columnconfigure(1, weight=0, minsize=self.content_width)
@@ -465,8 +465,27 @@ class BaseFrame(ttk.Frame):
             if self.has_regenerate:
                 ttk.Button(nav_frame, text=self.regenerate_text, command=self.on_regenerate, style="Nav.TButton").pack(side="right", padx=(0, 10))
 
-        # Register for font updates
+        # Register font updates
         self.controller.fonts.add_callback(self._update_layout)
+
+    def create_content(self):
+        ttk.Label(self.scrollable_frame, text=f"Content for {self.title}").pack()
+
+    def on_next(self):
+        self.controller.next_screen()
+
+    def on_back(self):
+        self.controller.previous_screen()
+
+    def on_regenerate(self):
+        self.controller.next_screen()
+
+    def on_show(self):
+        """
+        Called when the screen is shown. 
+        Subclasses can override this to load data lazily or refresh dynamic content.
+        """
+        pass
 
     def _update_layout(self):
         """Update layout when font size changes."""
@@ -532,25 +551,6 @@ class BaseFrame(ttk.Frame):
             delta = 1
         
         self._canvas.yview_scroll(delta, "units")
-
-    def create_content(self):
-        ttk.Label(self.scrollable_frame, text=f"Content for {self.title}").pack()
-
-    def on_next(self):
-        self.controller.next_screen()
-
-    def on_back(self):
-        self.controller.previous_screen()
-
-    def on_regenerate(self):
-        self.controller.next_screen()
-
-    def on_show(self):
-        """
-        Called when the screen is shown. 
-        Subclasses can override this to load data lazily or refresh dynamic content.
-        """
-        pass
     
     def _show_info_popup(self):
         """Show info popup with this screen's info_content."""
@@ -654,4 +654,3 @@ class BaseFrame(ttk.Frame):
         content = ttk.Frame(card, padding=10)
         content.pack(fill="x")
         return content
-

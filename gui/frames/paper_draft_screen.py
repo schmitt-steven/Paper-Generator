@@ -4,12 +4,13 @@ import threading
 from pathlib import Path
 
 from ..base_frame import BaseFrame, ProgressPopup, create_scrollable_text_area
+from ..info_texts import PAPER_DRAFT_INFO
 from .writing_prompts_screen import WritingPromptsScreen
 from utils.file_utils import load_markdown, save_markdown
 from phases.paper_writing.paper_writing_pipeline import PaperWritingPipeline
 from phases.paper_search.literature_search import LiteratureSearch
 from phases.latex_generation.paper_converter import PaperConverter
-from phases.latex_generation.metadata import LaTeXMetadata
+from phases.latex_generation.paper_converter import LaTeXMetadata
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.experimentation.experiment_runner import ExperimentRunner
 from phases.context_analysis.user_requirements import UserRequirements
@@ -26,9 +27,7 @@ LATEX_PAPER_FILE = Path("output/latex/paper.tex")
 
 class PaperDraftScreen(BaseFrame):
     def __init__(self, parent, controller):
-        self.draft_text: tk.Text
-        
-        # Dynamic button text based on whether output file exists
+        self.draft_text: tk.Text        
         next_text = "Continue" if LATEX_PAPER_FILE.exists() else "Generate LaTeX"
         
         super().__init__(
@@ -38,14 +37,15 @@ class PaperDraftScreen(BaseFrame):
             next_text=next_text,
             has_regenerate=True,
             regenerate_text="Regenerate",
-            header_file_path=Path(OUTPUT_DIR) / PAPER_DRAFT_FILE
+            header_file_path=Path(OUTPUT_DIR) / PAPER_DRAFT_FILE,
+            info_content=PAPER_DRAFT_INFO
         )
 
     def create_content(self):
         """Create the card container - content is added when draft loads."""
-        # Create the main card that will hold everything
+        # Create the main card that holds everything
         self.card = ttk.Frame(self.scrollable_frame, style="Card.TFrame", padding=1)
-        self.card.pack(fill="both", expand=True)
+        self.card.pack(fill="both", expand=True, pady=(10, 0))
         
         # Header with title and button
         header = ttk.Frame(self.card, style="CardHeader.TFrame", padding=(10, 8))
@@ -64,7 +64,7 @@ class PaperDraftScreen(BaseFrame):
             fg=header_fg
         ).pack(side="left")
         
-        # Show Prompts button on right
+        # Prompts button on right
         ttk.Button(
             header,
             text="Show Prompts",
@@ -73,7 +73,7 @@ class PaperDraftScreen(BaseFrame):
         
         ttk.Separator(self.card, orient="horizontal").pack(fill="x")
         
-        # Content frame for the text area (no padding)
+        # Content frame for the text area
         self.card_content = ttk.Frame(self.card, padding=0)
         self.card_content.pack(fill="both", expand=True)
     
@@ -95,7 +95,7 @@ class PaperDraftScreen(BaseFrame):
             self._show_error(f"Error loading paper draft: {e}")
             return
         
-        # Create the editable text area inside the card
+        # Create editable text area inside the card
         self._create_draft_section(draft_content)
 
     def _show_error(self, message: str):
@@ -113,7 +113,7 @@ class PaperDraftScreen(BaseFrame):
 
     def _create_draft_section(self, content: str):
         """Create the text area inside the card content."""
-        # Text area with scrollbar (no border wrapper)
+        # Text area with scrollbar
         inner = ttk.Frame(self.card_content)
         inner.pack(fill="both", expand=True)
         
@@ -137,7 +137,6 @@ class PaperDraftScreen(BaseFrame):
         
         self.draft_text.insert("1.0", content)
         
-        # Apply theme colors
         self.controller.apply_theme_colors(self.draft_text)
 
     def _save_draft(self):
@@ -156,10 +155,8 @@ class PaperDraftScreen(BaseFrame):
 
     def on_next(self):
         """Save the edited draft and proceed or generate LaTeX."""
-        # Always save first
         self._save_draft()
         
-        # Check if output exists
         if LATEX_PAPER_FILE.exists():
             super().on_next()
         else:
@@ -189,7 +186,7 @@ class PaperDraftScreen(BaseFrame):
                     raise ValueError("No hypothesis found")
                 
                 experiment_result = None
-                # Load experiment result (simplified filename without hypothesis ID)
+                # Load experiment result
                 experiment_result_file = "output/experiments/experiment_result.json"
                 if Path(experiment_result_file).exists():
                     experiment_result = ExperimentRunner.load_experiment_result(experiment_result_file)
@@ -212,7 +209,7 @@ class PaperDraftScreen(BaseFrame):
                 success = converter.compile_latex(latex_dir)
                 
                 if success:
-                    # Success - close popup and proceed
+                    # Close popup and continue
                     self.after(0, lambda: self._on_generation_success(popup))
                 else:
                     self.after(0, lambda: popup.show_error("LaTeX compilation failed. Check logs for details."))
@@ -234,12 +231,10 @@ class PaperDraftScreen(BaseFrame):
         """Called when screen is shown - load draft."""
         draft_path = Path(OUTPUT_DIR) / PAPER_DRAFT_FILE
         
-        # Load draft if we haven't yet and it exists
         if not hasattr(self, 'draft_text'):
             if draft_path.exists():
                 self._load_draft()
             else:
-                # This shouldn't happen since Evidence Screen generates before navigating
                 print("[PaperDraftScreen] Warning: No paper draft found")
 
     def on_regenerate(self):
@@ -282,7 +277,7 @@ class PaperDraftScreen(BaseFrame):
                 except:
                     pass
                 
-                # 2. Initialize pipeline
+                # 2. Create pipeline
                 pipeline = PaperWritingPipeline()
                 
                 # 3. Write Paper using edited evidence from evidence.json

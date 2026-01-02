@@ -9,6 +9,7 @@ from pathlib import Path
 import re
 
 from ..base_frame import BaseFrame
+from ..info_texts import WRITING_PROMPTS_INFO
 
 
 PROMPTS_FILE = Path("output/section_writing_prompts.md")
@@ -27,11 +28,10 @@ class CollapsiblePromptCard(ttk.Frame):
         self._build_ui()
     
     def _build_ui(self):
-        # Header frame with toggle
+        # Header frame
         header = ttk.Frame(self, style="CardHeader.TFrame", padding=(10, 8))
         header.pack(fill="x")
         
-        # Get colors  
         header_bg = getattr(self.controller, '_card_header_bg', '#252525')
         header_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
         
@@ -87,7 +87,7 @@ class CollapsiblePromptCard(ttk.Frame):
         
         ttk.Separator(self, orient="horizontal").pack(fill="x")
         
-        # Content frame (hidden by default) - no padding
+        # Content frame (hidden by default)
         self.content_frame = ttk.Frame(self, padding=0)
         # Don't pack yet - only show when expanded
         
@@ -160,13 +160,13 @@ class WritingPromptsScreen(BaseFrame):
             has_next=False,
             has_back=True,
             back_text="Back",
-            header_file_path=PROMPTS_FILE
+            header_file_path=PROMPTS_FILE,
+            info_content=WRITING_PROMPTS_INFO
         )
     
     def create_content(self):
         """Create the initial UI structure."""
-        # Remove default padding from scrollable frame
-        self.scrollable_frame.configure(padding=(0, 12, 0, 10))
+        pass
     
     def on_show(self):
         """Load prompts when screen is shown."""
@@ -190,14 +190,14 @@ class WritingPromptsScreen(BaseFrame):
             content = PROMPTS_FILE.read_text(encoding="utf-8")
             sections = self._parse_sections(content)
             
-            for section_name, prompt_content in sections.items():
+            for i, (section_name, prompt_content) in enumerate(sections.items()):
                 card = CollapsiblePromptCard(
                     self.scrollable_frame,
                     section_name,
                     prompt_content.strip(),
                     self.controller
                 )
-                card.pack(fill="x", pady=(0, 8))
+                card.pack(fill="x", pady=(10 if i == 0 else 0, 8))
                 self.prompt_cards[section_name] = card
                 
         except Exception as e:

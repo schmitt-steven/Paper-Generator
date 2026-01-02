@@ -28,7 +28,7 @@ EXPERIMENT_PLAN_FILE = "experiment_plan.md"
 
 
 class ExperimentRunner:
-    """Conducts experiments to test hypotheses."""
+    """Runs experiment to test a hypothesis."""
     
     def __init__(self, base_output_dir: str = "output/experiments"):
         self.settings = Settings
@@ -822,7 +822,6 @@ class ExperimentRunner:
     
     @staticmethod
     def load_previous_results(
-        hypothesis_id: str = None,  # Kept for backward compatibility but not used
         run_id: Optional[int] = None,
         base_dir: str = "output/experiments"
     ) -> dict[str, Any]:

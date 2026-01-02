@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from ..base_frame import BaseFrame, ProgressPopup, TextBorderFrame, create_scrollable_text_area
+from ..info_texts import EVIDENCE_INFO
 from phases.paper_writing.data_models import Evidence, PaperChunk, Section
 from phases.paper_writing.evidence_manager import (
     load_evidence, save_evidence, add_evidence, remove_evidence, get_evidence_stats,
@@ -26,7 +27,6 @@ DISPLAY_SECTIONS = [
     Section.DISCUSSION,
     Section.CONCLUSION,
 ]
-
 
 class EvidenceChunkCard(ttk.Frame):
     """A card displaying a single evidence chunk with metadata and remove button."""
@@ -69,7 +69,7 @@ class EvidenceChunkCard(ttk.Frame):
             anchor="w"
         ).pack(anchor="w")
         
-        # Metadata (directly under title)
+        # Metadata (under title)
         authors_text = paper.authors[0] if paper.authors else "Unknown"
         if len(paper.authors) > 1:
             authors_text += " et al."
@@ -90,7 +90,7 @@ class EvidenceChunkCard(ttk.Frame):
             anchor="w"
         ).pack(anchor="w")
         
-        # Remove button on right (minimalistic label-based)
+        # Remove button on right
         remove_color = "#666666" if self.controller.current_theme == "dark" else "#888888"
         hover_color = "#ff6b6b" if self.controller.current_theme == "dark" else "#e05555"
         
@@ -113,7 +113,7 @@ class EvidenceChunkCard(ttk.Frame):
         
         ttk.Separator(self, orient="horizontal").pack(fill="x")
         
-        # Summary text area (no border)
+        # Summary text area
         text_frame = ttk.Frame(self)
         text_frame.pack(fill="both", expand=True)
         
@@ -203,7 +203,7 @@ class CollapsibleSectionCard(ttk.Frame):
         
         # Content frame (hidden by default)
         self.content_frame = ttk.Frame(self, padding=10)
-        # Don't pack yet - only show when expanded
+        # Don't pack yet, only show when expanded
     
     def toggle(self):
         """Toggle expansion state."""
@@ -378,7 +378,7 @@ class AddChunkDialog(tk.Toplevel):
         self.text_input.grid(row=0, column=0, sticky="nsew")
         scrollbar.config(command=self.text_input.yview)
         
-        # Bottom button bar (Cancel left, Add Evidence right - like other screens)
+        # Bottom button bar (Cancel left, Add Evidence right)
         btn_frame = ttk.Frame(main)
         btn_frame.grid(row=6, column=0, sticky="ew")
         
@@ -446,6 +446,7 @@ class EvidenceScreen(BaseFrame):
             back_text="Back",
             has_regenerate=True,
             regenerate_text="Regather Evidence",
+            info_content=EVIDENCE_INFO
             # header_file_path=Path(EVIDENCE_FILE) if Path(EVIDENCE_FILE).exists() else None,
         )
     
@@ -499,8 +500,7 @@ class EvidenceScreen(BaseFrame):
             row=0, column=1, sticky="sew", pady=(30, 0)
         )
         
-        # Remove default padding from scrollable frame for consistent look
-        self.scrollable_frame.configure(padding=(0, 12, 0, 10))
+        self.scrollable_frame.configure(padding=(0, 10, 0, 10))
     
     def on_show(self):
         """Load evidence when screen is shown."""
@@ -527,14 +527,14 @@ class EvidenceScreen(BaseFrame):
     def _build_sections(self):
         """Build the section cards (stats bar is already in sticky frame)."""
         # Section cards go in scrollable_frame
-        for section in DISPLAY_SECTIONS:
+        for i, section in enumerate(DISPLAY_SECTIONS):
             card = CollapsibleSectionCard(
                 self.scrollable_frame,
                 section,
                 self.controller,
                 on_chunk_removed=self._on_chunk_removed
             )
-            card.pack(fill="x", pady=(0, 8))
+            card.pack(fill="x", pady=(10 if i == 0 else 0, 8))
             self.section_cards[section] = card
             
             # Set evidence
@@ -582,7 +582,7 @@ class EvidenceScreen(BaseFrame):
             chunk = PaperChunk(
                 chunk_id=f"user_{uuid.uuid4().hex[:8]}",
                 paper=paper,
-                chunk_text=text,  # Use summary as chunk text too
+                chunk_text=text,
                 chunk_index=0,
                 embedding=[]
             )
@@ -590,8 +590,8 @@ class EvidenceScreen(BaseFrame):
                 chunk=chunk,
                 summary=text,
                 vector_score=0.0,
-                llm_score=1.0,  # User-provided gets high score
-                combined_score=1.0,
+                llm_score=0.0,
+                combined_score=0.0,
                 source_query="user_added"
             )
             
@@ -621,10 +621,10 @@ class EvidenceScreen(BaseFrame):
         paper_draft_path = Path("output/paper_draft.md")
         
         if paper_draft_path.exists():
-            # Draft exists - just proceed
+            # Draft exists - just continue
             super().on_next()
         else:
-            # No draft - need to generate it first
+            # No draft - need to generate it
             self._run_paper_generation()
     
     def _run_paper_generation(self):
@@ -669,7 +669,7 @@ class EvidenceScreen(BaseFrame):
                     status_callback=status_update
                 )
                 
-                # Success - close popup and proceed to Paper Draft screen
+                # Success - close popup and show Paper Draft screen
                 self.after(0, lambda: self._on_generation_success(popup))
                 
             except Exception as e:

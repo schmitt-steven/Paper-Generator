@@ -20,10 +20,10 @@ class SemanticScholarAPI:
     def _rate_limit(self):
         """
         Enforce rate limiting.
-        Without key: 5,000 requests per 5 minutes (~16/sec) - we use 2 sec to be conservative
-        With key: 1 request per second for search endpoint - we use 1 sec
+        Without key: 5,000 requests per 5 minutes (~16/sec)
+        With key: 1 request per second for search endpoint
         """
-        min_interval = 1.0 if self.api_key else 2.0
+        min_interval = 1.0 if self.api_key else 2.5
         elapsed = time.time() - self._last_request_time
         if elapsed < min_interval:
             time.sleep(min_interval - elapsed)
@@ -80,7 +80,7 @@ class SemanticScholarAPI:
                     backoff *= 3
                     continue
                 
-                # Check for other error status codes
+                # Check for other errors
                 if response.status_code != 200:
                     error_text = response.text[:200] if response.text else "No error message"
                     print(f"API error ({response.status_code}): {error_text}")

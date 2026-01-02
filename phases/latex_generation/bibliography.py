@@ -36,47 +36,19 @@ def extract_citation_keys_from_markdown(md_text: str) -> set[str]:
     return citation_keys
 
 
-def extract_citation_keys_from_latex(latex_text: str) -> set[str]:
-    """
-    Extract all citation keys from LaTeX text.
-    
-    Handles both single and multiple citations:
-    - \\cite{key1}
-    - \\cite{key1,key2,key3}
-    
-    Args:
-        latex_text: LaTeX-formatted text
-    
-    Returns:
-        Set of unique citation keys
-    """
-    # Pattern to match \cite{key1,key2,key3} or \cite{key1}
-    pattern = r'\\cite\{([^}]+)\}'
-    matches = re.findall(pattern, latex_text)
-    
-    citation_keys = set()
-    for match in matches:
-        # Split by comma and strip whitespace
-        keys = [k.strip() for k in match.split(",")]
-        citation_keys.update(keys)
-    
-    return citation_keys
 
-
-def extract_all_citations(paper_draft: PaperDraft, is_latex: bool = False) -> set[str]:
+def extract_all_citations(paper_draft: PaperDraft) -> set[str]:
     """
     Extract all citation keys from all sections of a PaperDraft.
     
     Args:
-        paper_draft: PaperDraft with sections (markdown or LaTeX)
-        is_latex: If True, extract from LaTeX format; if False, extract from markdown format
+        paper_draft: PaperDraft with sections in markdown format
     
     Returns:
         Set of unique citation keys
     """
     all_keys = set()
     
-    # Extract from each section
     sections = [
         paper_draft.abstract,
         paper_draft.introduction,
@@ -87,11 +59,9 @@ def extract_all_citations(paper_draft: PaperDraft, is_latex: bool = False) -> se
         paper_draft.conclusion,
     ]
     
-    extract_func = extract_citation_keys_from_latex if is_latex else extract_citation_keys_from_markdown
-    
     for section_text in sections:
         if section_text:
-            keys = extract_func(section_text)
+            keys = extract_citation_keys_from_markdown(section_text)
             all_keys.update(keys)
     
     return all_keys
@@ -160,7 +130,7 @@ def generate_bibtex_entry(paper: Paper) -> str:
     # Determine entry type
     entry_type = "article"  # Default fallback
     
-    # Try to extract from BibTeX if available (even if we're generating new entry)
+    # Try to extract from BibTeX if available
     if paper.bibtex:
         bibtex_type_match = re.search(r'@(\w+)\{', paper.bibtex)
         if bibtex_type_match:
@@ -189,7 +159,7 @@ def generate_bibtex_entry(paper: Paper) -> str:
         f"  year = {{{year}}},",
     ]
     
-    # Add venue field - use appropriate field name based on entry type
+    # Add venue field - choose field name based on entry type
     if paper.venue:
         if entry_type == "inproceedings":
             bibtex_lines.append(f"  booktitle = {{{paper.venue}}},")
@@ -212,21 +182,18 @@ def generate_bibtex_entry(paper: Paper) -> str:
 def generate_literature_bib(
     paper_draft: PaperDraft,
     indexed_papers: list[Paper],
-    is_latex: bool = False,
 ) -> str:
     """
     Generate literature.bib file content from PaperDraft citations.
     
     Args:
-        paper_draft: PaperDraft with sections (markdown or LaTeX)
+        paper_draft: PaperDraft with sections in markdown format
         indexed_papers: List of Paper objects to map citations to
-        is_latex: If True, extract from LaTeX format; if False, extract from markdown format
     
     Returns:
         Complete BibTeX file content as string
     """
-    # Extract all citation keys
-    citation_keys = extract_all_citations(paper_draft, is_latex=is_latex)
+    citation_keys = extract_all_citations(paper_draft)
     
     # Create mapping
     paper_mapping = create_paper_mapping(indexed_papers)
@@ -252,9 +219,6 @@ def generate_literature_bib(
                   note = {{Citation key not found in indexed papers}},
                 }}""")
             bibtex_entries.append(placeholder)
-    
-    #if missing_keys:
-    #    logger.warning(f"[Bibliography] {len(missing_keys)} citation keys not found in indexed papers: {missing_keys}")
     
     return "\n\n".join(bibtex_entries)
 

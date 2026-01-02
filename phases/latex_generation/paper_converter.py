@@ -5,6 +5,7 @@ import os
 import re
 import shutil
 import subprocess
+from dataclasses import dataclass
 from typing import Optional, Any, List, Set
 from pathlib import Path
 from settings import Settings
@@ -13,10 +14,32 @@ from phases.paper_writing.data_models import PaperDraft, Section
 from utils.lazy_model_loader import LazyModelMixin
 from phases.latex_generation.bibliography import generate_literature_bib
 from phases.latex_generation.markdown_to_latex import MarkdownToLaTeX
-from phases.latex_generation.metadata import LaTeXMetadata
 from phases.experimentation.experiment_state import ExperimentResult
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class LaTeXMetadata:
+    """Metadata for LaTeX document generation (IEEEtran format)."""
+
+    title: str
+    authors: list[dict[str, str]]  # List of author dictionaries
+
+    @classmethod
+    def from_settings(cls, generated_title: str) -> "LaTeXMetadata":
+        """Create LaTeXMetadata from settings.
+        
+        Args:
+            generated_title: Title from PaperDraft (respects Settings.LATEX_TITLE if set)
+        
+        Returns:
+            LaTeXMetadata with all fields for IEEEtran template
+        """
+        return cls(
+            title=generated_title,
+            authors=Settings.LATEX_AUTHORS,
+        )
 
 
 class PaperConverter(LazyModelMixin):
@@ -266,8 +289,7 @@ class PaperConverter(LazyModelMixin):
     def _generate_bibliography(self, latex_dir: Path, paper_draft: PaperDraft, indexed_papers: list[Paper]) -> None:
         """Generate literature.bib from citations in PaperDraft."""
 
-        # Extract from markdown format (before conversion)
-        bib_content = generate_literature_bib(paper_draft, indexed_papers, is_latex=False)
+        bib_content = generate_literature_bib(paper_draft, indexed_papers)
         
         bib_path = latex_dir / "literature.bib"
         bib_path.write_text(bib_content, encoding="utf-8")

@@ -1,6 +1,4 @@
 from tkinter.ttk import Style
-
-
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sv_ttk
@@ -41,7 +39,6 @@ class PaperGeneratorApp(tk.Tk):
             self.destroy()
             return
 
-
         # Windows DPI awareness (fixes blurry text on Windows)
         if sys.platform == "win32":
             from ctypes import windll
@@ -66,7 +63,7 @@ class PaperGeneratorApp(tk.Tk):
             except:
                 pass
         
-        # Apply Sun Valley theme (use saved preference)
+        # Apply Sun Valley tkinter theme 
         saved_dark_mode = getattr(Settings, "DARK_MODE", True)
         self.current_theme = "dark" if saved_dark_mode else "light"
         sv_ttk.set_theme(self.current_theme)
@@ -121,14 +118,13 @@ class PaperGeneratorApp(tk.Tk):
             ExperimentResultsScreen,
             EvidenceScreen,
             PaperDraftScreen,
-            ResultScreen,
-            SectionGuidelinesScreen
+            ResultScreen
         ]
         self.current_screen_index = 0
         
         self.init_frames()
         
-        # Defer application of custom theme colors to override defaults
+        # Defer app of custom theme colors to override defaults
         self.after(100, self.apply_theme_colors)
         
         # Show initial frame and call on_show
@@ -141,24 +137,22 @@ class PaperGeneratorApp(tk.Tk):
         """Configure ttk styles with current fonts."""
         style = ttk.Style()
         
-        # Configure default fonts for common ttk widgets
+        # Configure default fonts for ttk widgets
         style.configure("TLabel", font=self.fonts.default_font)
         style.configure("TButton", font=self.fonts.default_font)
         style.configure("TEntry", font=self.fonts.text_field_font)
         style.configure("TFrame", font=self.fonts.default_font)
         style.configure("TLabelframe.Label", font=self.fonts.default_font)
         
-        # Override button styling (after setting default)
-        # Note: We need to be careful not to reset layout if it's already set
-        # But configuring font is safe
+        # Override button styling
         try:
              style.layout("TButton", style.layout("Accent.TButton"))
              style.configure("TButton", font=self.fonts.default_font, **style.configure("Accent.TButton"))
              style.map("TButton", **style.map("Accent.TButton"))
         except:
-             pass # Theme might not be fully loaded or compatible
-        
-        # Card header styling (different background for the title row)
+             pass
+
+        # Card header styling 
         if self.current_theme == "dark":
             self._card_header_bg = "#252525"  
             self._navbar_bg = "#0f0f0f"       
@@ -171,18 +165,18 @@ class PaperGeneratorApp(tk.Tk):
         style.configure("NavBar.TFrame", background=self._navbar_bg)
         style.configure("NavBar.TLabel", background=self._navbar_bg)
         
-        # Card body background (white in light mode for crisp sections)
+        # Card body background
         if self.current_theme == "dark":
             self._card_bg = None  # Use default theme
         else:
-            self._card_bg = "#ffffff"  # Pure white for light mode cards
+            self._card_bg = "#ffffff" 
             style.configure("Card.TFrame", background=self._card_bg)
         
         # Canvas/scrollable area background
         if self.current_theme == "dark":
             self._canvas_bg = "#131313"
         else:
-            self._canvas_bg = "#f0f5f8"  # Lightest icy background
+            self._canvas_bg = "#f0f5f8"
         
         style.configure("Scrollable.TFrame", background=self._canvas_bg)
         style.configure("Scrollable.TLabel", background=self._canvas_bg)
@@ -192,8 +186,7 @@ class PaperGeneratorApp(tk.Tk):
         style.configure("TSpinbox", font=self.fonts.text_field_font)
         style.configure("TEntry", font=self.fonts.text_field_font)
         
-        # Explicitly set font for TCombobox sub-elements via option_add
-        # This is often needed for the Entry part of the Combobox to pick up changes
+        # Set font for TCombobox sub-elements via option_add
         self.option_add("*TCombobox*Font", self.fonts.default_font)
         self.option_add("*TCombobox.Font", self.fonts.default_font)
         
@@ -207,7 +200,7 @@ class PaperGeneratorApp(tk.Tk):
         # Set default font for Text widgets (text areas)
         self.option_add("*Text.Font", self.fonts.text_area_font)
         
-        # Theme-aware Combobox Listbox styling (stored as instance vars for update_combobox_styles)
+        # Combobox Listbox styling (stored as instance vars for update_combobox_styles)
         if self.current_theme == "dark":
             self._listbox_bg = "#2b2b2b"
             self._listbox_fg = "#ffffff"
@@ -244,7 +237,7 @@ class PaperGeneratorApp(tk.Tk):
         # Check if this is a Combobox
         if isinstance(widget, ttk.Combobox):
             try:
-                # Get the popdown listbox and configure it directly
+                # Get popdown listbox and configure it directly
                 # The listbox is accessed via the popdown toplevel
                 popdown = widget.tk.call("ttk::combobox::PopdownWindow", widget)
                 listbox = popdown + ".f.l"
@@ -261,9 +254,8 @@ class PaperGeneratorApp(tk.Tk):
                     "-font", self.fonts.default_font
                 )
             except:
-                pass  # Popdown may not exist yet if dropdown hasn't been opened
-        
-        # Recurse through children
+                pass
+
         for child in widget.winfo_children():
             self.update_combobox_styles(child)
 
@@ -273,8 +265,8 @@ class PaperGeneratorApp(tk.Tk):
             self.frames[Frame] = frame
             frame.grid(row=0, column=0, sticky="nsew")
         
-        # Initialize additional frames not in main navigation
-        extra_frames = [WritingPromptsScreen]
+        # Init additional frames not in main navigation
+        extra_frames = [WritingPromptsScreen, SectionGuidelinesScreen]
         for Frame in extra_frames:
             frame = Frame(parent=self.container, controller=self)
             self.frames[Frame] = frame
@@ -334,9 +326,9 @@ class PaperGeneratorApp(tk.Tk):
             card_header_bg = "#252525"
             card_header_fg = "#ffffff"
         else:
-            text_bg = "#f5f8fa"  # Lighter icy text area background
+            text_bg = "#f5f8fa"
             text_fg = "#1c1c1c"
-            border_color = "#c5d0d8"  # Icy border
+            border_color = "#c5d0d8"
             insert_bg = "#1c1c1c"
             card_header_bg = "#e8eef2"
             card_header_fg = "#1c1c1c"
@@ -394,23 +386,19 @@ class PaperGeneratorApp(tk.Tk):
                     parent.configure(background=card_header_bg)
                 
                 if is_card_header:
-                    # Update background, but preserve gray foreground for count labels
+                    # Update background
                     current_fg = str(widget.cget('fg'))
                     if current_fg in ['gray', '#888888', '#666666']:
-                        # This is a count label - keep gray foreground
                         widget.configure(background=card_header_bg, fg="#666666")
                     else:
-                        # This is a title label - use theme foreground
                         widget.configure(background=card_header_bg, foreground=card_header_fg)
                 elif is_navbar:
-                    # NavBar uses _navbar_bg color (set in configure_styles)
                     navbar_bg = self._navbar_bg
                     navbar_fg = "#ffffff" if self.current_theme == "dark" else "#1c1c1c"
                     widget.configure(background=navbar_bg, foreground=navbar_fg)
             except:
                 pass
                 
-        # Recurse
         for child in widget.winfo_children():
             self.apply_theme_colors(child)
 

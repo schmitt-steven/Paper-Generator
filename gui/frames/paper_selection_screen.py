@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import List, Dict, Callable, Any, Optional
 
 from ..base_frame import BaseFrame, ProgressPopup, create_gray_button
+from ..icons import HoverColor
+from ..info_texts import PAPER_SELECTION_INFO
 from phases.paper_search.paper import Paper
 from phases.paper_search.user_paper_loader import UserPaperLoader
 from phases.paper_search.literature_search import LiteratureSearch
@@ -56,14 +58,14 @@ class PaperSelectionScreen(BaseFrame):
         # Track original paper IDs to detect new papers
         self._original_paper_ids: set = set()
         
-        # Dynamic button text based on whether output file exists
         next_text = "Continue" if HYPOTHESES_FILE.exists() else "Generate Hypothesis"
         
         super().__init__(
             parent=parent,
             controller=controller,
             title="Paper Selection",
-            next_text=next_text
+            next_text=next_text,
+            info_content=PAPER_SELECTION_INFO
         )
 
     def create_content(self):
@@ -93,7 +95,7 @@ class PaperSelectionScreen(BaseFrame):
             
             print(f"[Papers] Loaded {len(self.user_papers)} user papers, {len(self.searched_papers)} searched papers")
             
-            # Refresh the UI
+            # Refresh UI
             self._refresh_user_papers_list()
             self._refresh_searched_papers_list()
             
@@ -107,14 +109,13 @@ class PaperSelectionScreen(BaseFrame):
         section_frame = ttk.Frame(parent, style="Card.TFrame", padding=1)
         section_frame.pack(fill="x", pady=10)
         
-        # Header row with styled background
+        # Header row
         header_frame = ttk.Frame(section_frame, style="CardHeader.TFrame", padding=(10, 6))
         header_frame.pack(fill="x")
         
         left_header = ttk.Frame(header_frame, style="CardHeader.TFrame")
         left_header.pack(side="left")
         
-        # Use tk.Label for reliable background color
         header_bg = getattr(self.controller, '_card_header_bg', '#252525')
         header_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
         tk.Label(
@@ -174,13 +175,13 @@ class PaperSelectionScreen(BaseFrame):
         content_row = ttk.Frame(entry_frame)
         content_row.pack(fill="x")
         
-        # Button container (right-aligned) - Pack FIRST to reserve space
+        # Button container
         btn_container = ttk.Frame(content_row)
         btn_container.pack(side="right", padx=(10, 0))
 
         # Upload button for closed access papers
         if not is_user_paper and not paper.is_open_access:
-             # Check if we already have a PDF for this paper
+             # Check if PDF for paper was provided
              has_local_pdf = False
              if paper.pdf_path:
                  has_local_pdf = True
@@ -196,11 +197,11 @@ class PaperSelectionScreen(BaseFrame):
                      btn_container,
                      icon_name="upload",
                      command=lambda: self._on_upload_paper_pdf(paper),
-                     hover_color="green"
+                     hover_color=HoverColor.GREEN
                  )
                  upload_btn.pack(side="left", padx=(0, 10))
         
-        # X button with theme-aware icon
+        # X button
         x_btn = self.controller.icons.create_icon_label(
             btn_container,
             icon_name="x",
@@ -208,7 +209,7 @@ class PaperSelectionScreen(BaseFrame):
         )
         x_btn.pack(side="left")
 
-        # Content Frame (Title + Metadata) - Pack SECOND to fill remaining space
+        # Content Frame (Title + Metadata)
         content_frame = ttk.Frame(content_row)
         content_frame.pack(side="left", fill="x", expand=True)
         
@@ -218,7 +219,7 @@ class PaperSelectionScreen(BaseFrame):
         metadata_frame = ttk.Frame(content_frame)
         metadata_frame.pack(anchor="w", pady=(2, 0), fill="x")
         
-        # 1. Status Tag (Colored)
+        # 1. Status Tag
         status_text, status_color = self._get_paper_status(paper)
         if status_text:
             status_label = ttk.Label(metadata_frame, text=status_text, font=self.controller.fonts.text_area_font, foreground=status_color)
@@ -227,14 +228,12 @@ class PaperSelectionScreen(BaseFrame):
             # Separator if there is other metadata
             ttk.Label(metadata_frame, text="  \u00B7  ", font=self.controller.fonts.text_area_font, foreground="gray").pack(side="left")
 
-        # 2. Bibliographic Metadata (Gray)
+        # 2. Bibliographic Metadata
         metadata = self._format_paper_bibliographic_info(paper, is_user_paper)
         metadata_label = ttk.Label(metadata_frame, text=metadata, font=self.controller.fonts.text_area_font, foreground="gray")
         metadata_label.pack(side="left")
         
-        # Dynamic wraplength
         def update_wraplength(event):
-            # Subtract padding/offsets if needed
             width = event.width
             if width > 10: 
                 title_label.config(wraplength=width)
@@ -251,7 +250,7 @@ class PaperSelectionScreen(BaseFrame):
     def _get_paper_status(self, paper: Paper) -> tuple[Optional[str], Optional[str]]:
         """Return status text and color if applicable."""
         if not paper.is_open_access and not paper.user_provided:
-             # Check if we have a PDF for this paper
+             # Check if PDF for paper was provided
              has_local_pdf = False
              if paper.pdf_path:
                  has_local_pdf = True
@@ -288,7 +287,7 @@ class PaperSelectionScreen(BaseFrame):
         if paper.citation_count is not None:
             parts.append(f"{paper.citation_count:,} citations")
         
-        # Show similarity /relevance score for searched papers (from ranking.relevance_score)
+        # Show similarity /relevance score for searched papers
         if not is_user_paper and paper.ranking and paper.ranking.relevance_score is not None:
             parts.append(f"Relevance: {paper.ranking.relevance_score:.2f}")
         
@@ -388,7 +387,7 @@ class PaperSelectionScreen(BaseFrame):
                     print(f"[Papers] Skipping duplicate: {pdf_path.name}")
                     continue
                 
-                # Process this paper
+                # Process paper
                 paper = loader.load_user_paper(pdf_path)
                 if paper:
                     new_papers.append(paper)
@@ -421,7 +420,6 @@ class PaperSelectionScreen(BaseFrame):
         if self.is_searching:
             return
         
-        # Confirm if there are already searched papers (they will be replaced)
         if self.searched_papers:
             if not messagebox.askyesno(
                 "Confirm Auto Search",
@@ -605,10 +603,10 @@ class PaperSelectionScreen(BaseFrame):
             print(f"[Papers] Found {len(papers_to_process)} papers to process ({len(new_papers)} new, {len(papers_needing_conversion)} need conversion)")
             self._process_new_papers(all_papers, papers_to_process)
         elif HYPOTHESES_FILE.exists():
-            # No papers to process, hypotheses exist - just continue
+            # No papers to process, hypotheses exist -> continue
             super().on_next()
         else:
-            # No papers to process, no hypothesis - generate it
+            # No papers to process, no hypothesis -> generate it
             self._run_hypothesis_generation(all_papers)
 
     def _find_papers_needing_conversion(self, all_papers: list[Paper]) -> list[Paper]:
@@ -704,7 +702,7 @@ class PaperSelectionScreen(BaseFrame):
                 user_requirements = UserRequirements.load_user_requirements("user_files/user_requirements.md")
                 user_provided_hypothesis = bool(user_requirements.hypothesis and user_requirements.hypothesis.strip())
                 
-                # Step 1: Ensure all papers are converted to markdown
+                # Step 1: Check all papers are converted to markdown
                 papers_needing_conversion = self._find_papers_needing_conversion(all_papers)
                 if papers_needing_conversion:
                     self.after(0, lambda: popup.update_status(f"Converting {len(papers_needing_conversion)} PDF(s) to markdown"))
@@ -731,9 +729,6 @@ class PaperSelectionScreen(BaseFrame):
                         num_papers_analyzed=0
                     )
                     hypothesis_builder.create_hypothesis_from_user_input(user_requirements)
-                # If no user hypothesis, skip generation - user can create manually on hypothesis screen
-                
-
                 
                 # Success - close popup and go to next screen
                 self.after(0, lambda: self._on_generation_success(popup))
