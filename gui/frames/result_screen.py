@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 import threading
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from PIL import Image, ImageTk
 import pymupdf  # fitz
 
@@ -205,6 +205,7 @@ class ResultScreen(BaseFrame):
         popup.close()
         # Refresh preview
         self.show_preview()
+        messagebox.showinfo("Success", "PDF compiled successfully!")
 
     def _show_error(self, msg):
         err_label = ttk.Label(self.scrollable_frame, text=msg, foreground="red")

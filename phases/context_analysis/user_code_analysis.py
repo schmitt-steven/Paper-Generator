@@ -17,27 +17,30 @@ class UserCode:
     file_name: str
     file_content: str
     summary: str = ""
-    novel_concepts: str = ""
-    research_relevance: str = ""
-    important_snippets: list['CodeSnippet'] | None  = None
+    keywords: list[str] = None
+    method: str = ""
+    contribution: str = ""
+    important_snippets: list['CodeSnippet'] | None = None
     
     def __post_init__(self):
         if self.important_snippets is None:
             self.important_snippets = []
+        if self.keywords is None:
+            self.keywords = []
 
 
 class CodeSnippet(BaseModel):
     """Represents an important code snippet extracted from a file"""
+    label: str
     code: str
-    explanation: str
-    importance_reasoning: str
 
 
 class UserCodeAnalysisResult(BaseModel):
     """Structured response format used by the LLM"""
     summary: str
-    novel_concepts: str
-    research_relevance: str
+    keywords: list[str]
+    method: str
+    contribution: str
 
 
 class SnippetExtractionResult(BaseModel):
@@ -99,24 +102,29 @@ class CodeAnalyzer(LazyModelMixin):
 
         prompt = textwrap.dedent(f"""\
             [ROLE]
-            You are an expert in code analysis and scientific literature.
+            You are a Senior Research Engineer. Extract the research essence from this code.
 
             [TASK]
-            Analyze the following code file and provide a structured analysis.
+            Analyze the code and output a JSON object.
+
+            [GUIDELINES]
+            - **Ignore Boilerplate:** Skip logging, argparse, standard IO.
+            - **Be Precise:** Don't say "optimization"; say "AdamW with weight decay".
 
             [OUTPUT_FORMAT]
-            You MUST respond with valid JSON containing exactly these three fields:
+            Respond ONLY with valid JSON using exactly these keys:
             {{
-                "summary": "Technical description of what the code does and how it works in a few sentences.",
-                "novel_concepts": "What makes this code truly novel or innovative? If nothing is novel, use an empty string.",
-                "research_relevance": "Based on the novel concepts above, what is the research potential? Otherwise, explain specific academic value in a few sentences. If no research potential, use an empty string."
+                "summary": "2-3 sentences explaining what this file does technically.",
+                "keywords": ["list", "of", "algorithms", "libraries", "math_terms", "architectures"],
+                "method": "How is it implemented? (e.g., 'Uses a custom collate function with resizing' or 'Standard Transformer Encoder block').",
+                "contribution": "What role does this play in the research? (e.g., 'Core training loop' or 'Data augmentation pipeline')."
             }}
 
             [CODE FILE] 
             {code_analysis.file_name}
 
             [CODE CONTENT]
-            ```
+            ```python
             {code_analysis.file_content}
             ```"""
         )
@@ -129,71 +137,49 @@ class CodeAnalyzer(LazyModelMixin):
         parsed_dict = result.parsed
         parsed = UserCodeAnalysisResult(**parsed_dict)
         code_analysis.summary = parsed.summary
-        code_analysis.novel_concepts = parsed.novel_concepts
-        code_analysis.research_relevance = parsed.research_relevance
+        code_analysis.keywords = parsed.keywords
+        code_analysis.method = parsed.method
+        code_analysis.contribution = parsed.contribution
 
+        # Debug output
+        print(f"  Keywords: {', '.join(code_analysis.keywords)}")
         print(f"Completed analyzing {code_analysis.file_name}")
         return code_analysis
 
     def extract_important_snippets(self, code_analysis: UserCode) -> UserCode:
-        """Extract important code snippets from a file that has novel concepts."""
+        """Extract important code snippets from a file."""
                 
         prompt = textwrap.dedent(f"""\
             [ROLE]
-            You are an expert in code analysis and scientific research.
+            You are a Technical Editor. Your job is to select code blocks for a paper's "Methodology" section.
+
+            [INPUT CONTEXT]
+            File: {code_analysis.file_name}
+            Core Logic Identified: {code_analysis.method}
+            Keywords: {', '.join(code_analysis.keywords)}
 
             [TASK]
-            Extract the most important code snippets from this file that demonstrate the novel concepts.
+            Extract 1-3 code snippets that mathematically or algorithmically implement the "Core Logic" above.
 
-            [CODE SUMMARY]
-            {code_analysis.summary}
+            [RULES]
+            1. **Verbatim:** Copy code exactly. Do not summarize.
+            2. **Pure Logic:** Exclude imports, print statements, and error handling.
+            3. **Limit:** Maximum 20 lines per snippet. If it's longer, extract the central loop or equation.
 
-            [CODE NOVEL CONCEPTS]
-            {code_analysis.novel_concepts}
-
-            [CODE RESEARCH RELEVANCE]
-            {code_analysis.research_relevance}
-
-            [CODE FILE]
-            {code_analysis.file_name}
-
-            [CODE FILE CONTENT]
-            ```
+            [CODE CONTENT]
+            ```python
             {code_analysis.file_content}
             ```
-
-            [INSTRUCTIONS]
-            1. Extract only the most important code snippet(s) that best demonstrate the novel/research-worthy aspects
-            2. Copy the code EXACTLY as it appears (verbatim) - preserve all indentation, newlines, and formatting
-            4. For each snippet provide:
-            - code: The exact code (function, class, or relevant block) with original formatting preserved
-            - explanation: What this code does (2-3 sentences)
-            - importance_reasoning: Why this specific code is important for research (1-2 sentences)
-            5. Prioritize:
-            - Core algorithmic implementations
-            - Novel data structures or patterns
-            - Key architectural decisions
-            6. If the file is very long, focus on the most critical snippets
             
             [OUTPUT FORMAT]
-            Return your response as a JSON object with this exact structure:
-            {{
-            "snippets": [
-                {{
-                "code": "the actual code here",
-                "explanation": "what it does",
-                "importance_reasoning": "why it matters"
-                }}
-            ]
-            }}"""
-        )
+            Return a JSON object:
+            {{"snippets": [{{"label": "Short Name", "code": "verbatim code here"}}]}}""")
 
         result = self.model.respond(prompt)
         
-        # Parse JSON from content string (response schema doesn't work well for code)
+        # Parse JSON from content string (structured response has issues with verbatim code)
         content = remove_thinking_blocks(result.content)
-        # Extract JSON from markdown code blocks if present
-        json_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', content, re.DOTALL)
+        json_match = re.search(r'```(?:json)?\s*(\{{.*?\}})\s*```', content, re.DOTALL)
         if json_match:
             content = json_match.group(1)
         
@@ -206,17 +192,12 @@ class CodeAnalyzer(LazyModelMixin):
 
     def analyze_all_files(self, code_files: list[UserCode]) -> list[UserCode]:
         """
-        Analyze all code files and extract important code snippets from files
-        that have novel concepts.
+        Analyze all code files and extract important code snippets.
         """
         analyzed_files = []
         for code_file in code_files:
             analyzed = self.analyze_code_file(code_file)
-            
-            # Extract snippets only if novel concepts were found
-            if analyzed.novel_concepts.strip():
-                analyzed = self.extract_important_snippets(analyzed)
-            
+            analyzed = self.extract_important_snippets(analyzed)
             analyzed_files.append(analyzed)
         
         print(f"Code analysis complete: analyzed {len(analyzed_files)} file(s)")
@@ -225,29 +206,31 @@ class CodeAnalyzer(LazyModelMixin):
 
     @staticmethod
     def get_analysis_report(analyzed_files: list[UserCode]) -> str:
-        report = ["=== Code Analysis Report ===\n"]
+        report = []
         
         for analysis in analyzed_files:
             report.extend([
-                f"File: {analysis.file_name}",
-                f"Summary:\n{analysis.summary}"
+                f"## File: {analysis.file_name}",
+                f"\n**Summary:** {analysis.summary}"
             ])
-            if analysis.novel_concepts:
-                report.append(f"Novel Concepts:\n{analysis.novel_concepts}")
+            
+            if analysis.keywords:
+                report.append(f"\n**Keywords:** {', '.join(analysis.keywords)}")
+            
+            if analysis.method:
+                report.append(f"\n**Method:** {analysis.method}")
                 
-            if analysis.research_relevance:
-                report.append(f"Research Relevance:\n{analysis.research_relevance}")
+            if analysis.contribution:
+                report.append(f"\n**Contribution:** {analysis.contribution}")
             
             if analysis.important_snippets:
-                report.append(f"\nImportant Code Snippets ({len(analysis.important_snippets)}):")
-                for i, snippet in enumerate(analysis.important_snippets, 1):
+                report.append(f"\n**Code Snippets ({len(analysis.important_snippets)}):**")
+                for snippet in analysis.important_snippets:
                     report.extend([
-                        f"\n  Snippet {i}:",
-                        f"  Importance: {snippet.importance_reasoning}",
-                        f"  Explanation: {snippet.explanation}",
-                        f"  Code:\n```\n{snippet.code}\n```"
+                        f"\n### {snippet.label}",
+                        f"```python\n{snippet.code}\n```"
                     ])
             
-            report.append("==== End of Code Analysis Report ====" + "\n")
+            report.append("\n---\n")
 
         return "\n".join(report)

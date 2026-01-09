@@ -13,6 +13,7 @@ class HoverColor(Enum):
     RED = "red"
     GREEN = "green"
     BLUE = "blue"
+    GRAY = "gray"
 
 
 class IconManager:
@@ -126,7 +127,8 @@ class IconManager:
                           icon_name: str,
                           command=None,
                           size: int = None,
-                          hover_color: HoverColor = HoverColor.RED) -> tk.Label:
+                          hover_color: HoverColor = HoverColor.RED,
+                          base_color: HoverColor = HoverColor.NONE) -> tk.Label:
         """
         Create a clickable label with an icon.
         
@@ -136,11 +138,15 @@ class IconManager:
             command: Callback function when clicked
             size: Icon size in pixels (defaults to font-scaled size)
             hover_color: HoverColor enum value (RED, GREEN, BLUE, or NONE)
+            base_color: HoverColor enum value for the default icon color (NONE uses theme color)
             
         Returns:
             tk.Label configured as an icon button
         """
-        icon = self.get_icon(icon_name, size)
+        if base_color != HoverColor.NONE:
+            icon = self.get_icon_colored(icon_name, size, hover_color=base_color)
+        else:
+            icon = self.get_icon(icon_name, size)
         
         # Determine background based on parent style
         bg = self._get_parent_bg(parent)
@@ -148,6 +154,7 @@ class IconManager:
         label = tk.Label(parent, image=icon, bg=bg, cursor="hand2")
         label._icon_name = icon_name  # Store for theme updates
         label._icon_size = size
+        label._icon_base_color = base_color  # Store base color for theme updates
         label._icon_ref = icon  # Keep reference to prevent garbage collection
         
         if command:
@@ -193,6 +200,8 @@ class IconManager:
             color = "#4ade80" if self.app.current_theme == "dark" else "#22c55e"
         elif hover_color == HoverColor.BLUE:
             color = "#4a9eff" if self.app.current_theme == "dark" else "#0078d4"
+        elif hover_color == HoverColor.GRAY:
+            color = "#888888"
         else:
             color = "#ffffff" if self.app.current_theme == "dark" else "#1c1c1c"
         
@@ -275,7 +284,14 @@ class IconManager:
         if isinstance(widget, tk.Label) and hasattr(widget, '_icon_name'):
             icon_name = widget._icon_name
             size = getattr(widget, '_icon_size', None) or self.default_size()
-            new_icon = self.get_icon(icon_name, size)
+            base_color = getattr(widget, '_icon_base_color', HoverColor.NONE)
+            
+            # Get icon with preserved base_color
+            if base_color != HoverColor.NONE:
+                new_icon = self.get_icon_colored(icon_name, size, hover_color=base_color)
+            else:
+                new_icon = self.get_icon(icon_name, size)
+            
             if new_icon:
                 widget.configure(image=new_icon)
                 widget._icon_ref = new_icon  # Update reference

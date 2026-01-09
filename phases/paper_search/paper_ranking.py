@@ -55,6 +55,9 @@ class PaperRanker(LazyEmbeddingMixin):
         
         # Calculate scores for each paper
         for paper, paper_emb in zip(papers, paper_embs):
+            # Store embedding on paper for later use (filtering/clustering)
+            paper.title_abstract_embedding = paper_emb.tolist() if isinstance(paper_emb, np.ndarray) else list(paper_emb)
+            
             # Relevance score (0-1): cosine similarity
             relevance = self._cosine_similarity(context_emb, paper_emb)
             

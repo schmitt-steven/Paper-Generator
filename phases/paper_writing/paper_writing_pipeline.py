@@ -45,7 +45,7 @@ class PaperWritingPipeline:
 
         if not self._indexed_corpus:
             if status_callback:
-                status_callback("Generating embeddings for papers...")
+                status_callback("Generating embeddings for papers")
             self.index_papers(papers)
 
         print(f"\n{'='*80}")
@@ -106,7 +106,7 @@ class PaperWritingPipeline:
             writing_prompts = None
         
         if status_callback:
-            status_callback("Drafting paper sections...")
+            status_callback("Writing paper sections")
 
         paper_draft, generated_prompts = self.writer.generate_paper_sections(
             context=paper_concept,
@@ -261,7 +261,7 @@ class PaperWritingPipeline:
         print(f"{'='*80}\n")
         
         if status_callback:
-            status_callback("Loading edited evidence...")
+            status_callback("Loading edited evidence")
         
         # Load evidence from file (user may have added/removed chunks)
         try:
@@ -285,7 +285,7 @@ class PaperWritingPipeline:
             writing_prompts = None
         
         if status_callback:
-            status_callback("Drafting paper sections...")
+            status_callback("Writing paper sections")
 
         paper_draft, generated_prompts = self.writer.generate_paper_sections(
             context=paper_concept,

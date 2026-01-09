@@ -28,6 +28,7 @@ class Paper:
     bibtex: Optional[str] = None
     markdown_text: Optional[str] = None
     ranking: Optional[RankingScores] = None
+    title_abstract_embedding: Optional[List[float]] = None  # Embedding of title + abstract for clustering/filtering
     is_open_access: bool = False
     user_provided: bool = False
     pdf_path: Optional[str] = None

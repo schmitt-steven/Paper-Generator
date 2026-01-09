@@ -48,10 +48,10 @@ pip install -r requirements.txt
 
 ```bash
 # Install LaTeX
-sudo apt-get install texlive-full
+sudo apt install texlive-full
 
 # Install Inkscape
-sudo apt-get install inkscape
+sudo apt install inkscape
 
 # Install Python dependencies
 pip install -r requirements.txt

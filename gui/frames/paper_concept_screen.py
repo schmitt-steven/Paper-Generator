@@ -159,7 +159,7 @@ class PaperConceptScreen(BaseFrame):
                 analyzed_code = code_analyzer.analyze_all_files(code_files)
                 
                 # 3. Generate Paper Concept
-                self.after(0, lambda: popup.update_status("Generating concept (this may take a while)..."))
+                self.after(0, lambda: popup.update_status("Generating concept"))
                 paper_conception = PaperConception(
                     model_name=Settings.PAPER_CONCEPTION_MODEL,
                     user_code=analyzed_code,
@@ -183,14 +183,14 @@ class PaperConceptScreen(BaseFrame):
     def _on_regeneration_complete(self, popup: ProgressPopup):
         """Handle regeneration completion."""
         popup.close()
+        
+        # Clear existing content before reloading
+        for widget in self.scrollable_frame.winfo_children():
+            widget.destroy()
+        
+        # Reload UI with new concept (this creates fresh text areas)
         self._load_concept()
-        # Refresh the text areas with new content
-        self.description_text.delete("1.0", "end")
-        self.description_text.insert("1.0", self.concept.description)
         
-        self.code_snippets_text.delete("1.0", "end")
-        self.code_snippets_text.insert("1.0", self.concept.code_snippets)
-        
-        self.open_questions_text.delete("1.0", "end")
-        self.open_questions_text.insert("1.0", self.concept.open_questions)
+        # Re-apply theme colors to newly created widgets (for borders)
+        self.controller.apply_theme_colors(self)
 

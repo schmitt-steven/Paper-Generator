@@ -62,126 +62,67 @@ class PaperConception(LazyModelMixin):
         
         return "[User Requirements]\n" + "\n".join(sections)
 
-    def _format_code_snippets_section(self) -> str:
-        """Extract and format code snippets prominently for the LLM."""
-        snippets_text = []
-        
-        for code_file in self.user_code:
-            if code_file.important_snippets:
-                snippets_text.append(f"\n## From: {code_file.file_name}")
-                snippets_text.append(f"\n**Novel Concepts:** {code_file.novel_concepts}\n")
-                
-                for i, snippet in enumerate(code_file.important_snippets, 1):
-                    snippets_text.extend([
-                        f"\n### Snippet {i}\n",
-                        f"**Why Important:**  \n{snippet.importance_reasoning}\n",
-                        f"**What It Does:**  \n{snippet.explanation}\n",
-                        f"**Code:**\n```python\n{snippet.code}\n```\n"
-                    ])
-        
-        return "\n".join(snippets_text) if snippets_text else "[No code snippets extracted]"
-
     def generate_core_information(self) -> PaperConcept:
         
-        code_snippets_section = self._format_code_snippets_section()
-        
+        code_analysis_report = CodeAnalyzer.get_analysis_report(self.user_code)
+                
         prompt = textwrap.dedent(f"""\
             [ROLE]
-            You are a critical research advisor with expertise in academic rigor, novelty assessment, and peer review standards.
-
-            [TASK]
-            Generate a rigorous paper concept that identifies core ideas, gaps, and research direction.
-            Be CRITICAL and DEMANDING. Do not accept vague claims or weak differentiation.
-
-            [CRITICAL SECTIONS]
-            1. Paper Specifications
-            2. Research Topic
-            3. Research Field
-            4. Problem Statement
-            5. Motivation
-            6. Novelty & Differentiation
-            7. Methodology & Implementation (High-Level)
-            8. Expected Contribution
+            You are an Expert in advanced scientific research.
+            Your task is to distill user notes and code into a **canonical research definition**.
             
-            Note: We are at the CONCEPT stage - no need for detailed proofs, experiment designs, or final paper titles yet.
+            [OBJECTIVE]
+            Create a structured "Paper Concept" that serves as the semantic anchor for this research. 
+            This output will be embedded to find similar papers. Therefore, it must use precise, standard terminology and avoid conversational fillers.
 
-            [STRICT REQUIREMENTS FOR EACH SECTION]
-            1. Paper Specifications
-            - Extract all metadata (type, length, audience, style, figures/tables)
-            - If missing specific items, state: "[Missing: specific item name - needed for X reason]"
+            [INPUT DATA]
+            1. User Hypothesis/Notes
+            2. Code Analysis (Ground Truth for implementation details)
+            3. Code Snippets (Source of algorithmic logic)
 
-            2. Research Topic
-            - Briefly describe the general topic/area of research (1-2 sentences)
-            - This is NOT the final paper title, just the subject matter
+            [STRICT WRITING RULES]
+            1. **No Meta-Commentary:** Do NOT write "The user wants," "The code shows," or "I will generate."
+            2. **Fact-Based Tone:** Write as if the research already exists. (e.g., "This method leverages X to solve Y.")
+            3. **Semantic Density:** Use specific field terminology found in the code (e.g., "Cross-Entropy Loss," "Monte Carlo Tree Search") rather than generic terms (e.g., "Standard Loss," "Search Algorithm").
+            4. **Inference:** If the notes are vague, strictly infer the methodology from the logic present in the **Code Snippets**.
 
-            3. Research Field
-            - Identify the primary field and relevant subfields
-            - State standard terminology if applicable
-
-            4. Problem Statement
-            - Must be SPECIFIC, not generic (e.g., "scalability issues" or "efficiency problems" are too vague)
-            - Must quantify inefficiencies or failure modes with concrete examples
-            - Must clearly scope the problem domain and constraints
-            - If vague or missing, state: "[Missing: quantifiable problem definition - current description too broad]"
-
-            5. Motivation
-            - Why is this problem important to solve?
-            - What are the implications or applications?
-
-            6. Novelty & Differentiation
-            **CRITICAL: This is where most papers fail.**
-            - Explicitly compare to existing methods in the field
-            - State: "This differs from [Method X] because [specific technical difference]"
-            - If code/notes don't differentiate from existing work, state: "[Missing: differentiation from existing methods - must explain specific advantages]"
-            - Do NOT claim novelty without clear differentiation from prior art
-
-            7. Methodology & Implementation (High-Level)
-            - Describe the approach at a high level
-            - Reference CODE SNIPPETS below for key implementation insights
-            - Identify if mathematical formulation is present or missing
-            - If critical details missing, state: "[Missing: X - needed for Y]"
-
-            8. Expected Contribution
-            - Must be concrete and measurable
-            - Avoid vague claims like "improves efficiency"
-            - State specific advantages with conditions (e.g., "faster convergence in sparse reward settings")
-
-            [CRITICAL INSTRUCTIONS]
-            - **Be BRUTAL**: If information is vague, mark it as insufficient
-            - **Demand precision**: Generic claims → demand specific examples and scope
-            - **Require differentiation**: Always compare to existing methods in the field
-            - **Specify gaps**: Don't just write "[Missing information]" - write "[Missing: X because Y]"
-            - **NO INVENTED DATA**: Do NOT make up percentages, specific metrics, or quantitative results
-            - Use qualitative comparisons: "faster", "more accurate", "scales better" instead of "20% faster"
-            - When writing Novelty, ask: "How is this different from existing state-of-the-art methods?"
-            - Extract domain/field from the notes/code and tailor analysis accordingly
-            - Focus on CONCEPT quality, not full paper details
+            ---
 
             [OUTPUT FORMAT]
-            - Use ## for section headings (e.g., "## 1. Paper Specifications")
-            - Use ### for subsections if needed
-            - Do NOT use horizontal rules (---) between sections
-            - Use bullet points (-) for lists
-            - Keep formatting clean and consistent
+
+            ## 1. Taxonomic Classification
+            *Keywords that define the search space.*
+            - **Primary Domain:** (e.g., Natural Language Processing)
+            - **Specific Task:** (e.g., Low-Resource Machine Translation)
+            - **Methodological Class:** (e.g., Transformer-based Sequence-to-Sequence learning)
+
+            ## 2. Abstract & Core Contribution
+            *A dense, 4-5 sentence summary. This is the primary vector for embeddings.*
+            - **Structure:** [Current Challenge in SOTA] -> [Proposed Method] -> [Mechanism of Action] -> [Expected Outcome].
+            - **Requirement:** Mention specific algorithms or architectures identified in the code snippets.
+
+            ## 3. Problem Definition
+            *The specific gap this paper fills.*
+            - **The Bottleneck:** What specific limitation prevents current methods from succeeding in this context? (e.g., "Vanishing gradients in deep networks," "High computational cost of attention mechanisms").
+            - **The Constraint:** Under what conditions does the problem exist?
+
+            ## 4. Technical Approach
+            *The "How" - strictly derived from code/notes.*
+            - **Architecture:** Define the structural logic (e.g., "A dual-encoder framework...").
+            - **Key differentiator:** How does this implementation differ from the standard approach? (e.g., "Replaces standard Softmax with Sparsemax to...").
 
             [USER REQUIREMENTS]
             {self._format_user_requirements_section()}
 
-            [FULL CODE ANALYSIS]
-            {CodeAnalyzer.get_analysis_report(self.user_code)}
-
-            [CODE SNIPPETS] (Use These in Methodology)
-            {code_snippets_section}
-        """)
+            [CODE ANALYSIS]
+            {code_analysis_report}"""
+        )
 
         result = self.model.respond(prompt)
         
         description_text = remove_thinking_blocks(result.content)
         
-        # Format code snippets as markdown string
-        code_snippets_text = self._format_code_snippets_section()
-        
-        return PaperConcept(description=description_text, code_snippets=code_snippets_text)
+        return PaperConcept(description=description_text, code_snippets=code_analysis_report)
 
     def identify_open_questions(self, concept: PaperConcept) -> PaperConcept:
         """
@@ -232,8 +173,8 @@ class PaperConception(LazyModelMixin):
             [PAPER CONCEPT TO ANALYZE]
             {concept.description}
 
-            [CODE SNIPPETS AVAILABLE]
-            {self._format_code_snippets_section()}
+            [CODE ANALYSIS]
+            {CodeAnalyzer.get_analysis_report(self.user_code)}
 
             [OUTPUT FORMAT]
             1. question

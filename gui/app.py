@@ -28,13 +28,12 @@ class PaperGeneratorApp(tk.Tk):
     def __init__(self):
         super().__init__()
 
-        # Check if LM Studio is running before initializing the app
         if not is_lm_studio_running():
-            self.withdraw()  # Hide the main window
+            self.withdraw()  # Hide main window
             messagebox.showwarning(
                 "LM Studio Not Running",
                 "LM Studio must be running in the background.\n\n"
-                "Please start LM Studio and try again."
+                "Please start LM Studio and open the app again."
             )
             self.destroy()
             return

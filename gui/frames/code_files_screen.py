@@ -157,6 +157,10 @@ class CodeFilesScreen(BaseFrame):
 
     def _load_existing_files(self):
         """Load existing code files from user_files/ directory."""
+        # Skip if already loaded
+        if self.code_files:
+            return
+        
         user_files_dir = Path("user_files")
         if not user_files_dir.exists():
             return

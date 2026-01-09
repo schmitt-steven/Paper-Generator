@@ -14,7 +14,7 @@ from phases.paper_search.paper import Paper
 from phases.paper_search.user_paper_loader import UserPaperLoader
 from phases.paper_search.literature_search import LiteratureSearch
 from phases.paper_search.paper_ranking import PaperRanker
-from phases.paper_search.paper_filtering import PaperFilter
+from phases.paper_search.paper_filter import PaperFilter
 from phases.context_analysis.paper_conception import PaperConception, PaperConcept
 from phases.context_analysis.user_requirements import UserRequirements
 
@@ -104,8 +104,14 @@ class PaperSelectionScreen(BaseFrame):
             import traceback
             traceback.print_exc()
 
-    def _create_section_container(self, parent, title: str, count: int, 
-                                   button_text: str, button_command: Callable) -> tuple:
+    def _create_section_container(
+        self,
+        parent,
+        title: str,
+        count: int,
+        button_text: str,
+        button_command: Callable
+    ) -> tuple:
         section_frame = ttk.Frame(parent, style="Card.TFrame", padding=1)
         section_frame.pack(fill="x", pady=10)
         
@@ -179,33 +185,23 @@ class PaperSelectionScreen(BaseFrame):
         btn_container = ttk.Frame(content_row)
         btn_container.pack(side="right", padx=(10, 0))
 
-        # Upload button for closed access papers
+        # Upload button for closed access papers (always show to allow overwriting)
         if not is_user_paper and not paper.is_open_access:
-             # Check if PDF for paper was provided
-             has_local_pdf = False
-             if paper.pdf_path:
-                 has_local_pdf = True
-             elif paper.id:
-                 safe_id = "".join([c for c in paper.id if c.isalnum() or c in ('-', '_', '.')])
-                 expected_pdf_path = Path("output/literature") / safe_id / f"{safe_id}.pdf"
-                 if expected_pdf_path.exists():
-                     has_local_pdf = True
-             
-             if not has_local_pdf:
-                 # Use upload icon with theme-aware coloring
-                 upload_btn = self.controller.icons.create_icon_label(
-                     btn_container,
-                     icon_name="upload",
-                     command=lambda: self._on_upload_paper_pdf(paper),
-                     hover_color=HoverColor.GREEN
-                 )
-                 upload_btn.pack(side="left", padx=(0, 10))
+            upload_btn = self.controller.icons.create_icon_label(
+                btn_container,
+                icon_name="upload",
+                command=lambda: self._on_upload_paper_pdf(paper),
+                hover_color=HoverColor.GREEN,
+                base_color=HoverColor.GRAY
+            )
+            upload_btn.pack(side="left", padx=(0, 10))
         
         # X button
         x_btn = self.controller.icons.create_icon_label(
             btn_container,
             icon_name="x",
-            command=lambda: on_remove(paper.id)
+            command=lambda: on_remove(paper.id),
+            base_color=HoverColor.GRAY
         )
         x_btn.pack(side="left")
 
@@ -335,13 +331,26 @@ class PaperSelectionScreen(BaseFrame):
             output_folder.mkdir(parents=True, exist_ok=True)
             dest_path = output_folder / f"{safe_id}.pdf"
             
-            # 2. Copy file
+            # 2. Remove existing PDF and markdown files (since we're overwriting)
+            if dest_path.exists():
+                dest_path.unlink()
+                print(f"[Papers] Removed old PDF file: {dest_path}")
+            
+            md_path = output_folder / f"{safe_id}.md"
+            if md_path.exists():
+                md_path.unlink()
+                print(f"[Papers] Removed old markdown file: {md_path}")
+            
+            # 3. Clear paper's markdown_text so it will be re-converted
+            paper.markdown_text = None
+            
+            # 4. Copy file
             shutil.copy2(file_path, dest_path)
             
-            # 3. Update paper object
+            # 5. Update paper object
             paper.pdf_path = str(dest_path.resolve().relative_to(Path.cwd()))
             
-            # 4. Save and refresh
+            # 6. Save and refresh
             self._save_papers()
             self._refresh_searched_papers_list() # Re-render appropriately
             
@@ -406,6 +415,7 @@ class PaperSelectionScreen(BaseFrame):
             self.user_papers.append(paper)
             print(f"[Papers] Added user paper: {paper.title[:60]}")
         
+        self._save_papers()  # Save immediately after upload
         self._refresh_user_papers_list()
         self._set_upload_loading(False)
 
@@ -460,14 +470,15 @@ class PaperSelectionScreen(BaseFrame):
                     weights={'relevance': 0.7, 'citations': 0.2, 'recency': 0.1}
                 )
                 
-                # Step 3: Filter papers for diverse selection
+                # Save unfiltered papers
+                #LiteratureSearch.save_papers(ranked_papers, filename="papers_unfiltered.json", output_dir="output")
+                
+                # Step 3: Filter papers
                 self.after(0, lambda: popup.update_status("Filtering found papers"))
-                filtered_papers = PaperFilter.filter_diverse(
+                filtered_papers = PaperFilter.run(
                     ranked_papers,
-                    n_cutting_edge=20,
-                    n_hidden_gems=15,
-                    n_classics=15,
-                    n_well_rounded=10
+                    target_count=60,
+                    min_relevance=0.4
                 )
                 
                 # Step 4: Show results on screen
@@ -487,6 +498,7 @@ class PaperSelectionScreen(BaseFrame):
         """Handle search completion - close popup and display papers."""
         popup.close()
         self.searched_papers = papers
+        self._save_papers()  # Save immediately after search
         self._refresh_searched_papers_list()
         self._set_search_loading(False)
 
@@ -521,7 +533,13 @@ class PaperSelectionScreen(BaseFrame):
         if not self.searched_papers:
             self._show_empty_state(self.searched_papers_list, "Click 'Auto Search' to find related papers")
         else:
-            for i, paper in enumerate(self.searched_papers):
+            # Sort by relevance score (highest first)
+            sorted_papers = sorted(
+                self.searched_papers,
+                key=lambda p: p.ranking.relevance_score if p.ranking and p.ranking.relevance_score else 0,
+                reverse=True
+            )
+            for i, paper in enumerate(sorted_papers):
                 if i > 0:
                     ttk.Separator(self.searched_papers_list, orient="horizontal").pack(fill="x", padx=5)
                 entry = self._create_paper_entry(self.searched_papers_list, paper, self._remove_searched_paper, False)
@@ -533,7 +551,13 @@ class PaperSelectionScreen(BaseFrame):
         self.user_count_label.config(text=str(len(self.user_papers)))
 
     def _update_searched_count(self):
-        self.searched_count_label.config(text=str(len(self.searched_papers)))
+        total = len(self.searched_papers)
+        if total == 0:
+            self.searched_count_label.config(text="0")
+        else:
+            open_count = sum(1 for p in self.searched_papers if p.is_open_access)
+            closed_count = total - open_count
+            self.searched_count_label.config(text=f"{total} ({open_count} open, {closed_count} closed access)")
 
     def _remove_user_paper(self, paper_id: str):
         removed = next((p for p in self.user_papers if p.id == paper_id), None)

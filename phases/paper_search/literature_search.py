@@ -282,13 +282,13 @@ class LiteratureSearch(LazyModelMixin):
         return merged
 
 
-    def execute_search(self, query: str, max_results: int = 20, year: Optional[str] = None, fields_of_study: Optional[str] = None, open_access_only: bool = False) -> list[Paper]:
+    def execute_search(self, query: str, max_results: int = 30, year: Optional[str] = None, fields_of_study: Optional[str] = None, open_access_only: bool = False) -> list[Paper]:
         """
         Execute a single search on Semantic Scholar using the provided query string.
         
         Args:
             query: Search query string
-            max_results: Maximum number of results per query (default: 20)
+            max_results: Maximum number of results per query
             year: Optional year filter (e.g., "2020-2024" or "2020")
             fields_of_study: Optional comma-separated fields of study filter (e.g., "Computer Science,Mathematics")
             

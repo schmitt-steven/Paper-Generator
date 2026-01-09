@@ -1,6 +1,26 @@
 [
   {
-    "query": "Bellman equation",
+    "query": "model-based reinforcement learning",
+    "year": null
+  },
+  {
+    "query": "Bellman optimality equation",
+    "year": null
+  },
+  {
+    "query": "temporal difference learning",
+    "year": null
+  },
+  {
+    "query": "Dyna-Q survey",
+    "year": null
+  },
+  {
+    "query": "sample efficiency review",
+    "year": null
+  },
+  {
+    "query": "backward value propagation",
     "year": null
   },
   {
@@ -8,55 +28,35 @@
     "year": null
   },
   {
-    "query": "sample complexity RL",
+    "query": "episodic MDP deterministic",
     "year": null
   },
   {
-    "query": "reinforcement learning survey",
+    "query": "value iteration online",
     "year": null
   },
   {
-    "query": "model-free RL review",
+    "query": "Monte Carlo reinforcement learning",
     "year": null
   },
   {
-    "query": "eligibility traces",
+    "query": "deterministic MDP sample complexity",
     "year": null
   },
   {
-    "query": "n-step returns",
+    "query": "persistent transition model",
     "year": null
   },
   {
-    "query": "backward induction RL",
+    "query": "grid world reinforcement learning",
     "year": null
   },
   {
-    "query": "transition graph RL",
+    "query": "online dynamic programming",
     "year": null
   },
   {
-    "query": "value iteration RL",
+    "query": "backward propagation RL",
     "year": null
-  },
-  {
-    "query": "Dyna-Q algorithm",
-    "year": null
-  },
-  {
-    "query": "RETRACE algorithm",
-    "year": null
-  },
-  {
-    "query": "sparse reward RL",
-    "year": null
-  },
-  {
-    "query": "convergence rate RL",
-    "year": null
-  },
-  {
-    "query": "deterministic MDP RL",
-    "year": "2020-2024"
   }
 ]
