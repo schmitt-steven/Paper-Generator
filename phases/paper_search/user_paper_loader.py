@@ -81,16 +81,20 @@ class UserPaperLoader(LazyModelMixin):
                 raise ValueError("First page has no text")
             
             prompt = dedent(f"""\
-                Extract the paper title from the following text from the first page of a research paper:
+                Extract the paper title from the following text from the first page of a research paper.
+                
+                Return the title in Title Case (capitalize all major words).
+                Example: "Attention Is All You Need" or "Deep Learning for Natural Language Processing"
 
+                Text from first page:
                 {first_page_text[:1000]}
 
-                Return ONLY the exact title of the paper.""")
+                Return ONLY the properly capitalized title of the paper.""")
             
             result = self.model.respond(
                 history=prompt,
                 response_format=PaperTitle,
-                config={'temperature': 0.1}
+                config={'temperature': 0.0}
             )
             
             return result.parsed['title'].strip()

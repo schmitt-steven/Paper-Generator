@@ -84,14 +84,22 @@ class PDFDownloader:
                     # Update pdf_path after successful download
                     paper.pdf_path = os.path.relpath(filename, os.getcwd())
                 except Exception as e:
-                    print(f"  [{i}/{len(papers)}] FAILED: {paper.title[:50]}... ({e})")
-                    # Log DOI and title for closed access papers
-                    if "403" in str(e) or "Forbidden" in str(e):
-                        print(f"      -> Closed access paper")
+                    # Retry once after 3 seconds
+                    print(f"  [{i}/{len(papers)}] First attempt failed, retrying in 3s...")
+                    time.sleep(3)
+                    try:
+                        PDFDownloader.download_pdf(pdf_url, filename)
+                        print(f"  [{i}/{len(papers)}] {paper.title[:50]}... (retry succeeded)")
+                        successful += 1
+                        paper.pdf_path = os.path.relpath(filename, os.getcwd())
+                    except Exception as retry_e:
+                        print(f"  [{i}/{len(papers)}] FAILED: {paper.title[:50]}... ({retry_e})")
+                        # Mark paper as closed access since we couldn't download it
+                        paper.is_open_access = False
+                        print(f"      -> Marked as closed access")
                         if paper.doi:
                             print(f"      -> DOI: {paper.doi}")
-                        print(f"      -> Title: {paper.title}")
-                    failed += 1
+                        failed += 1
             else:
                 print(f"  [{i}/{len(papers)}] SKIPPED - no PDF URL")
                 # Log DOI and title for papers without PDF access

@@ -7,6 +7,7 @@ from settings import Settings
 from typing import override
 from ..base_frame import BaseFrame
 from ..info_texts import SETTINGS_INFO
+from ..theme_colors import CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT
 from utils.lm_studio_client import get_model_names
 from .section_guidelines_screen import SectionGuidelinesScreen
 
@@ -157,15 +158,16 @@ class SettingsScreen(BaseFrame):
         ttk.Label(frame, text="(Leave empty for LLM generated title)", font=self.controller.fonts.default_font).pack(anchor="e")
 
         # Authors section
-        authors_section = ttk.Frame(self.scrollable_frame, style="Card.TFrame", padding=1)
+        from ..base_frame import CardBorderFrame
+        authors_section = CardBorderFrame(self.scrollable_frame, padx=1, pady=1)
         authors_section.pack(fill="x", padx=0, pady=(20, 10))
         
         # Header row
         header_frame = ttk.Frame(authors_section, style="CardHeader.TFrame", padding=10)
         header_frame.pack(fill="x")
         
-        header_bg = getattr(self.controller, '_card_header_bg', '#252525')
-        header_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
+        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
+        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
         tk.Label(
             header_frame, 
             text="Authors", 
@@ -188,7 +190,7 @@ class SettingsScreen(BaseFrame):
         ttk.Separator(authors_section, orient="horizontal").pack(fill="x")
         
         # Authors container
-        self.authors_container = ttk.Frame(authors_section, padding=10)
+        self.authors_container = ttk.Frame(authors_section, style="CardContent.TFrame", padding=10)
         self.authors_container.pack(fill="x")
 
         # Load authors from Settings

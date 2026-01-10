@@ -108,7 +108,7 @@ class ExperimentRunner:
 
                 [REQUIREMENTS]
                 - Write clean, concise Python code
-                - Save plots to plots/ directory as .svg files (create with os.makedirs if needed)
+                - Save plots to plots/ directory as .pdf files (create with os.makedirs if needed)
                 - Save results to JSON in current directory
                 - Print concise, meaningful output (~100-200 lines max)
                 - Output ONLY Python code, NO markdown formatting
@@ -225,7 +225,7 @@ class ExperimentRunner:
                     Include everything from the previous response, then add:
                     - Create plots/ directory
                     - Generate comparison plots
-                    - Save plots to plots/ as .svg files
+                    - Save plots to plots/ as .pdf files
                     - Print concise summary of the results (NEVER guess the results, only print the actual results)
 
                     Output the COMPLETE, FINAL code (imports & data structures + algorithms + experiment + visualization).
@@ -549,7 +549,7 @@ class ExperimentRunner:
                 [REQUIREMENTS]
                 1. Address all issues identified in the validation feedback as well as possible.
                 2. Ensure the code actually tests the hypothesis as described in the experiment plan
-                3. Ensure plots are saved to "plots/" directory as .svg files (relative to execution directory) - create this directory if needed using os.makedirs("plots", exist_ok=True)
+                3. Ensure plots are saved to "plots/" directory as .pdf files (relative to execution directory) - create this directory if needed using os.makedirs("plots", exist_ok=True)
                 4. Save detailed results/metrics to JSON file in the current directory (do NOT create an "output" directory - the code already runs from the output directory)
                 5. Ensure stdout output is concise and meaningful - key metrics, conclusions and results only, avoid loop spam
                 6. Make sure the experiment is complete and meaningful (e.g., not too short, collects proper metrics, etc.)
@@ -740,7 +740,7 @@ class ExperimentRunner:
             - Output requirements: 
               * Detailed results/metrics stored in JSON file
               * Concise, meaningful output to stdout (key metrics, conclusions)
-              * Plot(s) for visualization (saved as .svg)
+              * Plot(s) for visualization (saved as .pdf)
             - Experiment MUST complete in under 5 minutes. Use reasonable parameter ranges and reduce iterations/computations/parameter combinations if needed.
 
             [RESEARCH_CONTEXT]
@@ -1016,7 +1016,7 @@ class ExperimentRunner:
                     # Check if files exist but weren't detected as new
                     plots_dir = os.path.join(self.base_output_dir, "plots")
                     results_file = os.path.join(self.base_output_dir, "results.json")
-                    existing_plots = [f for f in os.listdir(plots_dir) if f.endswith(('.png', '.svg', '.pdf'))] if os.path.exists(plots_dir) else []
+                    existing_plots = [f for f in os.listdir(plots_dir) if f.endswith(('.png', '.pdf'))] if os.path.exists(plots_dir) else []
                     existing_results = os.path.exists(results_file)
                     print(f"  Note: Found {len(existing_plots)} existing plot(s) and {'1' if existing_results else '0'} existing result file(s) (may have been created in previous run)")
             write_result = CodeGenerationResult(

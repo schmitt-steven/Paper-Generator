@@ -408,8 +408,8 @@ Your output must strictly follow the requirements and produce a polished academi
                 1. Reference it naturally in the text (e.g., "As shown in Figure 1..." or "Figure 2 demonstrates...")
                 2. Include the markdown image syntax: ![Brief alt text](relative_path_to_image.png)
                 3. CRITICAL: Use RELATIVE paths from the paper_draft.md location (which is in the output/ directory).
-                   - If filename is "experiments/plots/file.png", use exactly that (no "output/" prefix)
-                   - Example: ![Alt text](experiments/plots/convergence_comparison.png)
+                   - If filename is "experiments/plots/file.pdf", use exactly that (no "output/" prefix)
+                   - Example: ![Alt text](experiments/plots/convergence_comparison.pdf)
                 4. Add a visible caption line immediately below: *Figure N: Full caption text*
                 5. Use the exact caption text provided above for each figure
                 6. Place figures at appropriate points in the narrative where they support your discussion
@@ -417,7 +417,7 @@ Your output must strictly follow the requirements and produce a polished academi
                 Example:
                 As shown in Figure 1, our method...
 
-                ![Convergence Comparison](experiments/plots/convergence_comparison.png)
+                ![Convergence Comparison](experiments/plots/convergence_comparison.pdf)
                 *Figure 1: Learning curves comparing the ...*"""
             )
 

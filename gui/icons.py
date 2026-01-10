@@ -106,7 +106,7 @@ class IconManager:
         
         for pixel in data:
             # Keep original alpha, replace RGB with target color
-            # Use the original pixel's luminance to determine the new color intensity
+            # Use the original pixels luminance to get new color intensity
             if len(pixel) == 4:
                 orig_r, orig_g, orig_b, a = pixel
                 # Use max of RGB as intensity factor
@@ -123,26 +123,17 @@ class IconManager:
         img.putdata(new_data)
         return img
     
-    def create_icon_label(self, parent,
-                          icon_name: str,
-                          command=None,
-                          size: int = None,
-                          hover_color: HoverColor = HoverColor.RED,
-                          base_color: HoverColor = HoverColor.NONE) -> tk.Label:
-        """
-        Create a clickable label with an icon.
-        
-        Args:
-            parent: Parent widget
-            icon_name: Name of the icon
-            command: Callback function when clicked
-            size: Icon size in pixels (defaults to font-scaled size)
-            hover_color: HoverColor enum value (RED, GREEN, BLUE, or NONE)
-            base_color: HoverColor enum value for the default icon color (NONE uses theme color)
-            
-        Returns:
-            tk.Label configured as an icon button
-        """
+    def create_icon_label(
+        self,
+        parent,
+        icon_name: str,
+        command=None,
+        size: int = None,
+        hover_color: HoverColor = HoverColor.RED,
+        base_color: HoverColor = HoverColor.NONE
+    ) -> tk.Label:
+        """Create a clickable label with an icon."""
+
         if base_color != HoverColor.NONE:
             icon = self.get_icon_colored(icon_name, size, hover_color=base_color)
         else:
@@ -179,17 +170,8 @@ class IconManager:
         return label
     
     def get_icon_colored(self, name: str, size: int = None, hover_color: HoverColor = HoverColor.NONE) -> 'ImageTk.PhotoImage | None':
-        """
-        Get an icon with a specific color (for hover states).
-        
-        Args:
-            name: Icon name (without extension)
-            size: Icon size in pixels (defaults to font-scaled size)
-            hover_color: HoverColor enum value (RED, GREEN, BLUE, or NONE for theme color)
-            
-        Returns:
-            PhotoImage ready for use in tkinter widgets
-        """
+        """Get icon with a specific color (for hover states)"""
+
         if size is None:
             size = self.default_size()
         
@@ -280,7 +262,6 @@ class IconManager:
         if widget is None:
             widget = self.app
         
-        # Check if its an icon label we created
         if isinstance(widget, tk.Label) and hasattr(widget, '_icon_name'):
             icon_name = widget._icon_name
             size = getattr(widget, '_icon_size', None) or self.default_size()
@@ -296,7 +277,7 @@ class IconManager:
                 widget.configure(image=new_icon)
                 widget._icon_ref = new_icon  # Update reference
                 
-                # Update background too
+                # Update background
                 bg = self._get_parent_bg(widget.master)
                 try:
                     widget.configure(bg=bg)

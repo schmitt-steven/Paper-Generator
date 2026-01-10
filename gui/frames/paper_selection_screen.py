@@ -10,6 +10,7 @@ from typing import List, Dict, Callable, Any, Optional
 from ..base_frame import BaseFrame, ProgressPopup, create_gray_button
 from ..icons import HoverColor
 from ..info_texts import PAPER_SELECTION_INFO
+from ..theme_colors import CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT, MUTED_TEXT
 from phases.paper_search.paper import Paper
 from phases.paper_search.user_paper_loader import UserPaperLoader
 from phases.paper_search.literature_search import LiteratureSearch
@@ -112,7 +113,8 @@ class PaperSelectionScreen(BaseFrame):
         button_text: str,
         button_command: Callable
     ) -> tuple:
-        section_frame = ttk.Frame(parent, style="Card.TFrame", padding=1)
+        from ..base_frame import CardBorderFrame
+        section_frame = CardBorderFrame(parent, padx=1, pady=1)
         section_frame.pack(fill="x", pady=10)
         
         # Header row
@@ -122,8 +124,8 @@ class PaperSelectionScreen(BaseFrame):
         left_header = ttk.Frame(header_frame, style="CardHeader.TFrame")
         left_header.pack(side="left")
         
-        header_bg = getattr(self.controller, '_card_header_bg', '#252525')
-        header_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
+        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
+        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
         tk.Label(
             left_header, 
             text=title, 
@@ -136,7 +138,7 @@ class PaperSelectionScreen(BaseFrame):
             left_header, 
             text=str(count), 
             font=self.controller.fonts.sub_header_font, 
-            fg="#666666",
+            fg=MUTED_TEXT,
             bg=header_bg
         )
         count_label.pack(side="left", padx=(10, 0))
@@ -151,7 +153,7 @@ class PaperSelectionScreen(BaseFrame):
         ttk.Separator(section_frame, orient="horizontal").pack(fill="x")
         
         # Papers list container
-        papers_list = ttk.Frame(section_frame, padding=10)
+        papers_list = ttk.Frame(section_frame, style="CardContent.TFrame", padding=10)
         papers_list.pack(fill="x")
         
         return section_frame, count_label, action_btn, papers_list
@@ -374,11 +376,14 @@ class PaperSelectionScreen(BaseFrame):
             return
         
         self._set_upload_loading(True)
-        thread = threading.Thread(target=self._process_uploaded_files, args=(file_paths,))
+        popup = ProgressPopup(self.controller, "Uploading Papers")
+        popup.update_status(f"Processing {len(file_paths)} file(s)")
+        
+        thread = threading.Thread(target=self._process_uploaded_files, args=(file_paths, popup))
         thread.daemon = True
         thread.start()
 
-    def _process_uploaded_files(self, file_paths: tuple):
+    def _process_uploaded_files(self, file_paths: tuple, popup: ProgressPopup):
         """Process uploaded PDF files. Simplified: process directly, skip duplicates."""
         try:
             # Get existing paper IDs to skip duplicates
@@ -386,10 +391,13 @@ class PaperSelectionScreen(BaseFrame):
             
             loader = UserPaperLoader(model_name=Settings.LITERATURE_SEARCH_MODEL)
             new_papers = []
+            total = len(file_paths)
             
-            for file_path in file_paths:
+            for i, file_path in enumerate(file_paths, 1):
                 pdf_path = Path(file_path)
                 paper_id = f"user_{pdf_path.stem}"
+                
+                self.after(0, lambda p=pdf_path.name, idx=i: popup.update_status(f"Processing {idx}/{total}: {p}"))
                 
                 # Skip if already loaded
                 if paper_id in existing_ids:
@@ -402,15 +410,16 @@ class PaperSelectionScreen(BaseFrame):
                     new_papers.append(paper)
                     existing_ids.add(paper.id)
             
-            self.after(0, lambda: self._on_upload_complete(new_papers))
+            self.after(0, lambda: self._on_upload_complete(new_papers, popup))
             
         except Exception as e:
             print(f"Error processing uploaded files: {e}")
             import traceback
             traceback.print_exc()
+            self.after(0, lambda err=str(e): popup.show_error(err))
             self.after(0, lambda: self._set_upload_loading(False))
 
-    def _on_upload_complete(self, new_papers: list[Paper]):
+    def _on_upload_complete(self, new_papers: list[Paper], popup: ProgressPopup):
         for paper in new_papers:
             self.user_papers.append(paper)
             print(f"[Papers] Added user paper: {paper.title[:60]}")
@@ -418,11 +427,12 @@ class PaperSelectionScreen(BaseFrame):
         self._save_papers()  # Save immediately after upload
         self._refresh_user_papers_list()
         self._set_upload_loading(False)
+        popup.close()
 
     def _set_upload_loading(self, loading: bool):
         self.is_uploading = loading
         if loading:
-            self.upload_btn.config(state="disabled", text="Processing")
+            self.upload_btn.config(state="disabled", text="Uploading...")
         else:
             self.upload_btn.config(state="normal", text="Upload")
 
@@ -613,76 +623,101 @@ class PaperSelectionScreen(BaseFrame):
         # Find new papers (not in original loaded set)
         new_papers = [p for p in all_papers if p.id not in self._original_paper_ids]
         
-        # Find papers that need processing (no markdown_text but PDF exists)
-        papers_needing_conversion = self._find_papers_needing_conversion(all_papers)
+        # Find papers that need processing (download and/or conversion)
+        papers_needing_download, papers_needing_conversion = self._find_papers_needing_processing(all_papers)
         
-        if new_papers or papers_needing_conversion:
-            # Process new papers and papers needing conversion (deduplicate by ID)
-            seen_ids = set()
-            papers_to_process = []
-            for paper in new_papers + papers_needing_conversion:
-                if paper.id not in seen_ids:
-                    seen_ids.add(paper.id)
-                    papers_to_process.append(paper)
-            print(f"[Papers] Found {len(papers_to_process)} papers to process ({len(new_papers)} new, {len(papers_needing_conversion)} need conversion)")
-            self._process_new_papers(all_papers, papers_to_process)
+        # Combine all papers that need processing (deduplicate by ID)
+        seen_ids = set()
+        papers_to_process = []
+        for paper in new_papers + papers_needing_download + papers_needing_conversion:
+            if paper.id not in seen_ids:
+                seen_ids.add(paper.id)
+                papers_to_process.append(paper)
+        
+        if papers_to_process:
+            print(f"[Papers] Found {len(papers_to_process)} papers to process:")
+            print(f"    - {len(new_papers)} new papers")
+            print(f"    - {len(papers_needing_download)} need PDF download")
+            print(f"    - {len(papers_needing_conversion)} need conversion")
+            self._process_new_papers(all_papers, papers_to_process, papers_needing_download)
         elif HYPOTHESES_FILE.exists():
-            # No papers to process, hypotheses exist -> continue
+            # No papers to process, hypothesis exists -> continue
             super().on_next()
         else:
             # No papers to process, no hypothesis -> generate it
             self._run_hypothesis_generation(all_papers)
 
-    def _find_papers_needing_conversion(self, all_papers: list[Paper]) -> list[Paper]:
-        """Find papers that need to be converted to markdown (have PDF but no markdown_text)."""
-        papers_needing_conversion = []
-        for paper in all_papers:
-            # Check if paper doesn't have markdown_text
-            has_markdown = getattr(paper, "markdown_text", None) and isinstance(paper.markdown_text, str) and paper.markdown_text.strip()
-            if not has_markdown:
-                # Check if PDF exists (either pdf_path or in output/literature/)
-                pdf_exists = False
-                if paper.pdf_path:
-                    pdf_path = Path(paper.pdf_path)
-                    if pdf_path.is_absolute() and pdf_path.exists():
-                        pdf_exists = True
-                    elif not pdf_path.is_absolute():
-                        full_path = Path.cwd() / pdf_path
-                        if full_path.exists():
-                            pdf_exists = True
-                
-                if not pdf_exists:
-                    # Check if PDF exists in output/literature/{id}/
-                    safe_id = "".join([c for c in paper.id if c.isalnum() or c in ('-', '_', '.')])
-                    pdf_path = Path("output/literature") / safe_id / f"{safe_id}.pdf"
-                    if pdf_path.exists():
-                        pdf_exists = True
-                
-                if pdf_exists:
-                    papers_needing_conversion.append(paper)
+    def _find_papers_needing_processing(self, all_papers: list[Paper]) -> tuple[list[Paper], list[Paper]]:
+        """
+        Find papers that need processing.
         
-        return papers_needing_conversion
+        Returns:
+            Tuple of (papers_needing_download, papers_needing_conversion)
+            - papers_needing_download: Open-access papers without a downloaded PDF
+            - papers_needing_conversion: Papers with PDF but no markdown_text
+        """
+        papers_needing_download = []
+        papers_needing_conversion = []
+        
+        for paper in all_papers:
+            # Check if paper has markdown_text
+            has_markdown = getattr(paper, "markdown_text", None) and isinstance(paper.markdown_text, str) and paper.markdown_text.strip()
+            if has_markdown:
+                continue  # Paper is fully processed
+            
+            # Check if PDF exists
+            pdf_exists = self._check_pdf_exists(paper)
+            
+            if pdf_exists:
+                # Has PDF but no markdown -> needs conversion
+                papers_needing_conversion.append(paper)
+            elif paper.is_open_access and paper.pdf_url and not paper.user_provided:
+                # Open-access paper without PDF -> needs download (then conversion)
+                papers_needing_download.append(paper)
+            # Note: Closed-access papers without PDF are skipped (user needs to upload manually)
+        
+        return papers_needing_download, papers_needing_conversion
+    
+    def _check_pdf_exists(self, paper: Paper) -> bool:
+        """Check if a PDF file exists for the given paper."""
+        # Check pdf_path first
+        if paper.pdf_path:
+            pdf_path = Path(paper.pdf_path)
+            if pdf_path.is_absolute() and pdf_path.exists():
+                return True
+            elif not pdf_path.is_absolute():
+                full_path = Path.cwd() / pdf_path
+                if full_path.exists():
+                    return True
+        
+        # Check standard location in output/literature/{id}/
+        safe_id = "".join([c for c in paper.id if c.isalnum() or c in ('-', '_', '.')])
+        pdf_path = Path("output/literature") / safe_id / f"{safe_id}.pdf"
+        return pdf_path.exists()
 
-    def _process_new_papers(self, all_papers: list[Paper], new_papers: list[Paper]):
-        """Download and convert new papers, save all, then continue or generate hypotheses."""
-        popup = ProgressPopup(self.controller, "Processing New Papers")
+    def _process_new_papers(self, all_papers: list[Paper], papers_to_process: list[Paper], papers_needing_download: list[Paper] = None):
+        """Download and convert papers, save all, then continue or generate hypotheses."""
+        popup = ProgressPopup(self.controller, "Processing Papers")
+        
+        # Use provided list or empty if not given
+        if papers_needing_download is None:
+            papers_needing_download = []
         
         def task():
             try:
-                # Step 1: Download non-user-provided new papers
-                to_download = [p for p in new_papers if not p.user_provided]
-                if to_download:
-                    self.after(0, lambda: popup.update_status(f"Downloading {len(to_download)} PDF(s)"))
+                # Step 1: Download papers that need downloading
+                if papers_needing_download:
+                    self.after(0, lambda: popup.update_status(f"Downloading {len(papers_needing_download)} PDF(s)"))
                     successful, failed = PDFDownloader.download_papers_as_pdfs(
-                        to_download, 
+                        papers_needing_download, 
                         base_folder="output/literature/"
                     )
                     print(f"Downloaded {successful} PDF(s), {failed} failed")
                 
-                # Step 2: Convert all new papers to markdown
-                self.after(0, lambda: popup.update_status(f"Converting {len(new_papers)} PDF(s) to markdown"))
+                # Step 2: Convert all papers to process to markdown
+                self.after(0, lambda: popup.update_status(f"Converting {len(papers_to_process)} PDF(s) to markdown"))
                 converter = PDFConverter()
-                converter.convert_all_papers(new_papers, base_folder="output/literature/")
+                converter.convert_all_papers(papers_to_process, base_folder="output/literature/")
                 
                 # Step 3: Save all papers to papers.json
                 self.after(0, lambda: popup.update_status("Saving papers"))
@@ -727,11 +762,18 @@ class PaperSelectionScreen(BaseFrame):
                 user_provided_hypothesis = bool(user_requirements.hypothesis and user_requirements.hypothesis.strip())
                 
                 # Step 1: Check all papers are converted to markdown
-                papers_needing_conversion = self._find_papers_needing_conversion(all_papers)
-                if papers_needing_conversion:
-                    self.after(0, lambda: popup.update_status(f"Converting {len(papers_needing_conversion)} PDF(s) to markdown"))
+                papers_needing_download, papers_needing_conversion = self._find_papers_needing_processing(all_papers)
+                if papers_needing_download or papers_needing_conversion:
+                    # Download papers that need it
+                    if papers_needing_download:
+                        self.after(0, lambda: popup.update_status(f"Downloading {len(papers_needing_download)} PDF(s)"))
+                        PDFDownloader.download_papers_as_pdfs(papers_needing_download, base_folder="output/literature/")
+                    
+                    # Convert all papers that need it
+                    papers_to_convert = papers_needing_download + papers_needing_conversion
+                    self.after(0, lambda: popup.update_status(f"Converting {len(papers_to_convert)} PDF(s) to markdown"))
                     converter = PDFConverter()
-                    converter.convert_all_papers(papers_needing_conversion, base_folder="output/literature/")
+                    converter.convert_all_papers(papers_to_convert, base_folder="output/literature/")
                 
                 # Step 2: Filter by markdown availability
                 self.after(0, lambda: popup.update_status("Filtering papers with markdown"))

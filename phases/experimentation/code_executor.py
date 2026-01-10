@@ -106,8 +106,8 @@ class CodeExecutor:
         )
     
     def _list_plot_files(self, output_dir: str) -> list[str]:
-        """List all plot files (PNG, SVG, PDF) in output directory."""
-        plot_extensions = {'.png', '.svg', '.pdf', '.jpg', '.jpeg'}
+        """List all plot files (PNG, PDF) in output directory."""
+        plot_extensions = {'.png', '.pdf', '.jpg', '.jpeg'}
         plot_files = []
         
         plots_dir = os.path.join(output_dir, "plots")

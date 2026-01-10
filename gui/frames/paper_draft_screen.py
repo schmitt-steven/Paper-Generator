@@ -5,6 +5,7 @@ from pathlib import Path
 
 from ..base_frame import BaseFrame, ProgressPopup, create_scrollable_text_area
 from ..info_texts import PAPER_DRAFT_INFO
+from ..theme_colors import CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT
 from .writing_prompts_screen import WritingPromptsScreen
 from utils.file_utils import load_markdown, save_markdown
 from phases.paper_writing.paper_writing_pipeline import PaperWritingPipeline
@@ -44,7 +45,8 @@ class PaperDraftScreen(BaseFrame):
     def create_content(self):
         """Create the card container - content is added when draft loads."""
         # Create the main card that holds everything
-        self.card = ttk.Frame(self.scrollable_frame, style="Card.TFrame", padding=1)
+        from ..base_frame import CardBorderFrame
+        self.card = CardBorderFrame(self.scrollable_frame, padx=1, pady=1)
         self.card.pack(fill="both", expand=True, pady=(10, 0))
         
         # Header with title and button
@@ -52,8 +54,8 @@ class PaperDraftScreen(BaseFrame):
         header.pack(fill="x")
         
         # Get colors
-        header_bg = getattr(self.controller, '_card_header_bg', '#252525')
-        header_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
+        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
+        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
         
         # Title on left
         tk.Label(
@@ -74,7 +76,7 @@ class PaperDraftScreen(BaseFrame):
         ttk.Separator(self.card, orient="horizontal").pack(fill="x")
         
         # Content frame for the text area
-        self.card_content = ttk.Frame(self.card, padding=0)
+        self.card_content = ttk.Frame(self.card, style="CardContent.TFrame", padding=0)
         self.card_content.pack(fill="both", expand=True)
     
     def _show_prompts(self):

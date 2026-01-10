@@ -7,8 +7,13 @@ from tkinter import ttk, messagebox
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from ..base_frame import BaseFrame, ProgressPopup, TextBorderFrame, create_scrollable_text_area
+from ..base_frame import BaseFrame, ProgressPopup, TextBorderFrame, CardBorderFrame, create_scrollable_text_area
 from ..info_texts import EVIDENCE_INFO
+from ..theme_colors import (
+    BORDER_DARK, BORDER_LIGHT,
+    TEXT_BG_DARK, TEXT_BG_LIGHT,
+    TEXT_FG_DARK, TEXT_FG_LIGHT,
+)
 from phases.paper_writing.data_models import Evidence, PaperChunk, Section
 from phases.paper_writing.evidence_manager import (
     load_evidence, save_evidence, add_evidence, remove_evidence, get_evidence_stats,
@@ -28,11 +33,11 @@ DISPLAY_SECTIONS = [
     Section.CONCLUSION,
 ]
 
-class EvidenceChunkCard(ttk.Frame):
+class EvidenceChunkCard(CardBorderFrame):
     """A card displaying a single evidence chunk with metadata and remove button."""
     
     def __init__(self, parent, evidence: Evidence, on_remove, controller):
-        super().__init__(parent, style="Card.TFrame", padding=1)
+        super().__init__(parent, padx=1, pady=1)
         self.evidence = evidence
         self.on_remove = on_remove
         self.controller = controller
@@ -117,8 +122,8 @@ class EvidenceChunkCard(ttk.Frame):
         text_frame = ttk.Frame(self)
         text_frame.pack(fill="both", expand=True)
         
-        text_bg = "#242424" if self.controller.current_theme == "dark" else "#ffffff"
-        text_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
+        text_bg = TEXT_BG_DARK if self.controller.current_theme == "dark" else TEXT_BG_LIGHT
+        text_fg = TEXT_FG_DARK if self.controller.current_theme == "dark" else TEXT_FG_LIGHT
         
         scrollbar = ttk.Scrollbar(text_frame, orient="vertical")
         scrollbar.pack(side="right", fill="y")
@@ -151,11 +156,11 @@ class EvidenceChunkCard(ttk.Frame):
             self.on_remove(self.evidence)
 
 
-class CollapsibleSectionCard(ttk.Frame):
+class CollapsibleSectionCard(CardBorderFrame):
     """A collapsible card for a paper section containing evidence chunks."""
     
     def __init__(self, parent, section: Section, controller, on_chunk_removed):
-        super().__init__(parent, style="Card.TFrame", padding=1)
+        super().__init__(parent, padx=1, pady=1)
         self.section = section
         self.controller = controller
         self.on_chunk_removed = on_chunk_removed
@@ -202,7 +207,7 @@ class CollapsibleSectionCard(ttk.Frame):
         ttk.Separator(self, orient="horizontal").pack(fill="x")
         
         # Content frame (hidden by default)
-        self.content_frame = ttk.Frame(self, padding=10)
+        self.content_frame = ttk.Frame(self, style="CardContent.TFrame", padding=10)
         # Don't pack yet, only show when expanded
     
     def toggle(self):
@@ -342,9 +347,9 @@ class AddChunkDialog(tk.Toplevel):
         
         # Get theme colors
         is_dark = hasattr(self.parent, 'current_theme') and self.parent.current_theme == "dark"
-        text_bg = "#242424" if is_dark else "#ffffff"
-        text_fg = "#ffffff" if is_dark else "#1c1c1c"
-        border_color = "#404040" if is_dark else "#cccccc"
+        text_bg = TEXT_BG_DARK if is_dark else TEXT_BG_LIGHT
+        text_fg = TEXT_FG_DARK if is_dark else TEXT_FG_LIGHT
+        border_color = BORDER_DARK if is_dark else BORDER_LIGHT
         
         # Border container
         border_frame = tk.Frame(text_frame, bg=border_color, padx=1, pady=1)

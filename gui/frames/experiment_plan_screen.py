@@ -5,6 +5,7 @@ from pathlib import Path
 
 from ..base_frame import BaseFrame, ProgressPopup, create_scrollable_text_area
 from ..info_texts import EXPERIMENT_PLAN_INFO
+from ..theme_colors import CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT
 from utils.file_utils import load_markdown, save_markdown
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.context_analysis.paper_conception import PaperConception
@@ -72,15 +73,16 @@ class ExperimentPlanScreen(BaseFrame):
 
     def _create_plan_section(self, content: str):
         """Create an editable text area for the plan inside a card."""
-        card = ttk.Frame(self.scrollable_frame, style="Card.TFrame", padding=1)
+        from ..base_frame import CardBorderFrame
+        card = CardBorderFrame(self.scrollable_frame, padx=1, pady=1)
         card.pack(fill="both", expand=True, pady=10)
         
         # Header
         header = ttk.Frame(card, style="CardHeader.TFrame", padding=(10, 6))
         header.pack(fill="x")
         
-        header_bg = getattr(self.controller, '_card_header_bg', '#252525')
-        header_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
+        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
+        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
         tk.Label(
             header,
             text="Experiment Plan",
@@ -92,7 +94,7 @@ class ExperimentPlanScreen(BaseFrame):
         ttk.Separator(card, orient="horizontal").pack(fill="x")
         
         # Content
-        content_frame = ttk.Frame(card, padding=0)
+        content_frame = ttk.Frame(card, style="CardContent.TFrame", padding=0)
         content_frame.pack(fill="both", expand=True)
         
         # Text area with scrollbar

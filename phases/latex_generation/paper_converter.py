@@ -502,7 +502,7 @@ class PaperConverter(LazyModelMixin):
             return
         
         # Copy all plot files from plots directory
-        plot_extensions = {'.png', '.svg', '.pdf', '.jpg', '.jpeg'}
+        plot_extensions = {'.png', '.pdf', '.jpg', '.jpeg'}
         copied_count = 0
         for plot_file in plots_dir.iterdir():
             if plot_file.is_file() and plot_file.suffix.lower() in plot_extensions:

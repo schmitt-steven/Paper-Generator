@@ -4,6 +4,23 @@ from tkinter import ttk, messagebox
 import sv_ttk
 import sys
 import os
+from .theme_colors import (
+    BORDER_DARK, BORDER_LIGHT,
+    SEPARATOR_DARK, SEPARATOR_LIGHT,
+    CARD_HEADER_BG_DARK, CARD_HEADER_BG_LIGHT,
+    NAVBAR_BG_DARK, NAVBAR_BG_LIGHT,
+    CARD_BG_DARK, CARD_BG_LIGHT,
+    CANVAS_BG_DARK, CANVAS_BG_LIGHT,
+    LISTBOX_BG_DARK, LISTBOX_BG_LIGHT,
+    LISTBOX_FG_DARK, LISTBOX_FG_LIGHT,
+    LISTBOX_SELECT_BG_DARK, LISTBOX_SELECT_BG_LIGHT,
+    LISTBOX_SELECT_FG_DARK, LISTBOX_SELECT_FG_LIGHT,
+    POPDOWN_BG_DARK, POPDOWN_BG_LIGHT,
+    TEXT_BG_DARK, TEXT_BG_LIGHT,
+    TEXT_FG_DARK, TEXT_FG_LIGHT,
+    INSERT_BG_DARK, INSERT_BG_LIGHT,
+    CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT,
+)
 from .frames import (
     SettingsScreen,
     UserRequirementsScreen,
@@ -153,32 +170,39 @@ class PaperGeneratorApp(tk.Tk):
 
         # Card header styling 
         if self.current_theme == "dark":
-            self._card_header_bg = "#252525"  
-            self._navbar_bg = "#0f0f0f"       
+            self._card_header_bg = CARD_HEADER_BG_DARK
+            self._navbar_bg = NAVBAR_BG_DARK
         else:
-            self._card_header_bg = "#e8eef2"  # Icy light blue-gray
-            self._navbar_bg = "#d0dae0"       # Darker icy blue-gray for nav bars
+            self._card_header_bg = CARD_HEADER_BG_LIGHT
+            self._navbar_bg = NAVBAR_BG_LIGHT
         
         style.configure("CardHeader.TFrame", background=self._card_header_bg)
         style.configure("CardHeader.TLabel", background=self._card_header_bg)
         style.configure("NavBar.TFrame", background=self._navbar_bg)
         style.configure("NavBar.TLabel", background=self._navbar_bg)
         
-        # Card body background
+        # Card frame border color (padding=1 trick uses card background as border)
         if self.current_theme == "dark":
-            self._card_bg = None  # Use default theme
+            self._card_border = BORDER_DARK
+            self._card_content_bg = "#1c1c1c"  # Dark content background
         else:
-            self._card_bg = "#ffffff" 
-            style.configure("Card.TFrame", background=self._card_bg)
+            self._card_border = BORDER_LIGHT
+            self._card_content_bg = "#ffffff"  # Light content background
+        style.configure("Card.TFrame", background=self._card_border)
+        style.configure("CardContent.TFrame", background=self._card_content_bg)
         
         # Canvas/scrollable area background
         if self.current_theme == "dark":
-            self._canvas_bg = "#131313"
+            self._canvas_bg = CANVAS_BG_DARK
         else:
-            self._canvas_bg = "#f0f5f8"
+            self._canvas_bg = CANVAS_BG_LIGHT
         
         style.configure("Scrollable.TFrame", background=self._canvas_bg)
         style.configure("Scrollable.TLabel", background=self._canvas_bg)
+        
+        # Separator styling
+        separator_color = SEPARATOR_DARK if self.current_theme == "dark" else SEPARATOR_LIGHT
+        style.configure("TSeparator", background=separator_color)
         
         # Custom Listbox (Dropdown Menu) styling
         style.configure("TCombobox", font=self.fonts.default_font)
@@ -201,19 +225,19 @@ class PaperGeneratorApp(tk.Tk):
         
         # Combobox Listbox styling (stored as instance vars for update_combobox_styles)
         if self.current_theme == "dark":
-            self._listbox_bg = "#2b2b2b"
-            self._listbox_fg = "#ffffff"
-            self._listbox_select_bg = "#404040"
-            self._listbox_select_fg = "#ffffff"
-            self._listbox_border = "#404040"
-            popdown_bg = "#2b2b2b"
+            self._listbox_bg = LISTBOX_BG_DARK
+            self._listbox_fg = LISTBOX_FG_DARK
+            self._listbox_select_bg = LISTBOX_SELECT_BG_DARK
+            self._listbox_select_fg = LISTBOX_SELECT_FG_DARK
+            self._listbox_border = BORDER_DARK
+            popdown_bg = POPDOWN_BG_DARK
         else:
-            self._listbox_bg = "#ffffff"
-            self._listbox_fg = "#1c1c1c"
-            self._listbox_select_bg = "#0078d4"
-            self._listbox_select_fg = "#ffffff"
-            self._listbox_border = "#cccccc"
-            popdown_bg = "#ffffff"
+            self._listbox_bg = LISTBOX_BG_LIGHT
+            self._listbox_fg = LISTBOX_FG_LIGHT
+            self._listbox_select_bg = LISTBOX_SELECT_BG_LIGHT
+            self._listbox_select_fg = LISTBOX_SELECT_FG_LIGHT
+            self._listbox_border = BORDER_LIGHT
+            popdown_bg = POPDOWN_BG_LIGHT
         
         style.configure("ComboboxPopdownFrame", relief="flat", background=popdown_bg)
         # For listbox inside combobox
@@ -318,25 +342,32 @@ class PaperGeneratorApp(tk.Tk):
             
         # Define colors
         if self.current_theme == "dark":
-            text_bg = "#232324"
-            text_fg = "#ffffff"
-            border_color = "#353639"
-            insert_bg = "#ffffff"
-            card_header_bg = "#252525"
-            card_header_fg = "#ffffff"
+            text_bg = TEXT_BG_DARK
+            text_fg = TEXT_FG_DARK
+            border_color = BORDER_DARK
+            insert_bg = INSERT_BG_DARK
+            card_header_bg = CARD_HEADER_BG_DARK
+            card_header_fg = CARD_HEADER_FG_DARK
         else:
-            text_bg = "#f5f8fa"
-            text_fg = "#1c1c1c"
-            border_color = "#c5d0d8"
-            insert_bg = "#1c1c1c"
-            card_header_bg = "#e8eef2"
-            card_header_fg = "#1c1c1c"
+            text_bg = TEXT_BG_LIGHT
+            text_fg = TEXT_FG_LIGHT
+            border_color = BORDER_LIGHT
+            insert_bg = INSERT_BG_LIGHT
+            card_header_bg = CARD_HEADER_BG_LIGHT
+            card_header_fg = CARD_HEADER_FG_LIGHT
             
-        # Import wrapper class
-        from .base_frame import TextBorderFrame
+        # Import wrapper classes
+        from .base_frame import TextBorderFrame, CardBorderFrame
         
-        # Apply to BorderFrame (the container)
+        # Apply to TextBorderFrame (the container for text areas)
         if isinstance(widget, TextBorderFrame):
+            try:
+                widget.configure(background=border_color)
+            except:
+                pass
+        
+        # Apply to CardBorderFrame (the container for cards)
+        if isinstance(widget, CardBorderFrame):
             try:
                 widget.configure(background=border_color)
             except:

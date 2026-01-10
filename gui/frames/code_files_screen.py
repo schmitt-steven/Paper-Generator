@@ -8,6 +8,7 @@ from dataclasses import dataclass
 
 from ..base_frame import BaseFrame, ProgressPopup, create_gray_button
 from ..info_texts import CODE_FILES_INFO
+from ..theme_colors import CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT, MUTED_TEXT
 from phases.context_analysis.user_code_analysis import CodeAnalyzer
 from phases.context_analysis.paper_conception import PaperConception
 from phases.context_analysis.user_requirements import UserRequirements
@@ -64,11 +65,8 @@ class CodeFilesScreen(BaseFrame):
 
     def _create_files_section(self):
         """Create the code files upload section."""
-        section_frame = ttk.Frame(
-            self.scrollable_frame,
-            style="Card.TFrame",
-            padding=1
-        )
+        from ..base_frame import CardBorderFrame
+        section_frame = CardBorderFrame(self.scrollable_frame, padx=1, pady=1)
         section_frame.pack(fill="x", pady=10)
         
         # Header row
@@ -78,8 +76,8 @@ class CodeFilesScreen(BaseFrame):
         left_header = ttk.Frame(header_frame, style="CardHeader.TFrame")
         left_header.pack(side="left")
         
-        header_bg = getattr(self.controller, '_card_header_bg', '#252525')
-        header_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
+        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
+        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
         tk.Label(
             left_header, 
             text="Your Code Files", 
@@ -92,7 +90,7 @@ class CodeFilesScreen(BaseFrame):
             left_header, 
             text="0", 
             font=self.controller.fonts.sub_header_font, 
-            fg="#666666",
+            fg=MUTED_TEXT,
             bg=header_bg
         )
         self.count_label.pack(side="left", padx=(10, 0))
@@ -103,7 +101,7 @@ class CodeFilesScreen(BaseFrame):
         ttk.Separator(section_frame, orient="horizontal").pack(fill="x")
         
         # Files list container
-        self.files_list = ttk.Frame(section_frame, padding=10)
+        self.files_list = ttk.Frame(section_frame, style="CardContent.TFrame", padding=10)
         self.files_list.pack(fill="x")
         
         # Show empty state initially

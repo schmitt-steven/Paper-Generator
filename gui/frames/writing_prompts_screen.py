@@ -8,18 +8,24 @@ from typing import Dict
 from pathlib import Path
 import re
 
-from ..base_frame import BaseFrame
+from ..base_frame import BaseFrame, CardBorderFrame
 from ..info_texts import WRITING_PROMPTS_INFO
+from ..theme_colors import (
+    CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT,
+    TEXT_BG_DARK_ALT, TEXT_BG_LIGHT_ALT, TEXT_FG_DARK, TEXT_FG_LIGHT,
+    SECONDARY_TEXT_DARK, SECONDARY_TEXT_LIGHT,
+    LINK_COLOR_DARK, LINK_COLOR_LIGHT,
+)
 
 
 PROMPTS_FILE = Path("output/section_writing_prompts.md")
 
 
-class CollapsiblePromptCard(ttk.Frame):
+class CollapsiblePromptCard(CardBorderFrame):
     """A collapsible card for a paper section's writing prompt."""
     
     def __init__(self, parent, section_name: str, prompt_content: str, controller):
-        super().__init__(parent, style="Card.TFrame", padding=1)
+        super().__init__(parent, padx=1, pady=1)
         self.section_name = section_name
         self.prompt_content = prompt_content
         self.controller = controller
@@ -32,8 +38,8 @@ class CollapsiblePromptCard(ttk.Frame):
         header = ttk.Frame(self, style="CardHeader.TFrame", padding=(10, 8))
         header.pack(fill="x")
         
-        header_bg = getattr(self.controller, '_card_header_bg', '#252525')
-        header_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
+        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
+        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
         
         # Left side: toggle + title
         left_frame = tk.Frame(header, bg=header_bg)
@@ -65,8 +71,8 @@ class CollapsiblePromptCard(ttk.Frame):
         self.title_label.bind("<Button-1>", lambda e: self.toggle())
         
         # Copy button on right
-        copy_color = "#888888" if self.controller.current_theme == "dark" else "#666666"
-        hover_color = "#4a9eff" if self.controller.current_theme == "dark" else "#0078d4"
+        copy_color = SECONDARY_TEXT_DARK if self.controller.current_theme == "dark" else SECONDARY_TEXT_LIGHT
+        hover_color = LINK_COLOR_DARK if self.controller.current_theme == "dark" else LINK_COLOR_LIGHT
         
         copy_btn = tk.Label(
             header,
@@ -88,12 +94,12 @@ class CollapsiblePromptCard(ttk.Frame):
         ttk.Separator(self, orient="horizontal").pack(fill="x")
         
         # Content frame (hidden by default)
-        self.content_frame = ttk.Frame(self, padding=0)
+        self.content_frame = ttk.Frame(self, style="CardContent.TFrame", padding=0)
         # Don't pack yet - only show when expanded
         
         # Text widget for prompt content
-        text_bg = "#242424" if self.controller.current_theme == "dark" else "#ffffff"
-        text_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
+        text_bg = TEXT_BG_DARK_ALT if self.controller.current_theme == "dark" else TEXT_BG_LIGHT_ALT
+        text_fg = TEXT_FG_DARK if self.controller.current_theme == "dark" else TEXT_FG_LIGHT
         
         # Scrollbar
         scrollbar = ttk.Scrollbar(self.content_frame, orient="vertical")

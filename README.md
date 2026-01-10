@@ -17,7 +17,6 @@ Work in progress, everything subject to change...
 
 - **Python 3.10+**
 - **LaTeX** (MacTeX, TeX Live, MikTeX, etc.)
-- **Inkscape** (for SVG plot support in LaTeX)
 - **LM Studio** running in background with at least 3 downloaded models:
   - One LLM capable of tool use
   - One VLM or multimodal model
@@ -37,9 +36,6 @@ xcode-select --install
 # Install LaTeX (full distribution, ~4GB)
 brew install --cask mactex
 
-# Install Inkscape (for SVG support)
-brew install --cask inkscape
-
 # Install Python dependencies
 pip install -r requirements.txt
 ```
@@ -50,9 +46,6 @@ pip install -r requirements.txt
 # Install LaTeX
 sudo apt install texlive-full
 
-# Install Inkscape
-sudo apt install inkscape
-
 # Install Python dependencies
 pip install -r requirements.txt
 ```
@@ -60,8 +53,7 @@ pip install -r requirements.txt
 ### Windows
 
 1. Install [MikTeX](https://miktex.org/download) or [TeX Live](https://tug.org/texlive/)
-2. Install [Inkscape](https://inkscape.org/release/)
-3. Install Python dependencies:
+2. Install Python dependencies:
    ```bash
    pip install -r requirements.txt
    ```

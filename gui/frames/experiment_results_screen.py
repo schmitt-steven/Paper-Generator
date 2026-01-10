@@ -9,6 +9,12 @@ from pathlib import Path
 from settings import Settings
 from ..base_frame import BaseFrame, ProgressPopup, TextBorderFrame, create_scrollable_text_area
 from ..info_texts import EXPERIMENT_RESULTS_INFO
+from ..theme_colors import (
+    CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT,
+    SECONDARY_TEXT_DARK, SECONDARY_TEXT_LIGHT,
+    DELETE_ICON_DARK, DELETE_ICON_LIGHT,
+    HOVER_DANGER_DARK, HOVER_DANGER_LIGHT,
+)
 from phases.context_analysis.paper_conception import PaperConception
 from phases.context_analysis.user_requirements import UserRequirements
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
@@ -189,7 +195,21 @@ class ExperimentResultsScreen(BaseFrame):
                 content_frame = figure_card.winfo_children()[-1]  # Last child is content frame
                 
                 # --- Plot Image ---
-                pil_img = Image.open(plot_path)
+                # Handle both image files and PDF files
+                if plot_path.suffix.lower() == '.pdf':
+                    # Use PyMuPDF to render PDF as image
+                    import fitz
+                    doc = fitz.open(plot_path)
+                    page = doc[0]  # Get first page
+                    # Render at 2x for quality
+                    mat = fitz.Matrix(2, 2)
+                    pix = page.get_pixmap(matrix=mat)
+                    mode = "RGBA" if pix.alpha else "RGB"
+                    pil_img = Image.frombytes(mode, [pix.width, pix.height], pix.samples)
+                    doc.close()
+                else:
+                    pil_img = Image.open(plot_path)
+                
                 # Max width 600, keep aspect ratio
                 width = 600
                 w_percent = (width / float(pil_img.size[0]))
@@ -220,15 +240,16 @@ class ExperimentResultsScreen(BaseFrame):
     
     def _create_figure_card(self, parent, title: str, plot_filename: str):
         """Create a card frame for a figure with a delete button in the header."""
-        card = ttk.Frame(parent, style="Card.TFrame", padding=1)
+        from ..base_frame import CardBorderFrame
+        card = CardBorderFrame(parent, padx=1, pady=1)
         card.pack(fill="x", padx=0, pady=10)
         
         header = ttk.Frame(card, style="CardHeader.TFrame", padding=(10, 6))
         header.pack(fill="x")
         
         # Title on the left
-        header_bg = getattr(self.controller, '_card_header_bg', '#252525')
-        header_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
+        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
+        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
         tk.Label(
             header, 
             text=title, 
@@ -237,9 +258,19 @@ class ExperimentResultsScreen(BaseFrame):
             fg=header_fg
         ).pack(side="left")
         
+        # Filename in gray brackets
+        filename_only = Path(plot_filename).name
+        tk.Label(
+            header,
+            text=f"({filename_only})",
+            font=self.controller.fonts.default_font,
+            bg=header_bg,
+            fg=SECONDARY_TEXT_DARK
+        ).pack(side="left", padx=(8, 0))
+        
         # Delete button on right (minimalistic with hover effect)
-        delete_color = "#666666" if self.controller.current_theme == "dark" else "#888888"
-        hover_color = "#ff6b6b" if self.controller.current_theme == "dark" else "#e05555"
+        delete_color = DELETE_ICON_DARK if self.controller.current_theme == "dark" else DELETE_ICON_LIGHT
+        hover_color = HOVER_DANGER_DARK if self.controller.current_theme == "dark" else HOVER_DANGER_LIGHT
         
         delete_btn = tk.Label(
             header,
@@ -258,7 +289,7 @@ class ExperimentResultsScreen(BaseFrame):
         
         ttk.Separator(card, orient="horizontal").pack(fill="x")
         
-        content = ttk.Frame(card, padding=10)
+        content = ttk.Frame(card, style="CardContent.TFrame", padding=10)
         content.pack(fill="x")
         
         return card
@@ -293,7 +324,8 @@ class ExperimentResultsScreen(BaseFrame):
         """Create section to view/edit experiment code (styled as a card)."""
         
         # === Card container ===
-        card = ttk.Frame(self.results_container, style="Card.TFrame", padding=1)
+        from ..base_frame import CardBorderFrame
+        card = CardBorderFrame(self.results_container, padx=1, pady=1)
         card.pack(fill="both", expand=True, pady=10)
         
         # === Header with title and buttons ===
@@ -301,8 +333,8 @@ class ExperimentResultsScreen(BaseFrame):
         header.pack(fill="x")
         
         # Title on left
-        header_bg = getattr(self.controller, '_card_header_bg', '#252525')
-        header_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
+        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
+        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
         tk.Label(
             header, 
             text="Experiment Code", 
@@ -330,7 +362,7 @@ class ExperimentResultsScreen(BaseFrame):
         ttk.Separator(card, orient="horizontal").pack(fill="x")
         
         # === Content: Code editor ===
-        content = ttk.Frame(card, padding=0)
+        content = ttk.Frame(card, style="CardContent.TFrame", padding=0)
         content.pack(fill="both", expand=True)
 
         # Container for text + scrollbars (no border)

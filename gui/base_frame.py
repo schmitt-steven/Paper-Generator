@@ -6,6 +6,13 @@ import subprocess
 import platform
 
 from .icons import HoverColor
+from .theme_colors import (
+    NAVBAR_BG_DARK, NAVBAR_BG_LIGHT,
+    TEXT_BG_DARK_ALT, TEXT_BG_LIGHT_ALT,
+    TEXT_FG_DARK, TEXT_FG_LIGHT,
+    CARD_HEADER_BG_DARK, CARD_HEADER_BG_LIGHT,
+    CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT,
+)
 
 
 MAX_WIDTH = 700
@@ -15,6 +22,13 @@ TEXT_AREA_PADY = 10
 
 class TextBorderFrame(tk.Frame):
     """Custom Frame used as a border container for Text widgets."""
+    pass
+
+
+class CardBorderFrame(tk.Frame):
+    """Custom Frame used as a border container for Card widgets.
+    Uses tk.Frame (not ttk) so background color can be set directly.
+    """
     pass
 
 
@@ -254,8 +268,8 @@ class InfoPopup(tk.Toplevel):
         
         # Get theme colors
         is_dark = parent.current_theme == "dark"
-        navbar_bg = getattr(parent, '_navbar_bg', '#0f0f0f' if is_dark else '#F6F6F6')
-        navbar_fg = "#ffffff" if is_dark else "#1c1c1c"
+        navbar_bg = getattr(parent, '_navbar_bg', NAVBAR_BG_DARK if is_dark else NAVBAR_BG_LIGHT)
+        navbar_fg = TEXT_FG_DARK if is_dark else TEXT_FG_LIGHT
         
         # Main container
         self.grid_rowconfigure(1, weight=1)
@@ -295,8 +309,8 @@ class InfoPopup(tk.Toplevel):
         text.insert("1.0", content)
         text.config(state="disabled")
         
-        text_bg = "#242424" if is_dark else "#ffffff"
-        text_fg = "#ffffff" if is_dark else "#1c1c1c"
+        text_bg = TEXT_BG_DARK_ALT if is_dark else TEXT_BG_LIGHT_ALT
+        text_fg = TEXT_FG_DARK if is_dark else TEXT_FG_LIGHT
         text.configure(background=text_bg, foreground=text_fg)
         
         # Scrollbar
@@ -369,8 +383,8 @@ class BaseFrame(ttk.Frame):
         center_container.pack(expand=True)
         
         # Title
-        navbar_bg = getattr(self.controller, '_navbar_bg', '#1a1a1a')
-        navbar_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
+        navbar_bg = getattr(self.controller, '_navbar_bg', NAVBAR_BG_DARK)
+        navbar_fg = TEXT_FG_DARK if self.controller.current_theme == "dark" else TEXT_FG_LIGHT
         tk.Label(
             center_container, 
             text=self.title, 
@@ -632,15 +646,16 @@ class BaseFrame(ttk.Frame):
 
     def create_card_frame(self, parent, title):
         """Helper to create a unified card-styled section with title and separator."""
-        card = ttk.Frame(parent, style="Card.TFrame", padding=1)
+        # Use CardBorderFrame (tk.Frame) for direct background/border control
+        card = CardBorderFrame(parent, padx=1, pady=1)
         card.pack(fill="x", padx=0, pady=10)
         
         header = ttk.Frame(card, style="CardHeader.TFrame", padding=(10, 6))
         header.pack(fill="x")
         
         # Use tk.Label instead of ttk.Label for reliable background color
-        header_bg = getattr(self.controller, '_card_header_bg', '#252525')
-        header_fg = "#ffffff" if self.controller.current_theme == "dark" else "#1c1c1c"
+        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
+        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
         tk.Label(
             header, 
             text=title, 
@@ -651,6 +666,6 @@ class BaseFrame(ttk.Frame):
         
         ttk.Separator(card, orient="horizontal").pack(fill="x")
         
-        content = ttk.Frame(card, padding=10)
+        content = ttk.Frame(card, style="CardContent.TFrame", padding=10)
         content.pack(fill="x")
         return content
