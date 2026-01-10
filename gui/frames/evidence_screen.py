@@ -119,7 +119,7 @@ class EvidenceChunkCard(CardBorderFrame):
         ttk.Separator(self, orient="horizontal").pack(fill="x")
         
         # Summary text area
-        text_frame = ttk.Frame(self)
+        text_frame = ttk.Frame(self, style="CardContent.TFrame")
         text_frame.pack(fill="both", expand=True)
         
         text_bg = TEXT_BG_DARK if self.controller.current_theme == "dark" else TEXT_BG_LIGHT

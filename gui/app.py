@@ -96,6 +96,7 @@ class PaperGeneratorApp(tk.Tk):
         # Register callback to re-configure styles when fonts change
         # This ensures widgets like Combobox update their internal font references
         self.fonts.add_callback(self.configure_styles)
+        self.fonts.add_callback(self.icons.update_icon_labels)
 
         self.title("Paper Generator")
         
@@ -184,12 +185,16 @@ class PaperGeneratorApp(tk.Tk):
         # Card frame border color (padding=1 trick uses card background as border)
         if self.current_theme == "dark":
             self._card_border = BORDER_DARK
-            self._card_content_bg = "#1c1c1c"  # Dark content background
+            self._card_content_bg = CARD_BG_DARK if CARD_BG_DARK else "#1c1c1c"
         else:
             self._card_border = BORDER_LIGHT
-            self._card_content_bg = "#ffffff"  # Light content background
+            self._card_content_bg = CARD_BG_LIGHT
         style.configure("Card.TFrame", background=self._card_border)
         style.configure("CardContent.TFrame", background=self._card_content_bg)
+        style.configure("CardRow.TFrame", background=self._card_content_bg)
+        style.configure("CardRow.TLabel", background=self._card_content_bg)
+        style.configure("CardRow.TCheckbutton", background=self._card_content_bg)
+        style.configure("CardRow.Switch.TCheckbutton", background=self._card_content_bg)
         
         # Canvas/scrollable area background
         if self.current_theme == "dark":

@@ -20,7 +20,7 @@ NAVBAR_BG_DARK = "#0f0f0f"
 NAVBAR_BG_LIGHT = "#d0dae0"
 
 CARD_BG_DARK = None  # Uses default theme
-CARD_BG_LIGHT = "#ffffff"
+CARD_BG_LIGHT = "#f0f5f8"
 
 # =============================================================================
 # CANVAS / SCROLLABLE AREA BACKGROUNDS
@@ -50,7 +50,7 @@ POPDOWN_BG_LIGHT = "#ffffff"
 # TEXT AREA COLORS
 # =============================================================================
 TEXT_BG_DARK = "#232324"
-TEXT_BG_LIGHT = "#f5f8fa"
+TEXT_BG_LIGHT = "#f0f5f8"  # Same as CARD_BG_LIGHT
 
 TEXT_BG_DARK_ALT = "#242424"
 TEXT_BG_LIGHT_ALT = "#ffffff"

@@ -111,14 +111,16 @@ class FontManager:
 
     def update_base_size(self, new_size):
         """Update the base size and refresh all registered fonts."""
+        if self.base_size == int(new_size):
+            return
+            
         self.base_size = int(new_size)
         
         self.default_font.configure(size=self._calc_size(0))
         self.header_font.configure(size=self._calc_size(6))
         self.sub_header_font.configure(size=self._calc_size(2))
         self.text_area_font.configure(size=self._calc_size(-2))
-        self.text_field_font.configure(size=self._calc_size(-6))
-        self.text_field_font.configure(size=self._calc_size(-6))
+        self.text_field_font.configure(size=self._calc_size(0))
         self.nav_button_font.configure(size=self._calc_size(0))
         self.code_font.configure(size=self._calc_size(-4))
         self.small_font.configure(size=self._calc_size(-4))

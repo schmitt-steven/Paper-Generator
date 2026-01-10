@@ -368,12 +368,12 @@ class BaseFrame(ttk.Frame):
         
         # Info button on right side
         if self.info_content:
-            info_size = int(self.controller.fonts.base_size * 1.75)
+
             info_btn = self.controller.icons.create_icon_label(
                 header_frame,
                 icon_name="info",
                 command=self._show_info_popup,
-                size=info_size,
+                scale=1.75,
                 hover_color=HoverColor.BLUE
             )
             info_btn.pack(side="right", padx=(10, 15))

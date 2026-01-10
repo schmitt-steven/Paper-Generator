@@ -118,7 +118,8 @@ class ExperimentResultsScreen(BaseFrame):
             hyp_container,
             text=experiment_result.hypothesis.description,
             font=self.controller.fonts.text_area_font,
-            justify="left"
+            justify="left",
+            style="CardRow.TLabel"
         )
         hyp_label.pack(anchor="w", fill="x", padx=(5, 0))
         
@@ -137,7 +138,8 @@ class ExperimentResultsScreen(BaseFrame):
             verdict_container,
             text=verdict.upper(),
             font=self.controller.fonts.sub_header_font,
-            foreground=verdict_color
+            foreground=verdict_color,
+            style="CardRow.TLabel"
         ).pack(anchor="w", padx=(5, 0))
         
         # Reasoning
@@ -145,7 +147,8 @@ class ExperimentResultsScreen(BaseFrame):
             verdict_container,
             text=experiment_result.hypothesis_evaluation.reasoning,
             font=self.controller.fonts.text_area_font,
-            justify="left"
+            justify="left",
+            style="CardRow.TLabel"
         )
         reasoning_label.pack(anchor="w", pady=(5, 0), fill="x", padx=(5, 0))
         
@@ -366,7 +369,7 @@ class ExperimentResultsScreen(BaseFrame):
         content.pack(fill="both", expand=True)
 
         # Container for text + scrollbars (no border)
-        editor_container = ttk.Frame(content)
+        editor_container = ttk.Frame(content, style="CardRow.TFrame")
         editor_container.pack(fill="both", expand=True)
         
         # Scrollbars

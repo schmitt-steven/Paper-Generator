@@ -129,10 +129,17 @@ class IconManager:
         icon_name: str,
         command=None,
         size: int = None,
+        scale: float = None,
         hover_color: HoverColor = HoverColor.RED,
         base_color: HoverColor = HoverColor.NONE
     ) -> tk.Label:
         """Create a clickable label with an icon."""
+
+        if size is None and scale is None:
+             scale = self.SIZE_MULTIPLIER
+
+        if size is None:
+             size = int(self.app.fonts.base_size * scale)
 
         if base_color != HoverColor.NONE:
             icon = self.get_icon_colored(icon_name, size, hover_color=base_color)
@@ -145,7 +152,9 @@ class IconManager:
         label = tk.Label(parent, image=icon, bg=bg, cursor="hand2")
         label._icon_name = icon_name  # Store for theme updates
         label._icon_size = size
+        label._icon_scale = scale
         label._icon_base_color = base_color  # Store base color for theme updates
+        label._icon_hover_color = hover_color # Store hover color for theme updates
         label._icon_ref = icon  # Keep reference to prevent garbage collection
         
         if command:
@@ -221,6 +230,8 @@ class IconManager:
                         return getattr(self.app, '_navbar_bg', self._default_bg())
                     elif 'CardHeader' in style:
                         return getattr(self.app, '_card_header_bg', self._default_bg())
+                    elif 'CardContent' in style or 'CardRow' in style:
+                        return getattr(self.app, '_card_content_bg', self._default_bg())
             except:
                 pass
             
@@ -264,7 +275,13 @@ class IconManager:
         
         if isinstance(widget, tk.Label) and hasattr(widget, '_icon_name'):
             icon_name = widget._icon_name
-            size = getattr(widget, '_icon_size', None) or self.default_size()
+            
+            scale = getattr(widget, '_icon_scale', None)
+            if scale is not None:
+                size = int(self.app.fonts.base_size * scale)
+            else:
+                 size = getattr(widget, '_icon_size', None) or self.default_size()
+            
             base_color = getattr(widget, '_icon_base_color', HoverColor.NONE)
             
             # Get icon with preserved base_color
@@ -283,6 +300,12 @@ class IconManager:
                     widget.configure(bg=bg)
                 except:
                     pass
+
+                # Update hover icon if it exists
+                hover_color = getattr(widget, '_icon_hover_color', HoverColor.NONE)
+                if hover_color != HoverColor.NONE:
+                    hover_icon = self.get_icon_colored(icon_name, size, hover_color=hover_color)
+                    widget._hover_icon_ref = hover_icon
         
         # Recurse
         for child in widget.winfo_children():

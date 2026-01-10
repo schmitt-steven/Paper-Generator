@@ -74,7 +74,7 @@ class ResultScreen(BaseFrame):
 
         path = Path(PDF_PATH)
         if not path.exists():
-            ttk.Label(self.preview_container, text="PDF not found yet.").pack(pady=20)
+            ttk.Label(self.preview_container, text="PDF not found yet.", style="CardRow.TLabel").pack(pady=20)
             return
 
         try:
@@ -83,7 +83,7 @@ class ResultScreen(BaseFrame):
             
             if len(doc) == 0:
                 print("PDF is empty")
-                ttk.Label(self.preview_container, text="PDF is empty.", foreground="gray").pack(pady=20)
+                ttk.Label(self.preview_container, text="PDF is empty.", foreground="gray", style="CardRow.TLabel").pack(pady=20)
                 return
 
             # Show pages
@@ -118,11 +118,11 @@ class ResultScreen(BaseFrame):
                     self.preview_images.append(tk_img)
                     
                     # Container for page
-                    page_frame = ttk.Frame(self.preview_container, padding=10)
+                    page_frame = ttk.Frame(self.preview_container, style="CardRow.TFrame", padding=10)
                     page_frame.pack(fill="x")
                     
                     # Page Image
-                    lbl = ttk.Label(page_frame, image=tk_img)
+                    lbl = ttk.Label(page_frame, image=tk_img, style="CardRow.TLabel")
                     lbl.pack()
                     
                     # Separator between pages (only if showing multiple preview pages)
@@ -131,7 +131,7 @@ class ResultScreen(BaseFrame):
                         ttk.Separator(self.preview_container, orient="horizontal").pack(fill="x", padx=50, pady=10)
                 except Exception as e_page:
                     print(f"Error processing page {page_num}: {e_page}")
-                    ttk.Label(self.preview_container, text=f"Error processing page {page_num}.", foreground="red").pack()
+                    ttk.Label(self.preview_container, text=f"Error processing page {page_num}.", foreground="red", style="CardRow.TLabel").pack()
 
             doc.close()
             
@@ -139,7 +139,7 @@ class ResultScreen(BaseFrame):
             import traceback
             traceback.print_exc()
             print(f"Error generating preview: {e}")
-            ttk.Label(self.preview_container, text=f"Preview error: {e}", foreground="red").pack(pady=20)
+            ttk.Label(self.preview_container, text=f"Preview error: {e}", foreground="red", style="CardRow.TLabel").pack(pady=20)
 
     def _open_pdf(self):
         """Open the generated PDF in the default browser/viewer."""

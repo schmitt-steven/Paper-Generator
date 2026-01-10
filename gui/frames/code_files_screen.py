@@ -118,20 +118,21 @@ class CodeFilesScreen(BaseFrame):
 
     def _create_file_entry(self, parent: ttk.Frame, code_file: CodeFile) -> ttk.Frame:
         """Create a single file entry widget."""
-        entry_frame = ttk.Frame(parent, padding="8")
+        entry_frame = ttk.Frame(parent, style="CardRow.TFrame", padding="8")
         entry_frame.pack(fill="x")
         
-        content_row = ttk.Frame(entry_frame)
+        content_row = ttk.Frame(entry_frame, style="CardRow.TFrame")
         content_row.pack(fill="x")
         
-        content_frame = ttk.Frame(content_row)
+        content_frame = ttk.Frame(content_row, style="CardRow.TFrame")
         content_frame.pack(side="left", fill="x", expand=True)
         
         # Filename
         ttk.Label(
             content_frame,
             text=code_file.filename,
-            font=self.controller.fonts.default_font
+            font=self.controller.fonts.default_font,
+            style="CardRow.TLabel"
         ).pack(anchor="w")
         
         # Line count
@@ -140,7 +141,8 @@ class CodeFilesScreen(BaseFrame):
             content_frame,
             text=line_text,
             font=self.controller.fonts.text_area_font,
-            foreground="gray"
+            foreground="gray",
+            style="CardRow.TLabel"
         ).pack(anchor="w", pady=(2, 0))
         
         # Remove button

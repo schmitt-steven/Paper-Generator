@@ -102,7 +102,7 @@ class PaperDraftScreen(BaseFrame):
 
     def _show_error(self, message: str):
         """Display an error message."""
-        error_frame = ttk.Frame(self.card_content, padding="20")
+        error_frame = ttk.Frame(self.card_content, style="CardRow.TFrame", padding="20")
         error_frame.pack(fill="x", pady=20)
         
         ttk.Label(
@@ -110,13 +110,14 @@ class PaperDraftScreen(BaseFrame):
             text=message,
             font=self.controller.fonts.default_font,
             foreground="red",
-            wraplength=500
+            wraplength=500,
+            style="CardRow.TLabel"
         ).pack()
 
     def _create_draft_section(self, content: str):
         """Create the text area inside the card content."""
         # Text area with scrollbar
-        inner = ttk.Frame(self.card_content)
+        inner = ttk.Frame(self.card_content, style="CardRow.TFrame")
         inner.pack(fill="both", expand=True)
         
         scrollbar = ttk.Scrollbar(inner, orient="vertical")

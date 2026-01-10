@@ -98,7 +98,7 @@ class ExperimentPlanScreen(BaseFrame):
         content_frame.pack(fill="both", expand=True)
         
         # Text area with scrollbar
-        inner = ttk.Frame(content_frame)
+        inner = ttk.Frame(content_frame, style="CardRow.TFrame")
         inner.pack(fill="both", expand=True)
         
         scrollbar = ttk.Scrollbar(inner, orient="vertical")

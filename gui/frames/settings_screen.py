@@ -74,10 +74,10 @@ class SettingsScreen(BaseFrame):
             ("EVIDENCE_AGENTIC_ITERATIONS", "Evidence Agentic Iterations", "spinbox", (1, 5)),
         ])
               
-        row_frame = ttk.Frame(paper_writing_frame)
+        row_frame = ttk.Frame(paper_writing_frame, style="CardRow.TFrame")
         row_frame.pack(fill="x", pady=2)
         
-        ttk.Label(row_frame, text="Writing Guidelines", width=35).pack(side="left")
+        ttk.Label(row_frame, text="Writing Guidelines", width=35, style="CardRow.TLabel").pack(side="left")
         
         guidelines_btn = ttk.Button(row_frame, text="Edit", command=lambda: self.controller.show_frame(SectionGuidelinesScreen))
         guidelines_btn.pack(side="right", fill="x", expand=True, padx=(10, 0))
@@ -98,10 +98,10 @@ class SettingsScreen(BaseFrame):
             else:
                 key, label_text, setting_type, extra = setting
                 
-            row_frame = ttk.Frame(frame)
+            row_frame = ttk.Frame(frame, style="CardRow.TFrame")
             row_frame.pack(fill="x", pady=2)
             
-            ttk.Label(row_frame, text=label_text, width=35).pack(side="left")
+            ttk.Label(row_frame, text=label_text, width=35, style="CardRow.TLabel").pack(side="left")
             
             var = tk.StringVar()
             
@@ -131,10 +131,10 @@ class SettingsScreen(BaseFrame):
         frame = self.create_card_frame(self.scrollable_frame, "LaTeX Generation")
 
         # LaTeX Generation Model
-        row_frame = ttk.Frame(frame)
+        row_frame = ttk.Frame(frame, style="CardRow.TFrame")
         row_frame.pack(fill="x", pady=2)
         
-        ttk.Label(row_frame, text="LaTeX Generation Model", width=35).pack(side="left")
+        ttk.Label(row_frame, text="LaTeX Generation Model", width=35, style="CardRow.TLabel").pack(side="left")
         
         var = tk.StringVar()
         current_value = getattr(Settings, "LATEX_GENERATION_MODEL", "")
@@ -149,13 +149,13 @@ class SettingsScreen(BaseFrame):
         self.settings_vars["LATEX_GENERATION_MODEL"] = var
 
         # Title
-        row_frame = ttk.Frame(frame)
+        row_frame = ttk.Frame(frame, style="CardRow.TFrame")
         row_frame.pack(fill="x", pady=2)
-        ttk.Label(row_frame, text="Paper Title", width=35).pack(side="left")
+        ttk.Label(row_frame, text="Paper Title", width=35, style="CardRow.TLabel").pack(side="left")
         self.title_var = tk.StringVar(value=Settings.LATEX_TITLE)
         entry = ttk.Entry(row_frame, textvariable=self.title_var, width=60)
         entry.pack(side="right", fill="x", expand=True, padx=(10, 0))
-        ttk.Label(frame, text="(Leave empty for LLM generated title)", font=self.controller.fonts.default_font).pack(anchor="e")
+        ttk.Label(frame, text="(Leave empty for LLM generated title)", font=self.controller.fonts.default_font, style="CardRow.TLabel").pack(anchor="e")
 
         # Authors section
         from ..base_frame import CardBorderFrame
@@ -208,10 +208,10 @@ class SettingsScreen(BaseFrame):
         frame = self.create_card_frame(self.scrollable_frame, "General")
 
         # Theme Toggle (Switch)
-        row_frame = ttk.Frame(frame)
+        row_frame = ttk.Frame(frame, style="CardRow.TFrame")
         row_frame.pack(fill="x", pady=2)
         
-        ttk.Label(row_frame, text="Dark Mode", width=35).pack(side="left")
+        ttk.Label(row_frame, text="Dark Mode", width=35, style="CardRow.TLabel").pack(side="left")
         
         self.dark_mode_var = tk.BooleanVar(value=getattr(Settings, "DARK_MODE", True))
         
@@ -224,16 +224,16 @@ class SettingsScreen(BaseFrame):
         switch = ttk.Checkbutton(
             row_frame, 
             variable=self.dark_mode_var,
-            style="Switch.TCheckbutton",
+            style="CardRow.Switch.TCheckbutton",
             command=on_toggle
         )
         switch.pack(side="right", padx=(10, 0))
 
         # Font Size
-        row_frame = ttk.Frame(frame)
+        row_frame = ttk.Frame(frame, style="CardRow.TFrame")
         row_frame.pack(fill="x", pady=(10, 2))
         
-        ttk.Label(row_frame, text="Font Size", width=35).pack(side="left")
+        ttk.Label(row_frame, text="Font Size", width=35, style="CardRow.TLabel").pack(side="left")
         
         # Font size options: label -> base_size value
         self.font_size_options = {
@@ -278,10 +278,10 @@ class SettingsScreen(BaseFrame):
         self.settings_vars["FONT_SIZE_BASE"] = self.font_size_var
 
         # Semantic Scholar API Key
-        row_frame = ttk.Frame(frame)
+        row_frame = ttk.Frame(frame, style="CardRow.TFrame")
         row_frame.pack(fill="x", pady=(10, 2))
         
-        ttk.Label(row_frame, text="Semantic Scholar API Key", width=35).pack(side="left")
+        ttk.Label(row_frame, text="Semantic Scholar API Key", width=35, style="CardRow.TLabel").pack(side="left")
         
         self.api_key_var = tk.StringVar(value=getattr(Settings, "SEMANTIC_SCHOLAR_API_KEY", ""))
         api_key_entry = ttk.Entry(row_frame, textvariable=self.api_key_var, show="•")
@@ -290,10 +290,10 @@ class SettingsScreen(BaseFrame):
         self.settings_vars["SEMANTIC_SCHOLAR_API_KEY"] = self.api_key_var
 
         # Clear Cache Button
-        row_frame = ttk.Frame(frame)
+        row_frame = ttk.Frame(frame, style="CardRow.TFrame")
         row_frame.pack(fill="x", pady=(10, 2))
         
-        ttk.Label(row_frame, text="Clear Cache", width=35).pack(side="left")
+        ttk.Label(row_frame, text="Clear Cache", width=35, style="CardRow.TLabel").pack(side="left")
         
         clear_btn = ttk.Button(row_frame, text="Clear", command=self.clear_cache)
         clear_btn.pack(side="right", fill="x", expand=True, padx=(10, 0))
@@ -365,16 +365,16 @@ class SettingsScreen(BaseFrame):
         if len(self.author_frames) > 0:
             ttk.Separator(self.authors_container, orient="horizontal").pack(fill="x", padx=10)
         
-        author_frame = ttk.Frame(self.authors_container, padding="10")
+        author_frame = ttk.Frame(self.authors_container, style="CardRow.TFrame", padding="10")
         author_frame.pack(fill="x", pady=5)
         
         fields = ["Name", "Affiliation", "Department", "Address", "Email"]
         entries = {}
         
         for field in fields:
-            row = ttk.Frame(author_frame)
+            row = ttk.Frame(author_frame, style="CardRow.TFrame")
             row.pack(fill="x")
-            ttk.Label(row, text=field, width=15).pack(side="left")
+            ttk.Label(row, text=field, width=15, style="CardRow.TLabel").pack(side="left")
             entry = ttk.Entry(row)
             entry.pack(side="right", fill="x", expand=True)
             if data:

@@ -53,14 +53,15 @@ class UserRequirementsScreen(BaseFrame):
             parent = self.current_card_frame if self.current_card_frame else self.scrollable_frame
             
             # Container for section
-            section_container = ttk.Frame(parent, padding=(15, 0, 15, 15))
+            section_container = ttk.Frame(parent, style="CardRow.TFrame", padding=(15, 0, 15, 15))
             section_container.pack(fill="x")
             
             # Sub-header
             ttk.Label(
                 section_container, 
                 text=title, 
-                font=self.controller.fonts.default_font
+                font=self.controller.fonts.default_font,
+                style="CardRow.TLabel"
             ).pack(anchor="w", pady=(0, 5))
             
             container, text_widget = create_scrollable_text_area(section_container, height=6)

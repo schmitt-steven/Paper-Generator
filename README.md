@@ -16,7 +16,7 @@ Work in progress, everything subject to change...
 ## Requirements
 
 - **Python 3.10+**
-- **LaTeX** (MacTeX, TeX Live, MikTeX, etc.)
+- **LaTeX** (MacTeX or TeX Live, MikTeX, etc.)
 - **LM Studio** running in background with at least 3 downloaded models:
   - One LLM capable of tool use
   - One VLM or multimodal model
@@ -27,20 +27,17 @@ Work in progress, everything subject to change...
 ### macOS
 
 ```bash
-# Install Xcode Command Line Tools
+# (if not yet installed)
 xcode-select --install
-
-# Install Homebrew (if not installed)
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-# Install LaTeX (full distribution, ~4GB)
+# Install LaTeX
 brew install --cask mactex
-
 # Install Python dependencies
 pip install -r requirements.txt
 ```
 
-### Linux (Ubuntu/Debian)
+### Linux (Debian-based)
 
 ```bash
 # Install LaTeX

@@ -8,12 +8,14 @@ from phases.paper_writing.data_models import Section
 
 class SectionGuidelinesScreen(BaseFrame):
     def __init__(self, parent, controller):
+        self.file_path = "user_files/section_guidelines.md"
         super().__init__(
             parent=parent,
             controller=controller,
             title="Section Writing Guidelines",
             next_text="Save",
             has_back=True,
+            header_file_path=self.file_path,
             info_content=SECTION_GUIDELINES_INFO
         )
         self.text_areas = {}
