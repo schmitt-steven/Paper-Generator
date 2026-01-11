@@ -105,36 +105,76 @@ class HypothesisScreen(BaseFrame):
         self.description_text = self._create_section(
             "Description", 
             hyp.description, 
-            height=8
+            height=12
         )
         
         self.rationale_text = self._create_section(
             "Rationale", 
             hyp.rationale, 
-            height=8
+            height=12
         )
         
         self.success_criteria_text = self._create_section(
             "Success Criteria", 
             hyp.success_criteria, 
-            height=8
+            height=12
         )
 
     def _create_section(self, title: str, content: str, height: int = 4) -> tk.Text:
-        """Create a labeled section with an editable text area."""
-        section_container = ttk.Frame(self.scrollable_frame, style="Scrollable.TFrame", padding=(0, 0, 0, 15))
-        section_container.pack(fill="x", pady=(10 if title == "Description" else 0, 0))
+        """Create a labeled section with an editable text area inside a card."""
+        from ..base_frame import CardBorderFrame
+        from ..theme_colors import CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT
         
-        ttk.Label(
-            section_container, 
+        # Card Container
+        card = CardBorderFrame(self.scrollable_frame, padx=1, pady=1)
+        card.pack(fill="x", pady=10)
+        
+        # Header
+        header = ttk.Frame(card, style="CardHeader.TFrame", padding=(10, 6))
+        header.pack(fill="x")
+        
+        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
+        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
+        
+        tk.Label(
+            header, 
             text=title, 
-            style="Scrollable.TLabel",
-            font=self.controller.fonts.sub_header_font
-        ).pack(anchor="w", pady=(0, 10))
+            font=self.controller.fonts.sub_header_font,
+            bg=header_bg,
+            fg=header_fg
+        ).pack(side="left")
         
-        container, text_widget = create_scrollable_text_area(section_container, height=height)
-        container.pack(fill="x", expand=True)
+        ttk.Separator(card, orient="horizontal").pack(fill="x")
+        
+        # Content
+        content_frame = ttk.Frame(card, style="CardContent.TFrame", padding=0)
+        content_frame.pack(fill="both", expand=True)
+        
+        # Text area container
+        inner = ttk.Frame(content_frame, style="CardRow.TFrame")
+        inner.pack(fill="both", expand=True)
+
+        scrollbar = ttk.Scrollbar(inner, orient="vertical")
+        scrollbar.pack(side="right", fill="y")
+        
+        text_widget = tk.Text(
+            inner,
+            height=height,
+            wrap="word",
+            font=self.controller.fonts.text_area_font,
+            padx=10,
+            pady=10,
+            highlightthickness=0,
+            borderwidth=0,
+            relief="flat",
+            yscrollcommand=scrollbar.set
+        )
+        text_widget.pack(side="left", fill="both", expand=True)
+        scrollbar.config(command=text_widget.yview)
+        
         text_widget.insert("1.0", content)
+        
+        self.controller.apply_theme_colors(text_widget)
         
         return text_widget
 

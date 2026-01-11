@@ -1,5 +1,4 @@
 # Section Guidelines
-
 ## Abstract
 150-250 words. Structure: (1) problem/gap, (2) approach, (3) key result with metrics, (4) main implication. 
 Be specific. NO citations.

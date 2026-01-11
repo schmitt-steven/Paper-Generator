@@ -17,7 +17,7 @@ CARD_HEADER_BG_DARK = "#252525"
 CARD_HEADER_BG_LIGHT = "#e8eef2"
 
 NAVBAR_BG_DARK = "#0f0f0f"
-NAVBAR_BG_LIGHT = "#d0dae0"
+NAVBAR_BG_LIGHT = "#e8eef2"
 
 CARD_BG_DARK = None  # Uses default theme
 CARD_BG_LIGHT = "#f0f5f8"
@@ -49,8 +49,8 @@ POPDOWN_BG_LIGHT = "#ffffff"
 # =============================================================================
 # TEXT AREA COLORS
 # =============================================================================
-TEXT_BG_DARK = "#232324"
-TEXT_BG_LIGHT = "#f0f5f8"  # Same as CARD_BG_LIGHT
+TEXT_BG_DARK = "#2d2c2e"
+TEXT_BG_LIGHT = "#eff4f6" #"#eff3f6"
 
 TEXT_BG_DARK_ALT = "#242424"
 TEXT_BG_LIGHT_ALT = "#ffffff"

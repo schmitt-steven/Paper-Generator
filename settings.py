@@ -41,8 +41,8 @@ class Settings:
     EVIDENCE_GATHERING_MODEL =       ""  
     PAPER_WRITING_MODEL =            ""
 
-    EVIDENCE_INITIAL_CHUNKS =        12  # Number of chunks retrieved from vector search
-    EVIDENCE_FILTERED_CHUNKS =       8   # Number of chunks after LLM filtering/scoring
+    EVIDENCE_INITIAL_CHUNKS =        15  # Number of chunks retrieved from vector search
+    EVIDENCE_FILTERED_CHUNKS =       10  # Number of chunks after LLM filtering/scoring
     EVIDENCE_AGENTIC_ITERATIONS =    3   # Number of agentic search iterations
     
     GENERATE_ACKNOWLEDGEMENTS =      True  # Set to False to skip acknowledgements section entirely
@@ -62,18 +62,11 @@ class Settings:
 
     LATEX_AUTHORS = [
         {
-            "name": "Qwen3",
-            "affiliation": "University of Qwen",
+            "name": "Author 1",
+            "affiliation": "University of Test",
             "department": "Department of Computer Science",
             "address": "Buckingham Palace, London, UK",
-            "email": "qwen.rocks@china.gov"
-        },
-        {
-            "name": "Human",
-            "affiliation": "Tech Corp",
-            "department": "AI Department",
-            "address": "Mannheim, Germany",
-            "email": "second@guy.com"
+            "email": "author1@university.edu"
         },
     ]
 

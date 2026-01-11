@@ -64,7 +64,7 @@ class UserRequirementsScreen(BaseFrame):
                 style="CardRow.TLabel"
             ).pack(anchor="w", pady=(0, 5))
             
-            container, text_widget = create_scrollable_text_area(section_container, height=6)
+            container, text_widget = create_scrollable_text_area(section_container, height=10)
             container.pack(fill="x", expand=True, padx=(0, 0))
             text_widget.insert("1.0", "".join(text_lines).strip())
             

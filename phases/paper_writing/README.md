@@ -21,7 +21,7 @@ Splits papers into overlapping text chunks and creates their embeddings.
 
 ### `EvidenceGatherer` ([evidence_gatherer.py](evidence_gatherer.py))
 
-LLM agent that iteratively calls `search_evidence` tool until sufficient evidence is found (or max iterations reached).
+LLM agent that iteratively calls `search_evidence` tool until enough evidence is found (or max iterations reached).
 
 Each `search_evidence` call runs a retrieval pipeline:
 1. Vector search (cosine similarity) to find relevant chunks
@@ -42,6 +42,7 @@ Loads user-defined writing guidelines from `user_files/section_guidelines.md`.
 
 Generates paper sections in order: Methods → Results → Discussion → Introduction → Related Work → Conclusion → Abstract → Title
 
+This class also:
 - Builds prompts with context, evidence, and guidelines
 - Integrates figures/plots in Results section
 - Generates title from abstract, introduction, and conclusion (unles user provided one)

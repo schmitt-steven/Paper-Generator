@@ -24,20 +24,59 @@ class SectionGuidelinesScreen(BaseFrame):
         pass
 
     def _create_section_editor(self, section_name: str, section_enum: Section, content: str):
-        frame_name = f"section_frame_{section_enum.name}"
+        from ..base_frame import CardBorderFrame
+        from ..theme_colors import CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT
         
-        # Get valid parent
-        container = ttk.Frame(self.scrollable_frame, style="Scrollable.TFrame")
-        container.pack(fill="x", expand=True, pady=10)
+        # Card Container
+        card = CardBorderFrame(self.scrollable_frame, padx=1, pady=1)
+        card.pack(fill="x", pady=10)
         
-        # Title
-        ttk.Label(container, text=section_name, style="Scrollable.TLabel", font=self.controller.fonts.sub_header_font).pack(anchor="w", pady=(0, 5))
+        # Header
+        header = ttk.Frame(card, style="CardHeader.TFrame", padding=(10, 6))
+        header.pack(fill="x")
+        
+        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
+        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
+        
+        tk.Label(
+            header, 
+            text=section_name, 
+            font=self.controller.fonts.sub_header_font,
+            bg=header_bg,
+            fg=header_fg
+        ).pack(side="left")
+        
+        ttk.Separator(card, orient="horizontal").pack(fill="x")
+        
+        # Content
+        content_frame = ttk.Frame(card, style="CardContent.TFrame", padding=0)
+        content_frame.pack(fill="both", expand=True)
+        
+        # Text area container
+        inner = ttk.Frame(content_frame, style="CardRow.TFrame")
+        inner.pack(fill="both", expand=True)
 
-        # Create scrollable text area
-        container_frame, text_area = create_scrollable_text_area(container, height=6)
-        container_frame.pack(fill="both", expand=True) # Helper returns a frame containing text+scrollbar
+        scrollbar = ttk.Scrollbar(inner, orient="vertical")
+        scrollbar.pack(side="right", fill="y")
+        
+        text_area = tk.Text(
+            inner,
+            height=12,
+            wrap="word",
+            font=self.controller.fonts.text_area_font,
+            padx=10,
+            pady=10,
+            highlightthickness=0,
+            borderwidth=0,
+            relief="flat",
+            yscrollcommand=scrollbar.set
+        )
+        text_area.pack(side="left", fill="both", expand=True)
+        scrollbar.config(command=text_area.yview)
         
         text_area.insert("1.0", content)
+        
+        self.controller.apply_theme_colors(text_area)
         
         self.text_areas[section_enum] = text_area
 
