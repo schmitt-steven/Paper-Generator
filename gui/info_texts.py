@@ -1,8 +1,11 @@
-"""
-Info popup texts for all screens.
-"""
+"""Info popup texts"""
+
+START_PAGE_INFO = """Start Page"""
+
+WRITING_GUIDELINES_INFO = """Writing Guidelines"""
 
 SETTINGS_INFO = """Settings screen"""
+
 
 CODE_FILES_INFO = """code files"""
 

@@ -1,15 +1,14 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import shutil
-import os
 from pathlib import Path
-from settings import Settings
-from typing import override
-from ..base_frame import BaseFrame
+from settings import Settings, FontSize
+
+from ..base_frame import BaseFrame, CardBorderFrame
 from ..info_texts import SETTINGS_INFO
 from ..theme_colors import CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT
 from utils.lm_studio_client import get_model_names
-from .section_guidelines_screen import SectionGuidelinesScreen
+
 
 class SettingsScreen(BaseFrame):
     def __init__(self, parent, controller):
@@ -24,143 +23,78 @@ class SettingsScreen(BaseFrame):
             parent=parent,
             controller=controller,
             title="Settings",
-            next_text="Continue",
-            has_back=False,
+            has_next=False,
+            has_back=True,
+            back_text="Save & Back",
             info_content=SETTINGS_INFO
         )
 
     def create_content(self):
+        # Section 1: General
+        self.create_general_section()
+        
+        # Section 2: LaTeX Template (placeholder)
+        self.create_latex_template_section()
+        
+        # Section 3: Authors
+        self.create_authors_section()
+        
+        # Section 4: Model Selection (all models)
+        self.create_model_selection_section()
+        
+        # Section 5: Appearance
         self.create_appearance_section()
-
-        # Context Analysis Phase
-        self.create_phase_section("Context Analysis", [
-            ("CODE_ANALYSIS_MODEL", "Code Analysis Model", self.llm_models),
-
-            ("PAPER_CONCEPTION_MODEL", "Paper Conception Model", self.llm_models),
-        ])
-
-        # Paper Search Phase
-        self.create_phase_section("Paper Search", [
-            ("LITERATURE_SEARCH_MODEL", "Literature Search Model", self.llm_models),
-
-
-            ("PAPER_RANKING_EMBEDDING_MODEL", "Paper Ranking Embedding Model", self.embedding_models),
-        ])
-
-        # Hypothesis Generation Phase
-        self.create_phase_section("Hypothesis Generation", [
-            ("HYPOTHESIS_BUILDER_MODEL", "Hypothesis Builder Model", self.llm_models),
-
-        ])
-
-        # Experimentation Phase
-        self.create_phase_section("Experimentation", [
-            ("EXPERIMENT_PLAN_MODEL", "Planning Model", self.llm_models),
-            ("EXPERIMENT_CODE_WRITE_MODEL", "Coding Model", self.llm_models),
-
-            ("EXPERIMENT_VALIDATION_MODEL", "Results Validation Model", self.llm_models),
-            ("EXPERIMENT_PLOT_CAPTION_MODEL", "Plot Caption Model (Vision)", self.vision_models),
-            ("EXPERIMENT_VERDICT_MODEL", "Verdict Model", self.llm_models),
-        ])
-
-        # Paper Writing Phase
-        paper_writing_frame = self.create_phase_section("Paper Writing", [
-            ("PAPER_INDEXING_EMBEDDING_MODEL", "Paper Indexing Embedding Model", "dropdown", self.embedding_models),
-            ("EVIDENCE_GATHERING_MODEL", "Evidence Gathering Model", "dropdown", self.llm_models),
-            ("PAPER_WRITING_MODEL", "Paper Writing Model", "dropdown", self.llm_models),
-            ("PAPER_EMBEDDING_BATCH_SIZE", "Paper Embedding Batch Size", "spinbox", (1, 128)),
-            ("EVIDENCE_INITIAL_CHUNKS", "Evidence Initial Chunks", "spinbox", (1, 20)),
-            ("EVIDENCE_FILTERED_CHUNKS", "Evidence Filtered Chunks", "spinbox", (1, 20)),
-            ("EVIDENCE_AGENTIC_ITERATIONS", "Evidence Agentic Iterations", "spinbox", (1, 5)),
-        ])
-              
-        row_frame = ttk.Frame(paper_writing_frame, style="CardRow.TFrame")
-        row_frame.pack(fill="x", pady=2)
         
-        ttk.Label(row_frame, text="Writing Guidelines", width=35, style="CardRow.TLabel").pack(side="left")
-        
-        guidelines_btn = ttk.Button(row_frame, text="Edit", command=lambda: self.controller.show_frame(SectionGuidelinesScreen))
-        guidelines_btn.pack(side="right", fill="x", expand=True, padx=(10, 0))
+        # Clear Cache button at the bottom (standalone, red)
+        self.create_clear_cache_button()
 
-        # LaTeX Generation Section (combines model and data)
-        self.create_latex_generation_section()
+    def create_clear_cache_button(self):
+        """Standalone Clear Cache button at the bottom"""
+        clear_btn = ttk.Button(
+            self.scrollable_frame,
+            text="Clear Cache",
+            command=self.clear_cache
+        )
+        clear_btn.pack(fill="x", pady=(10, 20))
 
+    def create_general_section(self):
+        """General section: Paper Title, API Key"""
+        frame = self.create_card_frame(self.scrollable_frame, "General")
 
-    def create_phase_section(self, title, settings):
-        from settings import Settings
-        
-        frame = self.create_card_frame(self.scrollable_frame, title)
-
-        for setting in settings:
-            if len(setting) == 3:
-                key, label_text, options = setting
-                setting_type = "dropdown"
-            else:
-                key, label_text, setting_type, extra = setting
-                
-            row_frame = ttk.Frame(frame, style="CardRow.TFrame")
-            row_frame.pack(fill="x", pady=2)
-            
-            ttk.Label(row_frame, text=label_text, width=35, style="CardRow.TLabel").pack(side="left")
-            
-            var = tk.StringVar()
-            
-            current_value = getattr(Settings, key, "")
-            
-            if setting_type == "dropdown":
-                dropdown = ttk.Combobox(row_frame, textvariable=var, values=options if len(setting) == 3 else extra, state="readonly", width=60)
-                dropdown.pack(side="right", fill="x", expand=True, padx=(10, 0))
-                
-                # Set current value if valid, else default to first
-                values = options if len(setting) == 3 else extra
-                if current_value in values:
-                    dropdown.set(current_value)
-                elif values:
-                    dropdown.current(0)
-                    
-            elif setting_type == "spinbox":
-                min_val, max_val = extra
-                spinbox = ttk.Spinbox(row_frame, from_=min_val, to=max_val, textvariable=var)
-                spinbox.pack(side="right", fill="x", expand=True, padx=(10, 0))
-                var.set(current_value if current_value else min_val)
-            
-            self.settings_vars[key] = var
-        return frame
-
-    def create_latex_generation_section(self):
-        frame = self.create_card_frame(self.scrollable_frame, "LaTeX Generation")
-
-        # LaTeX Generation Model
-        row_frame = ttk.Frame(frame, style="CardRow.TFrame")
-        row_frame.pack(fill="x", pady=2)
-        
-        ttk.Label(row_frame, text="LaTeX Generation Model", width=35, style="CardRow.TLabel").pack(side="left")
-        
-        var = tk.StringVar()
-        current_value = getattr(Settings, "LATEX_GENERATION_MODEL", "")
-        dropdown = ttk.Combobox(row_frame, textvariable=var, values=self.llm_models, state="readonly", width=60)
-        dropdown.pack(side="right", fill="x", expand=True, padx=(10, 0))
-        
-        if current_value in self.llm_models:
-            dropdown.set(current_value)
-        elif self.llm_models:
-            dropdown.current(0)
-        
-        self.settings_vars["LATEX_GENERATION_MODEL"] = var
-
-        # Title
+        # Paper Title
         row_frame = ttk.Frame(frame, style="CardRow.TFrame")
         row_frame.pack(fill="x", pady=2)
         ttk.Label(row_frame, text="Paper Title", width=35, style="CardRow.TLabel").pack(side="left")
         self.title_var = tk.StringVar(value=Settings.LATEX_TITLE)
         entry = ttk.Entry(row_frame, textvariable=self.title_var, width=60)
         entry.pack(side="right", fill="x", expand=True, padx=(10, 0))
-        ttk.Label(frame, text="(Leave empty for LLM generated title)", font=self.controller.fonts.default_font, style="CardRow.TLabel").pack(anchor="e")
 
-        # Authors section
-        from ..base_frame import CardBorderFrame
+        # Semantic Scholar API Key
+        row_frame = ttk.Frame(frame, style="CardRow.TFrame")
+        row_frame.pack(fill="x", pady=(10, 2))
+        
+        ttk.Label(row_frame, text="Semantic Scholar API Key", width=35, style="CardRow.TLabel").pack(side="left")
+        
+        self.api_key_var = tk.StringVar(value=getattr(Settings, "SEMANTIC_SCHOLAR_API_KEY", ""))
+        api_key_entry = ttk.Entry(row_frame, textvariable=self.api_key_var, show="•")
+        api_key_entry.pack(side="right", fill="x", expand=True, padx=(10, 0))
+        
+        self.settings_vars["SEMANTIC_SCHOLAR_API_KEY"] = self.api_key_var
+
+    def create_latex_template_section(self):
+        """LaTeX Template section: placeholder for future IEEE/JAIR selection"""
+        frame = self.create_card_frame(self.scrollable_frame, "LaTeX Template")
+
+        row_frame = ttk.Frame(frame, style="CardRow.TFrame")
+        row_frame.pack(fill="x", pady=2)
+        
+        ttk.Label(row_frame, text="Template selection (IEEE, JAIR)...", 
+                  style="CardRow.TLabel").pack(side="left")
+
+    def create_authors_section(self):
+        """Authors section with add/remove functionality"""
         authors_section = CardBorderFrame(self.scrollable_frame, padx=1, pady=1)
-        authors_section.pack(fill="x", padx=0, pady=(20, 10))
+        authors_section.pack(fill="x", padx=0, pady=10)
         
         # Header row
         header_frame = ttk.Frame(authors_section, style="CardHeader.TFrame", padding=10)
@@ -198,69 +132,83 @@ class SettingsScreen(BaseFrame):
             for author_data in Settings.LATEX_AUTHORS:
                 self.add_author(author_data)
         else:
-            # Add at least one empty author if none exist
             self.add_author()
         
-        # Initialize button state
         self._update_remove_button_state()
-        
-    def create_appearance_section(self):        
-        frame = self.create_card_frame(self.scrollable_frame, "General")
 
-        # Theme Toggle (Switch)
-        row_frame = ttk.Frame(frame, style="CardRow.TFrame")
-        row_frame.pack(fill="x", pady=2)
-        
-        ttk.Label(row_frame, text="Dark Mode", width=35, style="CardRow.TLabel").pack(side="left")
-        
-        self.dark_mode_var = tk.BooleanVar(value=getattr(Settings, "DARK_MODE", True))
-        
-        def on_toggle():
-            self.controller.toggle_theme()
-            # Save dark mode preference
-            Settings.DARK_MODE = self.dark_mode_var.get()
-            Settings.save_to_file()
-        
-        switch = ttk.Checkbutton(
-            row_frame, 
-            variable=self.dark_mode_var,
-            style="CardRow.Switch.TCheckbutton",
-            command=on_toggle
-        )
-        switch.pack(side="right", padx=(10, 0))
+    def create_model_selection_section(self):
+        """Model Selection section: all models in a flat list"""
+        frame = self.create_card_frame(self.scrollable_frame, "Model Selection")
+
+        models = [
+            ("CODE_ANALYSIS_MODEL", "Code Analysis Model", self.llm_models),
+            ("PAPER_CONCEPTION_MODEL", "Paper Conception Model", self.llm_models),
+            ("LITERATURE_SEARCH_MODEL", "Literature Search Model", self.llm_models),
+            ("PAPER_RANKING_EMBEDDING_MODEL", "Paper Ranking Embedding Model", self.embedding_models),
+            ("HYPOTHESIS_BUILDER_MODEL", "Hypothesis Builder Model", self.llm_models),
+            ("EXPERIMENT_PLAN_MODEL", "Planning Model", self.llm_models),
+            ("EXPERIMENT_CODE_WRITE_MODEL", "Coding Model", self.llm_models),
+            ("EXPERIMENT_VALIDATION_MODEL", "Results Validation Model", self.llm_models),
+            ("EXPERIMENT_PLOT_CAPTION_MODEL", "Plot Caption Model (Vision)", self.vision_models),
+            ("EXPERIMENT_VERDICT_MODEL", "Verdict Model", self.llm_models),
+            ("PAPER_INDEXING_EMBEDDING_MODEL", "Paper Indexing Embedding Model", self.embedding_models),
+            ("EVIDENCE_GATHERING_MODEL", "Evidence Gathering Model", self.llm_models),
+            ("PAPER_WRITING_MODEL", "Paper Writing Model", self.llm_models),
+            ("LATEX_GENERATION_MODEL", "LaTeX Generation Model", self.llm_models),
+        ]
+
+        for key, label_text, options in models:
+            row_frame = ttk.Frame(frame, style="CardRow.TFrame")
+            row_frame.pack(fill="x", pady=2)
+            
+            ttk.Label(row_frame, text=label_text, width=35, style="CardRow.TLabel").pack(side="left")
+            
+            var = tk.StringVar()
+            current_value = getattr(Settings, key, "")
+            
+            dropdown = ttk.Combobox(row_frame, textvariable=var, values=options, state="readonly", width=60)
+            dropdown.pack(side="right", fill="x", expand=True, padx=(10, 0))
+            
+            if current_value in options:
+                dropdown.set(current_value)
+            elif options:
+                dropdown.current(0)
+            
+            self.settings_vars[key] = var
+
+    def create_appearance_section(self):
+        """Appearance section: Font Size, Dark Mode"""
+        frame = self.create_card_frame(self.scrollable_frame, "Appearance")
 
         # Font Size
         row_frame = ttk.Frame(frame, style="CardRow.TFrame")
-        row_frame.pack(fill="x", pady=(10, 2))
+        row_frame.pack(fill="x", pady=2)
         
         ttk.Label(row_frame, text="Font Size", width=35, style="CardRow.TLabel").pack(side="left")
         
-        # Font size options: label -> base_size value
+        # Map enum names to labels
         self.font_size_options = {
-            "Very Small": 15,
-            "Small": 18,
-            "Medium": 21,
-            "Large": 24,
-            "Very Large": 27,
-            "Ultra Large": 30
+            FontSize.VERY_SMALL: "Very Small",
+            FontSize.SMALL: "Small",
+            FontSize.MEDIUM: "Medium",
+            FontSize.LARGE: "Large",
+            FontSize.VERY_LARGE: "Very Large",
+            FontSize.ULTRA_LARGE: "Ultra Large"
         }
         
-        # Find current option based on saved value
-        current_base_size = getattr(Settings, "FONT_SIZE_BASE", 16)
-        current_option = "Medium"  # Default
-        for label, size in self.font_size_options.items():
-            if size == current_base_size:
-                current_option = label
-                break
+        # Get current label from enum
+        current_label = self.font_size_options.get(Settings.FONT_SIZE, "Small")
         
-        self.font_size_var = tk.StringVar(value=current_option)
+        self.font_size_var = tk.StringVar(value=current_label)
         
-        # Helper to update font immediately
+        # Reverse lookup: label -> enum
+        self.label_to_enum = {v: k for k, v in self.font_size_options.items()}
+        
         def on_font_size_change(*args):
             try:
                 label = self.font_size_var.get()
-                size = self.font_size_options.get(label, 16)
-                self.controller.fonts.update_base_size(size)
+                font_enum = self.label_to_enum.get(label, FontSize.SMALL)
+                self.controller.fonts.update_base_size(font_enum.value)
             except Exception:
                 pass
 
@@ -269,7 +217,7 @@ class SettingsScreen(BaseFrame):
         dropdown = ttk.Combobox(
             row_frame, 
             textvariable=self.font_size_var,
-            values=list(self.font_size_options.keys()),
+            values=list(self.font_size_options.values()),
             state="readonly",
             width=15
         )
@@ -277,26 +225,25 @@ class SettingsScreen(BaseFrame):
         
         self.settings_vars["FONT_SIZE_BASE"] = self.font_size_var
 
-        # Semantic Scholar API Key
+        # Dark Mode Toggle
         row_frame = ttk.Frame(frame, style="CardRow.TFrame")
         row_frame.pack(fill="x", pady=(10, 2))
         
-        ttk.Label(row_frame, text="Semantic Scholar API Key", width=35, style="CardRow.TLabel").pack(side="left")
+        ttk.Label(row_frame, text="Dark Mode", width=35, style="CardRow.TLabel").pack(side="left")
         
-        self.api_key_var = tk.StringVar(value=getattr(Settings, "SEMANTIC_SCHOLAR_API_KEY", ""))
-        api_key_entry = ttk.Entry(row_frame, textvariable=self.api_key_var, show="•")
-        api_key_entry.pack(side="right", fill="x", expand=True, padx=(10, 0))
+        self.dark_mode_var = tk.BooleanVar(value=getattr(Settings, "DARK_MODE", True))
         
-        self.settings_vars["SEMANTIC_SCHOLAR_API_KEY"] = self.api_key_var
-
-        # Clear Cache Button
-        row_frame = ttk.Frame(frame, style="CardRow.TFrame")
-        row_frame.pack(fill="x", pady=(10, 2))
+        def on_toggle():
+            self.controller.toggle_theme()
+            Settings.DARK_MODE = self.dark_mode_var.get()
         
-        ttk.Label(row_frame, text="Clear Cache", width=35, style="CardRow.TLabel").pack(side="left")
-        
-        clear_btn = ttk.Button(row_frame, text="Clear", command=self.clear_cache)
-        clear_btn.pack(side="right", fill="x", expand=True, padx=(10, 0))
+        switch = ttk.Checkbutton(
+            row_frame, 
+            variable=self.dark_mode_var,
+            style="CardRow.Switch.TCheckbutton",
+            command=on_toggle
+        )
+        switch.pack(side="right", padx=(10, 0))
 
     def clear_cache(self):
         """Clear all cached files: output folder contents and non-essential user_files."""
@@ -314,7 +261,6 @@ class SettingsScreen(BaseFrame):
         deleted_count = 0
         errors = []
         
-        # Get base directory (where settings.py is located)
         base_dir = Path(__file__).parent.parent.parent
         
         # Clear output folder
@@ -348,7 +294,6 @@ class SettingsScreen(BaseFrame):
                     except Exception as e:
                         errors.append(f"{item.name}: {e}")
         
-        # Show result
         if errors:
             messagebox.showwarning(
                 "Cache Cleared with Errors",
@@ -361,7 +306,7 @@ class SettingsScreen(BaseFrame):
             )
 
     def add_author(self, data=None):
-        # Add separator if not the first author
+        """Add an author entry."""
         if len(self.author_frames) > 0:
             ttk.Separator(self.authors_container, orient="horizontal").pack(fill="x", padx=10)
         
@@ -387,12 +332,10 @@ class SettingsScreen(BaseFrame):
     def remove_last_author(self):
         """Remove the last added author."""
         if len(self.author_frames) <= 1:
-            return  # Don't remove if only one author
+            return
         
-        # Get the last author frame and its separator (if exists)
         last_frame, _ = self.author_frames[-1]
         
-        # Find and remove the separator before this frame (if it exists)
         for widget in self.authors_container.winfo_children():
             if isinstance(widget, ttk.Separator):
                 widget_index = self.authors_container.winfo_children().index(widget)
@@ -401,7 +344,6 @@ class SettingsScreen(BaseFrame):
                     widget.destroy()
                     break
         
-        # Remove frame
         last_frame.destroy()
         self.author_frames.pop()
         self._update_remove_button_state()
@@ -413,10 +355,8 @@ class SettingsScreen(BaseFrame):
         else:
             self.remove_author_btn.config(state="disabled")
 
-    
-    @override
-    def on_next(self):
-        # Model dropdowns that require selection
+    def on_back(self):
+        # Model settings that require selection
         model_settings = {
             "CODE_ANALYSIS_MODEL": "Code Analysis Model",
             "PAPER_CONCEPTION_MODEL": "Paper Conception Model",
@@ -448,38 +388,25 @@ class SettingsScreen(BaseFrame):
                 "Please select a model for the following fields:\n\n" +
                 "\n".join(f"• {model}" for model in missing_models)
             )
-            # return  # Don't proceed to next screen
+            return
         
-        # Save settings to Settings class
-        from settings import Settings
-        
-        # Update simple settings
+        # Save model settings
         for key, var in self.settings_vars.items():
             value = var.get()
-            # Convert to int if it's a numeric setting
-            if key in ["PAPER_EMBEDDING_BATCH_SIZE",
-                       "EVIDENCE_INITIAL_CHUNKS",
-                       "EVIDENCE_FILTERED_CHUNKS",
-                       "EVIDENCE_AGENTIC_ITERATIONS"]:
-                try:
-                    value = int(value)
-                except ValueError:
-                    print(f"Warning: Invalid integer for {key}: {value}")
-                    continue
-            elif key == "FONT_SIZE_BASE":
-                # Convert font size label to number
-                value = self.font_size_options.get(value, 16)
+            if key == "FONT_SIZE_BASE":
+                # Convert label to FontSize enum
+                label = value
+                font_enum = self.label_to_enum.get(label, FontSize.SMALL)
+                Settings.FONT_SIZE = font_enum
+                continue
             
             if hasattr(Settings, key):
                 setattr(Settings, key, value)
-                # print(f"Updated {key} to {value}")
-            else:
-                print(f"Warning: Setting {key} not found in Settings class!")
 
-        # Update LaTeX Title
+        # Save LaTeX Title
         Settings.LATEX_TITLE = self.title_var.get()
 
-        # Update Authors
+        # Save Authors
         authors = []
         for _, entries in self.author_frames:
             author_data = {}
@@ -489,8 +416,10 @@ class SettingsScreen(BaseFrame):
         
         Settings.LATEX_AUTHORS = authors
 
-        # Save settings to file
+        # Persist to settings.py
         Settings.save_to_file()
 
-        # Show next screen
-        super().on_next()
+        # Navigate back to Start screen
+        from .start_screen import StartScreen
+        self.controller.show_frame(StartScreen)
+

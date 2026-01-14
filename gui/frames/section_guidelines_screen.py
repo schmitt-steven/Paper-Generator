@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from typing import override
+
 from ..base_frame import BaseFrame, create_scrollable_text_area
 from ..info_texts import SECTION_GUIDELINES_INFO
 from phases.paper_writing.section_guidelines import SectionGuidelinesLoader
@@ -80,7 +80,6 @@ class SectionGuidelinesScreen(BaseFrame):
         
         self.text_areas[section_enum] = text_area
 
-    @override
     def on_show(self):
         # Clear existing content (to avoid duplicates)
         for widget in self.scrollable_frame.winfo_children():
@@ -105,7 +104,6 @@ class SectionGuidelinesScreen(BaseFrame):
             content = guidelines.get(section, "")
             self._create_section_editor(section.value.title(), section, content)
 
-    @override
     def on_next(self):
         # Save content
         new_guidelines = {}
@@ -117,8 +115,7 @@ class SectionGuidelinesScreen(BaseFrame):
         SectionGuidelinesLoader.save_guidelines(new_guidelines)
         
         messagebox.showinfo("Saved", "Section guidelines have been saved successfully.")
-        
-    @override 
+         
     def on_back(self):
         from .settings_screen import SettingsScreen
         self.controller.show_frame(SettingsScreen)

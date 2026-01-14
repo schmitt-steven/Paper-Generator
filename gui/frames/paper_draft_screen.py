@@ -3,9 +3,12 @@ from tkinter import ttk
 import threading
 from pathlib import Path
 
-from ..base_frame import BaseFrame, ProgressPopup, create_scrollable_text_area
+from ..base_frame import BaseFrame, ProgressPopup, create_scrollable_text_area, CardBorderFrame
 from ..info_texts import PAPER_DRAFT_INFO
-from ..theme_colors import CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT
+from ..theme_colors import (
+    CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT,
+    TEXT_BG_DARK_ALT, TEXT_BG_LIGHT_ALT, TEXT_FG_DARK, TEXT_FG_LIGHT
+)
 from .writing_prompts_screen import WritingPromptsScreen
 from utils.file_utils import load_markdown, save_markdown
 from phases.paper_writing.paper_writing_pipeline import PaperWritingPipeline
@@ -22,13 +25,125 @@ from settings import Settings
 PAPER_DRAFT_FILE = "paper_draft.md"
 OUTPUT_DIR = "output"
 HYPOTHESES_FILE = "output/hypothesis.md"
-
 LATEX_PAPER_FILE = Path("output/latex/paper.tex")
+
+
+class CollapsibleDraftCard(CardBorderFrame):
+    """A collapsible card for the paper draft (read-only)."""
+    
+    def __init__(self, parent, title: str, content: str, controller, 
+                 on_show_prompts=None, start_expanded: bool = True):
+        super().__init__(parent, padx=1, pady=1)
+        self.title_text = title
+        self.content = content
+        self.controller = controller
+        self.on_show_prompts = on_show_prompts
+        self.expanded = False
+        
+        self._build_ui()
+        
+        if start_expanded:
+            self.expand()
+    
+    def _build_ui(self):
+        # Header
+        header = ttk.Frame(self, style="CardHeader.TFrame", padding=(10, 8))
+        header.pack(fill="x")
+        
+        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
+        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
+        
+        # Left side: Toggle + Title
+        left_frame = tk.Frame(header, bg=header_bg)
+        left_frame.pack(side="left", fill="x", expand=True)
+        left_frame.bind("<Button-1>", lambda e: self.toggle())
+        
+        self.toggle_label = tk.Label(
+            left_frame,
+            text="▶",
+            font=self.controller.fonts.default_font,
+            bg=header_bg,
+            fg=header_fg,
+            cursor="hand2"
+        )
+        self.toggle_label.pack(side="left", padx=(0, 10))
+        self.toggle_label.bind("<Button-1>", lambda e: self.toggle())
+        
+        self.title_label = tk.Label(
+            left_frame,
+            text=self.title_text,
+            font=self.controller.fonts.sub_header_font,
+            bg=header_bg,
+            fg=header_fg,
+            cursor="hand2"
+        )
+        self.title_label.pack(side="left")
+        self.title_label.bind("<Button-1>", lambda e: self.toggle())
+        
+        # Right side: Buttons
+        btn_frame = tk.Frame(header, bg=header_bg)
+        btn_frame.pack(side="right")
+        
+        # Show Prompts Button (Custom)
+        if self.on_show_prompts:
+            prompts_btn = ttk.Button(btn_frame, text="Show Prompts", command=self.on_show_prompts)
+            prompts_btn.pack(side="left")
+            
+        ttk.Separator(self, orient="horizontal").pack(fill="x")
+        
+        # Content frame
+        self.content_frame = ttk.Frame(self, style="CardContent.TFrame", padding=0)
+        
+        # Read-only Text Widget
+        text_bg = getattr(self.controller, '_text_bg_dark_alt', TEXT_BG_DARK_ALT) if self.controller.current_theme == "dark" else getattr(self.controller, '_text_bg_light_alt', TEXT_BG_LIGHT_ALT)
+        text_fg = getattr(self.controller, '_text_fg_dark', TEXT_FG_DARK) if self.controller.current_theme == "dark" else getattr(self.controller, '_text_fg_light', TEXT_FG_LIGHT)
+        
+        # Heuristic height
+        num_lines = self.content.count('\n') + 1
+        height = min(num_lines + 5, 40)
+        
+        inner = ttk.Frame(self.content_frame, style="CardRow.TFrame")
+        inner.pack(fill="both", expand=True)
+        
+        scrollbar = ttk.Scrollbar(inner, orient="vertical")
+        scrollbar.pack(side="right", fill="y")
+        
+        self.text_widget = tk.Text(
+            inner,
+            height=height,
+            wrap="word",
+            font=self.controller.fonts.text_area_font,
+            background=text_bg,
+            foreground=text_fg,
+            borderwidth=0,
+            highlightthickness=0,
+            relief="flat",
+            padx=12,
+            pady=10,
+            yscrollcommand=scrollbar.set
+        )
+        self.text_widget.pack(side="left", fill="both", expand=True)
+        scrollbar.config(command=self.text_widget.yview)
+        
+        self.text_widget.insert("1.0", self.content)
+        self.text_widget.config(state="disabled")
+
+    def toggle(self):
+        self.expanded = not self.expanded
+        if self.expanded:
+            self.toggle_label.config(text="▼")
+            self.content_frame.pack(fill="both", expand=True)
+        else:
+            self.toggle_label.config(text="▶")
+            self.content_frame.pack_forget()
+
+    def expand(self):
+        if not self.expanded:
+            self.toggle()
 
 
 class PaperDraftScreen(BaseFrame):
     def __init__(self, parent, controller):
-        self.draft_text: tk.Text        
         next_text = "Continue" if LATEX_PAPER_FILE.exists() else "Generate LaTeX"
         
         super().__init__(
@@ -41,43 +156,12 @@ class PaperDraftScreen(BaseFrame):
             header_file_path=Path(OUTPUT_DIR) / PAPER_DRAFT_FILE,
             info_content=PAPER_DRAFT_INFO
         )
+        self.card = None
 
     def create_content(self):
-        """Create the card container - content is added when draft loads."""
-        # Create the main card that holds everything
-        from ..base_frame import CardBorderFrame
-        self.card = CardBorderFrame(self.scrollable_frame, padx=1, pady=1)
-        self.card.pack(fill="both", expand=True, pady=(10, 0))
-        
-        # Header with title and button
-        header = ttk.Frame(self.card, style="CardHeader.TFrame", padding=(10, 8))
-        header.pack(fill="x")
-        
-        # Get colors
-        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
-        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
-        
-        # Title on left
-        tk.Label(
-            header,
-            text="Paper Draft",
-            font=self.controller.fonts.sub_header_font,
-            bg=header_bg,
-            fg=header_fg
-        ).pack(side="left")
-        
-        # Prompts button on right
-        ttk.Button(
-            header,
-            text="Show Prompts",
-            command=self._show_prompts
-        ).pack(side="right")
-        
-        ttk.Separator(self.card, orient="horizontal").pack(fill="x")
-        
-        # Content frame for the text area
-        self.card_content = ttk.Frame(self.card, style="CardContent.TFrame", padding=0)
-        self.card_content.pack(fill="both", expand=True)
+        """Create the container."""
+        # Content is dynamic based on file presence
+        pass
     
     def _show_prompts(self):
         """Navigate to the Writing Prompts screen."""
@@ -85,81 +169,43 @@ class PaperDraftScreen(BaseFrame):
 
     def _load_draft(self):
         """Load paper draft from file and display it."""
+        # Clear existing
+        for widget in self.scrollable_frame.winfo_children():
+            widget.destroy()
+            
         try:
             draft_content = load_markdown(PAPER_DRAFT_FILE, OUTPUT_DIR)
-        except FileNotFoundError:
-            self._show_error(
-                f"Paper draft not found: {OUTPUT_DIR}/{PAPER_DRAFT_FILE}\n\n"
-                "Please complete the previous steps first."
-            )
-            return
-        except Exception as e:
-            self._show_error(f"Error loading paper draft: {e}")
+        except (FileNotFoundError, Exception) as e:
+            msg = f"Paper draft not found: {OUTPUT_DIR}/{PAPER_DRAFT_FILE}" if isinstance(e, FileNotFoundError) else f"Error loading draft: {e}"
+            self._show_error(msg)
             return
         
-        # Create editable text area inside the card
-        self._create_draft_section(draft_content)
+        # Create Card
+        self.card = CollapsibleDraftCard(
+            self.scrollable_frame,
+            "Draft Content",
+            draft_content,
+            self.controller,
+            on_show_prompts=self._show_prompts,
+            start_expanded=True
+        )
+        self.card.pack(fill="x", pady=10)
 
     def _show_error(self, message: str):
         """Display an error message."""
-        error_frame = ttk.Frame(self.card_content, style="CardRow.TFrame", padding="20")
+        # Clear existing to prevent stacking errors if called multiple times
+        for widget in self.scrollable_frame.winfo_children():
+            widget.destroy()
+
+        error_frame = ttk.Frame(self.scrollable_frame, padding="20")
         error_frame.pack(fill="x", pady=20)
+        ttk.Label(error_frame, text=message, foreground="red", wraplength=500).pack()
         
-        ttk.Label(
-            error_frame,
-            text=message,
-            font=self.controller.fonts.default_font,
-            foreground="red",
-            wraplength=500,
-            style="CardRow.TLabel"
-        ).pack()
-
-    def _create_draft_section(self, content: str):
-        """Create the text area inside the card content."""
-        # Text area with scrollbar
-        inner = ttk.Frame(self.card_content, style="CardRow.TFrame")
-        inner.pack(fill="both", expand=True)
-        
-        scrollbar = ttk.Scrollbar(inner, orient="vertical")
-        scrollbar.pack(side="right", fill="y")
-        
-        self.draft_text = tk.Text(
-            inner,
-            height=40,
-            wrap="word",
-            font=self.controller.fonts.text_area_font,
-            padx=10,
-            pady=10,
-            highlightthickness=0,
-            borderwidth=0,
-            relief="flat",
-            yscrollcommand=scrollbar.set
-        )
-        self.draft_text.pack(side="left", fill="both", expand=True)
-        scrollbar.config(command=self.draft_text.yview)
-        
-        self.draft_text.insert("1.0", content)
-        
-        self.controller.apply_theme_colors(self.draft_text)
-
-    def _save_draft(self):
-        """Save the edited draft."""
-        if not hasattr(self, 'draft_text'):
-            return
-        
-        # Get content from text widget
-        draft_content = self.draft_text.get("1.0", "end-1c")
-        
-        try:
-            save_markdown(draft_content, PAPER_DRAFT_FILE, OUTPUT_DIR)
-            print(f"[PaperDraft] Saved changes to {OUTPUT_DIR}/{PAPER_DRAFT_FILE}")
-        except Exception as e:
-            print(f"[PaperDraft] Failed to save: {e}")
+        # Add a button to regenerate if missing
+        ttk.Button(error_frame, text="Generate Draft", command=self.on_regenerate).pack(pady=10)
 
     def on_next(self):
-        """Save the edited draft and proceed or generate LaTeX."""
-        self._save_draft()
-        
+        """Proceed to next screen or generate LaTeX."""
         if LATEX_PAPER_FILE.exists():
             super().on_next()
         else:
@@ -224,7 +270,7 @@ class PaperDraftScreen(BaseFrame):
         
         thread = threading.Thread(target=task, daemon=True)
         thread.start()
-
+        
     def _on_generation_success(self, popup: ProgressPopup):
         """Handle successful generation."""
         popup.close()
@@ -232,13 +278,12 @@ class PaperDraftScreen(BaseFrame):
     
     def on_show(self):
         """Called when screen is shown - load draft."""
+        # Always reload to ensure content is fresh (since it's read-only in GUI now)
         draft_path = Path(OUTPUT_DIR) / PAPER_DRAFT_FILE
-        
-        if not hasattr(self, 'draft_text'):
-            if draft_path.exists():
-                self._load_draft()
-            else:
-                print("[PaperDraftScreen] Warning: No paper draft found")
+        if draft_path.exists():
+            self._load_draft()
+        else:
+             self._show_error(f"No paper draft found at {draft_path}.\nPlease generate the draft.")
 
     def on_regenerate(self):
         """Regenerate the paper draft from scratch."""
@@ -319,11 +364,6 @@ class PaperDraftScreen(BaseFrame):
     def _on_regeneration_complete(self, popup: ProgressPopup):
         """Handle regeneration completion."""
         popup.close()
-        
-        # Refresh text widget
-        try:
-             content = load_markdown(PAPER_DRAFT_FILE, OUTPUT_DIR)
-             self.draft_text.delete("1.0", "end")
-             self.draft_text.insert("1.0", content)
-        except Exception as e:
-             print(f"Error refreshing draft text: {e}")
+        # Load the newly generated draft
+        self._load_draft()
+

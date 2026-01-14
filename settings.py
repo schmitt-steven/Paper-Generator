@@ -1,6 +1,17 @@
-import json
+import re
+from enum import Enum
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
+
+
+class FontSize(Enum):
+    """Font size options for the UI."""
+    VERY_SMALL = 15
+    SMALL = 18
+    MEDIUM = 21
+    LARGE = 24
+    VERY_LARGE = 27
+    ULTRA_LARGE = 30
 
 
 class Settings:
@@ -10,48 +21,45 @@ class Settings:
     Note: MLX embedding models are NOT supported by LM Studio yet, use GGUF instead :(
     See https://github.com/lmstudio-ai/lmstudio-bug-tracker/issues/808
     
-    Settings are saved to and loaded from user_settings.json to keep changes across sessions.
+    Settings are saved directly to this file.
     """
     
-    _SETTINGS_FILE = Path("user_settings.json")
-    
     # Context Analysis Phase
-    CODE_ANALYSIS_MODEL = ""  
-
-    PAPER_CONCEPTION_MODEL = ""  
+    CODE_ANALYSIS_MODEL = "gemma-3-27b-it-qat"  
+    PAPER_CONCEPTION_MODEL = "gemma-3-27b-it-qat"  
     
     # Paper Search Phase
-    LITERATURE_SEARCH_MODEL = ""  
-    PAPER_RANKING_EMBEDDING_MODEL = ""  # Must be an embedding model!
+    LITERATURE_SEARCH_MODEL = "gemma-3-27b-it-qat"  
+    PAPER_RANKING_EMBEDDING_MODEL = "text-embedding-qwen3-embedding-4b@q5_0"  # Must be an embedding model!
     
     # Hypothesis Generation Phase
-    HYPOTHESIS_BUILDER_MODEL = ""
+    HYPOTHESIS_BUILDER_MODEL = "gemma-3-27b-it-qat"
     
     # Experimentation Phase
-    EXPERIMENT_PLAN_MODEL =          ""
-    EXPERIMENT_CODE_WRITE_MODEL =    ""  
-    EXPERIMENT_VALIDATION_MODEL =    "" 
-    EXPERIMENT_PLOT_CAPTION_MODEL =  ""  # Must be a VISION model!
-    EXPERIMENT_VERDICT_MODEL =       ""
+    EXPERIMENT_PLAN_MODEL = "gemma-3-27b-it-qat"
+    EXPERIMENT_CODE_WRITE_MODEL = "gemma-3-27b-it-qat"  
+    EXPERIMENT_VALIDATION_MODEL = "gemma-3-27b-it-qat" 
+    EXPERIMENT_PLOT_CAPTION_MODEL = "gemma-3-27b-it-qat"  # Must be a VISION model!
+    EXPERIMENT_VERDICT_MODEL = "gemma-3-27b-it-qat"
     
     # Paper Writing Phase
-    PAPER_INDEXING_EMBEDDING_MODEL = ""  # Must be an embedding model!
-    PAPER_EMBEDDING_BATCH_SIZE =     64  # Number of text chunks to embed at once
+    PAPER_INDEXING_EMBEDDING_MODEL = "text-embedding-qwen3-embedding-4b@q5_0"  # Must be an embedding model!
+    PAPER_EMBEDDING_BATCH_SIZE = 64  # Number of text chunks to embed at once
 
-    EVIDENCE_GATHERING_MODEL =       ""  
-    PAPER_WRITING_MODEL =            ""
+    EVIDENCE_GATHERING_MODEL = "gemma-3-27b-it-qat"  
+    PAPER_WRITING_MODEL = "gemma-3-27b-it-qat"
 
-    EVIDENCE_INITIAL_CHUNKS =        15  # Number of chunks retrieved from vector search
-    EVIDENCE_FILTERED_CHUNKS =       10  # Number of chunks after LLM filtering/scoring
-    EVIDENCE_AGENTIC_ITERATIONS =    3   # Number of agentic search iterations
+    EVIDENCE_INITIAL_CHUNKS = 15  # Number of chunks retrieved from vector search
+    EVIDENCE_FILTERED_CHUNKS = 10  # Number of chunks after LLM filtering/scoring
+    EVIDENCE_AGENTIC_ITERATIONS = 3  # Number of agentic search iterations
     
-    GENERATE_ACKNOWLEDGEMENTS =      True  # Set to False to skip acknowledgements section entirely
+    GENERATE_ACKNOWLEDGEMENTS = True  # Set to False to skip acknowledgements section entirely
 
     # LaTeX Generation Phase
-    LATEX_GENERATION_MODEL = ""
+    LATEX_GENERATION_MODEL = "gemma-3-27b-it-qat"
 
     # UI Settings
-    FONT_SIZE_BASE = 16
+    FONT_SIZE = FontSize.SMALL
     DARK_MODE = True  # True for dark theme, False for light theme
 
     # API Keys
@@ -72,47 +80,90 @@ class Settings:
 
     @classmethod
     def save_to_file(cls) -> None:
-        """Save current settings to user_settings.json file."""
-        settings_dict = {}
-        
-        # Get all class attributes (excluding private attributes and methods)
-        for key in dir(cls):
-            if key.startswith('_'):
-                continue
-            try:
-                value = getattr(cls, key)
-                # Only save non-callable attributes (skip methods)
-                if not callable(value):
-                    settings_dict[key] = value
-            except AttributeError:
-                continue
+        """Save current settings by rewriting this Python file."""
+        settings_file = Path(__file__)
         
         try:
-            with open(cls._SETTINGS_FILE, 'w', encoding='utf-8') as f:
-                json.dump(settings_dict, f, indent=2, ensure_ascii=False)
-            print(f"[Settings] Saved settings to {cls._SETTINGS_FILE}")
+            content = settings_file.read_text(encoding='utf-8')
+            
+            # Settings to save with their current values
+            settings_to_save = {
+                # Models
+                "CODE_ANALYSIS_MODEL": cls.CODE_ANALYSIS_MODEL,
+                "PAPER_CONCEPTION_MODEL": cls.PAPER_CONCEPTION_MODEL,
+                "LITERATURE_SEARCH_MODEL": cls.LITERATURE_SEARCH_MODEL,
+                "PAPER_RANKING_EMBEDDING_MODEL": cls.PAPER_RANKING_EMBEDDING_MODEL,
+                "HYPOTHESIS_BUILDER_MODEL": cls.HYPOTHESIS_BUILDER_MODEL,
+                "EXPERIMENT_PLAN_MODEL": cls.EXPERIMENT_PLAN_MODEL,
+                "EXPERIMENT_CODE_WRITE_MODEL": cls.EXPERIMENT_CODE_WRITE_MODEL,
+                "EXPERIMENT_VALIDATION_MODEL": cls.EXPERIMENT_VALIDATION_MODEL,
+                "EXPERIMENT_PLOT_CAPTION_MODEL": cls.EXPERIMENT_PLOT_CAPTION_MODEL,
+                "EXPERIMENT_VERDICT_MODEL": cls.EXPERIMENT_VERDICT_MODEL,
+                "PAPER_INDEXING_EMBEDDING_MODEL": cls.PAPER_INDEXING_EMBEDDING_MODEL,
+                "EVIDENCE_GATHERING_MODEL": cls.EVIDENCE_GATHERING_MODEL,
+                "PAPER_WRITING_MODEL": cls.PAPER_WRITING_MODEL,
+                "LATEX_GENERATION_MODEL": cls.LATEX_GENERATION_MODEL,
+                # UI Settings
+                "FONT_SIZE": cls.FONT_SIZE.name,
+                "DARK_MODE": cls.DARK_MODE,
+                # API Keys
+                "SEMANTIC_SCHOLAR_API_KEY": cls.SEMANTIC_SCHOLAR_API_KEY,
+                # LaTeX Data
+                "LATEX_TITLE": cls.LATEX_TITLE,
+            }
+            
+            # Update string values
+            for key, value in settings_to_save.items():
+                if key == "FONT_SIZE":
+                    # Handle FontSize enum: FONT_SIZE = FontSize.SMALL
+                    pattern = rf'(\s+{key}\s*=\s*)FontSize\.\w+'
+                    replacement = rf'\1FontSize.{value}'
+                    content = re.sub(pattern, replacement, content)
+                elif isinstance(value, str):
+                    # Match: KEY = "value" or KEY = ""
+                    pattern = rf'(\s+{key}\s*=\s*)"[^"]*"'
+                    replacement = rf'\1"{value}"'
+                    content = re.sub(pattern, replacement, content)
+                elif isinstance(value, bool):
+                    # Match: KEY = True or KEY = False
+                    pattern = rf'(\s+{key}\s*=\s*)(True|False)'
+                    replacement = rf'\1{value}'
+                    content = re.sub(pattern, replacement, content)
+                elif isinstance(value, int):
+                    # Match: KEY = number
+                    pattern = rf'(\s+{key}\s*=\s*)\d+'
+                    replacement = rf'\1{value}'
+                    content = re.sub(pattern, replacement, content)
+            
+            # Handle LATEX_AUTHORS (complex list of dicts)
+            authors_str = _format_authors(cls.LATEX_AUTHORS)
+            # Match the entire LATEX_AUTHORS block
+            pattern = r'(\s+LATEX_AUTHORS\s*=\s*)\[[\s\S]*?\n    \]'
+            replacement = rf'\1{authors_str}'
+            content = re.sub(pattern, replacement, content)
+            
+            settings_file.write_text(content, encoding='utf-8')
+            print(f"[Settings] Saved settings to {settings_file}")
         except Exception as e:
             print(f"[Settings] Failed to save settings: {e}")
+
+
+def _format_authors(authors: list) -> str:
+    """Format authors list as Python code."""
+    if not authors:
+        return "[]"
     
-    @classmethod
-    def load_from_file(cls) -> None:
-        """Load settings from user_settings.json file if it exists."""
-        if not cls._SETTINGS_FILE.exists():
-            return
-        
-        try:
-            with open(cls._SETTINGS_FILE, 'r', encoding='utf-8') as f:
-                settings_dict = json.load(f)
-            
-            # Update class attributes with loaded values
-            for key, value in settings_dict.items():
-                if hasattr(cls, key):
-                    setattr(cls, key, value)
-            
-            print(f"[Settings] Loaded settings from {cls._SETTINGS_FILE}")
-        except Exception as e:
-            print(f"[Settings] Failed to load settings: {e}")
-
-
-# Load settings from file on import (if file exists)
-Settings.load_from_file()
+    lines = ["["]
+    for i, author in enumerate(authors):
+        lines.append("        {")
+        lines.append(f'            "name": "{author.get("name", "")}",')
+        lines.append(f'            "affiliation": "{author.get("affiliation", "")}",')
+        lines.append(f'            "department": "{author.get("department", "")}",')
+        lines.append(f'            "address": "{author.get("address", "")}",')
+        lines.append(f'            "email": "{author.get("email", "")}"')
+        if i < len(authors) - 1:
+            lines.append("        },")
+        else:
+            lines.append("        },")
+    lines.append("    ]")
+    return "\n".join(lines)

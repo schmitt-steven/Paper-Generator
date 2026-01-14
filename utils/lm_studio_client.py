@@ -8,7 +8,7 @@ def is_lm_studio_running() -> bool:
         True if LM Studio is running, False otherwise.
     """
     try:
-        # Try to list models - this will fail if LM Studio isn't running
+        # Try to list models - this will fail if LM Studio isnt running
         lms.list_downloaded_models("llm")
         return True
     except Exception:
@@ -16,15 +16,8 @@ def is_lm_studio_running() -> bool:
 
 
 def get_model_names(model_type="llm", vision_only=False):
-    """Fetch model keys from LM Studio.
+    """Fetch model keys from LM Studio."""
     
-    Args:
-        model_type: "llm" or "embedding"
-        vision_only: If True, only return LLM models with vision support
-    
-    Returns:
-        List of model keys (strings)
-    """
     models = lms.list_downloaded_models(model_type)
     
     if vision_only:

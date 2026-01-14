@@ -1,4 +1,6 @@
+from .start_screen import StartScreen
 from .settings_screen import SettingsScreen
+
 from .user_requirements_screen import UserRequirementsScreen
 from .code_files_screen import CodeFilesScreen
 from .paper_concept_screen import PaperConceptScreen

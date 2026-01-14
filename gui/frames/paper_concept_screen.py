@@ -2,24 +2,130 @@ import tkinter as tk
 from tkinter import ttk
 from pathlib import Path
 import threading
-from ..base_frame import BaseFrame, create_scrollable_text_area, ProgressPopup
+from ..base_frame import BaseFrame, CardBorderFrame, ProgressPopup
 from ..info_texts import PAPER_CONCEPT_INFO
+from ..theme_colors import (
+    CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT,
+    TEXT_BG_DARK_ALT, TEXT_BG_LIGHT_ALT, TEXT_FG_DARK, TEXT_FG_LIGHT,
+)
 from phases.context_analysis.paper_conception import PaperConception, PaperConcept
 from phases.context_analysis.user_requirements import UserRequirements
 from phases.context_analysis.user_code_analysis import CodeAnalyzer
 from settings import Settings
-from utils.file_utils import save_markdown
+
+
+class CollapsibleConceptCard(CardBorderFrame):
+    """A collapsible card for a paper concept section (read-only, no copy button)."""
+    
+    def __init__(self, parent, section_name: str, content: str, controller, start_expanded: bool = False):
+        super().__init__(parent, padx=1, pady=1)
+        self.section_name = section_name
+        self.content = content
+        self.controller = controller
+        self.expanded = False
+        
+        self._build_ui()
+        
+        if start_expanded:
+            self.expand()
+    
+    def _build_ui(self):
+        # Header frame
+        header = ttk.Frame(self, style="CardHeader.TFrame", padding=(10, 8))
+        header.pack(fill="x")
+        
+        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
+        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
+        
+        # Left side: toggle + title (clickable)
+        left_frame = tk.Frame(header, bg=header_bg)
+        left_frame.pack(side="left", fill="x", expand=True)
+        left_frame.bind("<Button-1>", lambda e: self.toggle())
+        
+        # Toggle indicator
+        self.toggle_label = tk.Label(
+            left_frame,
+            text="▶",
+            font=self.controller.fonts.default_font,
+            bg=header_bg,
+            fg=header_fg,
+            cursor="hand2"
+        )
+        self.toggle_label.pack(side="left", padx=(0, 10))
+        self.toggle_label.bind("<Button-1>", lambda e: self.toggle())
+        
+        # Section title
+        self.title_label = tk.Label(
+            left_frame,
+            text=self.section_name,
+            font=self.controller.fonts.sub_header_font,
+            bg=header_bg,
+            fg=header_fg,
+            cursor="hand2"
+        )
+        self.title_label.pack(side="left")
+        self.title_label.bind("<Button-1>", lambda e: self.toggle())
+        
+        ttk.Separator(self, orient="horizontal").pack(fill="x")
+        
+        # Content frame (hidden by default)
+        self.content_frame = ttk.Frame(self, style="CardContent.TFrame", padding=0)
+        # Don't pack yet - only show when expanded
+        
+        # Text widget for content (read-only)
+        text_bg = TEXT_BG_DARK_ALT if self.controller.current_theme == "dark" else TEXT_BG_LIGHT_ALT
+        text_fg = TEXT_FG_DARK if self.controller.current_theme == "dark" else TEXT_FG_LIGHT
+        
+        # Scrollbar
+        scrollbar = ttk.Scrollbar(self.content_frame, orient="vertical")
+        scrollbar.pack(side="right", fill="y")
+        
+        self.text_widget = tk.Text(
+            self.content_frame,
+            height=20,
+            font=self.controller.fonts.text_area_font,
+            wrap="word",
+            background=text_bg,
+            foreground=text_fg,
+            borderwidth=0,
+            highlightthickness=0,
+            relief="flat",
+            padx=12,
+            pady=10,
+            yscrollcommand=scrollbar.set
+        )
+        self.text_widget.pack(side="left", fill="both", expand=True)
+        scrollbar.config(command=self.text_widget.yview)
+        
+        self.text_widget.insert("1.0", self.content)
+        self.text_widget.config(state="disabled")  # Read-only
+    
+    def toggle(self):
+        """Toggle expansion state."""
+        self.expanded = not self.expanded
+        if self.expanded:
+            self.toggle_label.config(text="▼")
+            self.content_frame.pack(fill="both", expand=True)
+        else:
+            self.toggle_label.config(text="▶")
+            self.content_frame.pack_forget()
+    
+    def expand(self):
+        """Force expand."""
+        if not self.expanded:
+            self.toggle()
+    
+    def collapse(self):
+        """Force collapse."""
+        if self.expanded:
+            self.toggle()
 
 
 class PaperConceptScreen(BaseFrame):
     def __init__(self, parent, controller):
         self.file_path = "output/paper_concept.md"
         self.concept: PaperConcept | None = None
-        
-        # Text widgets for each section
-        self.description_text: tk.Text
-        self.code_snippets_text: tk.Text
-        self.open_questions_text: tk.Text
+        self.concept_cards = []
         
         super().__init__(
             parent,
@@ -46,10 +152,24 @@ class PaperConceptScreen(BaseFrame):
             self._show_error(f"Error loading paper concept: {e}")
             return
         
-        # Create sections
-        self.description_text = self._create_section("Description", self.concept.description, height=20)
-        self.code_snippets_text = self._create_section("Important Code Snippets", self.concept.code_snippets, height=20)
-        self.open_questions_text = self._create_section("Questions for Literature Search", self.concept.open_questions, height=20)
+        # Create collapsible sections
+        sections = [
+            ("Description", self.concept.description),
+            ("Important Code Snippets", self.concept.code_snippets),
+            ("Questions for Literature Search", self.concept.open_questions),
+        ]
+        
+        self.concept_cards = []
+        for i, (title, content) in enumerate(sections):
+            card = CollapsibleConceptCard(
+                self.scrollable_frame,
+                title,
+                content,
+                self.controller,
+                start_expanded=True
+            )
+            card.pack(fill="x", pady=(10 if i == 0 else 0, 8))
+            self.concept_cards.append(card)
 
     def _show_error(self, message: str):
         """Display an error message."""
@@ -64,109 +184,8 @@ class PaperConceptScreen(BaseFrame):
             wraplength=500
         ).pack()
 
-    def _create_section(self, title: str, content: str, height: int = 8) -> tk.Text:
-        """Create a labeled section with an editable text area inside a card."""
-        from ..base_frame import CardBorderFrame
-        from ..theme_colors import CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT
-        
-        # Card Container
-        card = CardBorderFrame(self.scrollable_frame, padx=1, pady=1)
-        card.pack(fill="x", pady=10)
-        
-        # Header
-        header = ttk.Frame(card, style="CardHeader.TFrame", padding=(10, 6))
-        header.pack(fill="x")
-        
-        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
-        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
-        
-        tk.Label(
-            header, 
-            text=title, 
-            font=self.controller.fonts.sub_header_font,
-            bg=header_bg,
-            fg=header_fg
-        ).pack(side="left")
-        
-        ttk.Separator(card, orient="horizontal").pack(fill="x")
-        
-        # Content
-        content_frame = ttk.Frame(card, style="CardContent.TFrame", padding=0)
-        content_frame.pack(fill="both", expand=True)
-        
-        # Text area container
-        inner = ttk.Frame(content_frame, style="CardRow.TFrame")
-        inner.pack(fill="both", expand=True)
-
-        scrollbar = ttk.Scrollbar(inner, orient="vertical")
-        scrollbar.pack(side="right", fill="y")
-        
-        text_widget = tk.Text(
-            inner,
-            height=height,
-            wrap="word",
-            font=self.controller.fonts.text_area_font,
-            padx=10,
-            pady=10,
-            highlightthickness=0,
-            borderwidth=0,
-            relief="flat",
-            yscrollcommand=scrollbar.set
-        )
-        text_widget.pack(side="left", fill="both", expand=True)
-        scrollbar.config(command=text_widget.yview)
-        
-        text_widget.insert("1.0", content)
-        
-        self.controller.apply_theme_colors(text_widget)
-        
-        return text_widget
-
-    def _save_concept(self) -> PaperConcept:
-        """Save the edited content and return updated concept."""
-        # Get content from text widgets
-        description = self.description_text.get("1.0", "end-1c").strip()
-        code_snippets = self.code_snippets_text.get("1.0", "end-1c").strip()
-        open_questions = self.open_questions_text.get("1.0", "end-1c").strip()
-        
-        # Build the markdown content
-        lines = [
-            "# Paper Concept",
-            "",
-            description,
-            "",
-            "# Important Code Snippets",
-            "",
-            code_snippets,
-            "",
-            "# Open Questions",
-            "",
-            open_questions,
-        ]
-        content = "\n".join(lines)
-        
-        try:
-            save_markdown(content, "paper_concept.md", "output")
-            print(f"[PaperConcept] Saved changes to {self.file_path}")
-        except Exception as e:
-            print(f"[PaperConcept] Failed to save: {e}")
-        
-        # Return updated concept for use in generation
-        return PaperConcept(
-            description=description,
-            code_snippets=code_snippets,
-            open_questions=open_questions
-        )
-
     def on_next(self):
-        """Save the edited content and proceed to next screen."""
-        if self.concept is None:
-            super().on_next()
-            return
-        
-        self._save_concept()
-        
-        # Show next screen
+        """Proceed to next screen (no saving needed - content is read-only)."""
         super().on_next()
     
     def on_show(self):
@@ -192,7 +211,6 @@ class PaperConceptScreen(BaseFrame):
                 # 2. Analyze Code
                 self.after(0, lambda: popup.update_status("Analyzing code files"))
                 code_analyzer = CodeAnalyzer(model_name=Settings.CODE_ANALYSIS_MODEL)
-                # Hardcoded "user_files" as per project convention, can be made dynamic if needed
                 code_files = code_analyzer.load_code_files("user_files") 
                 analyzed_code = code_analyzer.analyze_all_files(code_files)
                 
@@ -226,9 +244,12 @@ class PaperConceptScreen(BaseFrame):
         for widget in self.scrollable_frame.winfo_children():
             widget.destroy()
         
-        # Reload UI with new concept (this creates fresh text areas)
+        # Reset concept to force reload
+        self.concept = None
+        self.concept_cards = []
+        
+        # Reload UI with new concept
         self._load_concept()
         
-        # Re-apply theme colors to newly created widgets (for borders)
+        # Re-apply theme colors to newly created widgets
         self.controller.apply_theme_colors(self)
-

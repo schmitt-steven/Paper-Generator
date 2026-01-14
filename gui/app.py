@@ -22,6 +22,7 @@ from .theme_colors import (
     CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT,
 )
 from .frames import (
+    StartScreen,
     SettingsScreen,
     UserRequirementsScreen,
     CodeFilesScreen,
@@ -85,7 +86,7 @@ class PaperGeneratorApp(tk.Tk):
         sv_ttk.set_theme(self.current_theme)
 
         # Global font config
-        self.fonts = FontManager(self, base_size=getattr(Settings, "FONT_SIZE_BASE", 16))
+        self.fonts = FontManager(self, base_size=Settings.FONT_SIZE.value)
         
         # Icon manager for theme-aware icons
         self.icons = IconManager(self)
@@ -125,9 +126,7 @@ class PaperGeneratorApp(tk.Tk):
         
         self.frames = {}
         self.screen_order = [
-            SettingsScreen,
-            UserRequirementsScreen,
-            CodeFilesScreen,
+            StartScreen,
             PaperConceptScreen,
             PaperSelectionScreen,
             HypothesisScreen,
@@ -143,6 +142,11 @@ class PaperGeneratorApp(tk.Tk):
         
         # Defer app of custom theme colors to override defaults
         self.after(100, self.apply_theme_colors)
+        
+        # Disable scrolling on Comboboxes to prevent accidental changes
+        self.unbind_class("TCombobox", "<MouseWheel>")
+        self.unbind_class("TCombobox", "<Button-4>")
+        self.unbind_class("TCombobox", "<Button-5>")
         
         # Show initial frame and call on_show
         initial_frame = self.frames[self.screen_order[0]]
@@ -168,6 +172,15 @@ class PaperGeneratorApp(tk.Tk):
              style.map("TButton", **style.map("Accent.TButton"))
         except:
              pass
+        
+        # Danger button style (red)
+        style.configure("Danger.TButton", 
+                        font=self.fonts.default_font,
+                        background="#dc3545",
+                        foreground="white")
+        style.map("Danger.TButton",
+                  background=[("active", "#c82333"), ("pressed", "#bd2130")],
+                  foreground=[("active", "white"), ("pressed", "white")])
 
         # Card header styling 
         if self.current_theme == "dark":
@@ -294,7 +307,7 @@ class PaperGeneratorApp(tk.Tk):
             frame.grid(row=0, column=0, sticky="nsew")
         
         # Init additional frames not in main navigation
-        extra_frames = [WritingPromptsScreen, SectionGuidelinesScreen]
+        extra_frames = [SettingsScreen, WritingPromptsScreen, SectionGuidelinesScreen]
         for Frame in extra_frames:
             frame = Frame(parent=self.container, controller=self)
             self.frames[Frame] = frame

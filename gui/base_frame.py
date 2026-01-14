@@ -392,33 +392,6 @@ class BaseFrame(ttk.Frame):
             bg=navbar_bg,
             fg=navbar_fg
         ).pack(side="left")
-        
-        # Action Buttons
-        if self.header_file_path:
-            actions_frame = ttk.Frame(center_container, style="NavBar.TFrame")
-            actions_frame.pack(side="left", padx=(15, 0))
-            
-            # "Open in Editor" Button
-            ttk.Button(
-                actions_frame, 
-                text="Open in Editor", 
-                command=self._open_in_editor,
-                style="Accent.TButton" 
-            ).pack(side="left", padx=5)
-            
-            # "Show in Explorer" Button
-            ttk.Button(
-                actions_frame, 
-                text="Show in Explorer", 
-                command=self._show_in_explorer
-            ).pack(side="left", padx=5)
-
-            # "Reload" File Button
-            ttk.Button(
-                actions_frame, 
-                text="Reload", 
-                command=self.reload_content
-            ).pack(side="left", padx=5)
 
         ttk.Separator(self, orient="horizontal").grid(row=1, column=0, sticky="ew")
         
@@ -453,6 +426,36 @@ class BaseFrame(ttk.Frame):
         self._canvas.bind_all("<MouseWheel>", self._on_mousewheel, add="+")  # Windows/macOS
         self._canvas.bind_all("<Button-4>", self._on_mousewheel, add="+")    # Linux scroll up
         self._canvas.bind_all("<Button-5>", self._on_mousewheel, add="+")    # Linux scroll down
+        
+        # Action Buttons at top of scrollable content (if file path provided)
+        if self.header_file_path:
+            actions_frame = ttk.Frame(self.scrollable_frame, style="Scrollable.TFrame")
+            actions_frame.pack(fill="x", pady=(10, 10))
+            actions_frame.columnconfigure(0, weight=1, uniform="actions")
+            actions_frame.columnconfigure(1, weight=1, uniform="actions")
+            actions_frame.columnconfigure(2, weight=1, uniform="actions")
+            
+            # "Open in Editor" Button
+            ttk.Button(
+                actions_frame, 
+                text="Open in Editor", 
+                command=self._open_in_editor,
+                style="Accent.TButton" 
+            ).grid(row=0, column=0, sticky="ew", padx=(0, 5))
+            
+            # "Show in Explorer" Button
+            ttk.Button(
+                actions_frame, 
+                text="Show in Explorer", 
+                command=self._show_in_explorer
+            ).grid(row=0, column=1, sticky="ew", padx=5)
+
+            # "Reload" File Button
+            ttk.Button(
+                actions_frame, 
+                text="Reload", 
+                command=self.reload_content
+            ).grid(row=0, column=2, sticky="ew", padx=(5, 0))
         
         self.create_content()
         
@@ -634,6 +637,36 @@ class BaseFrame(ttk.Frame):
                     delattr(self, attr)
                 except:
                     setattr(self, attr, None)
+
+        # Re-create action buttons at top of scrollable content (if file path provided)
+        if self.header_file_path:
+            actions_frame = ttk.Frame(self.scrollable_frame, style="Scrollable.TFrame")
+            actions_frame.pack(fill="x", pady=(10, 10))
+            actions_frame.columnconfigure(0, weight=1, uniform="actions")
+            actions_frame.columnconfigure(1, weight=1, uniform="actions")
+            actions_frame.columnconfigure(2, weight=1, uniform="actions")
+            
+            # "Open in Editor" Button
+            ttk.Button(
+                actions_frame, 
+                text="Open in Editor", 
+                command=self._open_in_editor,
+                style="Accent.TButton" 
+            ).grid(row=0, column=0, sticky="ew", padx=(0, 5))
+            
+            # "Show in Explorer" Button
+            ttk.Button(
+                actions_frame, 
+                text="Show in Explorer", 
+                command=self._show_in_explorer
+            ).grid(row=0, column=1, sticky="ew", padx=5)
+
+            # "Reload" File Button
+            ttk.Button(
+                actions_frame, 
+                text="Reload", 
+                command=self.reload_content
+            ).grid(row=0, column=2, sticky="ew", padx=(5, 0))
 
         # Re-create static content (info sections, etc.)
         self.create_content()

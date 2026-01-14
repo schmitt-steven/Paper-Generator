@@ -97,15 +97,15 @@ class PDFConverter:
         """Convert PDFs to markdown and update Paper objects with markdown text.
         
         Handles both:
-        - Papers with pdf_url (downloaded papers) → look in output/literature/{id}/
-        - Papers with pdf_path (user papers) → use pdf_path directly
+        - Papers with pdf_url (downloaded papers) - look in output/literature/{id}/
+        - Papers with pdf_path (user papers) - use pdf_path directly
         
         Args:
             papers: List of Paper objects to update
             base_folder: Base folder containing paper PDFs
             
         Returns:
-            List of Paper objects with markdown_text field populated
+            List of Paper objects with updated markdown_text field
         """
         
         print(f"\nConverting {len(papers)} papers to markdown...")

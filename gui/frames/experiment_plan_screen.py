@@ -1,12 +1,17 @@
 import tkinter as tk
 from tkinter import ttk
 import threading
+import re
 from pathlib import Path
+from typing import Dict
 
-from ..base_frame import BaseFrame, ProgressPopup, create_scrollable_text_area
+from ..base_frame import BaseFrame, ProgressPopup, CardBorderFrame
 from ..info_texts import EXPERIMENT_PLAN_INFO
-from ..theme_colors import CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT
-from utils.file_utils import load_markdown, save_markdown
+from ..theme_colors import (
+    CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT,
+    TEXT_BG_DARK_ALT, TEXT_BG_LIGHT_ALT, TEXT_FG_DARK, TEXT_FG_LIGHT,
+)
+from utils.file_utils import load_markdown
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.context_analysis.paper_conception import PaperConception
 from phases.experimentation.experiment_runner import ExperimentRunner
@@ -19,9 +24,108 @@ EXPERIMENTS_DIR = "output/experiments"
 EXPERIMENT_PLAN_FILE = "experiment_plan.md"
 HYPOTHESES_FILE = "output/hypothesis.md"
 
+
+class CollapsiblePlanCard(CardBorderFrame):
+    """A collapsible card for experiment plan sections (read-only)."""
+    
+    def __init__(self, parent, section_name: str, content: str, controller, start_expanded: bool = False):
+        super().__init__(parent, padx=1, pady=1)
+        self.section_name = section_name
+        self.content = content
+        self.controller = controller
+        self.start_expanded = start_expanded
+        self.expanded = False
+        
+        self._build_ui()
+        
+        if start_expanded:
+            self.expand()
+    
+    def _build_ui(self):
+        # Header frame
+        header = ttk.Frame(self, style="CardHeader.TFrame", padding=(10, 8))
+        header.pack(fill="x")
+        
+        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
+        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
+        
+        # Left side: toggle + title (clickable)
+        left_frame = tk.Frame(header, bg=header_bg)
+        left_frame.pack(side="left", fill="x", expand=True)
+        left_frame.bind("<Button-1>", lambda e: self.toggle())
+        
+        # Toggle indicator
+        self.toggle_label = tk.Label(
+            left_frame,
+            text="▶",
+            font=self.controller.fonts.default_font,
+            bg=header_bg,
+            fg=header_fg,
+            cursor="hand2"
+        )
+        self.toggle_label.pack(side="left", padx=(0, 10))
+        self.toggle_label.bind("<Button-1>", lambda e: self.toggle())
+        
+        # Section title
+        self.title_label = tk.Label(
+            left_frame,
+            text=self.section_name,
+            font=self.controller.fonts.sub_header_font,
+            bg=header_bg,
+            fg=header_fg,
+            cursor="hand2"
+        )
+        self.title_label.pack(side="left")
+        self.title_label.bind("<Button-1>", lambda e: self.toggle())
+        
+        ttk.Separator(self, orient="horizontal").pack(fill="x")
+        
+        # Content frame (hidden by default)
+        self.content_frame = ttk.Frame(self, style="CardContent.TFrame", padding=0)
+        
+        # Text widget
+        text_bg = TEXT_BG_DARK_ALT if self.controller.current_theme == "dark" else TEXT_BG_LIGHT_ALT
+        text_fg = TEXT_FG_DARK if self.controller.current_theme == "dark" else TEXT_FG_LIGHT
+        num_lines = self.content.count('\n') + 1
+        height = min(num_lines + 5, 150)
+        
+        self.text_widget = tk.Text(
+            self.content_frame,
+            height=height,
+            font=self.controller.fonts.text_area_font,
+            wrap="word",
+            background=text_bg,
+            foreground=text_fg,
+            borderwidth=0,
+            highlightthickness=0,
+            relief="flat",
+            padx=12,
+            pady=10
+        )
+        self.text_widget.pack(side="left", fill="both", expand=True)
+        
+        self.text_widget.insert("1.0", self.content)
+        self.text_widget.config(state="disabled")  # Read-only
+    
+    def toggle(self):
+        """Toggle expansion state."""
+        self.expanded = not self.expanded
+        if self.expanded:
+            self.toggle_label.config(text="▼")
+            self.content_frame.pack(fill="both", expand=True)
+        else:
+            self.toggle_label.config(text="▶")
+            self.content_frame.pack_forget()
+    
+    def expand(self):
+        """Force expand."""
+        if not self.expanded:
+            self.toggle()
+
+
 class ExperimentPlanScreen(BaseFrame):
     def __init__(self, parent, controller):
-        self.plan_text: tk.Text
+        self.cards: list[CollapsiblePlanCard] = []
         
         # Check if experiment result exists to set button text
         experiment_result_file = Path("output/experiments/experiment_result.json")
@@ -42,7 +146,7 @@ class ExperimentPlanScreen(BaseFrame):
         pass
 
     def _load_plan(self):
-        """Load experiment plan from file and display it."""
+        """Load experiment plan from file and display it as cards."""
         try:
             plan_content = load_markdown(EXPERIMENT_PLAN_FILE, EXPERIMENTS_DIR)
         except FileNotFoundError:
@@ -55,8 +159,21 @@ class ExperimentPlanScreen(BaseFrame):
             self._show_error(f"Error loading experiment plan: {e}")
             return
         
-        # Create editable text area
-        self._create_plan_section(plan_content)
+        # Clear existing
+        for card in self.cards:
+            card.destroy()
+        self.cards.clear()
+        
+        # Create single card with full content
+        card = CollapsiblePlanCard(
+            self.scrollable_frame,
+            "Experiment Plan",
+            plan_content.strip(),
+            self.controller,
+            start_expanded=True
+        )
+        card.pack(fill="both", expand=True, pady=10)
+        self.cards.append(card)
 
     def _show_error(self, message: str):
         """Display an error message."""
@@ -71,75 +188,8 @@ class ExperimentPlanScreen(BaseFrame):
             wraplength=500
         ).pack()
 
-    def _create_plan_section(self, content: str):
-        """Create an editable text area for the plan inside a card."""
-        from ..base_frame import CardBorderFrame
-        card = CardBorderFrame(self.scrollable_frame, padx=1, pady=1)
-        card.pack(fill="both", expand=True, pady=10)
-        
-        # Header
-        header = ttk.Frame(card, style="CardHeader.TFrame", padding=(10, 6))
-        header.pack(fill="x")
-        
-        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
-        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
-        tk.Label(
-            header,
-            text="Experiment Plan",
-            font=self.controller.fonts.sub_header_font,
-            bg=header_bg,
-            fg=header_fg
-        ).pack(side="left")
-        
-        ttk.Separator(card, orient="horizontal").pack(fill="x")
-        
-        # Content
-        content_frame = ttk.Frame(card, style="CardContent.TFrame", padding=0)
-        content_frame.pack(fill="both", expand=True)
-        
-        # Text area with scrollbar
-        inner = ttk.Frame(content_frame, style="CardRow.TFrame")
-        inner.pack(fill="both", expand=True)
-        
-        scrollbar = ttk.Scrollbar(inner, orient="vertical")
-        scrollbar.pack(side="right", fill="y")
-        
-        self.plan_text = tk.Text(
-            inner,
-            height=40,
-            wrap="word",
-            padx=10,
-            pady=10,
-            highlightthickness=0,
-            borderwidth=0,
-            relief="flat",
-            yscrollcommand=scrollbar.set
-        )
-        self.plan_text.pack(side="left", fill="both", expand=True)
-        scrollbar.config(command=self.plan_text.yview)
-        
-        self.plan_text.insert("1.0", content)
-        
-        self.controller.apply_theme_colors(self.plan_text)
-
-    def _save_plan(self):
-        """Save the edited plan."""
-        if not hasattr(self, 'plan_text'):
-            return
-        
-        # Get content from text widget
-        plan_content = self.plan_text.get("1.0", "end-1c")
-        
-        try:
-            save_markdown(plan_content, EXPERIMENT_PLAN_FILE, EXPERIMENTS_DIR)
-            print(f"[ExperimentationPlan] Saved changes to {EXPERIMENTS_DIR}/{EXPERIMENT_PLAN_FILE}")
-        except Exception as e:
-            print(f"[ExperimentationPlan] Failed to save: {e}")
-
     def on_next(self):
-        """Save the edited plan and proceed or run experiments."""
-        self._save_plan()
-        
+        """Proceed or run experiments (no saving)."""
         # Check if output exists (simplified filename without hypothesis ID)
         experiment_result_file = Path("output/experiments/experiment_result.json")
         if experiment_result_file.exists():
@@ -153,8 +203,6 @@ class ExperimentPlanScreen(BaseFrame):
         
         def task():
             try:
-                # Load hypothesis
-                self.after(0, lambda: popup.update_status("Loading hypothesis"))
                 # Load hypothesis
                 self.after(0, lambda: popup.update_status("Loading hypothesis"))
                 selected_hypothesis = HypothesisBuilder.load_hypothesis(HYPOTHESES_FILE)
@@ -172,7 +220,7 @@ class ExperimentPlanScreen(BaseFrame):
                 result = experiment_runner.run_experiment(
                     selected_hypothesis,
                     paper_concept,
-                    load_existing_plan=True,  # Use plan that was just saved
+                    load_existing_plan=True,  # Use existing plan file (we trust it's there)
                     load_existing_code=False  # Generate new code
                 )
                 
@@ -194,7 +242,7 @@ class ExperimentPlanScreen(BaseFrame):
     
     def on_show(self):
         """Called when screen is shown - load plan if not already loaded."""
-        if not hasattr(self, 'plan_text'):
+        if not self.cards: # Reload if no cards shown
             plan_path = Path(EXPERIMENTS_DIR) / EXPERIMENT_PLAN_FILE
             if plan_path.exists():
                 self._load_plan()
@@ -258,11 +306,8 @@ class ExperimentPlanScreen(BaseFrame):
     def _on_regeneration_complete(self, popup: ProgressPopup):
         """Handle regeneration completion."""
         popup.close()
+        # Force reload from file
+        self._load_plan()
         
-        # Refresh text widget
-        try:
-             content = load_markdown(EXPERIMENT_PLAN_FILE, EXPERIMENTS_DIR)
-             self.plan_text.delete("1.0", "end")
-             self.plan_text.insert("1.0", content)
-        except Exception as e:
-             print(f"Error refreshing plan text: {e}")
+        # Re-apply theme colors
+        self.controller.apply_theme_colors(self)

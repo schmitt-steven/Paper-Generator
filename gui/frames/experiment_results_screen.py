@@ -1,30 +1,374 @@
 import tkinter as tk
-import traceback
 from tkinter import ttk
-import threading
+from pathlib import Path
+from PIL import Image, ImageTk
+import fitz  # PyMuPDF
 import os
 import subprocess
 import platform
-from pathlib import Path
-from settings import Settings
-from ..base_frame import BaseFrame, ProgressPopup, TextBorderFrame, create_scrollable_text_area
+import threading
+
+from ..base_frame import BaseFrame, ProgressPopup, CardBorderFrame
 from ..info_texts import EXPERIMENT_RESULTS_INFO
 from ..theme_colors import (
     CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT,
-    SECONDARY_TEXT_DARK, SECONDARY_TEXT_LIGHT,
-    DELETE_ICON_DARK, DELETE_ICON_LIGHT,
-    HOVER_DANGER_DARK, HOVER_DANGER_LIGHT,
+    TEXT_BG_DARK_ALT, TEXT_BG_LIGHT_ALT, TEXT_FG_DARK, TEXT_FG_LIGHT,
 )
-from phases.context_analysis.paper_conception import PaperConception
-from phases.context_analysis.user_requirements import UserRequirements
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.experimentation.experiment_runner import ExperimentRunner
-from phases.paper_search.literature_search import LiteratureSearch
+from phases.context_analysis.paper_conception import PaperConception
+from phases.context_analysis.user_requirements import UserRequirements
 from phases.paper_writing.paper_writing_pipeline import PaperWritingPipeline
 
 
 PAPER_DRAFT_FILE = Path("output/paper_draft.md")
 HYPOTHESES_FILE = "output/hypothesis.md"
+
+
+class CollapsibleTextCard(CardBorderFrame):
+    """A collapsible card for text content (read-only)."""
+    
+    def __init__(self, parent, section_name: str, content: str, controller, start_expanded: bool = False, code_font: bool = False):
+        super().__init__(parent, padx=1, pady=1)
+        self.section_name = section_name
+        self.content = content
+        self.controller = controller
+        self.expanded = False
+        self.code_font = code_font
+        
+        self._build_ui()
+        
+        if start_expanded:
+            self.expand()
+    
+    def _build_ui(self):
+        # Header
+        header = ttk.Frame(self, style="CardHeader.TFrame", padding=(10, 8))
+        header.pack(fill="x")
+        
+        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
+        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
+        
+        # Clickable header
+        left_frame = tk.Frame(header, bg=header_bg)
+        left_frame.pack(side="left", fill="x", expand=True)
+        left_frame.bind("<Button-1>", lambda e: self.toggle())
+        
+        self.toggle_label = tk.Label(
+            left_frame,
+            text="▶",
+            font=self.controller.fonts.default_font,
+            bg=header_bg,
+            fg=header_fg,
+            cursor="hand2"
+        )
+        self.toggle_label.pack(side="left", padx=(0, 10))
+        self.toggle_label.bind("<Button-1>", lambda e: self.toggle())
+        
+        self.title_label = tk.Label(
+            left_frame,
+            text=self.section_name,
+            font=self.controller.fonts.sub_header_font,
+            bg=header_bg,
+            fg=header_fg,
+            cursor="hand2"
+        )
+        self.title_label.pack(side="left")
+        self.title_label.bind("<Button-1>", lambda e: self.toggle())
+        
+        ttk.Separator(self, orient="horizontal").pack(fill="x")
+        
+        # Content frame
+        self.content_frame = ttk.Frame(self, style="CardContent.TFrame", padding=0)
+        
+        # Text widget
+        text_bg = TEXT_BG_DARK_ALT if self.controller.current_theme == "dark" else TEXT_BG_LIGHT_ALT
+        text_fg = TEXT_FG_DARK if self.controller.current_theme == "dark" else TEXT_FG_LIGHT
+        
+        # Heuristic height
+        num_lines = self.content.count('\n') + 1
+        height = min(num_lines + 5, 50)
+        
+        font = self.controller.fonts.code_font if self.code_font else self.controller.fonts.text_area_font
+        wrap = "none" if self.code_font else "word"
+        
+        self.text_widget = tk.Text(
+            self.content_frame,
+            height=height,
+            font=font,
+            wrap=wrap,
+            background=text_bg,
+            foreground=text_fg,
+            borderwidth=0,
+            highlightthickness=0,
+            relief="flat",
+            padx=12,
+            pady=10
+        )
+        
+        if self.code_font:
+             # Add scrollbars for code
+             v_bar = ttk.Scrollbar(self.content_frame, orient="vertical", command=self.text_widget.yview)
+             h_bar = ttk.Scrollbar(self.content_frame, orient="horizontal", command=self.text_widget.xview)
+             self.text_widget.configure(yscrollcommand=v_bar.set, xscrollcommand=h_bar.set)
+             v_bar.pack(side="right", fill="y")
+             h_bar.pack(side="bottom", fill="x")
+             
+        self.text_widget.pack(side="left", fill="both", expand=True)
+        
+        self.text_widget.insert("1.0", self.content)
+        self.text_widget.config(state="disabled")
+
+    def toggle(self):
+        self.expanded = not self.expanded
+        if self.expanded:
+            self.toggle_label.config(text="▼")
+            self.content_frame.pack(fill="both", expand=True)
+        else:
+            self.toggle_label.config(text="▶")
+            self.content_frame.pack_forget()
+
+    def expand(self):
+        if not self.expanded:
+            self.toggle()
+
+
+class CollapsibleCodeCard(CardBorderFrame):
+    """A collapsible card for experiment code with an Edit button."""
+    
+    def __init__(self, parent, section_name: str, content: str, controller, 
+                 on_edit=None, on_show_explorer=None, start_expanded: bool = False):
+        super().__init__(parent, padx=1, pady=1)
+        self.section_name = section_name
+        self.content = content
+        self.controller = controller
+        self.on_edit = on_edit
+        self.on_show_explorer = on_show_explorer
+        self.expanded = False
+        
+        self._build_ui()
+        
+        if start_expanded:
+            self.expand()
+    
+    def _build_ui(self):
+        # Header
+        header = ttk.Frame(self, style="CardHeader.TFrame", padding=(10, 8))
+        header.pack(fill="x")
+        
+        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
+        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
+        
+        # Clickable Left Header (Toggle + Title)
+        left_frame = tk.Frame(header, bg=header_bg)
+        left_frame.pack(side="left", fill="x", expand=True)
+        left_frame.bind("<Button-1>", lambda e: self.toggle())
+        
+        self.toggle_label = tk.Label(
+            left_frame,
+            text="▶",
+            font=self.controller.fonts.default_font,
+            bg=header_bg,
+            fg=header_fg,
+            cursor="hand2"
+        )
+        self.toggle_label.pack(side="left", padx=(0, 10))
+        self.toggle_label.bind("<Button-1>", lambda e: self.toggle())
+        
+        self.title_label = tk.Label(
+            left_frame,
+            text=self.section_name,
+            font=self.controller.fonts.sub_header_font,
+            bg=header_bg,
+            fg=header_fg,
+            cursor="hand2"
+        )
+        self.title_label.pack(side="left")
+        self.title_label.bind("<Button-1>", lambda e: self.toggle())
+        
+        # Buttons on Right
+        btn_frame = tk.Frame(header, bg=header_bg)
+        btn_frame.pack(side="right")
+        
+        if self.on_edit:
+            edit_btn = ttk.Button(btn_frame, text="Edit", command=self.on_edit)
+            edit_btn.pack(side="left", padx=(0, 10))
+        
+        if self.on_show_explorer:
+            explorer_btn = ttk.Button(btn_frame, text="Show in Explorer", command=self.on_show_explorer)
+            explorer_btn.pack(side="left", padx=(0))
+        
+        ttk.Separator(self, orient="horizontal").pack(fill="x")
+        
+        # Content frame
+        self.content_frame = ttk.Frame(self, style="CardContent.TFrame", padding=0)
+        
+        # Text widget for code
+        text_bg = TEXT_BG_DARK_ALT if self.controller.current_theme == "dark" else TEXT_BG_LIGHT_ALT
+        text_fg = TEXT_FG_DARK if self.controller.current_theme == "dark" else TEXT_FG_LIGHT
+        
+        num_lines = self.content.count('\n') + 1
+        height = min(num_lines + 5, 40)
+        
+        self.text_widget = tk.Text(
+            self.content_frame,
+            height=height,
+            font=self.controller.fonts.code_font,
+            wrap="none",
+            background=text_bg,
+            foreground=text_fg,
+            borderwidth=0,
+            highlightthickness=0,
+            relief="flat",
+            padx=12,
+            pady=10
+        )
+        
+        # Scrollbars
+        v_bar = ttk.Scrollbar(self.content_frame, orient="vertical", command=self.text_widget.yview)
+        h_bar = ttk.Scrollbar(self.content_frame, orient="horizontal", command=self.text_widget.xview)
+        self.text_widget.configure(yscrollcommand=v_bar.set, xscrollcommand=h_bar.set)
+        v_bar.pack(side="right", fill="y")
+        h_bar.pack(side="bottom", fill="x")
+             
+        self.text_widget.pack(side="left", fill="both", expand=True)
+        
+        self.text_widget.insert("1.0", self.content)
+        self.text_widget.config(state="disabled")
+
+    def toggle(self):
+        self.expanded = not self.expanded
+        if self.expanded:
+            self.toggle_label.config(text="▼")
+            self.content_frame.pack(fill="both", expand=True)
+        else:
+            self.toggle_label.config(text="▶")
+            self.content_frame.pack_forget()
+
+    def expand(self):
+        if not self.expanded:
+            self.toggle()
+
+
+class CollapsibleFigureCard(CardBorderFrame):
+    """A collapsible card for figures (read-only)."""
+    
+    def __init__(self, parent, title: str, image_path: str, caption: str, controller, start_expanded: bool = False):
+        super().__init__(parent, padx=1, pady=1)
+        self.title_text = title
+        self.image_path = image_path
+        self.caption = caption
+        self.controller = controller
+        self.expanded = False
+        
+        self._build_ui()
+        
+        if start_expanded:
+            self.expand()
+            
+    def _build_ui(self):
+        # Header
+        header = ttk.Frame(self, style="CardHeader.TFrame", padding=(10, 8))
+        header.pack(fill="x")
+        
+        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
+        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
+        
+        left_frame = tk.Frame(header, bg=header_bg)
+        left_frame.pack(side="left", fill="x", expand=True)
+        left_frame.bind("<Button-1>", lambda e: self.toggle())
+        
+        self.toggle_label = tk.Label(
+            left_frame,
+            text="▶",
+            font=self.controller.fonts.default_font,
+            bg=header_bg,
+            fg=header_fg,
+            cursor="hand2"
+        )
+        self.toggle_label.pack(side="left", padx=(0, 10))
+        self.toggle_label.bind("<Button-1>", lambda e: self.toggle())
+        
+        self.title_label = tk.Label(
+            left_frame,
+            text=self.title_text,
+            font=self.controller.fonts.sub_header_font,
+            bg=header_bg,
+            fg=header_fg,
+            cursor="hand2"
+        )
+        self.title_label.pack(side="left")
+        self.title_label.bind("<Button-1>", lambda e: self.toggle())
+        
+        ttk.Separator(self, orient="horizontal").pack(fill="x")
+        
+        # Content frame
+        self.content_frame = ttk.Frame(self, style="CardContent.TFrame", padding=10)
+        
+        # Image rendering logic
+        try:
+            path = Path(self.image_path)
+            if not path.exists():
+                path = Path("output/experiments/plots") / path.name
+                
+            pil_img = None
+            if path.exists():
+                if path.suffix.lower() == '.pdf':
+                     doc = fitz.open(path)
+                     page = doc[0]
+                     mat = fitz.Matrix(2, 2)
+                     pix = page.get_pixmap(matrix=mat)
+                     mode = "RGBA" if pix.alpha else "RGB"
+                     pil_img = Image.frombytes(mode, [pix.width, pix.height], pix.samples)
+                     doc.close()
+                else:
+                     pil_img = Image.open(path)
+                
+                if pil_img:
+                    # Resize max width 600
+                    width = 600
+                    w_percent = (width / float(pil_img.size[0]))
+                    h_size = int((float(pil_img.size[1]) * float(w_percent)))
+                    pil_img = pil_img.resize((width, h_size), Image.Resampling.LANCZOS)
+                    
+                    self.tk_img = ImageTk.PhotoImage(pil_img) # Keep ref
+                    ttk.Label(self.content_frame, image=self.tk_img).pack(pady=(0, 10))
+            else:
+                 ttk.Label(self.content_frame, text=f"Image not found: {self.image_path}", foreground="red").pack()
+                 
+        except Exception as e:
+            print(f"Error loading image {self.image_path}: {e}")
+            ttk.Label(self.content_frame, text=f"Error loading image: {e}", foreground="red").pack()
+
+        # Caption (Read-only)
+        if self.caption:
+            caption_label = ttk.Label(
+                self.content_frame, 
+                text=self.caption,
+                font=self.controller.fonts.text_area_font,
+                wraplength=600,
+                justify="left",
+                style="CardRow.TLabel"
+            )
+            caption_label.pack(fill="x")
+            
+            # Dynamic wrap
+            def update_wrap(event):
+                 caption_label.config(wraplength=event.width - 20)
+            self.content_frame.bind("<Configure>", update_wrap)
+
+    def toggle(self):
+        self.expanded = not self.expanded
+        if self.expanded:
+            self.toggle_label.config(text="▼")
+            self.content_frame.pack(fill="both", expand=True)
+        else:
+            self.toggle_label.config(text="▶")
+            self.content_frame.pack_forget()
+
+    def expand(self):
+        if not self.expanded:
+            self.toggle()
 
 
 class ExperimentResultsScreen(BaseFrame):
@@ -43,9 +387,11 @@ class ExperimentResultsScreen(BaseFrame):
             header_file_path=Path("output/experiments/experiment_result.json"),
             info_content=EXPERIMENT_RESULTS_INFO
         )
+        
+        self.cards = []
+        self.current_code_path = None
 
     def create_content(self):
-        """Create the experiment results display."""
         self.results_container = ttk.Frame(self.scrollable_frame, style="Scrollable.TFrame")
         self.results_container.pack(fill="x", expand=True)
 
@@ -56,368 +402,88 @@ class ExperimentResultsScreen(BaseFrame):
             return
         
         try:
-            # Get selected hypothesis
-            # Get selected hypothesis
+            # Clear previous
+            for widget in self.results_container.winfo_children():
+                widget.destroy()
+            self.cards.clear()
+
+            # Load
             selected_hypothesis = HypothesisBuilder.load_hypothesis(HYPOTHESES_FILE)
-            
             if selected_hypothesis is None:
                 self._show_error("No hypothesis found")
                 return
             
-            # Load experiment result
             experiment_result_file = Path("output/experiments/experiment_result.json")
             if not experiment_result_file.exists():
                 self._show_error(f"Experiment result not found: {experiment_result_file}")
                 return
             
             experiment_result = ExperimentRunner.load_experiment_result(str(experiment_result_file))
+            self.experiment_result = experiment_result
             
-            # Display results
-            self._create_results_display(experiment_result)
+            # --- 1. Verdict Section ---
+            verdict = experiment_result.hypothesis_evaluation.verdict.upper()
+            reasoning = experiment_result.hypothesis_evaluation.reasoning
+            verdict_text = f"Verdict: {verdict}\n\nReasoning: {reasoning}"
             
-        except Exception as e:     
-            # Print full error to console for debugging
-            print(f"\n[ERROR] Failed to load experiment results:")
+            verdict_card = CollapsibleTextCard(
+                self.results_container,
+                "Verdict",
+                verdict_text,
+                self.controller,
+                start_expanded=True
+            )
+            verdict_card.pack(fill="x", pady=10)
+            self.cards.append(verdict_card)
+            
+            # --- 2. Code Section ---
+            code_path = Path("output/experiments/experiment.py")
+            if not code_path.exists():
+                 if Path("rbql_vs_q_gemini.py").exists(): code_path = Path("rbql_vs_q_gemini.py")
+            
+            self.current_code_path = code_path
+            code_content = "# No code found"
+            if code_path.exists():
+                try:
+                    with open(code_path, "r", encoding="utf-8") as f:
+                        code_content = f.read()
+                except:
+                    pass
+            
+            code_card = CollapsibleCodeCard(
+                self.results_container,
+                "Experiment Code",
+                code_content,
+                self.controller,
+                on_edit=self._open_code_in_editor,
+                on_show_explorer=self._show_code_in_explorer,
+                start_expanded=False
+            )
+            code_card.pack(fill="x", pady=10)
+            self.cards.append(code_card)
+            
+            # --- 3. Figures Section ---
+            if experiment_result.plots:
+                 for idx, plot in enumerate(experiment_result.plots, 1):
+                      fig_card = CollapsibleFigureCard(
+                           self.results_container,
+                           f"Figure {idx}: {Path(plot.filename).name}",
+                           plot.filename,
+                           plot.caption,
+                           self.controller,
+                           start_expanded=True
+                      )
+                      fig_card.pack(fill="x", pady=10)
+                      self.cards.append(fig_card)
+
+        except Exception as e:
+            import traceback
             traceback.print_exc()
-            # Show simplified error in GUI
-            self._show_error(f"Error loading experiment results: {e}")
-
-    def _show_error(self, message: str):
-        """Display an error message."""
-        # Also print to console
-        print(f"{message}")
-        
-        error_frame = ttk.Frame(self.scrollable_frame, padding="20")
-        error_frame.pack(fill="x", pady=20)
-        
-        ttk.Label(
-            error_frame,
-            text=message,
-            font=self.controller.fonts.default_font,
-            foreground="red",
-            wraplength=500
-        ).pack()
-
-    def _create_results_display(self, experiment_result):
-        """Create the results display."""
-        
-        # Store experiment result for later access (e.g., saving captions)
-        self.experiment_result = experiment_result
-        self.caption_editors = {}  # Map plot filename to text widget
-        
-        # Clear previous results
-        for widget in self.results_container.winfo_children():
-            widget.destroy()
-
-        # Hypothesis description
-        # Hypothesis description
-        hyp_container = self.create_card_frame(self.results_container, "Hypothesis")
-
-
-        hyp_label = ttk.Label(
-            hyp_container,
-            text=experiment_result.hypothesis.description,
-            font=self.controller.fonts.text_area_font,
-            justify="left",
-            style="CardRow.TLabel"
-        )
-        hyp_label.pack(anchor="w", fill="x", padx=(5, 0))
-        
-        def update_hyp_wrap(event):
-            hyp_label.config(wraplength=event.width - 20)
-        hyp_container.bind("<Configure>", update_hyp_wrap)
-
-        # Verdict section
-        # Verdict section
-        verdict_container = self.create_card_frame(self.results_container, "Verdict")
-
-        
-        verdict = experiment_result.hypothesis_evaluation.verdict
-        verdict_color = "green" if verdict.lower() == "proven" else ("red" if verdict.lower() == "disproven" else "orange")
-        ttk.Label(
-            verdict_container,
-            text=verdict.upper(),
-            font=self.controller.fonts.sub_header_font,
-            foreground=verdict_color,
-            style="CardRow.TLabel"
-        ).pack(anchor="w", padx=(5, 0))
-        
-        # Reasoning
-        reasoning_label = ttk.Label(
-            verdict_container,
-            text=experiment_result.hypothesis_evaluation.reasoning,
-            font=self.controller.fonts.text_area_font,
-            justify="left",
-            style="CardRow.TLabel"
-        )
-        reasoning_label.pack(anchor="w", pady=(5, 0), fill="x", padx=(5, 0))
-        
-        def update_reasoning_wrap(event):
-             reasoning_label.config(wraplength=event.width - 20)
-        verdict_container.bind("<Configure>", update_reasoning_wrap)
-
-
-        # --- Plots Section ---
-        self._create_plots_section()
-
-        # --- Experiment Code Section ---
-        self._create_code_section()
-
-    def _create_plots_section(self):
-        """Create section to display generated plots with editable captions."""
-        from PIL import Image, ImageTk
-        
-        # Use plots from experiment result (contains filename and caption)
-        if not hasattr(self, 'experiment_result') or not self.experiment_result.plots:
-            return
-        
-        # Store figure containers for potential removal
-        self.figure_containers = {}
-        
-        for idx, plot in enumerate(self.experiment_result.plots, start=1):
-            plot_path = Path(plot.filename)
-            
-            # Ensure the path exists (could be relative or absolute)
-            if not plot_path.exists():
-                # Try relative to project root
-                plot_path = Path("output/experiments/plots") / plot_path.name
-                if not plot_path.exists():
-                    print(f"Plot file not found: {plot.filename}")
-                    continue
-            
-            try:
-                # --- Create Figure Card ---
-                figure_card = self._create_figure_card(
-                    self.results_container,
-                    f"Figure {idx}",
-                    plot.filename
-                )
-                self.figure_containers[plot.filename] = figure_card
-                
-                # Get the content frame from the card
-                content_frame = figure_card.winfo_children()[-1]  # Last child is content frame
-                
-                # --- Plot Image ---
-                # Handle both image files and PDF files
-                if plot_path.suffix.lower() == '.pdf':
-                    # Use PyMuPDF to render PDF as image
-                    import fitz
-                    doc = fitz.open(plot_path)
-                    page = doc[0]  # Get first page
-                    # Render at 2x for quality
-                    mat = fitz.Matrix(2, 2)
-                    pix = page.get_pixmap(matrix=mat)
-                    mode = "RGBA" if pix.alpha else "RGB"
-                    pil_img = Image.frombytes(mode, [pix.width, pix.height], pix.samples)
-                    doc.close()
-                else:
-                    pil_img = Image.open(plot_path)
-                
-                # Max width 600, keep aspect ratio
-                width = 600
-                w_percent = (width / float(pil_img.size[0]))
-                h_size = int((float(pil_img.size[1]) * float(w_percent)))
-                pil_img = pil_img.resize((width, h_size), Image.Resampling.LANCZOS)
-                
-                tk_img = ImageTk.PhotoImage(pil_img)
-                
-                img_label = ttk.Label(content_frame, image=tk_img)
-                img_label.image = tk_img  # Keep reference!
-                img_label.pack(pady=(10, 10), padx=5)
-                
-                # --- Caption Section ---
-                # Editable caption using consistent styling
-                caption_container, caption_text = create_scrollable_text_area(
-                    content_frame, 
-                    height=6,
-                    font=self.controller.fonts.text_area_font
-                )
-                caption_container.pack(fill="x", padx=5, pady=(0, 5))
-                caption_text.insert("1.0", plot.caption or "")
-                
-                # Store reference for saving later
-                self.caption_editors[plot.filename] = caption_text
-                
-            except Exception as e:
-                print(f"Error loading plot {plot_path}: {e}")
-    
-    def _create_figure_card(self, parent, title: str, plot_filename: str):
-        """Create a card frame for a figure with a delete button in the header."""
-        from ..base_frame import CardBorderFrame
-        card = CardBorderFrame(parent, padx=1, pady=1)
-        card.pack(fill="x", padx=0, pady=10)
-        
-        header = ttk.Frame(card, style="CardHeader.TFrame", padding=(10, 6))
-        header.pack(fill="x")
-        
-        # Title on the left
-        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
-        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
-        tk.Label(
-            header, 
-            text=title, 
-            font=self.controller.fonts.sub_header_font,
-            bg=header_bg,
-            fg=header_fg
-        ).pack(side="left")
-        
-        # Filename in gray brackets
-        filename_only = Path(plot_filename).name
-        tk.Label(
-            header,
-            text=f"({filename_only})",
-            font=self.controller.fonts.default_font,
-            bg=header_bg,
-            fg=SECONDARY_TEXT_DARK
-        ).pack(side="left", padx=(8, 0))
-        
-        # Delete button on right (minimalistic with hover effect)
-        delete_color = DELETE_ICON_DARK if self.controller.current_theme == "dark" else DELETE_ICON_LIGHT
-        hover_color = HOVER_DANGER_DARK if self.controller.current_theme == "dark" else HOVER_DANGER_LIGHT
-        
-        delete_btn = tk.Label(
-            header,
-            text="✕",
-            font=("Segoe UI", 14),
-            bg=header_bg,
-            fg=delete_color,
-            cursor="hand2"
-        )
-        delete_btn.pack(side="right", padx=(0, 5))
-        
-        # Hover effects
-        delete_btn.bind("<Enter>", lambda e: delete_btn.config(fg=hover_color))
-        delete_btn.bind("<Leave>", lambda e: delete_btn.config(fg=delete_color))
-        delete_btn.bind("<Button-1>", lambda e, fn=plot_filename, t=title: self._delete_figure(fn, t))
-        
-        ttk.Separator(card, orient="horizontal").pack(fill="x")
-        
-        content = ttk.Frame(card, style="CardContent.TFrame", padding=10)
-        content.pack(fill="x")
-        
-        return card
-    
-    def _delete_figure(self, plot_filename: str, title: str):
-        """Delete a figure after confirmation."""
-        confirm = tk.messagebox.askyesno(
-            "Delete Figure",
-            f"Are you sure you want to delete {title}?"
-        )
-        
-        if confirm:
-            # Remove from experiment result
-            self.experiment_result.plots = [
-                p for p in self.experiment_result.plots if p.filename != plot_filename
-            ]
-            
-            # Remove from caption editors
-            if plot_filename in self.caption_editors:
-                del self.caption_editors[plot_filename]
-            
-            # Remove the UI card
-            if plot_filename in self.figure_containers:
-                self.figure_containers[plot_filename].destroy()
-                del self.figure_containers[plot_filename]
-            
-            # Save the updated experiment result
-            self._save_experiment_result()
-            print(f"Deleted {title}")
-
-    def _create_code_section(self):
-        """Create section to view/edit experiment code (styled as a card)."""
-        
-        # === Card container ===
-        from ..base_frame import CardBorderFrame
-        card = CardBorderFrame(self.results_container, padx=1, pady=1)
-        card.pack(fill="both", expand=True, pady=10)
-        
-        # === Header with title and buttons ===
-        header = ttk.Frame(card, style="CardHeader.TFrame", padding=(10, 6))
-        header.pack(fill="x")
-        
-        # Title on left
-        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
-        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
-        tk.Label(
-            header, 
-            text="Experiment Code", 
-            font=self.controller.fonts.sub_header_font,
-            bg=header_bg,
-            fg=header_fg
-        ).pack(side="left")
-        
-        # Buttons on right
-        btn_frame = ttk.Frame(header, style="CardHeader.TFrame")
-        btn_frame.pack(side="right")
-        
-        ttk.Button(
-            btn_frame, 
-            text="Execute", 
-            command=self._execute_code
-        ).pack(side="right", padx=(5, 0))
-        
-        ttk.Button(
-            btn_frame, 
-            text="Open in Editor", 
-            command=self._open_code_in_editor
-        ).pack(side="right")
-        
-        ttk.Separator(card, orient="horizontal").pack(fill="x")
-        
-        # === Content: Code editor ===
-        content = ttk.Frame(card, style="CardContent.TFrame", padding=0)
-        content.pack(fill="both", expand=True)
-
-        # Container for text + scrollbars (no border)
-        editor_container = ttk.Frame(content, style="CardRow.TFrame")
-        editor_container.pack(fill="both", expand=True)
-        
-        # Scrollbars
-        v_scroll = ttk.Scrollbar(editor_container, orient="vertical")
-        h_scroll = ttk.Scrollbar(editor_container, orient="horizontal")
-        
-        self.code_editor = tk.Text(
-            editor_container, 
-            height=30,
-            font=self.controller.fonts.code_font,
-            highlightthickness=0,
-            borderwidth=0,
-            relief="flat",
-            wrap="none",
-            padx=10,
-            pady=5,
-            yscrollcommand=v_scroll.set,
-            xscrollcommand=h_scroll.set
-        )
-        
-        v_scroll.config(command=self.code_editor.yview)
-        h_scroll.config(command=self.code_editor.xview)
-        
-        # Layout
-        v_scroll.pack(side="right", fill="y")
-        h_scroll.pack(side="bottom", fill="x")
-        self.code_editor.pack(side="left", fill="both", expand=True)
-        
-        # Load code
-        code_path = Path("output/experiments/experiment.py")
-        if not code_path.exists():
-            if Path("rbql_vs_q_gemini.py").exists():
-                code_path = Path("rbql_vs_q_gemini.py")
-        
-        if code_path.exists():
-            try:
-                with open(code_path, "r", encoding="utf-8") as f:
-                    code_content = f.read()
-                self.code_editor.insert("1.0", code_content)
-                self.current_code_path = code_path
-            except Exception as e:
-                self.code_editor.insert("1.0", f"# Error loading code: {e}")
-        else:
-            self.code_editor.insert("1.0", "# No experiment code found.")
+            self._show_error(f"Error loading results: {e}")
 
     def _open_code_in_editor(self):
         """Open the experiment code file in the system's default editor."""
-        if not hasattr(self, 'current_code_path') or not self.current_code_path:
+        if not self.current_code_path or not self.current_code_path.exists():
             tk.messagebox.showwarning("No Code", "No experiment code file found.")
             return
         
@@ -434,259 +500,111 @@ class ExperimentResultsScreen(BaseFrame):
         except Exception as e:
             tk.messagebox.showerror("Error", f"Could not open file: {e}")
 
-    def _execute_code(self):
-        """Execute the experiment code (save and run)."""
-        if not tk.messagebox.askyesno(
-            "Execute Code",
-            "Do you want to execute the experiment code?\n\n"
-            "This will save and run the code, then refresh the results."
-        ):
+    def _show_code_in_explorer(self):
+        """Reveal the experiment code file in the file explorer."""
+        if not self.current_code_path or not self.current_code_path.exists():
             return
+             
+        print(f"Showing {self.current_code_path} in explorer...")
+        path = os.path.abspath(self.current_code_path)
+        path = os.path.normpath(path)
         
-        # First save any edits
-        self.save_code()
-        # Then run the code
-        self._rerun_experiment_code()
+        if platform.system() == 'Windows':
+            subprocess.call(['explorer', '/select,', path])
+        elif platform.system() == 'Darwin':
+            subprocess.call(['open', '-R', path])
+        else:
+            # Linux - try to just open the directory
+            subprocess.call(['xdg-open', os.path.dirname(path)])
 
-    def save_code(self):
-        """Save the code from editor to file."""
-        if hasattr(self, 'current_code_path') and self.current_code_path:
-            try:
-                content = self.code_editor.get("1.0", "end-1c")
-                with open(self.current_code_path, "w", encoding="utf-8") as f:
-                    f.write(content)
-                print(f"Saved code to {self.current_code_path}")
-            except Exception as e:
-                print(f"Error saving code: {e}")
-    
-    def _save_captions(self):
-        """Save captions from editors back to experiment result and file."""
-        if not hasattr(self, 'experiment_result') or not hasattr(self, 'caption_editors'):
-            return
-        
-        try:
-            # Update caption values from text editors
-            for plot in self.experiment_result.plots:
-                if plot.filename in self.caption_editors:
-                    editor = self.caption_editors[plot.filename]
-                    plot.caption = editor.get("1.0", "end-1c").strip()
+    def _show_error(self, message: str):
+        error_frame = ttk.Frame(self.scrollable_frame, padding="20")
+        error_frame.pack(fill="x", pady=20)
+        ttk.Label(error_frame, text=message, foreground="red", wraplength=500).pack()
+
+    def on_show(self):
+        if not hasattr(self, '_results_loaded') or not self._results_loaded:
+            self._load_and_display_results()
+            self._results_loaded = True
             
-            # Save updated experiment result to JSON
-            self._save_experiment_result()
-            print("Saved plot captions")
-        except Exception as e:
-            print(f"Error saving captions: {e}")
-    
-    def _save_experiment_result(self):
-        """Save the experiment result back to JSON file."""
-        if not hasattr(self, 'experiment_result'):
-            return
-        
-        try:
-            # Save using ExperimentRunner
-            runner = ExperimentRunner()
-            runner.save_experiment_result(self.experiment_result)
-        except Exception as e:
-            print(f"Error saving experiment result: {e}")
-
     def on_next(self):
-        """Proceed or gather evidence."""
-        # Save code and captions first
-        self.save_code()
-        self._save_captions()
-        
-        # Check if evidence already gathered
         from phases.paper_writing.evidence_manager import EVIDENCE_FILE
         if Path(EVIDENCE_FILE).exists():
             super().on_next()
         else:
             self._run_generation()
 
-    def on_regenerate(self):
-        """Regenerate the experiment code in-place."""
-        if not tk.messagebox.askyesno(
-            "Regenerate Experiment",
-            "Do you want to regenerate the experiment?\n\n"
-            "This will re-implement the experiment code based on the plan and run it."
-        ):
-            return
-        
-        self._save_captions()
-        
-        popup = ProgressPopup(self.controller, "Regenerating Experiment")
-        
-        def task():
-            try:
-                self.after(0, lambda: popup.update_status("Loading resources..."))
-                
-                selected_hypothesis = HypothesisBuilder.load_hypothesis(HYPOTHESES_FILE)
-                paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
-                
-                runner = ExperimentRunner()
-                
-                self.after(0, lambda: popup.update_status("Generating new code..."))
-                result = runner.run_experiment(
-                    hypothesis=selected_hypothesis, 
-                    paper_concept=paper_concept,
-                    load_existing_plan=True,
-                    load_existing_code=False  # Generate NEW code from plan
-                )
-                
-                # Reload screen results
-                self.after(0, lambda: self._on_rerun_success(popup))
-                
-            except Exception as e:
-                traceback.print_exc()
-                self.after(0, lambda err=str(e): popup.show_error(err))
-                
-        thread = threading.Thread(target=task, daemon=True)
-        thread.start()
-
-    def _rerun_experiment_code(self):
-        """Re-run the experiment using the current (potentially edited) code."""
-        self.save_code()
-        self._save_captions()
-        
-        # Use existing loading logic logic but trigger re-run
-        popup = ProgressPopup(self.controller, "Re-running Experiment")
-        
-        def task():
-            try:
-                self.after(0, lambda: popup.update_status("Loading resources..."))
-                
-                # Load necessary objects
-                # Load necessary objects
-                selected_hypothesis = HypothesisBuilder.load_hypothesis(HYPOTHESES_FILE)
-                paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
-                
-                # Check specifics for manual file override (hacky but needed for this specific task context)
-                # If we are viewing rbql_vs_q_gemini.py results, we might not have a formal 'experiment result' structure 
-                # fully aligned if it was run manually. But let's assume standard flow for the runner.
-                
-                runner = ExperimentRunner()
-                
-                self.after(0, lambda: popup.update_status("Executing code..."))
-                result = runner.run_experiment(
-                    hypothesis=selected_hypothesis, 
-                    paper_concept=paper_concept,
-                    load_existing_plan=True, 
-                    load_existing_code=True # CRITICAL FLAG
-                )
-                
-                # Reload screen results
-                self.after(0, lambda: self._on_rerun_success(popup))
-                
-            except Exception as e:
-                traceback.print_exc()
-                self.after(0, lambda err=str(e): popup.show_error(err))
-                
-        thread = threading.Thread(target=task, daemon=True)
-        thread.start()
-
-    def _on_rerun_success(self, popup):
-        popup.close()
-        # Force reload of results
-        self._load_and_display_results()
-
     def _run_generation(self):
-        """Gather evidence for paper writing with progress popup."""
-        popup = ProgressPopup(self.controller, "Gathering Evidence")
+        self._execute_evidence_gathering()
         
-        def task():
+    def _execute_evidence_gathering(self):
+         popup = ProgressPopup(self.controller, "Gathering Evidence")
+         def task():
             try:
-                # Load paper concept
-                self.after(0, lambda: popup.update_status("Loading paper concept"))
+                self.after(0, lambda: popup.update_status("Loading resources..."))
                 paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
+                experiment_result = ExperimentRunner.load_experiment_result("output/experiments/experiment_result.json")
+                from phases.paper_search.literature_search import LiteratureSearch
+                papers = LiteratureSearch.load_papers("output/papers.json")
                 
-                # Load experiment result
-                self.after(0, lambda: popup.update_status("Loading experiment results"))
-                experiment_result_file = "output/experiments/experiment_result.json"
-                experiment_result = ExperimentRunner.load_experiment_result(experiment_result_file)
+                pipeline = PaperWritingPipeline()
+                self.after(0, lambda: popup.update_status("Indexing papers..."))
+                pipeline.index_papers(papers)
                 
-                # Load papers with markdown
-                self.after(0, lambda: popup.update_status("Loading indexed papers"))
-                papers_with_markdown = LiteratureSearch.load_papers("output/papers.json")
-                
-                # Load user requirements
-                user_requirements = None
-                try:
-                    user_requirements = UserRequirements.load_user_requirements("user_files/user_requirements.md")
-                except:
-                    pass
-                
-                # Initialize pipeline and gather evidence
-                # This only gathers evidence and saves to evidence.json
-                # Paper writing happens later on Paper Draft screen
-                paper_writing_pipeline = PaperWritingPipeline()
-                
-                def status_update(msg):
-                    self.after(0, lambda: popup.update_status(msg))
-                
-                # Index papers first
-                self.after(0, lambda: popup.update_status("Indexing papers for evidence search"))
-                paper_writing_pipeline.index_papers(papers_with_markdown)
-                
-                # Gather evidence for each section
                 from phases.paper_writing.evidence_gatherer import EvidenceGatherer
                 from phases.paper_writing.evidence_manager import save_evidence
                 from phases.paper_writing.data_models import Section
                 from settings import Settings
                 
-                gatherer = EvidenceGatherer(
-                    indexed_corpus=paper_writing_pipeline._indexed_corpus or [],
-                )
-                
+                gatherer = EvidenceGatherer(pipeline._indexed_corpus or [])
                 evidence_by_section = {}
                 
-                for section_type in (
-                    Section.METHODS,
-                    Section.RESULTS,
-                    Section.DISCUSSION,
-                    Section.INTRODUCTION,
-                    Section.RELATED_WORK,
-                    Section.CONCLUSION,
-                ):
-                    self.after(0, lambda s=section_type: popup.update_status(f"Gathering evidence for {s.value}"))
-                    default_queries = paper_writing_pipeline.query_builder.build_default_queries(
-                        section_type, paper_concept, experiment_result
-                    )
-                    
-                    evidence, _ = gatherer.gather_evidence(
-                        section_type=section_type,
-                        context=paper_concept,
-                        experiment=experiment_result,
-                        default_queries=default_queries,
-                        max_iterations=Settings.EVIDENCE_AGENTIC_ITERATIONS,
-                        initial_chunks=Settings.EVIDENCE_INITIAL_CHUNKS,
-                        filtered_chunks=Settings.EVIDENCE_FILTERED_CHUNKS,
-                        user_requirements=user_requirements,
-                    )
-                    
-                    evidence_by_section[section_type] = evidence
+                sections = [Section.METHODS, Section.RESULTS, Section.DISCUSSION, Section.INTRODUCTION, Section.RELATED_WORK, Section.CONCLUSION]
                 
-                # Save evidence for Evidence Manager screen
-                self.after(0, lambda: popup.update_status("Saving evidence"))
+                for section in sections:
+                     self.after(0, lambda s=section: popup.update_status(f"Gathering evidence for {s.value}"))
+                     default_queries = pipeline.query_builder.build_default_queries(section, paper_concept, experiment_result)
+                     evidence, _ = gatherer.gather_evidence(
+                         section_type=section,
+                         context=paper_concept,
+                         experiment=experiment_result,
+                         default_queries=default_queries,
+                         max_iterations=Settings.EVIDENCE_AGENTIC_ITERATIONS,
+                         initial_chunks=Settings.EVIDENCE_INITIAL_CHUNKS,
+                         filtered_chunks=Settings.EVIDENCE_FILTERED_CHUNKS,
+                         user_requirements=None
+                     )
+                     evidence_by_section[section] = evidence
+                
                 save_evidence(evidence_by_section)
-                
-                # Success - proceed to Evidence Screen (not Paper Draft)
                 self.after(0, lambda: self._on_generation_success(popup))
-                
             except Exception as e:
-                import traceback
-                traceback.print_exc()
-                self.after(0, lambda err=str(e): popup.show_error(err))
-        
-        thread = threading.Thread(target=task, daemon=True)
-        thread.start()
+                 import traceback
+                 traceback.print_exc()
+                 self.after(0, lambda err=str(e): popup.show_error(err))
+         threading.Thread(target=task, daemon=True).start()
 
-    def _on_generation_success(self, popup: ProgressPopup):
-        """Handle successful generation."""
+    def _on_generation_success(self, popup):
         popup.close()
         self.controller.next_screen()
-    
-    def on_show(self):
-        """Called when screen is shown - load results if not already loaded."""
-        # Only load if we haven't loaded yet
-        if not hasattr(self, '_results_loaded') or not self._results_loaded:
-            self._load_and_display_results()
-            self._results_loaded = True
+
+    def on_regenerate(self):
+         if not tk.messagebox.askyesno("Regenerate", "Re-run the experiment from scratch?\nThis will generate and execute new code based on the current experiment plan."):
+              return
+         
+         popup = ProgressPopup(self.controller, "Regenerating Experiment")
+         def task():
+              try:
+                   self.after(0, lambda: popup.update_status("Regenerating..."))
+                   hypothesis = HypothesisBuilder.load_hypothesis(HYPOTHESES_FILE)
+                   concept = PaperConception.load_paper_concept("output/paper_concept.md")
+                   runner = ExperimentRunner()
+                   runner.run_experiment(hypothesis, concept, load_existing_plan=True, load_existing_code=False)
+                   self.after(0, lambda: self._on_rerun_success(popup))
+              except Exception as e:
+                   self.after(0, lambda err=str(e): popup.show_error(err))
+         threading.Thread(target=task, daemon=True).start()
+
+    def _on_rerun_success(self, popup):
+         popup.close()
+         self._load_and_display_results()

@@ -5,7 +5,7 @@ import re
 import json
 from settings import Settings
 from dataclasses import asdict, is_dataclass
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Any
 from pathlib import Path
 from pydantic import BaseModel
 from utils.file_utils import save_json, load_json, save_markdown, load_markdown

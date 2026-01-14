@@ -2,12 +2,15 @@ import tkinter as tk
 from tkinter import ttk
 import threading
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
-from ..base_frame import BaseFrame, ProgressPopup, create_scrollable_text_area
+from ..base_frame import BaseFrame, ProgressPopup, CardBorderFrame
 from ..info_texts import HYPOTHESIS_INFO
-from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
-from phases.hypothesis_generation.hypothesis_builder import Hypothesis
+from ..theme_colors import (
+    CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT,
+    TEXT_BG_DARK_ALT, TEXT_BG_LIGHT_ALT, TEXT_FG_DARK, TEXT_FG_LIGHT,
+)
+from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder, Hypothesis
 from phases.context_analysis.paper_conception import PaperConception
 from phases.context_analysis.user_requirements import UserRequirements
 from phases.experimentation.experiment_runner import ExperimentRunner
@@ -15,21 +18,114 @@ from settings import Settings
 
 
 HYPOTHESIS_FILE = "output/hypothesis.md"
-
-# Output file to check for dynamic button text
 EXPERIMENT_PLAN_FILE = Path("output/experiments/experiment_plan.md")
+
+
+class CollapsibleHypothesisCard(CardBorderFrame):
+    """A collapsible card for hypothesis sections (read-only)."""
+    
+    def __init__(self, parent, section_name: str, content: str, controller, start_expanded: bool = False):
+        super().__init__(parent, padx=1, pady=1)
+        self.section_name = section_name
+        self.content = content
+        self.controller = controller
+        self.expanded = False
+        
+        self._build_ui()
+        
+        if start_expanded:
+            self.expand()
+    
+    def _build_ui(self):
+        # Header frame
+        header = ttk.Frame(self, style="CardHeader.TFrame", padding=(10, 8))
+        header.pack(fill="x")
+        
+        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
+        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
+        
+        # Left side: toggle + title (clickable)
+        left_frame = tk.Frame(header, bg=header_bg)
+        left_frame.pack(side="left", fill="x", expand=True)
+        left_frame.bind("<Button-1>", lambda e: self.toggle())
+        
+        # Toggle indicator
+        self.toggle_label = tk.Label(
+            left_frame,
+            text="▶",
+            font=self.controller.fonts.default_font,
+            bg=header_bg,
+            fg=header_fg,
+            cursor="hand2"
+        )
+        self.toggle_label.pack(side="left", padx=(0, 10))
+        self.toggle_label.bind("<Button-1>", lambda e: self.toggle())
+        
+        # Section title
+        self.title_label = tk.Label(
+            left_frame,
+            text=self.section_name,
+            font=self.controller.fonts.sub_header_font,
+            bg=header_bg,
+            fg=header_fg,
+            cursor="hand2"
+        )
+        self.title_label.pack(side="left")
+        self.title_label.bind("<Button-1>", lambda e: self.toggle())
+        
+        ttk.Separator(self, orient="horizontal").pack(fill="x")
+        
+        # Content frame (hidden by default)
+        self.content_frame = ttk.Frame(self, style="CardContent.TFrame", padding=0)
+        
+        # Text widget to display content
+        text_bg = TEXT_BG_DARK_ALT if self.controller.current_theme == "dark" else TEXT_BG_LIGHT_ALT
+        text_fg = TEXT_FG_DARK if self.controller.current_theme == "dark" else TEXT_FG_LIGHT
+        
+        # Scrollbar
+        scrollbar = ttk.Scrollbar(self.content_frame, orient="vertical")
+        scrollbar.pack(side="right", fill="y")
+        
+        self.text_widget = tk.Text(
+            self.content_frame,
+            height=12,
+            font=self.controller.fonts.text_area_font,
+            wrap="word",
+            background=text_bg,
+            foreground=text_fg,
+            borderwidth=0,
+            highlightthickness=0,
+            relief="flat",
+            padx=12,
+            pady=10,
+            yscrollcommand=scrollbar.set
+        )
+        self.text_widget.pack(side="left", fill="both", expand=True)
+        scrollbar.config(command=self.text_widget.yview)
+        
+        self.text_widget.insert("1.0", self.content)
+        self.text_widget.config(state="disabled")  # Read-only
+    
+    def toggle(self):
+        """Toggle expansion state."""
+        self.expanded = not self.expanded
+        if self.expanded:
+            self.toggle_label.config(text="▼")
+            self.content_frame.pack(fill="both", expand=True)
+        else:
+            self.toggle_label.config(text="▶")
+            self.content_frame.pack_forget()
+    
+    def expand(self):
+        """Force expand."""
+        if not self.expanded:
+            self.toggle()
 
 
 class HypothesisScreen(BaseFrame):
     def __init__(self, parent, controller):
-        self.hypotheses: list[Hypothesis] = []
         self.current_hypothesis: Optional[Hypothesis] = None
-        self.current_hypothesis_index: int = 0
-        
-        # Text widgets for each field
-        self.description_text: tk.Text
-        self.rationale_text: tk.Text
-        self.success_criteria_text: tk.Text
+        self.cards: list[CollapsibleHypothesisCard] = []
         
         # Dynamic button text based on whether output file exists
         next_text = "Continue" if EXPERIMENT_PLAN_FILE.exists() else "Generate Experiment Plan"
@@ -49,34 +145,18 @@ class HypothesisScreen(BaseFrame):
        pass
 
     def _load_hypothesis(self):
-        """Load hypothesis from file or create empty one for manual entry."""
+        """Load hypothesis from file or create empty one."""
         if Path(HYPOTHESIS_FILE).exists():
             try:
                 self.current_hypothesis = HypothesisBuilder.load_hypothesis(HYPOTHESIS_FILE)
                 if self.current_hypothesis:
-                    # Create the editable sections
-                    self._create_hypothesis_fields()
+                    self._create_hypothesis_cards()
                     return
             except Exception as e:
                 print(f"Error loading hypothesis: {e}")
         
-        # No file or load failed, create empty hypothesis
-        self._create_empty_hypothesis()
-    
-    def _create_empty_hypothesis(self):
-        """Create an empty hypothesis for manual entry."""
-        empty_hypothesis = Hypothesis(
-            id="hyp_manual_001",
-            description="",
-            rationale="",
-            success_criteria="",
-            selected_for_experimentation=True
-        )
-        
-        self.current_hypothesis = empty_hypothesis
-        
-        # Create the editable sections
-        self._create_hypothesis_fields()
+        # No file or load failed
+        self._show_error("No hypothesis found. Please complete previous steps.")
     
     def on_show(self):
         """Called when screen is shown - load hypothesis if not already loaded."""
@@ -96,126 +176,38 @@ class HypothesisScreen(BaseFrame):
             wraplength=500
         ).pack()
 
-    def _create_hypothesis_fields(self):
-        """Create editable fields for the hypothesis."""
+    def _create_hypothesis_cards(self):
+        """Create collapsible cards for the hypothesis fields."""
         if self.current_hypothesis is None:
             return
+            
         hyp = self.current_hypothesis
         
-        self.description_text = self._create_section(
-            "Description", 
-            hyp.description, 
-            height=12
-        )
+        # Clear existing cards
+        for card in self.cards:
+            card.destroy()
+        self.cards.clear()
         
-        self.rationale_text = self._create_section(
-            "Rationale", 
-            hyp.rationale, 
-            height=12
-        )
+        sections = [
+            ("Description", hyp.description),
+            ("Rationale", hyp.rationale),
+            ("Success Criteria", hyp.success_criteria)
+        ]
         
-        self.success_criteria_text = self._create_section(
-            "Success Criteria", 
-            hyp.success_criteria, 
-            height=12
-        )
-
-    def _create_section(self, title: str, content: str, height: int = 4) -> tk.Text:
-        """Create a labeled section with an editable text area inside a card."""
-        from ..base_frame import CardBorderFrame
-        from ..theme_colors import CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT
-        
-        # Card Container
-        card = CardBorderFrame(self.scrollable_frame, padx=1, pady=1)
-        card.pack(fill="x", pady=10)
-        
-        # Header
-        header = ttk.Frame(card, style="CardHeader.TFrame", padding=(10, 6))
-        header.pack(fill="x")
-        
-        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
-        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
-        
-        tk.Label(
-            header, 
-            text=title, 
-            font=self.controller.fonts.sub_header_font,
-            bg=header_bg,
-            fg=header_fg
-        ).pack(side="left")
-        
-        ttk.Separator(card, orient="horizontal").pack(fill="x")
-        
-        # Content
-        content_frame = ttk.Frame(card, style="CardContent.TFrame", padding=0)
-        content_frame.pack(fill="both", expand=True)
-        
-        # Text area container
-        inner = ttk.Frame(content_frame, style="CardRow.TFrame")
-        inner.pack(fill="both", expand=True)
-
-        scrollbar = ttk.Scrollbar(inner, orient="vertical")
-        scrollbar.pack(side="right", fill="y")
-        
-        text_widget = tk.Text(
-            inner,
-            height=height,
-            wrap="word",
-            font=self.controller.fonts.text_area_font,
-            padx=10,
-            pady=10,
-            highlightthickness=0,
-            borderwidth=0,
-            relief="flat",
-            yscrollcommand=scrollbar.set
-        )
-        text_widget.pack(side="left", fill="both", expand=True)
-        scrollbar.config(command=text_widget.yview)
-        
-        text_widget.insert("1.0", content)
-        
-        self.controller.apply_theme_colors(text_widget)
-        
-        return text_widget
-
-    def _save_hypothesis(self) -> Hypothesis | None:
-        """Save the edited hypothesis and return it."""
-        if self.current_hypothesis is None:
-            return None
-        
-        # Get content from text widgets
-        description = self.description_text.get("1.0", "end-1c").strip()
-        rationale = self.rationale_text.get("1.0", "end-1c").strip()
-        success_criteria = self.success_criteria_text.get("1.0", "end-1c").strip()
-        
-        # Update hypothesis object
-        updated_hypothesis = Hypothesis(
-            id=self.current_hypothesis.id,
-            description=description,
-            rationale=rationale,
-            success_criteria=success_criteria,
-            selected_for_experimentation=self.current_hypothesis.selected_for_experimentation
-        )
-        
-        # Save back to file
-        try:
-            HypothesisBuilder.save_hypothesis(updated_hypothesis, HYPOTHESIS_FILE)
-            self.current_hypothesis = updated_hypothesis # Update current
-            print(f"[Hypothesis] Saved changes to {HYPOTHESIS_FILE}")
-        except Exception as e:
-            print(f"[Hypothesis] Failed to save: {e}")
-        
-        return updated_hypothesis
+        for i, (title, content) in enumerate(sections):
+            card = CollapsibleHypothesisCard(
+                self.scrollable_frame,
+                title,
+                content,
+                self.controller,
+                start_expanded=True  # All expanded by default
+            )
+            card.pack(fill="x", pady=(10 if i == 0 else 0, 8))
+            self.cards.append(card)
 
     def on_next(self):
-        """Save the edited hypothesis and proceed or generate experiment plan."""
+        """Proceed to next screen or generate experiment plan."""
         if self.current_hypothesis is None:
-            super().on_next()
-            return
-        
-        # Save first
-        updated_hypothesis = self._save_hypothesis()
-        if updated_hypothesis is None:
             super().on_next()
             return
         
@@ -223,7 +215,7 @@ class HypothesisScreen(BaseFrame):
         if EXPERIMENT_PLAN_FILE.exists():
             super().on_next()
         else:
-            self._run_generation(updated_hypothesis)
+            self._run_generation(self.current_hypothesis)
 
     def _run_generation(self, hypothesis: Hypothesis):
         """Run experiment plan generation with progress popup."""
@@ -237,26 +229,20 @@ class HypothesisScreen(BaseFrame):
                 
                 # Load user requirements
                 self.after(0, lambda: popup.update_status("Loading user requirements"))
-                from phases.context_analysis.user_requirements import UserRequirements
-                user_requirements = None
                 try:
                     user_requirements = UserRequirements.load_user_requirements("user_files/user_requirements.md")
                 except FileNotFoundError:
-                    print("User requirements file not found, proceeding without it")
-                except Exception as e:
-                    print(f"Warning: Failed to load user requirements: {e}")
+                    user_requirements = None
                 
-                # Load raw code files (needed for experiment plan - paper concept already has snippets)
+                # Load code files
                 self.after(0, lambda: popup.update_status("Loading code files"))
                 from phases.context_analysis.user_code_analysis import CodeAnalyzer
-                from settings import Settings
                 user_code = None
                 try:
                     code_analyzer = CodeAnalyzer(model_name=Settings.CODE_ANALYSIS_MODEL)
                     user_code = code_analyzer.load_code_files("user_files")
-                except Exception as e:
-                    print(f"Warning: Failed to load code files: {e}")
-                    user_code = None
+                except Exception:
+                    pass
                 
                 # Generate experiment plan
                 self.after(0, lambda: popup.update_status("Generating experiment plan"))
@@ -311,7 +297,6 @@ class HypothesisScreen(BaseFrame):
                 
                 # 3. Generate Hypothesis
                 self.after(0, lambda: popup.update_status("Generating hypothesis"))
-                # This automatically saves to file
                 builder.create_hypothesis_from_user_input(user_requirements)
                 
                 # 4. Reload UI
@@ -328,19 +313,12 @@ class HypothesisScreen(BaseFrame):
     def _on_regeneration_complete(self, popup: ProgressPopup):
         """Handle regeneration completion."""
         popup.close()
-        # Force reload from file
+        # Force reload from file (which was updated by builder)
+        for widget in self.scrollable_frame.winfo_children():
+            widget.destroy()
+        
+        self.current_hypothesis = None
         self._load_hypothesis()
         
-        # Refresh widgets
-        if self.current_hypothesis:
-             if hasattr(self, 'description_text'):
-                 self.description_text.delete("1.0", "end")
-                 self.description_text.insert("1.0", self.current_hypothesis.description)
-                 
-                 self.rationale_text.delete("1.0", "end")
-                 self.rationale_text.insert("1.0", self.current_hypothesis.rationale)
-                 
-                 self.success_criteria_text.delete("1.0", "end")
-                 self.success_criteria_text.insert("1.0", self.current_hypothesis.success_criteria)
-             else:
-                 self._create_hypothesis_fields()
+        # Re-apply theme colors
+        self.controller.apply_theme_colors(self)
