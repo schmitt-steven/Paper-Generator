@@ -21,7 +21,7 @@ from phases.context_analysis.user_requirements import UserRequirements
 
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from utils.pdf_downloader import PDFDownloader
-from utils.pdf_converter_pymupdf_marker import PDFConverter
+from utils.pdf_converter import PDFConverter
 from settings import Settings
 
 
