@@ -5,7 +5,7 @@ import re
 
 @dataclass
 class RankingScores:
-    """Stores ranking score components for a paper"""
+    """Stores ranking score for a paper"""
     relevance_score: float  # 0-1: Semantic similarity to context
     citation_score: float   # 0-1: Age-aware citation impact
     recency_score: float    # 0-1: Publication recency
@@ -27,6 +27,7 @@ class Paper:
     citation_count: Optional[int] = None
     bibtex: Optional[str] = None
     markdown_text: Optional[str] = None
+    conclusion: Optional[str] = None  # Extracted from markdown if available
     ranking: Optional[RankingScores] = None
     title_abstract_embedding: Optional[List[float]] = None  # Embedding of title + abstract for clustering/filtering
     is_open_access: bool = False

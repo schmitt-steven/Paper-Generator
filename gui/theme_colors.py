@@ -19,7 +19,7 @@ CARD_HEADER_BG_LIGHT = "#e8eef2"
 NAVBAR_BG_DARK = "#0f0f0f"
 NAVBAR_BG_LIGHT = "#e8eef2"
 
-CARD_BG_DARK = None  # Uses default theme
+CARD_BG_DARK = "#212121"  # Uses default theme
 CARD_BG_LIGHT = "#f0f5f8"
 
 # =============================================================================
@@ -31,7 +31,7 @@ CANVAS_BG_LIGHT = "#f0f5f8"
 # =============================================================================
 # LISTBOX (DROPDOWN) COLORS
 # =============================================================================
-LISTBOX_BG_DARK = "#2b2b2b"
+LISTBOX_BG_DARK = "#0f0f0f"
 LISTBOX_BG_LIGHT = "#ffffff"
 
 LISTBOX_FG_DARK = "#ffffff"
@@ -49,8 +49,8 @@ POPDOWN_BG_LIGHT = "#ffffff"
 # =============================================================================
 # TEXT AREA COLORS
 # =============================================================================
-TEXT_BG_DARK = "#2d2c2e"
-TEXT_BG_LIGHT = "#eff4f6" #"#eff3f6"
+TEXT_BG_DARK = "#1a1a1a"
+TEXT_BG_LIGHT = "#eff4f6"
 
 TEXT_BG_DARK_ALT = "#242424"
 TEXT_BG_LIGHT_ALT = "#ffffff"

@@ -98,10 +98,6 @@ class CollapsibleDraftCard(CardBorderFrame):
         text_bg = getattr(self.controller, '_text_bg_dark_alt', TEXT_BG_DARK_ALT) if self.controller.current_theme == "dark" else getattr(self.controller, '_text_bg_light_alt', TEXT_BG_LIGHT_ALT)
         text_fg = getattr(self.controller, '_text_fg_dark', TEXT_FG_DARK) if self.controller.current_theme == "dark" else getattr(self.controller, '_text_fg_light', TEXT_FG_LIGHT)
         
-        # Heuristic height
-        num_lines = self.content.count('\n') + 1
-        height = min(num_lines + 5, 40)
-        
         inner = ttk.Frame(self.content_frame, style="CardRow.TFrame")
         inner.pack(fill="both", expand=True)
         
@@ -110,7 +106,7 @@ class CollapsibleDraftCard(CardBorderFrame):
         
         self.text_widget = tk.Text(
             inner,
-            height=height,
+            height=1,  # Start small, will adjust after insert
             wrap="word",
             font=self.controller.fonts.text_area_font,
             background=text_bg,
@@ -127,6 +123,20 @@ class CollapsibleDraftCard(CardBorderFrame):
         
         self.text_widget.insert("1.0", self.content)
         self.text_widget.config(state="disabled")
+        
+        # After insert, calculate actual display lines and resize
+        def adjust_height():
+            self.text_widget.update_idletasks()
+            try:
+                display_lines = self.text_widget.count("1.0", "end", "displaylines")
+                if display_lines:
+                    actual_lines = display_lines[0] if isinstance(display_lines, tuple) else display_lines
+                    height = min(actual_lines + 1, 50)
+                    self.text_widget.config(height=height)
+            except:
+                pass
+        
+        self.text_widget.after(10, adjust_height)
 
     def toggle(self):
         self.expanded = not self.expanded
@@ -169,9 +179,10 @@ class PaperDraftScreen(BaseFrame):
 
     def _load_draft(self):
         """Load paper draft from file and display it."""
-        # Clear existing
-        for widget in self.scrollable_frame.winfo_children():
-            widget.destroy()
+        # Clear existing card and reload content
+        if self.card:
+            self.card.destroy()
+            self.card = None
             
         try:
             draft_content = load_markdown(PAPER_DRAFT_FILE, OUTPUT_DIR)
@@ -193,16 +204,19 @@ class PaperDraftScreen(BaseFrame):
 
     def _show_error(self, message: str):
         """Display an error message."""
-        # Clear existing to prevent stacking errors if called multiple times
-        for widget in self.scrollable_frame.winfo_children():
-            widget.destroy()
-
-        error_frame = ttk.Frame(self.scrollable_frame, padding="20")
-        error_frame.pack(fill="x", pady=20)
-        ttk.Label(error_frame, text=message, foreground="red", wraplength=500).pack()
+        # Clear existing card and error frame, but not action buttons
+        if self.card:
+            self.card.destroy()
+            self.card = None
+        if hasattr(self, 'error_frame') and self.error_frame:
+            self.error_frame.destroy()
+            
+        self.error_frame = ttk.Frame(self.scrollable_frame, padding="20")
+        self.error_frame.pack(fill="x", pady=20)
+        ttk.Label(self.error_frame, text=message, foreground="red", wraplength=500).pack()
         
         # Add a button to regenerate if missing
-        ttk.Button(error_frame, text="Generate Draft", command=self.on_regenerate).pack(pady=10)
+        ttk.Button(self.error_frame, text="Generate Draft", command=self.on_regenerate).pack(pady=10)
 
     def on_next(self):
         """Proceed to next screen or generate LaTeX."""
@@ -289,14 +303,14 @@ class PaperDraftScreen(BaseFrame):
         """Regenerate the paper draft from scratch."""
         if not tk.messagebox.askyesno(
             "Confirm Regeneration", 
-            "This will regenerate the entire paper draft based on your experiment results and evidence. Any manual edits will be lost.\n\nDo you want to continue?"
+            "This will regenerate the entire paper draft based on the current data. Any manual edits will be lost.\n\nDo you want to continue?"
         ):
             return
         
         self._run_paper_generation(is_regeneration=True)
 
     def _run_paper_generation(self, is_regeneration: bool = False):
-        """Generate paper draft from edited evidence.
+        """Generate paper draft using critique-based pipeline.
         
         Args:
             is_regeneration: True if regenerating (refresh text), False if initial (load draft)
@@ -310,6 +324,9 @@ class PaperDraftScreen(BaseFrame):
                 self.after(0, lambda: popup.update_status("Loading context"))
                 
                 paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
+                
+                # Load papers for the pipeline
+                papers = LiteratureSearch.load_papers("output/papers.json")
                 
                 # Load experiment result
                 experiment_result = None
@@ -325,23 +342,23 @@ class PaperDraftScreen(BaseFrame):
                 except:
                     pass
                 
-                # 2. Create pipeline
+                # 2. Create pipeline and write paper
                 pipeline = PaperWritingPipeline()
                 
-                # 3. Write Paper using edited evidence from evidence.json
                 def status_update(msg):
                     self.after(0, lambda: popup.update_status(msg))
                 
                 self.after(0, lambda: popup.update_status("Starting paper generation"))
                 
-                pipeline.write_paper_from_evidence(
+                pipeline.write_paper_with_critique(
                     paper_concept=paper_concept,
                     experiment_result=experiment_result,
+                    papers=papers,
                     user_requirements=user_requirements,
                     status_callback=status_update
                 )
                 
-                # 4. Complete
+                # 3. Complete
                 if is_regeneration:
                     self.after(0, lambda: self._on_regeneration_complete(popup))
                 else:

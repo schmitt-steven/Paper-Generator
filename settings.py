@@ -25,38 +25,33 @@ class Settings:
     """
     
     # Context Analysis Phase
-    CODE_ANALYSIS_MODEL = "gemma-3-27b-it-qat"  
-    PAPER_CONCEPTION_MODEL = "gemma-3-27b-it-qat"  
+    CODE_ANALYSIS_MODEL = "qwen/qwen3-next-80b"  
+    PAPER_CONCEPTION_MODEL = "qwen/qwen3-next-80b"  
     
     # Paper Search Phase
-    LITERATURE_SEARCH_MODEL = "gemma-3-27b-it-qat"  
+    LITERATURE_SEARCH_MODEL = "qwen/qwen3-next-80b"  
     PAPER_RANKING_EMBEDDING_MODEL = "text-embedding-qwen3-embedding-4b@q5_0"  # Must be an embedding model!
     
     # Hypothesis Generation Phase
-    HYPOTHESIS_BUILDER_MODEL = "gemma-3-27b-it-qat"
+    HYPOTHESIS_BUILDER_MODEL = "qwen/qwen3-next-80b"
     
     # Experimentation Phase
-    EXPERIMENT_PLAN_MODEL = "gemma-3-27b-it-qat"
-    EXPERIMENT_CODE_WRITE_MODEL = "gemma-3-27b-it-qat"  
-    EXPERIMENT_VALIDATION_MODEL = "gemma-3-27b-it-qat" 
-    EXPERIMENT_PLOT_CAPTION_MODEL = "gemma-3-27b-it-qat"  # Must be a VISION model!
-    EXPERIMENT_VERDICT_MODEL = "gemma-3-27b-it-qat"
+    EXPERIMENT_PLAN_MODEL = "qwen/qwen3-next-80b"
+    EXPERIMENT_CODE_WRITE_MODEL = "qwen/qwen3-next-80b"  
+    EXPERIMENT_VALIDATION_MODEL = "qwen/qwen3-next-80b" 
+    EXPERIMENT_PLOT_CAPTION_MODEL = "qwen3-vl-32b-instruct-mlx"  # Must be a VISION model!
+    EXPERIMENT_VERDICT_MODEL = "qwen/qwen3-next-80b"
     
     # Paper Writing Phase
     PAPER_INDEXING_EMBEDDING_MODEL = "text-embedding-qwen3-embedding-4b@q5_0"  # Must be an embedding model!
-    PAPER_EMBEDDING_BATCH_SIZE = 64  # Number of text chunks to embed at once
 
-    EVIDENCE_GATHERING_MODEL = "gemma-3-27b-it-qat"  
-    PAPER_WRITING_MODEL = "gemma-3-27b-it-qat"
-
-    EVIDENCE_INITIAL_CHUNKS = 15  # Number of chunks retrieved from vector search
-    EVIDENCE_FILTERED_CHUNKS = 10  # Number of chunks after LLM filtering/scoring
-    EVIDENCE_AGENTIC_ITERATIONS = 3  # Number of agentic search iterations
+    EVIDENCE_GATHERING_MODEL = "qwen/qwen3-next-80b"  
+    PAPER_WRITING_MODEL = "qwen/qwen3-next-80b"
     
     GENERATE_ACKNOWLEDGEMENTS = True  # Set to False to skip acknowledgements section entirely
 
     # LaTeX Generation Phase
-    LATEX_GENERATION_MODEL = "gemma-3-27b-it-qat"
+    LATEX_GENERATION_MODEL = "qwen/qwen3-next-80b"
 
     # UI Settings
     FONT_SIZE = FontSize.SMALL
@@ -88,7 +83,6 @@ class Settings:
             
             # Settings to save with their current values
             settings_to_save = {
-                # Models
                 "CODE_ANALYSIS_MODEL": cls.CODE_ANALYSIS_MODEL,
                 "PAPER_CONCEPTION_MODEL": cls.PAPER_CONCEPTION_MODEL,
                 "LITERATURE_SEARCH_MODEL": cls.LITERATURE_SEARCH_MODEL,
@@ -103,12 +97,9 @@ class Settings:
                 "EVIDENCE_GATHERING_MODEL": cls.EVIDENCE_GATHERING_MODEL,
                 "PAPER_WRITING_MODEL": cls.PAPER_WRITING_MODEL,
                 "LATEX_GENERATION_MODEL": cls.LATEX_GENERATION_MODEL,
-                # UI Settings
                 "FONT_SIZE": cls.FONT_SIZE.name,
                 "DARK_MODE": cls.DARK_MODE,
-                # API Keys
                 "SEMANTIC_SCHOLAR_API_KEY": cls.SEMANTIC_SCHOLAR_API_KEY,
-                # LaTeX Data
                 "LATEX_TITLE": cls.LATEX_TITLE,
             }
             

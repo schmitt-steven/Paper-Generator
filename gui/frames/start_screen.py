@@ -86,7 +86,7 @@ class StartScreen(BaseFrame):
         
         ttk.Separator(card, orient="horizontal").pack(fill="x")
         
-        # Content with Edit and Show in Explorer buttons (50/50)
+        # Content with Edit and Show in Explorer buttons
         content = ttk.Frame(card, style="CardContent.TFrame", padding=10)
         content.pack(fill="x")
         content.columnconfigure(0, weight=1, uniform="buttons")
@@ -131,7 +131,7 @@ class StartScreen(BaseFrame):
             fg=header_fg
         ).pack(side="left")
         
-        # Info button in header
+        # Info button
         info_btn = self.controller.icons.create_icon_label(
             header,
             icon_name="info",
@@ -143,7 +143,7 @@ class StartScreen(BaseFrame):
         
         ttk.Separator(card, orient="horizontal").pack(fill="x")
         
-        # Content with Edit and Show in Explorer buttons (50/50)
+        # Content with Edit and Show in Explorer buttons
         content = ttk.Frame(card, style="CardContent.TFrame", padding=10)
         content.pack(fill="x")
         content.columnconfigure(0, weight=1, uniform="buttons")
@@ -199,7 +199,7 @@ class StartScreen(BaseFrame):
         
         ttk.Separator(card, orient="horizontal").pack(fill="x")
         
-        # Content with Edit and Show in Explorer buttons (50/50)
+        # Content with Edit and Show in Explorer buttons
         content = ttk.Frame(card, style="CardContent.TFrame", padding=10)
         content.pack(fill="x")
         content.columnconfigure(0, weight=1, uniform="buttons")

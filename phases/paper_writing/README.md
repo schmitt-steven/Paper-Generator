@@ -4,12 +4,13 @@ RAG-based system for generating academic paper sections with indirect citations.
 
 ## Components
 
-### Data Models ([data_models.py](data_models.py))
+### `Data Models` ([data_models.py](data_models.py))
 
 - `Section` - Enum of paper sections (Abstract, Introduction, etc.)
 - `PaperDraft` - Container for all generated sections
 - `PaperChunk` - Indexed chunk with embedding for retrieval
 - `Evidence` - Scored chunk with summary and source query
+- `SectionCritique` - Structured critic output with improvements and search queries
 
 ### `PaperIndexer` ([paper_indexer.py](paper_indexer.py))
 
@@ -21,18 +22,15 @@ Splits papers into overlapping text chunks and creates their embeddings.
 
 ### `EvidenceGatherer` ([evidence_gatherer.py](evidence_gatherer.py))
 
-LLM agent that iteratively calls `search_evidence` tool until enough evidence is found (or max iterations reached).
+Handles evidence retrieval for the paper writing pipeline.
+- `batch_search`: Executes a list queries from the critic (sequentially but with internal batching).
+- Internal `_search_evidence` pipeline: vector search → batch summarization → batch scoring → filter.
 
-Each `search_evidence` call runs a retrieval pipeline:
-1. Vector search (cosine similarity) to find relevant chunks
-2. Batch summarization (LLM summarizes retrieved chunks)
-3. Batch scoring (LLM scores relevance 0.0-1.0)
-4. Combined scoring: `0.3 * vector_score + 0.7 * llm_score`
-5. Filtering: keep only chunks with highest combined scores
+### `SectionCritic` ([section_critic.py](section_critic.py))
 
-### `EvidenceManager` ([evidence_manager.py](evidence_manager.py))
-
-Utilities for saving/loading evidence by section to JSON.
+Analyzes draft sections and returns structured feedback:
+- `improvements`: List of specific suggestions (positively framed)
+- `search_queries`: Targeted queries to fill missing evidence gaps
 
 ### `SectionGuidelinesLoader` ([section_guidelines.py](section_guidelines.py))
 
@@ -40,20 +38,24 @@ Loads user-defined writing guidelines from `user_files/section_guidelines.md`.
 
 ### `PaperWriter` ([paper_writer.py](paper_writer.py))
 
-Generates paper sections in order: Methods → Results → Discussion → Introduction → Related Work → Conclusion → Abstract → Title
-
-This class also:
-- Builds prompts with context, evidence, and guidelines
-- Integrates figures/plots in Results section
-- Generates title from abstract, introduction, and conclusion (unles user provided one)
+Generates and rewrites paper sections.
+- `generate_section_from_catalog`: Creates initial draft using only title/abstract/conclusion catalog.
+- `rewrite_section`: Refines the draft using critique feedback and gathered evidence.
+- `generate_paper_sections`: Orchestrates the writing of all sections in order.
 
 ### `PaperWritingPipeline` ([paper_writing_pipeline.py](paper_writing_pipeline.py))
 
-Handles the complete paper writing workflow: indexing → evidence gathering → section writing.
+High-level orchestrator for the critique-based writing workflow:
+1. Index papers
+2. Loop through sections (Methods → Results → Discussion → etc.)
+3. For each section:
+   - Draft (zero-shot from catalog)
+   - Critique (identify gaps)
+   - Search (fill gaps with evidence)
+   - Rewrite (incorporate feedback)
 
 ## Output
 
 - `output/paper_embeddings.json` - Cached chunk embeddings
-- `output/evidence.json` - Gathered evidence by section
 - `output/section_writing_prompts.md` - Prompts used for each section
 - `output/paper_draft.md` - Generated paper draft

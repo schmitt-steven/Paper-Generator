@@ -86,12 +86,10 @@ class CollapsiblePlanCard(CardBorderFrame):
         # Text widget
         text_bg = TEXT_BG_DARK_ALT if self.controller.current_theme == "dark" else TEXT_BG_LIGHT_ALT
         text_fg = TEXT_FG_DARK if self.controller.current_theme == "dark" else TEXT_FG_LIGHT
-        num_lines = self.content.count('\n') + 1
-        height = min(num_lines + 5, 150)
         
         self.text_widget = tk.Text(
             self.content_frame,
-            height=height,
+            height=1,  # Start small, will adjust after insert
             font=self.controller.fonts.text_area_font,
             wrap="word",
             background=text_bg,
@@ -106,6 +104,20 @@ class CollapsiblePlanCard(CardBorderFrame):
         
         self.text_widget.insert("1.0", self.content)
         self.text_widget.config(state="disabled")  # Read-only
+        
+        # After insert, calculate actual display lines and resize
+        def adjust_height():
+            self.text_widget.update_idletasks()
+            try:
+                display_lines = self.text_widget.count("1.0", "end", "displaylines")
+                if display_lines:
+                    actual_lines = display_lines[0] if isinstance(display_lines, tuple) else display_lines
+                    height = min(actual_lines + 1, 50)
+                    self.text_widget.config(height=height)
+            except:
+                pass
+        
+        self.text_widget.after(10, adjust_height)
     
     def toggle(self):
         """Toggle expansion state."""
@@ -279,7 +291,7 @@ class ExperimentPlanScreen(BaseFrame):
                     pass
                 
                 # 2. Generate Plan
-                self.after(0, lambda: popup.update_status("Generating new plan..."))
+                self.after(0, lambda: popup.update_status("Generating new plan"))
                 experiment_runner = ExperimentRunner()
                 
                 experiment_plan = experiment_runner._generate_experiment_plan(

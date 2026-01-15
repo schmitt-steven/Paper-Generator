@@ -24,14 +24,11 @@ from .theme_colors import (
 from .frames import (
     StartScreen,
     SettingsScreen,
-    UserRequirementsScreen,
-    CodeFilesScreen,
     PaperConceptScreen,
     PaperSelectionScreen,
     HypothesisScreen,
     ExperimentPlanScreen,
     ExperimentResultsScreen,
-    EvidenceScreen,
     PaperDraftScreen,
     ResultScreen,
     SectionGuidelinesScreen,
@@ -132,7 +129,6 @@ class PaperGeneratorApp(tk.Tk):
             HypothesisScreen,
             ExperimentPlanScreen,
             ExperimentResultsScreen,
-            EvidenceScreen,
             PaperDraftScreen,
             ResultScreen
         ]

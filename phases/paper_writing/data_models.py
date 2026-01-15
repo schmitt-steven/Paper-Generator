@@ -74,4 +74,7 @@ class Evidence:
     source_query: str
 
 
-
+class SectionCritique(BaseModel):
+    """Structured critique output from the SectionCritic."""
+    improvements: list[str]    # What to add/change (constructive, positive framing)
+    search_queries: list[str]  # Max 5 queries to fill evidence gaps

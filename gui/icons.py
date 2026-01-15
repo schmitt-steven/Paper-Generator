@@ -43,16 +43,8 @@ class IconManager:
         self._cache.clear()
     
     def get_icon(self, name: str, size: int = None) -> 'ImageTk.PhotoImage | None':
-        """
-        Get a theme-aware icon by name.
+        """Get a theme-aware icon by name."""
         
-        Args:
-            name: Icon name (without extension), e.g., 'x', 'upload'
-            size: Icon size in pixels (defaults to font-scaled size)
-            
-        Returns:
-            PhotoImage ready for use in tkinter widgets
-        """
         # Use font-scaled default if size not specified
         if size is None:
             size = self.default_size()

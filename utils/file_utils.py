@@ -117,3 +117,86 @@ def preprocess_markdown(markdown: str) -> str:
     
     return markdown.strip()
 
+
+def remove_references_section(text: str) -> str:
+    """Remove references, acknowledgments, and bibliography sections from text.
+    
+    Should be called after PDF conversion to clean the stored markdown.
+    """
+    if not text:
+        return ""
+    
+    # Pattern matches common reference section headers (case-insensitive, with optional markdown formatting)
+    # Matches: REFERENCES, **REFERENCES**, 6. REFERENCES, **6** **REFERENCES**, **7. References**
+    # Regex:
+    # ^\s*(?:#+\s*)?           : Start of line, optional hash headers
+    # (?:\*\*)?                : Optional bold start (global or number)
+    # (?:[\d\.]+\s+)?          : Optional numbering (e.g. "6. " or "6 ")
+    # (?:\*\*)?                : Optional bold end (if number was bolded separately)
+    # (?:\s+)?                 : Optional space
+    # (?:\*\*)?                : Optional bold start (if title bolded separately)
+    # (?:REFERENCES?|ACKNOWLEDGMENTS?|ACKNOWLEDGEMENTS?|BIBLIOGRAPHY) : Keyword
+    # (?:[:\.]|(?:\s.*))?      : Optional colon/period or trailing text
+    # (?:\*\*)?                : Optional bold end
+    # \s*$                     : End of line
+    
+    # Simplified flexible regex:
+    # Allows for optional bolding wrapping the whole thing or parts
+    pattern = r'^\s*(?:#+\s*)?(?:\*\*)?(?:[\d\.]+\s+)?(?:\*\*)?(?:\s+)?(?:\*\*)?(?:REFERENCES?|ACKNOWLEDGMENTS?|ACKNOWLEDGEMENTS?|BIBLIOGRAPHY)(?:[:\.]|(?:\s.*))?(?:\*\*)?\s*$'
+    
+    lines = text.split('\n')
+    for i, line in enumerate(lines):
+        if re.match(pattern, line, re.IGNORECASE):
+            # Truncate at this line
+            return '\n'.join(lines[:i]).strip()
+    
+    return text
+
+
+def extract_conclusion(text: str) -> str:
+    """Extract the Conclusion section from the markdown text."""
+    import re
+    
+    if not text:
+        return ""
+        
+    # Pattern to find Conclusion section headers
+    # Matches: ## Conclusion, # Conclusions, **6** **Conclusion**, 5. Conclusion, **7. Conclusions and Future Work**
+    pattern = r'^\s*(?:#+\s*)?(?:\*\*)?(?:[\d\.]+\s+)?(?:\*\*)?(?:\s+)?(?:\*\*)?(?:DISCUSSION\s+AND\s+)?(?:CONCLUSIONS?|CONCLUDING\s+REMARKS)(?:[:\.]|(?:\s.*))?(?:\*\*)?\s*$'
+    
+    lines = text.split('\n')
+    start_index = -1
+    
+    # 1. Find start of Conclusion section
+    for i, line in enumerate(lines):
+        # Skip if it looks like a TOC entry (contains ".......")
+        if "....." in line:
+            continue
+            
+        if re.match(pattern, line, re.IGNORECASE):
+            start_index = i
+            # Don't break immediately, we want the last occurrence
+            
+    if start_index == -1:
+        return ""
+        
+    # 2. Extract content
+    conclusion_lines = []
+    # Skip the header itself
+    for line in lines[start_index + 1:]:
+        # Stop at the next section header (start with # or **, or bold numbering)
+        if re.match(r'^\s*#+\s+[A-Z]', line):
+             break
+        
+        # Stop at likely next header (e.g. **References**)
+        # Using a simple heuristic for top-level headers in these docs
+        if re.match(r'^\s*(?:\*\*)?(?:[\d\.]+\s+)?(?:\*\*)?[A-Z][A-Za-z\s]+(?:\*\*)?\s*$', line) and len(line) < 100:
+             # But don't stop for just any bold line, ensure it looks header-y
+             # For now, strict '#' or strict 'References' check via remove_references_section logic is safer
+             # If we hit References, stop
+             if "REFERENCES" in line.upper() or "BIBLIOGRAPHY" in line.upper():
+                  break
+            
+        conclusion_lines.append(line)
+        
+    return '\n'.join(conclusion_lines).strip()

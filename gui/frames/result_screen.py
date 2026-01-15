@@ -11,9 +11,17 @@ import pymupdf  # fitz
 
 from ..base_frame import BaseFrame, ProgressPopup
 from ..info_texts import RESULT_INFO
-from phases.latex_generation.paper_converter import PaperConverter
+from phases.latex_generation.paper_converter import PaperConverter, LaTeXMetadata
+from phases.paper_writing.paper_writing_pipeline import PaperWritingPipeline
+from phases.paper_search.literature_search import LiteratureSearch
+from phases.experimentation.experiment_runner import ExperimentRunner
+from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
+from phases.context_analysis.paper_conception import PaperConception
+from phases.context_analysis.user_requirements import UserRequirements
 
 PDF_PATH = "output/latex/result/paper.pdf"
+PAPER_DRAFT_FILE = "output/paper_draft.md"
+HYPOTHESES_FILE = "output/hypothesis.md"
 
 MAX_PREVIEW_PAGES = 1
 
@@ -23,9 +31,10 @@ class ResultScreen(BaseFrame):
             parent=parent,
             controller=controller,
             title="Result",
-            has_next=False,
-            has_regenerate=True,
-            regenerate_text="Recompile",
+            has_next=True,  # "Compile TeX Only" (Continue)
+            next_text="Compile current TeX",
+            has_regenerate=True, # "Update & Compile" (Regenerate)
+            regenerate_text="Rebuild TeX Project",
             info_content=RESULT_INFO
         )
         self.preview_images = [] # Keep references to prevent GC
@@ -33,7 +42,7 @@ class ResultScreen(BaseFrame):
     def create_content(self):
         # Buttons Section
         btn_frame = ttk.Frame(self.scrollable_frame, style="Scrollable.TFrame")
-        btn_frame.pack(fill="x", pady=20)
+        btn_frame.pack(fill="x", pady=10)
         
         # Grid connection for centering
         btn_frame.grid_columnconfigure(0, weight=1)
@@ -46,7 +55,7 @@ class ResultScreen(BaseFrame):
             command=self._open_pdf,
             state="normal"
         )
-        view_btn.grid(row=0, column=0, padx=10, sticky="e")
+        view_btn.grid(row=0, column=0, padx=5, sticky="ew")
         
         # Show File
         show_btn = ttk.Button(
@@ -55,7 +64,7 @@ class ResultScreen(BaseFrame):
             command=self._show_file,
             state="normal"
         )
-        show_btn.grid(row=0, column=1, padx=10, sticky="w")
+        show_btn.grid(row=0, column=1, padx=5, sticky="ew")
         
         # Preview Section
         self.preview_container = self.create_card_frame(self.scrollable_frame, "Preview")
@@ -74,7 +83,7 @@ class ResultScreen(BaseFrame):
 
         path = Path(PDF_PATH)
         if not path.exists():
-            ttk.Label(self.preview_container, text="PDF not found yet.", style="CardRow.TLabel").pack(pady=20)
+            ttk.Label(self.preview_container, text="PDF not found.", style="CardRow.TLabel").pack(pady=20)
             return
 
         try:
@@ -141,6 +150,7 @@ class ResultScreen(BaseFrame):
             print(f"Error generating preview: {e}")
             ttk.Label(self.preview_container, text=f"Preview error: {e}", foreground="red", style="CardRow.TLabel").pack(pady=20)
 
+
     def _open_pdf(self):
         """Open the generated PDF in the default browser/viewer."""
         path = Path(PDF_PATH)
@@ -171,9 +181,23 @@ class ResultScreen(BaseFrame):
         except Exception as e:
              self._show_error(f"Error showing file: {e}")
 
+    def on_next(self):
+        """Next button now triggers Compile TeX Only."""
+        self._on_compile_tex_only()
+
     def on_regenerate(self):
-        """Recompile the LaTeX project."""
-        popup = ProgressPopup(self.controller, "Recompiling LaTeX")
+        """Regenerate button now triggers Update & Compile."""
+        self._on_update_and_compile()
+
+    def _on_compile_tex_only(self):
+        """Compile the existing LaTeX project without regenerating from Markdown."""
+        if not tk.messagebox.askyesno(
+            "Confirm Compilation", 
+            "This will compile the current LaTeX files in 'output/latex'.\n\nDo you want to continue?"
+        ):
+            return
+
+        popup = ProgressPopup(self.controller, "Compiling LaTeX")
         
         def task():
             try:
@@ -185,7 +209,65 @@ class ResultScreen(BaseFrame):
                      return
 
                 # Compile LaTeX
-                self.after(0, lambda: popup.update_status("Compiling LaTeX"))
+                self.after(0, lambda: popup.update_status("Compiling LaTeX to PDF"))
+                success = converter.compile_latex(latex_dir)
+                
+                if success:
+                    self.after(0, lambda: self._on_recompile_success(popup))
+                else:
+                    self.after(0, lambda: popup.show_error("LaTeX compilation failed. Check logs."))
+                
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                self.after(0, lambda err=str(e): popup.show_error(err))
+        
+        thread = threading.Thread(target=task, daemon=True)
+        thread.start()
+
+    def _on_update_and_compile(self):
+        """Reload all data, regenerate LaTeX from Markdown draft, then compile."""
+        if not tk.messagebox.askyesno(
+            "Confirm Update & Compile", 
+            "This will overwrite any manual changes made to the LaTeX files (e.g. paper.tex) with the current content of the Markdown draft.\n\nDo you want to continue?"
+        ):
+            return
+
+        popup = ProgressPopup(self.controller, "Updating & Compiling")
+        
+        def task():
+            try:
+                # Load paper draft
+                self.after(0, lambda: popup.update_status("Loading paper draft"))
+                # Note: PaperWritingPipeline.load_paper_draft is a static method
+                paper_draft = PaperWritingPipeline.load_paper_draft(PAPER_DRAFT_FILE)
+                
+                # Load indexed papers
+                self.after(0, lambda: popup.update_status("Loading indexed papers"))
+                indexed_papers = LiteratureSearch.load_papers("output/papers.json")
+                
+                # Load experiment result (optional)
+                experiment_result = None
+                experiment_result_file = "output/experiments/experiment_result.json"
+                if Path(experiment_result_file).exists():
+                    self.after(0, lambda: popup.update_status("Loading experiment results"))
+                    experiment_result = ExperimentRunner.load_experiment_result(experiment_result_file)
+                
+                # Create metadata
+                self.after(0, lambda: popup.update_status("Generating LaTeX project"))
+                metadata = LaTeXMetadata.from_settings(generated_title=paper_draft.title)
+                
+                # Convert to LaTeX
+                converter = PaperConverter()
+                latex_dir = converter.convert_to_latex(
+                    paper_draft=paper_draft,
+                    metadata=metadata,
+                    indexed_papers=indexed_papers,
+                    experiment_result=experiment_result,
+                )
+                
+                # Compile LaTeX
+                self.after(0, lambda: popup.update_status("Compiling LaTeX to PDF"))
                 success = converter.compile_latex(latex_dir)
                 
                 if success:

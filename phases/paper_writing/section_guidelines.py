@@ -88,3 +88,50 @@ class SectionGuidelinesLoader:
             print(f"Saved section guidelines to {cls.FILE_PATH}")
         except Exception as e:
             print(f"Error saving section guidelines: {e}")
+
+    @classmethod
+    def get_guidelines(cls, section_type: Section, experiment=None) -> str:
+        """Get guidelines for a section from the loaded file."""
+        import textwrap
+        
+        # Load from file
+        custom_guidelines = cls.load_guidelines()
+        guideline = custom_guidelines.get(section_type, "")
+        
+        # If results section and experiment has plots, append plot instructions
+        if section_type == Section.RESULTS and experiment and experiment.plots:
+             guideline += "\n\n" + cls._get_results_plot_instructions(experiment)
+             
+        return guideline
+
+    @staticmethod
+    def _get_results_plot_instructions(experiment) -> str:
+        """Get instructions for integrating plots into the Results section."""
+        import textwrap
+        
+        plots_block = ""
+        for idx, plot in enumerate(experiment.plots, 1):
+            filename = plot.filename
+            # Simplify path logic
+            if filename.startswith("output/"):
+                filename = filename[len("output/"):]
+            
+            plots_block += f"Figure {idx}:\n  Filename: {filename}\n  Caption: {plot.caption}\n\n"
+
+        if not plots_block:
+            return ""
+
+        return textwrap.dedent(f"""
+            [FIGURE INTEGRATION]
+            The following figures were generated from the experiment. You MUST integrate all of them into your Results section.
+
+            {plots_block.strip()}
+
+            For each figure:
+            1. Reference it naturally in the text (e.g., "As shown in Figure 1..." or "Figure 2 demonstrates...")
+            2. Include the markdown image syntax: ![Brief alt text](relative_path_to_image.png)
+            3. CRITICAL: Use RELATIVE paths from the paper_draft.md location (which is in the output/ directory).
+               - If filename is "experiments/plots/file.pdf", use exactly that (no "output/" prefix)
+            4. Add a visible caption line immediately below: *Figure N: Full caption text*
+            5. Use the exact caption text provided above for each figure
+        """)

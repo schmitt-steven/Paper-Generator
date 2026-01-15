@@ -1,11 +1,8 @@
 import os
 import re
-from typing import List, Optional
-from dataclasses import dataclass
-import pymupdf4llm
 from phases.paper_search.paper import Paper
+from utils.file_utils import preprocess_markdown, remove_references_section, extract_conclusion
 
-@dataclass
 class MarkdownParseResult:
     pdf_name: str
     markdown_path: str
@@ -73,8 +70,14 @@ class PDFConverter:
             markdown_text = markdown_text.replace(
                 f"literature/{base_name}/markdown/images/", "images/"
             )
+        
+        # Preprocess to remove conversion artifacts
+        markdown_text = preprocess_markdown(markdown_text)
+        
+        # Remove references/bibliography section
+        markdown_text = remove_references_section(markdown_text)
 
-        # Save merged markdown
+        # Save cleaned markdown
         merged_path = os.path.join(pdf_output_dir, f"{base_name}.md")
         self._save_markdown(markdown_text, merged_path)
 
@@ -135,6 +138,8 @@ class PDFConverter:
                 try:
                     result = self.convert_to_markdown(pdf_path)
                     paper.markdown_text = result.markdown_text
+                    paper.conclusion = extract_conclusion(result.markdown_text)
+                    print(f"    Extracted conclusion: {'Yes' if paper.conclusion else 'No'} ({len(paper.conclusion)} chars)")
                     
                     # If this was a user paper using original pdf_path, update it to point to copied location
                     # (if it's not already in output/literature/)

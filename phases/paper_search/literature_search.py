@@ -387,7 +387,8 @@ class LiteratureSearch(LazyModelMixin):
                 "citation_key": paper.citation_key,
                 "is_open_access": paper.is_open_access,
                 "user_provided": paper.user_provided,
-                "pdf_path": paper.pdf_path
+                "pdf_path": paper.pdf_path,
+                "conclusion": paper.conclusion
             }
             for paper in papers
         ]

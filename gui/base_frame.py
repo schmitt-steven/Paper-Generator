@@ -20,17 +20,6 @@ TEXT_AREA_SPACING = 4
 TEXT_AREA_PADX = 10
 TEXT_AREA_PADY = 10
 
-class TextBorderFrame(tk.Frame):
-    """Custom Frame used as a border container for Text widgets."""
-    pass
-
-
-class CardBorderFrame(tk.Frame):
-    """Custom Frame used as a border container for Card widgets.
-    Uses tk.Frame (not ttk) so background color can be set directly.
-    """
-    pass
-
 
 def create_text_area(parent, height: int = 6, **kwargs) -> tk.Text:
     """Creates a styled multi-line text area widget."""
@@ -530,7 +519,7 @@ class BaseFrame(ttk.Frame):
             x, y = self.winfo_pointerx(), self.winfo_pointery()
             widget = self.winfo_containing(x, y)
             
-            # Walk up the widget tree to see if we're inside this frame
+            # Go up the widget tree to see if we are inside this frame
             while widget:
                 if widget is self:
                     return True
@@ -544,20 +533,20 @@ class BaseFrame(ttk.Frame):
         return False
     
     def _on_mousewheel(self, event):
-        # Only scroll if mouse is over this frame's content area
+        # Only scroll if mouse is over this frames content area
         if not self._is_mouse_over_frame():
             return
         
-        # Don't scroll if content fits
+        # Dont scroll if content fits
         if self.scrollable_frame.winfo_reqheight() <= self._canvas.winfo_height():
             return
         
-        # Don't hijack scroll from widgets that scroll themselves
+        # Dont hijack scroll from widgets that scroll themselves
         widget = event.widget
         if widget.winfo_class() in ("Listbox", "Text", "TCombobox", "Treeview"):
             return
         
-        # Platform-specific delta
+        # Platform specific delta
         if event.num == 4:
             delta = -1
         elif event.num == 5:
@@ -619,8 +608,7 @@ class BaseFrame(ttk.Frame):
         for widget in self.scrollable_frame.winfo_children():
             widget.destroy()
             
-        # Reset common state attributes if they exist to force re-fetches
-        # This is a heuristic to help subclasses that use 'if getattr(self, x) is None' checks
+        # Reset state attributes if they exist to force re-fetches
         common_attrs = [
             'draft_text', 
             'plan_text', 
@@ -631,8 +619,6 @@ class BaseFrame(ttk.Frame):
         ]
         for attr in common_attrs:
             if hasattr(self, attr):
-                # We can't always delattr if it's defined in __init__, so setting to None is safer
-                # But some checks use hasattr. Let's try deleting them if they are dynamic.
                 try:
                     delattr(self, attr)
                 except:
@@ -674,19 +660,17 @@ class BaseFrame(ttk.Frame):
         # Trigger on_show to load dynamic content
         self.on_show()
         
-        # Re-apply theme colors to newly created widgets (TextBorderFrame, Text, etc.)
+        # Re-apply theme colors to created widgets (TextBorderFrame, Text etc.)
         self.controller.apply_theme_colors(self)
 
     def create_card_frame(self, parent, title):
         """Helper to create a unified card-styled section with title and separator."""
-        # Use CardBorderFrame (tk.Frame) for direct background/border control
         card = CardBorderFrame(parent, padx=1, pady=1)
         card.pack(fill="x", padx=0, pady=10)
         
         header = ttk.Frame(card, style="CardHeader.TFrame", padding=(10, 6))
         header.pack(fill="x")
         
-        # Use tk.Label instead of ttk.Label for reliable background color
         header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
         header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
         tk.Label(
@@ -702,3 +686,14 @@ class BaseFrame(ttk.Frame):
         content = ttk.Frame(card, style="CardContent.TFrame", padding=10)
         content.pack(fill="x")
         return content
+
+class TextBorderFrame(tk.Frame):
+    """Custom Frame used as a border container for Text widgets."""
+    pass
+
+
+class CardBorderFrame(tk.Frame):
+    """Custom Frame used as a border container for Card widgets.
+    Uses tk.Frame (not ttk) so background color can be set directly.
+    """
+    pass

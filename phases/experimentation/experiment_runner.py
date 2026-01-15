@@ -623,19 +623,37 @@ class ExperimentRunner:
         plots = []
         
         # System prompt for plot caption generation
-        system_prompt = """[ROLE]
-        You are an expert at writing scientific figure captions for research papers.
+        plot_caption_prompt = """<role>
+You write figure captions for scientific research papers.
+</role>
 
-        [TASK]
-        Generate concise, informative captions for scientific plots/figures generated from experiments.
+<task>
+Generate a publication-quality figure caption for the provided plot.
+</task>
 
-        [GUIDELINES]
-        1. Describe what the plot shows clearly and concisely
-        2. Relate it to the hypothesis being tested
-        3. Use professional scientific language suitable for research papers
-        4. Keep captions typically 1-2 sentences
-        5. Be informative but concise
-        6. Focus on the key findings or comparisons shown in the plot"""
+<requirements>
+- State WHAT the figure shows, not WHY or HOW
+- Use past tense for methods, present tense for results
+- No interpretation, speculation, or methodology explanation
+- No phrases like "This figure shows", "As we can see", "The plot demonstrates"
+- Start directly with the subject (e.g., "Comparison of...", "Performance of...", "Distribution of...")
+- 1-2 sentences maximum
+- Include specific metrics/values visible in the figure when relevant
+- Use precise scientific terminology
+</requirements>
+
+<good_examples>
+- "Comparison of convergence rates between RBQL and standard Q-learning across 1000 episodes. RBQL achieves 95% optimal performance at episode 450 vs. 720 for Q-learning."
+- "Distribution of prediction errors for the three model variants. Median error for Model A: 0.023, Model B: 0.041, Model C: 0.089."
+- "Training loss curves for baseline (blue) and proposed method (orange) over 50 epochs."
+</good_examples>
+
+<bad_examples>
+Do NOT do this:
+- "This figure demonstrates how our method outperforms the baseline..." (interpretation)
+- "As we can see from the plot, the results clearly show that..." (filler phrases)
+- "The experiment was designed to test whether..." (methodology)
+</bad_examples>"""
         
         for plot_file in plot_files:
             # Extract just the filename from the full path
@@ -648,43 +666,38 @@ class ExperimentRunner:
                 print(f"ERROR: Failed to prepare image {filename}: {e}")
                 traceback.print_exc()
                 # Fallback caption without image
-                plots.append(Plot(filename=plot_file, caption=f"Figure showing results for hypothesis: {hypothesis.description}"))
+                plots.append(Plot(filename=plot_file, caption=f"Experimental results for: {hypothesis.description}"))
                 continue
             
             user_message = textwrap.dedent(f"""\
-                [TASK]
-                Generate a caption for this scientific plot.
-
-                [HYPOTHESIS]
-                Description: {hypothesis.description}
-                Rationale: {hypothesis.rationale}
+                <context>
+                Hypothesis: {hypothesis.description}
                 Success Criteria: {hypothesis.success_criteria}
+                </context>
 
-                [EXPERIMENT_PLAN]
-                {experiment_plan}
+                <experiment_output>
+                {stdout[-1500:] if len(stdout) > 1500 else stdout}
+                </experiment_output>
 
-                [CODE_EXECUTION_OUTPUT]
-                {stdout[:500] + '...[truncated during context limit]...' + stdout[-1500:] if len(stdout) > 2000 else stdout}
-
-                [PLOT_FILENAME]
-                {filename}
-
-                [OUTPUT_REQUIREMENT]
-                Generate a professional scientific figure caption for this plot. Output ONLY the caption text, no additional formatting or explanations.
-            """)
+                <output_format>
+                Write ONLY the caption (1-2 sentences). No preamble, no explanation.
+                </output_format>""")
                         
             try:
-                chat = lms.Chat(system_prompt)
+                chat = lms.Chat(plot_caption_prompt)
                 chat.add_user_message(user_message, images=[image_handle])
                 model = lms.llm(self.settings.EXPERIMENT_PLOT_CAPTION_MODEL)
-                result = model.respond(chat, config={"temperature": 0.4})
-                caption = remove_thinking_blocks(result.content)
+                result = model.respond(chat, config={"temperature": 0.3})
+                caption = remove_thinking_blocks(result.content).strip()
+                # Remove any quotes if the model wrapped the caption
+                if caption.startswith('"') and caption.endswith('"'):
+                    caption = caption[1:-1]
                 plots.append(Plot(filename=plot_file, caption=caption))
             except Exception as e:
                 print(f"ERROR: Failed to generate caption for {filename}: {e}")
                 traceback.print_exc()
                 # Fallback caption
-                plots.append(Plot(filename=plot_file, caption=f"Figure showing results for hypothesis: {hypothesis.description}"))
+                plots.append(Plot(filename=plot_file, caption=f"Experimental results for: {hypothesis.description}"))
         
         return plots
     

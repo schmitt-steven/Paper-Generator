@@ -240,9 +240,9 @@ class PaperConceptScreen(BaseFrame):
         """Handle regeneration completion."""
         popup.close()
         
-        # Clear existing content before reloading
-        for widget in self.scrollable_frame.winfo_children():
-            widget.destroy()
+        # Clear only the concept cards, not the action buttons
+        for card in self.concept_cards:
+            card.destroy()
         
         # Reset concept to force reload
         self.concept = None

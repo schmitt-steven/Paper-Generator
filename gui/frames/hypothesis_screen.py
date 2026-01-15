@@ -313,9 +313,10 @@ class HypothesisScreen(BaseFrame):
     def _on_regeneration_complete(self, popup: ProgressPopup):
         """Handle regeneration completion."""
         popup.close()
-        # Force reload from file (which was updated by builder)
-        for widget in self.scrollable_frame.winfo_children():
-            widget.destroy()
+        # Clear only the cards, not the action buttons
+        for card in self.cards:
+            card.destroy()
+        self.cards.clear()
         
         self.current_hypothesis = None
         self._load_hypothesis()

@@ -69,11 +69,11 @@ class PaperConverter(LazyModelMixin):
         
         self._populate_metadata(latex_dir, metadata)
         
-        self._convert_sections_to_chapters(latex_dir, paper_draft)
+        self._inject_sections_into_tex(latex_dir, paper_draft)
         
         self._generate_bibliography(latex_dir, paper_draft, indexed_papers)
         
-        # self._generate_abbreviations(latex_dir, paper_draft)
+
         
         if experiment_result:
             self._copy_plot_images(latex_dir, experiment_result)
@@ -122,7 +122,8 @@ class PaperConverter(LazyModelMixin):
                 cwd=latex_dir,
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
+                timeout=60  # 1 minute timeout
             )
             pdf_path = latex_dir / "result" / "paper.pdf"
             if pdf_path.exists():
@@ -131,6 +132,9 @@ class PaperConverter(LazyModelMixin):
             else:
                 logger.error(f"[PaperConverter] Compilation succeeded but PDF not found at {pdf_path}")
                 return False
+        except subprocess.TimeoutExpired:
+            logger.error(f"[PaperConverter] LaTeX compilation timed out after 60 seconds")
+            return False
         except subprocess.CalledProcessError as e:
             logger.error(f"[PaperConverter] LaTeX compilation failed with exit code {e.returncode}")
             if e.stdout:
@@ -225,66 +229,78 @@ class PaperConverter(LazyModelMixin):
         paper_path.write_text(content, encoding="utf-8")
         logger.info(f"[PaperConverter] Updated paper.tex with {len(metadata.authors)} author(s)")
 
-    def _convert_sections_to_chapters(self, latex_dir: Path, paper_draft: PaperDraft) -> None:
-        """Convert PaperDraft sections to LaTeX chapter files."""
+    def _inject_sections_into_tex(self, latex_dir: Path, paper_draft: PaperDraft) -> None:
+        """Convert PaperDraft sections to LaTeX and inject directly into paper.tex."""
         
-        # Map sections to chapter files
+        paper_path = latex_dir / "paper.tex"
+        if not paper_path.exists():
+             logger.error(f"[PaperConverter] paper.tex not found at {paper_path}")
+             return
+             
+        # Read the template with placeholders
+        paper_content = paper_path.read_text(encoding="utf-8")
+        
+        # Map sections to placeholders (e.g. Section.INTRODUCTION -> %%INTRODUCTION%%)
         section_mapping = {
-            Section.ABSTRACT: "abstract.tex",
-            Section.INTRODUCTION: "chapters/introduction.tex",
-            Section.RELATED_WORK: "chapters/related_work.tex",
-            Section.METHODS: "chapters/methods.tex",
-            Section.RESULTS: "chapters/results.tex",
-            Section.DISCUSSION: "chapters/discussion.tex",
-            Section.CONCLUSION: "chapters/conclusion.tex",
-            Section.ACKNOWLEDGEMENTS: "acknowledgements.tex",
+            Section.ABSTRACT: "%%ABSTRACT%%",
+            Section.INTRODUCTION: "%%INTRODUCTION%%",
+            Section.RELATED_WORK: "%%RELATED_WORK%%",
+            Section.METHODS: "%%METHODS%%",
+            Section.RESULTS: "%%RESULTS%%",
+            Section.DISCUSSION: "%%DISCUSSION%%",
+            Section.CONCLUSION: "%%CONCLUSION%%",
+            Section.ACKNOWLEDGEMENTS: "%%ACKNOWLEDGEMENTS%%",
         }
         
-        for section_type, filename in section_mapping.items():
+        # Map Section enum to PaperDraft attribute names
+        attr_map = {
+            Section.ABSTRACT: "abstract",
+            Section.INTRODUCTION: "introduction",
+            Section.RELATED_WORK: "related_work",
+            Section.METHODS: "methods",
+            Section.RESULTS: "results",
+            Section.DISCUSSION: "discussion",
+            Section.CONCLUSION: "conclusion",
+            Section.ACKNOWLEDGEMENTS: "acknowledgements",
+        }
+
+        for section_type, placeholder in section_mapping.items():
             # Get markdown content
-            # Map Section enum to PaperDraft attribute names
-            attr_map = {
-                Section.ABSTRACT: "abstract",
-                Section.INTRODUCTION: "introduction",
-                Section.RELATED_WORK: "related_work",
-                Section.METHODS: "methods",
-                Section.RESULTS: "results",
-                Section.DISCUSSION: "discussion",
-                Section.CONCLUSION: "conclusion",
-                Section.ACKNOWLEDGEMENTS: "acknowledgements",
-            }
             attr_name = attr_map[section_type]
             section_content = getattr(paper_draft, attr_name, None)
             
-            # Skip if content is None or empty
+            # Handle empty content
             if not section_content:
                 if section_type == Section.ACKNOWLEDGEMENTS:
                     logger.info(f"[PaperConverter] Skipping {section_type.value} (not provided)")
+                    # Remove placeholder
+                    paper_content = paper_content.replace(placeholder, "")
                 else:
                     logger.warning(f"[PaperConverter] Empty section: {section_type.value}")
+                    # Replace with empty string or comment
+                    paper_content = paper_content.replace(placeholder, f"% Empty section: {section_type.value}")
                 continue
             
             # Convert to LaTeX
-            print(f"[PaperConverter] Converting {section_type.value} to LaTeX...")
             logger.info(f"[PaperConverter] Converting {section_type.value} to LaTeX...")
             latex_content = MarkdownToLaTeX.convert_section_to_latex(section_content, section_type, self.model)
             
-            # Handle abstract specially - just plain content (paper.tex has \begin{abstract}...\end{abstract})
+            # Post-processing
             if section_type == Section.ABSTRACT:
-                # Abstract is already wrapped in \begin{abstract} environment in paper.tex
-                # Just write the plain content
+                # Abstract is just the content, environment is already in paper.tex
                 pass
             else:
-                # For IEEEtran, use \section instead of \chapter
-                if "\\section{" not in latex_content:
+                # Append section header if missing
+                if "\\section{" not in latex_content and section_type != Section.ACKNOWLEDGEMENTS:
                     section_title = section_type.value
                     latex_content = f"\\section{{{section_title}}}\n\\label{{sec:{section_title.lower().replace(' ', '_')}}}\n\n{latex_content}"
             
-            # Write to file
-            file_path = latex_dir / filename
-            file_path.parent.mkdir(parents=True, exist_ok=True)
-            file_path.write_text(latex_content, encoding="utf-8")
-            logger.info(f"[PaperConverter] Wrote {filename}")
+            # Inject into paper content
+            paper_content = paper_content.replace(placeholder, latex_content)
+            
+        # Write back the fully fully populated LaTeX file
+        paper_path.write_text(paper_content, encoding="utf-8")
+        logger.info(f"[PaperConverter] Injected all sections into {paper_path}")
 
     def _generate_bibliography(self, latex_dir: Path, paper_draft: PaperDraft, indexed_papers: list[Paper]) -> None:
         """Generate literature.bib from citations in PaperDraft."""
@@ -296,199 +312,7 @@ class PaperConverter(LazyModelMixin):
         
         logger.info(f"[PaperConverter] Generated literature.bib with {len(bib_content.split('@')) - 1} entries")
 
-    def _generate_abbreviations(self, latex_dir: Path, paper_draft: PaperDraft) -> None:
-        """Extract abbreviation definitions from paper draft and generate abbreviations.tex."""
-        definitions: dict[str, tuple[str, str]] = {}  # key -> (abbr, full)
-        keys: set[str] = set()
-        
-        def extract_abbrevs_from_text(text: str) -> None:
-            """Extract "Full Form (ABBR)" patterns from text."""
-            if not text:
-                return
-            
-            # Clean up malformed nested patterns first
-            # "Full Form (Full Form (ABBR))" -> "Full Form (ABBR)"
-            text = re.sub(
-                r'([A-Z][A-Za-z\s\-]+?)\s*\([^\)]*\1[^\)]*\(([A-Z]{2,})\)\)',
-                r'\1 (\2)',
-                text,
-                flags=re.IGNORECASE | re.DOTALL
-            )
-            
-            # Match: capitalized phrase followed by (2+ capital letters)
-            pattern = r'([A-Z][A-Za-z\s\-]+?)\s*\(([A-Z]{2,})\)'
-            
-            for match in re.finditer(pattern, text):
-                full_form = match.group(1).strip()
-                abbr = match.group(2).strip().upper()
-                key = abbr.lower()
-                
-                # Remove leading unwanted words
-                words = full_form.split()
-                unwanted_starts = {'unlike', 'the', 'a', 'an', 'this', 'that', 'these', 'those', 
-                                'such', 'some', 'any', 'all', 'each', 'every', 'both'}
-                
-                while words and words[0].lower() in unwanted_starts:
-                    words.pop(0)
-                
-                # Skip leading lowercase words
-                while words and words[0][0].islower():
-                    words.pop(0)
-                
-                if not words:
-                    continue
-                
-                full_form = ' '.join(words)
-                
-                # Store first occurrence only
-                if key not in definitions:
-                    definitions[key] = (abbr, full_form)
-                    keys.add(abbr)
-        
-        # Extract from markdown sections
-        for section_content in [
-            paper_draft.abstract,
-            paper_draft.introduction,
-            paper_draft.related_work,
-            paper_draft.methods,
-            paper_draft.results,
-            paper_draft.discussion,
-            paper_draft.conclusion,
-        ]:
-            extract_abbrevs_from_text(section_content)
-        
-        # Scan LaTeX files for additional abbreviations
-        def scan_latex_file(file_path: Path) -> None:
-            if not file_path.exists():
-                return
-            
-            content = file_path.read_text(encoding="utf-8")
-            extract_abbrevs_from_text(content)
-            
-            # Extract any existing \ac{KEY} usage
-            found_keys = re.findall(r'\\ac(?:s|l|f|p)?\{([^}]+)\}', content)
-            for key in found_keys:
-                keys.add(key.upper())
-        
-        # Scan all LaTeX files
-        scan_latex_file(latex_dir / "abstract.tex")
-        chapters_dir = latex_dir / "chapters"
-        if chapters_dir.exists():
-            for file_path in chapters_dir.glob("*.tex"):
-                if file_path.name != "abbreviations.tex":
-                    scan_latex_file(file_path)
-        
-        if not keys:
-            logger.warning("[PaperConverter] No abbreviations found")
-            return
-        
-        # Generate abbreviations.tex
-        lines = [
-            "% Abbreviations file",
-            "% Automatically generated",
-            ""
-        ]
-        
-        for key in sorted(keys):
-            key_lower = key.lower()
-            
-            if key_lower in definitions:
-                abbr, full = definitions[key_lower]
-            else:
-                abbr = key.upper()
-                full = key.replace('_', ' ').title()
-            
-            # Escape LaTeX special characters
-            full = full.replace("&", "\\&").replace("%", "\\%").replace("_", "\\_")
-            lines.append(f"\\acro{{{abbr}}}{{{full}}}")
-        
-        abbrev_file = latex_dir / "chapters" / "abbreviations.tex"
-        abbrev_file.write_text("\n".join(lines), encoding="utf-8")
-        logger.info(f"[PaperConverter] Generated abbreviations.tex with {len(keys)} entries")
-        
-        # Convert abbreviations in LaTeX files to \ac{} format
-        self._convert_abbreviations_to_ac(latex_dir, keys, definitions)
 
-
-    def _convert_abbreviations_to_ac(self, latex_dir: Path, keys: set[str], definitions: dict[str, tuple[str, str]]) -> None:
-        """Convert all abbreviation mentions to \ac{} format - LaTeX handles first occurrence expansion."""
-        
-        def process_file(file_path: Path) -> None:
-            if not file_path.exists():
-                return
-                
-            content = file_path.read_text(encoding="utf-8")
-            original_content = content
-            
-            # Clean up any malformed nested patterns from source
-            for abbr in sorted(keys, key=len, reverse=True):
-                key_lower = abbr.lower()
-                if key_lower not in definitions:
-                    continue
-                
-                known_full_form = definitions[key_lower][1]
-                escaped_full = re.escape(known_full_form)
-                escaped_abbr = re.escape(abbr)
-                
-                # Remove nested duplicates: "Full Form (Full Form (ABBR))" -> "Full Form (ABBR)"
-                nested_pattern = rf'{escaped_full}\s*\([^\)]*{escaped_full}[^\)]*\({escaped_abbr}\)\)'
-                content = re.sub(
-                    nested_pattern, 
-                    rf'{known_full_form} ({abbr})',
-                    content,
-                    flags=re.IGNORECASE | re.DOTALL
-                )
-            
-            # Convert "Full Form (ABBR)" -> \ac{ABBR}
-            # The \ac{} command will automatically expand to "Full Form (ABBR)" on first use
-            for abbr in sorted(keys, key=len, reverse=True):
-                key_lower = abbr.lower()
-                if key_lower not in definitions:
-                    continue
-                
-                known_full_form = definitions[key_lower][1]
-                escaped_full = re.escape(known_full_form)
-                escaped_abbr = re.escape(abbr)
-                
-                # Match "Full Form (ABBR)" but NOT if already \ac{ABBR}
-                pattern = rf'{escaped_full}\s*\((?!\\ac\{{){escaped_abbr}\)'
-                content = re.sub(pattern, rf'\\ac{{{abbr}}}', content, flags=re.IGNORECASE)
-            
-            # Convert standalone "ABBR" -> \ac{ABBR}
-            for abbr in sorted(keys, key=len, reverse=True):
-                escaped_abbr = re.escape(abbr)
-                
-                # Match standalone abbreviation, but not if already in \ac{}
-                pattern = rf'(?<!\\ac\{{)(?<!\\)\b{escaped_abbr}\b(?!\}})'
-                
-                def safe_replace(match):
-                    pos = match.start()
-                    
-                    # Check if already inside \ac{...}
-                    before = content[max(0, pos-10):pos]
-                    if '\\ac{' in before and not ')' in before[before.rfind('\\ac{'):]:
-                        return match.group(0)
-                    
-                    after = content[pos+len(abbr):min(len(content), pos+len(abbr)+10)]
-                    if after.startswith('}'):
-                        return match.group(0)
-                        
-                    return rf'\ac{{{abbr}}}'
-                
-                content = re.sub(pattern, safe_replace, content)
-            
-            if content != original_content:
-                file_path.write_text(content, encoding="utf-8")
-                logger.info(f"[PaperConverter] Converted abbreviations to \\ac{{}} in {file_path.name}")
-        
-        # Process all chapter files
-        chapters_dir = latex_dir / "chapters"
-        if chapters_dir.exists():
-            for file_path in chapters_dir.glob("*.tex"):
-                if file_path.name != "abbreviations.tex":
-                    process_file(file_path)
-        
-        process_file(latex_dir / "abstract.tex")
 
     def _copy_plot_images(self, latex_dir: Path, experiment_result: ExperimentResult) -> None:
         """Copy plot images from experiments/plots to LaTeX images directory."""

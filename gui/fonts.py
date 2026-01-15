@@ -14,7 +14,7 @@ class FontManager:
             self.font_family = "SF Pro"
             self.size_offset = 0
         else:
-            self.font_family = "Helvetica" # Fallback for Linux
+            self.font_family = "Helvetica"
             self.size_offset = 0
             
         # Monospace font
@@ -106,8 +106,8 @@ class FontManager:
         
     def _calc_size(self, relative_size):
         """Calculate actual font size based on base size, offset, and relative diff."""
-        # Ensure minimum size of 8 to remain readable
-        return max(8, self.base_size + self.size_offset + relative_size)
+        # Ensure minimum size of 10 to remain readable
+        return max(10, self.base_size + self.size_offset + relative_size)
 
     def update_base_size(self, new_size):
         """Update the base size and refresh all registered fonts."""

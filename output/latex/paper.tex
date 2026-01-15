@@ -4,7 +4,7 @@
 \usepackage[utf8]{inputenx}
 
 %% Note: The title will be automatically replaced by the paper generator
-\newcommand{\dokumententitel}[0]{Recursive Backwards Q-Learning: Sample-Efficient Value Convergence in Deterministic Episodic Environments}
+\newcommand{\dokumententitel}[0]{Test Paper}
 
 \input{preamble}
 
@@ -15,21 +15,7 @@
 
 % Author names - will be set by the paper generator
 \author{
-  \IEEEauthorblockN{Author 1}
-  \IEEEauthorblockA{
-    University of Test\\
-    Department of Computer Science\\
-    Some Address\\
-    Email: some@mail.com
-    }
-  \and
-  \IEEEauthorblockN{Author 2}
-  \IEEEauthorblockA{
-    University of Test\\
-    Department of Computer Science\\
-    Some Address\\
-    Email: some@other.mail.com
-    }
+
 }
 
 % Generate title
@@ -42,7 +28,7 @@
 
 % Abstract
 \begin{abstract}
-\input{abstract}
+This is the abstract.
 \end{abstract}
 
 % Generate table of contents
@@ -50,28 +36,36 @@
 
 % Sections
 % -------------------------------------------------------
-\input{chapters/introduction}
-\input{chapters/related_work}
-\input{chapters/methods}
-\input{chapters/results}
-\input{chapters/discussion}
-\input{chapters/conclusion}
+\section{Introduction}
+\label{sec:introduction}
+
+This is the introduction.
+\section{Related Work}
+\label{sec:related_work}
+
+This is related work.
+\section{Methods}
+\label{sec:methods}
+
+Methods section.
+\section{Results}
+\label{sec:results}
+
+Results section.
+\section{Discussion}
+\label{sec:discussion}
+
+Discussion section.
+\section{Conclusion}
+\label{sec:conclusion}
+
+Conclusion section.
 
 % Acknowledgements (if provided)
-\IfFileExists{acknowledgements.tex}{
-\input{acknowledgements}
-}{}
+\subsection{Acknowledgements}
 
 % --------------------------------------------------------------------
-% Abbreviations
-\section*{Abbreviations}
-\addcontentsline{toc}{section}{Abbreviations}
 
-% The longest abbreviation is written in square brackets
-% at \begin{acronym} to prevent ugly line breaks
-\begin{acronym}[IEEE]
-\input{chapters/abbreviations}
-\end{acronym}
 
 % Bibliography
 \addcontentsline{toc}{section}{References}

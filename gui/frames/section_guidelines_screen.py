@@ -19,6 +19,7 @@ class SectionGuidelinesScreen(BaseFrame):
             info_content=SECTION_GUIDELINES_INFO
         )
         self.text_areas = {}
+        self.section_cards = []  # Track cards for selective clearing
 
     def create_content(self):
         pass
@@ -79,12 +80,13 @@ class SectionGuidelinesScreen(BaseFrame):
         self.controller.apply_theme_colors(text_area)
         
         self.text_areas[section_enum] = text_area
+        return card
 
     def on_show(self):
-        # Clear existing content (to avoid duplicates)
-        for widget in self.scrollable_frame.winfo_children():
-            widget.destroy()
-            
+        # Clear only the section cards, not the action buttons
+        for card in getattr(self, 'section_cards', []):
+            card.destroy()
+        self.section_cards = []
         self.text_areas = {}
         
         guidelines = SectionGuidelinesLoader.load_guidelines()
@@ -102,7 +104,8 @@ class SectionGuidelinesScreen(BaseFrame):
         
         for section in ordered_sections:
             content = guidelines.get(section, "")
-            self._create_section_editor(section.value.title(), section, content)
+            card = self._create_section_editor(section.value.title(), section, content)
+            self.section_cards.append(card)
 
     def on_next(self):
         # Save content

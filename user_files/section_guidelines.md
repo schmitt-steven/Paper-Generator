@@ -1,7 +1,11 @@
 # Section Guidelines
 ## Abstract
-150-250 words. Structure: (1) problem/gap, (2) approach, (3) key result with metrics, (4) main implication. 
-Be specific. NO citations.
+150-250 words MAX.
+Structure: (1) Problem/Gap, (2) Approach, (3) Key Results (with specific metrics), (4) Main Implication.
+Be specific and verifiable.
+CITATIONS: STRICTLY FORBIDDEN. Do NOT include ANY citations in the Abstract.
+Do NOT use square brackets [ ] for references.
+Do NOT use generic phrases like "In this paper, we propose...". Jump straight into the problem or approach.
 
 ## Introduction
 Open with the problem and its concrete impact.
@@ -11,7 +15,7 @@ End with brief paper roadmap.
 Justify claims with evidence, don't just assert.
 
 ## Related Work
-Group by approach/theme, not chronologically. For each cluster:
+Group by approach/theme, not chronologically. For each group:
 - What they did (method + reported results)
 - Limitations relative to this work
 - Direct comparison where applicable

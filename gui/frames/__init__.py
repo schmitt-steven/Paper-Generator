@@ -1,14 +1,10 @@
 from .start_screen import StartScreen
 from .settings_screen import SettingsScreen
-
-from .user_requirements_screen import UserRequirementsScreen
-from .code_files_screen import CodeFilesScreen
 from .paper_concept_screen import PaperConceptScreen
 from .paper_selection_screen import PaperSelectionScreen
 from .hypothesis_screen import HypothesisScreen
 from .experiment_plan_screen import ExperimentPlanScreen
 from .experiment_results_screen import ExperimentResultsScreen
-from .evidence_screen import EvidenceScreen
 from .paper_draft_screen import PaperDraftScreen
 from .result_screen import ResultScreen
 from .section_guidelines_screen import SectionGuidelinesScreen

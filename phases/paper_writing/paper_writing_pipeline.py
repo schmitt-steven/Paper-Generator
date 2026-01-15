@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Sequence, Optional, Dict, Callable
+from typing import Sequence, Optional, Callable
 from pathlib import Path
 import re
 from phases.context_analysis.paper_conception import PaperConcept
@@ -7,22 +7,20 @@ from phases.context_analysis.user_requirements import UserRequirements
 from phases.paper_search.paper import Paper
 from phases.paper_writing.data_models import PaperDraft, PaperChunk, Section, Evidence
 from phases.paper_writing.paper_indexer import PaperIndexer
-from phases.paper_writing.query_builder import QueryBuilder
 from phases.paper_writing.paper_writer import PaperWriter
 from phases.paper_writing.evidence_gatherer import EvidenceGatherer
-from phases.paper_writing.evidence_manager import save_evidence, load_evidence
+from phases.paper_writing.section_critic import SectionCritic
 from phases.experimentation.experiment_state import ExperimentResult
 from utils.lms_settings import LMSJITSettings
-from utils.file_utils import save_json, load_json, save_markdown, load_markdown
+from utils.file_utils import save_markdown, load_markdown
 from settings import Settings
 
 
 class PaperWritingPipeline:
-    """Orchestrates indexing, evidence gathering, and section writing."""
+    """Orchestrates critique-based paper writing."""
 
     def __init__(self) -> None:
         self.indexer = PaperIndexer()
-        self.query_builder = QueryBuilder()
         self.writer = PaperWriter()
 
         self._indexed_corpus: Optional[list[PaperChunk]] = None
@@ -32,95 +30,6 @@ class PaperWritingPipeline:
 
         self._indexed_corpus = self.indexer.index_papers(papers)
         return self._indexed_corpus
-
-    def write_paper(
-        self,
-        paper_concept: PaperConcept,
-        experiment_result: ExperimentResult,
-        papers: Sequence[Paper],
-        user_requirements: Optional[UserRequirements] = None,
-        status_callback: Optional[Callable[[str], None]] = None,
-    ) -> PaperDraft:
-        """Run the full pipeline and return generated paper sections."""
-
-        if not self._indexed_corpus:
-            if status_callback:
-                status_callback("Generating embeddings for papers")
-            self.index_papers(papers)
-
-        print(f"\n{'='*80}")
-        print(f"GATHERING EVIDENCE FOR PAPER SECTIONS")
-        print(f"{'='*80}\n")
-        
-        gatherer = EvidenceGatherer(
-            indexed_corpus=self._indexed_corpus or [],
-        )
-
-        evidence_by_section: dict[Section, Sequence[Evidence]] = {}
-        # Generate sections in order: Methods -> Results -> Discussion -> Introduction -> Related Work -> Conclusion -> Abstract
-        
-        # Use context manager to ensure multiple models can be loaded for ALL sections
-        with LMSJITSettings():
-            for section_type in (
-                Section.METHODS,
-                Section.RESULTS,
-                Section.DISCUSSION,
-                Section.INTRODUCTION,
-                Section.RELATED_WORK,
-                Section.CONCLUSION,
-                # Section.ABSTRACT,
-            ):
-                print(f"[{section_type.value}] Gathering evidence for {section_type.value} section")
-                if status_callback:
-                    status_callback(f"Gathering evidence for {section_type.value} section")
-                default_queries = self.query_builder.build_default_queries(section_type, paper_concept, experiment_result)
-
-                evidence, _ = gatherer.gather_evidence(
-                    section_type=section_type,
-                    context=paper_concept,
-                    experiment=experiment_result,
-                    default_queries=default_queries,
-                    max_iterations=Settings.EVIDENCE_AGENTIC_ITERATIONS,
-                    initial_chunks=Settings.EVIDENCE_INITIAL_CHUNKS,
-                    filtered_chunks=Settings.EVIDENCE_FILTERED_CHUNKS,
-                    user_requirements=user_requirements,
-                )
-
-                evidence_by_section[section_type] = evidence
-
-        # Save evidence for the Evidence Manager screen
-        save_evidence(evidence_by_section)
-
-        print(f"\n{'='*80}")
-        print(f"WRITING PAPER SECTIONS")
-        print(f"{'='*80}\n")
-        
-        # Load prompts if setting is enabled
-        # Try to load existing prompts to avoid re-generation
-        writing_prompts = None
-        try:
-            writing_prompts = self.load_section_writing_prompts()
-            print(f"[PaperWritingPipeline] Using loaded writing prompts for {len(writing_prompts)} sections")
-        except FileNotFoundError:
-            print(f"[PaperWritingPipeline] Prompts file not found. Generating new prompts.")
-            writing_prompts = None
-        
-        if status_callback:
-            status_callback("Writing paper sections")
-
-        paper_draft, generated_prompts = self.writer.generate_paper_sections(
-            context=paper_concept,
-            experiment=experiment_result,
-            evidence_by_section=evidence_by_section,
-            user_requirements=user_requirements,
-            writing_prompts=writing_prompts,
-        )
-        
-        # Save writing prompts to output directory (use generated if not loaded)
-        self._save_prompts(prompts_by_section=generated_prompts if writing_prompts is None else writing_prompts)
-        self._save_paper_draft(paper_draft=paper_draft)
-
-        return paper_draft
 
     @staticmethod
     def _save_prompts(
@@ -157,14 +66,17 @@ class PaperWritingPipeline:
         content = load_markdown(path_obj.name, str(path_obj.parent))
 
         prompts = {}
-        # Pattern: # Section Name followed by content until next # or end
-        # Note: Section headers are Level 1 (#)
-        section_pattern = r'^#\s+(.+?)\s*\n(.*?)(?=\n#\s+|$)'
+        pattern = r'^# (.+)$'
+        parts = re.split(pattern, content, flags=re.MULTILINE)
         
-        for match in re.finditer(section_pattern, content, re.DOTALL | re.MULTILINE):
-            section_name = match.group(1).strip()
-            prompt_content = match.group(2).strip()
-            prompts[section_name] = prompt_content
+        # parts[0] is content before first header
+        # Then alternating: header, content, header, content...
+        for i in range(1, len(parts), 2):
+            if i + 1 < len(parts):
+                section_name = parts[i].strip()
+                section_content = parts[i + 1].strip()
+                if section_content:  # Only add if there's actual content
+                    prompts[section_name] = section_content
 
         print(f"[PaperWritingPipeline] Loaded {len(prompts)} section writing prompts from {filepath}")
         return prompts
@@ -241,62 +153,186 @@ class PaperWritingPipeline:
 
         self._indexed_corpus = None
 
-    def write_paper_from_evidence(
+    def write_paper_with_critique(
         self,
         paper_concept: PaperConcept,
         experiment_result: ExperimentResult,
+        papers: Sequence[Paper],
         user_requirements: Optional[UserRequirements] = None,
         status_callback: Optional[Callable[[str], None]] = None,
-        evidence_file: str = "output/evidence.json",
+        max_critique_queries: int = 5,
+        chunks_per_query: int = 3,
     ) -> PaperDraft:
         """
-        Write paper using pre-edited evidence from JSON file.
+        Write paper using the critique-based pipeline.
         
-        This method skips evidence gathering and uses evidence that was
-        previously gathered and potentially edited by the user via the
-        Evidence Manager screen.
+        Flow per section:
+        1. Draft v1 using paper catalog (title + abstract + conclusion)
+        2. Critique: identify improvements and search queries
+        3. Search: batch execute queries for additional evidence
+        4. Rewrite: incorporate critique and new evidence
+        
+        Args:
+            paper_concept: The paper concept/context
+            experiment_result: Experiment results to incorporate
+            papers: Selected papers for citation
+            user_requirements: Optional user requirements per section
+            status_callback: Callback for status updates
+            max_critique_queries: Max search queries from critique (default 5)
+            chunks_per_query: Evidence chunks per query (default 3)
+            
+        Returns:
+            PaperDraft with all sections
         """
-        print(f"\n{'='*80}")
-        print(f"LOADING EDITED EVIDENCE")
-        print(f"{'='*80}\n")
-        
-        if status_callback:
-            status_callback("Loading edited evidence")
-        
-        # Load evidence from file (user may have added/removed chunks)
-        try:
-            evidence_by_section = load_evidence(evidence_file)
-            total_chunks = sum(len(ev) for ev in evidence_by_section.values())
-            print(f"[PaperWritingPipeline] Loaded {total_chunks} evidence chunks from {evidence_file}")
-        except FileNotFoundError:
-            raise ValueError(f"Evidence file not found: {evidence_file}. Please run evidence gathering first.")
-        
-        print(f"\n{'='*80}")
-        print(f"WRITING PAPER SECTIONS")
-        print(f"{'='*80}\n")
-        
-        # Load prompts if setting is enabled
-        writing_prompts = None
-        try:
-            writing_prompts = self.load_section_writing_prompts()
-            print(f"[PaperWritingPipeline] Using loaded writing prompts for {len(writing_prompts)} sections")
-        except FileNotFoundError:
-            print(f"[PaperWritingPipeline] Prompts file not found. Generating new prompts.")
-            writing_prompts = None
-        
-        if status_callback:
-            status_callback("Writing paper sections")
+        # Index papers for critique-based evidence search
+        if not self._indexed_corpus:
+            if status_callback:
+                status_callback("Generating embeddings for papers")
+            self.index_papers(papers)
 
-        paper_draft, generated_prompts = self.writer.generate_paper_sections(
-            context=paper_concept,
-            experiment=experiment_result,
-            evidence_by_section=evidence_by_section,
-            user_requirements=user_requirements,
-            writing_prompts=writing_prompts,
+        print(f"\n{'='*80}")
+        print(f"PAPER WRITING PIPELINE")
+        print(f"{'='*80}\n")
+
+        critic = SectionCritic()
+        gatherer = EvidenceGatherer(indexed_corpus=self._indexed_corpus or [])
+        
+        section_order = (
+            Section.METHODS, Section.RESULTS, Section.DISCUSSION,
+            Section.INTRODUCTION, Section.RELATED_WORK, Section.CONCLUSION, Section.ABSTRACT
         )
         
-        # Save writing prompts to output directory
-        self._save_prompts(prompts_by_section=generated_prompts if writing_prompts is None else writing_prompts)
+        sections: dict[Section, str] = {}
+        evidence_by_section: dict[Section, Sequence[Evidence]] = {}
+        
+        with LMSJITSettings():
+            for section_type in section_order:
+                print(f"\n{'─'*60}")
+                print(f"[{section_type.value}] Processing section...")
+                print(f"{'─'*60}")
+                
+                # Step 1: Draft v1 using paper catalog
+                if status_callback:
+                    status_callback(f"Drafting {section_type.value} section")
+                print(f"  [Step 1] Writing initial draft using paper catalog...")
+                
+                draft_v1 = self.writer.generate_section_from_catalog(
+                    section_type=section_type,
+                    papers=papers,
+                    context=paper_concept,
+                    experiment=experiment_result,
+                    previous_sections=sections,
+                    user_requirements=user_requirements,
+                )
+                print(f"    Draft complete ({len(draft_v1)} chars)")
+                
+                # Step 2: Critique the draft
+                if status_callback:
+                    status_callback(f"Critiquing {section_type.value} section")
+                print(f"  [Step 2] Analyzing draft for improvements...")
+                
+                critique = critic.critique_section(
+                    section_type=section_type,
+                    draft_text=draft_v1,
+                    papers=papers,
+                    max_queries=max_critique_queries,
+                )
+                print(f"    Found {len(critique.improvements)} improvements, {len(critique.search_queries)} queries")
+                
+                # Step 3: Batch search for additional evidence
+                new_evidence: list[Evidence] = []
+                
+                # Skip search for sections that don't need external evidence (Abstract, Conclusion, Acknowledgements)
+                skip_search = section_type in [Section.ABSTRACT, Section.CONCLUSION, Section.ACKNOWLEDGEMENTS]
+                
+                if critique.search_queries and not skip_search:
+                    if status_callback:
+                        status_callback(f"Searching evidence for {section_type.value}")
+                    print(f"  [Step 3] Searching for additional evidence...")
+                    
+                    new_evidence = gatherer.batch_search(
+                        queries=critique.search_queries,
+                        section_type=section_type,
+                        chunks_per_query=chunks_per_query,
+                    )
+                else:
+                    reason = "skipped by policy" if skip_search else "no queries suggested"
+                    print(f"  [Step 3] Skipping search ({reason})")
+                
+                evidence_by_section[section_type] = new_evidence
+                
+                # Step 4: Rewrite with critique and new evidence
+                if status_callback:
+                    status_callback(f"Rewriting {section_type.value} section")
+                print(f"  [Step 4] Rewriting section with improvements and evidence...")
+                
+                final_section = self.writer.rewrite_section(
+                    section_type=section_type,
+                    original_draft=draft_v1,
+                    critique=critique,
+                    new_evidence=new_evidence,
+                    papers=papers,
+                    context=paper_concept,
+                    experiment=experiment_result,
+                    previous_sections=sections,
+                    user_requirements=user_requirements,
+                )
+                
+                sections[section_type] = final_section
+                print(f"    Section complete ({len(final_section)} chars)")
+                
+                # Intermediate save:
+                current_title = "Draft in Progress"
+                if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
+                     current_title = Settings.LATEX_TITLE
+                     
+                partial_draft = PaperDraft(
+                    title=current_title,
+                    abstract=sections.get(Section.ABSTRACT, ""),
+                    introduction=sections.get(Section.INTRODUCTION, ""),
+                    related_work=sections.get(Section.RELATED_WORK, ""),
+                    methods=sections.get(Section.METHODS, ""),
+                    results=sections.get(Section.RESULTS, ""),
+                    discussion=sections.get(Section.DISCUSSION, ""),
+                    conclusion=sections.get(Section.CONCLUSION, ""),
+                    acknowledgements=None
+                )
+                self._save_paper_draft(paper_draft=partial_draft)
+
+        # Generate acknowledgements if enabled
+        acknowledgements = None
+        if Settings.GENERATE_ACKNOWLEDGEMENTS and user_requirements and user_requirements.acknowledgements:
+            print("\nWriting Acknowledgements section...")
+            acknowledgements = self.writer.generate_acknowledgements(user_requirements.acknowledgements)
+
+        # Generate or use provided title
+        if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
+            title = Settings.LATEX_TITLE
+        else:
+            title = self.writer.generate_title(
+                abstract=sections[Section.ABSTRACT],
+                introduction=sections[Section.INTRODUCTION],
+                conclusion=sections[Section.CONCLUSION],
+                context=paper_concept,
+            )
+
+        paper_draft = PaperDraft(
+            title=title,
+            abstract=sections[Section.ABSTRACT],
+            introduction=sections[Section.INTRODUCTION],
+            related_work=sections[Section.RELATED_WORK],
+            methods=sections[Section.METHODS],
+            results=sections[Section.RESULTS],
+            discussion=sections[Section.DISCUSSION],
+            conclusion=sections[Section.CONCLUSION],
+            acknowledgements=acknowledgements,
+        )
+        
         self._save_paper_draft(paper_draft=paper_draft)
+        
+        print(f"\n{'='*80}")
+        print(f"PAPER WRITING COMPLETE")
+        print(f"{'='*80}\n")
 
         return paper_draft
+

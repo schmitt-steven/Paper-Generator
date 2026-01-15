@@ -32,8 +32,10 @@ class PaperIndexer:
     def index_papers(self, papers: Sequence[Paper]) -> list[PaperChunk]:
         """Parse and chunk papers into indexed PaperChunk records."""
 
+        papers_with_content = [p for p in papers if p.markdown_text and p.markdown_text.strip()]
+        
         print(f"\n{'='*80}")
-        print(f"INDEXING {len(papers)} PAPERS")
+        print(f"INDEXING {len(papers_with_content)}/{len(papers)} PAPERS (skipping {len(papers) - len(papers_with_content)} without text)")
         print(f"{'='*80}\n")
         
         # 1. Generate all chunk definitions first
@@ -43,12 +45,8 @@ class PaperIndexer:
             
         # 2. Load existing embeddings (dict)
         existing_embeddings: dict[str, list[float]] = {}
-        # 2. Load existing embeddings (dict)
+        # 2. Start fresh (do not load existing embeddings)
         existing_embeddings: dict[str, list[float]] = {}
-        loaded = self.load_embeddings()
-        if loaded:
-            existing_embeddings = loaded
-            print(f"Loaded {len(existing_embeddings)} existing embeddings.")
         
         # 3. Identify missing chunks
         missing_chunks: list[tuple[Paper, int, str, str]] = []
@@ -109,18 +107,10 @@ class PaperIndexer:
             if not paper.markdown_text:
                 continue
 
-            cleaned_markdown = preprocess_markdown(paper.markdown_text)
-            
-            # Strip references and acknowledgments sections
-            original_tokens = self._estimate_tokens(cleaned_markdown)
-            cleaned_markdown = self._strip_references_section(cleaned_markdown)
-            final_tokens = self._estimate_tokens(cleaned_markdown)
-            tokens_saved = original_tokens - final_tokens
-            if tokens_saved > 0:
-                total_tokens_saved += tokens_saved
-                papers_with_refs_stripped += 1
+            # Markdown is already preprocessed and stripped during PDF conversion
+            markdown = paper.markdown_text
                 
-            chunks = self._chunk_document(cleaned_markdown)
+            chunks = self._chunk_document(markdown)
             for chunk_idx, chunk_text in enumerate(chunks):
                 chunk_id = self._build_chunk_id(paper.id, chunk_idx)
                 chunk_definitions.append((paper, chunk_idx, chunk_id, chunk_text))
@@ -128,13 +118,9 @@ class PaperIndexer:
         if not chunk_definitions:
             return []
         
-        # Print summary of reference stripping (only if actually processing)
-        if chunk_definitions:  # Always print summary if we processed something
-            print(f"PREPROCESSING SUMMARY:")
-            print(f"  Papers processed: {len(papers)}")
-            print(f"  References stripped: {papers_with_refs_stripped}/{len(papers)} papers")
-            print(f"  Tokens saved: {total_tokens_saved:,}")
-            print(f"  Total chunks created: {len(chunk_definitions)}\n")
+        print(f"INDEXING SUMMARY:")
+        print(f"  Papers processed: {len(papers)}")
+        print(f"  Total chunks created: {len(chunk_definitions)}\n")
             
         return chunk_definitions
 
@@ -227,7 +213,7 @@ class PaperIndexer:
             return []
         
         embedding_model = lms.embedding_model(Settings.PAPER_INDEXING_EMBEDDING_MODEL)
-        batch_size = Settings.PAPER_EMBEDDING_BATCH_SIZE
+        batch_size = 32
         all_embeddings: list[list[float]] = []
         
         num_batches = (len(texts) + batch_size - 1) // batch_size
@@ -273,19 +259,3 @@ class PaperIndexer:
         except Exception as e:
             print(f"Error loading embeddings: {e}")
             return None
-
-    def _strip_references_section(self, text: str) -> str:
-        """Remove references, acknowledgments, and bibliography sections from text."""
-        import re
-        
-        # Pattern matches common reference section headers (case-insensitive, with optional markdown formatting)
-        # Matches: REFERENCES, References, **References**, ACKNOWLEDGMENTS, etc.
-        pattern = r'^\s*(?:\*\*)?(?:\d+\.?\s*)?(?:REFERENCES?|ACKNOWLEDGMENTS?|ACKNOWLEDGEMENTS?|BIBLIOGRAPHY)(?:\*\*)?(?:\s+.*)?$'
-        
-        lines = text.split('\n')
-        for i, line in enumerate(lines):
-            if re.match(pattern, line, re.IGNORECASE):
-                # Truncate at this line
-                return '\n'.join(lines[:i])
-        
-        return text

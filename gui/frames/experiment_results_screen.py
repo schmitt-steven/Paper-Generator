@@ -85,16 +85,12 @@ class CollapsibleTextCard(CardBorderFrame):
         text_bg = TEXT_BG_DARK_ALT if self.controller.current_theme == "dark" else TEXT_BG_LIGHT_ALT
         text_fg = TEXT_FG_DARK if self.controller.current_theme == "dark" else TEXT_FG_LIGHT
         
-        # Heuristic height
-        num_lines = self.content.count('\n') + 1
-        height = min(num_lines + 5, 50)
-        
         font = self.controller.fonts.code_font if self.code_font else self.controller.fonts.text_area_font
         wrap = "none" if self.code_font else "word"
         
         self.text_widget = tk.Text(
             self.content_frame,
-            height=height,
+            height=1,  # Start small, will adjust after insert
             font=font,
             wrap=wrap,
             background=text_bg,
@@ -118,6 +114,21 @@ class CollapsibleTextCard(CardBorderFrame):
         
         self.text_widget.insert("1.0", self.content)
         self.text_widget.config(state="disabled")
+        
+        # After insert, calculate actual display lines and resize
+        def adjust_height():
+            self.text_widget.update_idletasks()
+            try:
+                display_lines = self.text_widget.count("1.0", "end", "displaylines")
+                if display_lines:
+                    actual_lines = display_lines[0] if isinstance(display_lines, tuple) else display_lines
+                    # Cap at reasonable max, add small padding
+                    height = min(actual_lines + 1, 30)
+                    self.text_widget.config(height=height)
+            except:
+                pass  # Fall back to default if count fails
+        
+        self.text_widget.after(10, adjust_height)
 
     def toggle(self):
         self.expanded = not self.expanded
@@ -134,16 +145,17 @@ class CollapsibleTextCard(CardBorderFrame):
 
 
 class CollapsibleCodeCard(CardBorderFrame):
-    """A collapsible card for experiment code with an Edit button."""
+    """A collapsible card for experiment code with Edit and Execute buttons."""
     
     def __init__(self, parent, section_name: str, content: str, controller, 
-                 on_edit=None, on_show_explorer=None, start_expanded: bool = False):
+                 on_edit=None, on_show_explorer=None, on_execute=None, start_expanded: bool = False):
         super().__init__(parent, padx=1, pady=1)
         self.section_name = section_name
         self.content = content
         self.controller = controller
         self.on_edit = on_edit
         self.on_show_explorer = on_show_explorer
+        self.on_execute = on_execute
         self.expanded = False
         
         self._build_ui()
@@ -189,6 +201,10 @@ class CollapsibleCodeCard(CardBorderFrame):
         # Buttons on Right
         btn_frame = tk.Frame(header, bg=header_bg)
         btn_frame.pack(side="right")
+        
+        if self.on_execute:
+            execute_btn = ttk.Button(btn_frame, text="Execute", command=self.on_execute)
+            execute_btn.pack(side="left", padx=(0, 10))
         
         if self.on_edit:
             edit_btn = ttk.Button(btn_frame, text="Edit", command=self.on_edit)
@@ -373,9 +389,9 @@ class CollapsibleFigureCard(CardBorderFrame):
 
 class ExperimentResultsScreen(BaseFrame):
     def __init__(self, parent, controller):
-        # Dynamic button text based on whether evidence file exists
-        from phases.paper_writing.evidence_manager import EVIDENCE_FILE
-        next_text = "Continue" if Path(EVIDENCE_FILE).exists() else "Gather Evidence"
+        # Dynamic button text based on whether paper draft exists
+        paper_draft_file = Path("output/paper_draft.md")
+        next_text = "Continue" if paper_draft_file.exists() else "Write Paper"
         
         super().__init__(
             parent=parent,
@@ -457,6 +473,7 @@ class ExperimentResultsScreen(BaseFrame):
                 self.controller,
                 on_edit=self._open_code_in_editor,
                 on_show_explorer=self._show_code_in_explorer,
+                on_execute=self._execute_current_code,
                 start_expanded=False
             )
             code_card.pack(fill="x", pady=10)
@@ -517,6 +534,162 @@ class ExperimentResultsScreen(BaseFrame):
             # Linux - try to just open the directory
             subprocess.call(['xdg-open', os.path.dirname(path)])
 
+    def _execute_current_code(self):
+        """Execute the current experiment code and refresh the UI with new results."""
+        if not self.current_code_path or not self.current_code_path.exists():
+            tk.messagebox.showwarning("No Code", "No experiment code file found.")
+            return
+        
+        if not tk.messagebox.askyesno("Execute Code", "Execute the current experiment code?\n\nThis will run the code and regenerate the verdict and figures."):
+            return
+        
+        popup = ProgressPopup(self.controller, "Executing Experiment")
+        
+        def task():
+            try:
+                self.after(0, lambda: popup.update_status("Executing code"))
+                
+                runner = ExperimentRunner()
+                
+                code_file_abs = str(self.current_code_path.absolute())
+                
+                # Execute the code file
+                execution_result = runner.executor.execute_file(
+                    code_file_abs,
+                    output_dir=runner.base_output_dir
+                )
+                
+                if execution_result.return_code != 0:
+                    error_msg = execution_result.stderr or "Unknown error"
+                    self.after(0, lambda e=error_msg: popup.show_error(f"Execution failed: {e[:500]}"))
+                    return
+                
+                self.after(0, lambda: popup.update_status("Validating results"))
+                
+                # Load the hypothesis and experiment plan
+                hypothesis = HypothesisBuilder.load_hypothesis(HYPOTHESES_FILE)
+                experiment_plan = runner.load_experiment_plan()
+                
+                # Validate results
+                validation_result = runner._validate_experiment_results(
+                    execution_result,
+                    experiment_plan,
+                    hypothesis,
+                    code_file_abs
+                )
+                
+                self.after(0, lambda: popup.update_status("Generating verdict and captions"))
+                
+                # Generate plot captions if plots exist
+                plot_captions = []
+                if execution_result.plot_files:
+                    plot_captions = runner._generate_plot_captions(
+                        execution_result.plot_files,
+                        hypothesis,
+                        experiment_plan,
+                        execution_result.stdout
+                    )
+                
+                # Determine verdict
+                import lmstudio as lms
+                from settings import Settings
+                import textwrap
+                from phases.experimentation.experiment_state import VerdictResult, HypothesisEvaluation, ExperimentResult
+                from utils.llm_utils import remove_thinking_blocks
+                
+                verdict = "inconclusive"
+                reasoning = ""
+                
+                if validation_result.is_valid:
+                    # Build plot captions text
+                    plot_captions_text = ""
+                    if plot_captions:
+                        plot_captions_text = "\n\nGenerated Plot Captions:\n"
+                        for i, plot in enumerate(plot_captions, 1):
+                            plot_captions_text += f"{i}. {Path(plot.filename).name}: {plot.caption}\n"
+                    
+                    stdout_summary = execution_result.stdout
+                    if len(stdout_summary) > 2000:
+                        stdout_summary = stdout_summary[:500] + "\n...[truncated]...\n" + stdout_summary[-1500:]
+                    
+                    verdict_prompt = textwrap.dedent(f"""\
+                        [ROLE]
+                        You are evaluating the results of a scientific experiment to test a hypothesis.
+
+                        [HYPOTHESIS]
+                        Description: {hypothesis.description}
+                        Rationale: {hypothesis.rationale}
+                        Success Criteria: {hypothesis.success_criteria}
+
+                        [STDOUT_OUTPUT]
+                        {stdout_summary}
+
+                        [PLOT_CAPTIONS]
+                        {plot_captions_text}
+
+                        [TASK]
+                        Based on the execution results and generated plots, provide:
+                        1. A concise reasoning about whether the hypothesis is proven, disproven, or inconclusive
+                        2. Your concise analysis of the results and observations of the experiment
+                        Then determine the verdict with a single word: 'proven', 'disproven', or 'inconclusive'.
+                    """)
+                    
+                    model = lms.llm(Settings.EXPERIMENT_VERDICT_MODEL)
+                    result = model.respond(verdict_prompt, response_format=VerdictResult)
+                    verdict_result = VerdictResult(**result.parsed)
+                    verdict = verdict_result.verdict.strip().lower()
+                    reasoning = verdict_result.reasoning
+                    
+                    if verdict not in ["proven", "disproven", "inconclusive"]:
+                        verdict = "inconclusive"
+                else:
+                    reasoning = f"Validation failed: {validation_result.reasoning}"
+                
+                # Load existing result to preserve some fields
+                experiment_code = ""
+                try:
+                    with open(self.current_code_path, 'r', encoding='utf-8') as f:
+                        experiment_code = f.read()
+                except:
+                    pass
+                
+                # Create new experiment result
+                new_result = ExperimentResult(
+                    hypothesis=hypothesis,
+                    experiment_plan=experiment_plan,
+                    experiment_code=experiment_code,
+                    execution_result=execution_result,
+                    validation_result=validation_result,
+                    hypothesis_evaluation=HypothesisEvaluation(
+                        hypothesis_id=hypothesis.id,
+                        verdict=verdict,
+                        reasoning=reasoning
+                    ),
+                    plots=plot_captions,
+                    fix_attempts=0,
+                    validation_attempts=1,
+                    execution_time=None
+                )
+                
+                # Save the new result
+                runner.save_experiment_result(new_result)
+                
+                self.after(0, lambda: self._on_execute_success(popup))
+                
+            except Exception as e:
+                import traceback
+                tb_str = traceback.format_exc()
+                traceback.print_exc()
+                self.after(0, lambda err=tb_str: popup.show_error(err))
+        
+        threading.Thread(target=task, daemon=True).start()
+    
+    def _on_execute_success(self, popup):
+        """Handle successful code execution."""
+        popup.close()
+        self._results_loaded = False  # Force reload
+        self._load_and_display_results()
+
     def _show_error(self, message: str):
         error_frame = ttk.Frame(self.scrollable_frame, padding="20")
         error_frame.pack(fill="x", pady=20)
@@ -528,61 +701,53 @@ class ExperimentResultsScreen(BaseFrame):
             self._results_loaded = True
             
     def on_next(self):
-        from phases.paper_writing.evidence_manager import EVIDENCE_FILE
-        if Path(EVIDENCE_FILE).exists():
+        from pathlib import Path
+        paper_draft_file = Path("output/paper_draft.md")
+        if paper_draft_file.exists():
             super().on_next()
         else:
-            self._run_generation()
+            self._run_paper_generation()
 
-    def _run_generation(self):
-        self._execute_evidence_gathering()
+    def _run_paper_generation(self):
+        """Run the critique-based paper writing pipeline."""
+        popup = ProgressPopup(self.controller, "Writing Paper")
         
-    def _execute_evidence_gathering(self):
-         popup = ProgressPopup(self.controller, "Gathering Evidence")
-         def task():
+        def task():
             try:
-                self.after(0, lambda: popup.update_status("Loading resources..."))
+                self.after(0, lambda: popup.update_status("Loading resources"))
                 paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
                 experiment_result = ExperimentRunner.load_experiment_result("output/experiments/experiment_result.json")
                 from phases.paper_search.literature_search import LiteratureSearch
                 papers = LiteratureSearch.load_papers("output/papers.json")
                 
+                # Load user requirements if available
+                user_requirements = None
+                try:
+                    from phases.context_analysis.user_requirements import UserRequirements
+                    user_requirements = UserRequirements.load("output/user_requirements.json")
+                except:
+                    pass
+                
                 pipeline = PaperWritingPipeline()
-                self.after(0, lambda: popup.update_status("Indexing papers..."))
-                pipeline.index_papers(papers)
                 
-                from phases.paper_writing.evidence_gatherer import EvidenceGatherer
-                from phases.paper_writing.evidence_manager import save_evidence
-                from phases.paper_writing.data_models import Section
-                from settings import Settings
+                def status_callback(status: str):
+                    self.after(0, lambda s=status: popup.update_status(s))
                 
-                gatherer = EvidenceGatherer(pipeline._indexed_corpus or [])
-                evidence_by_section = {}
+                pipeline.write_paper_with_critique(
+                    paper_concept=paper_concept,
+                    experiment_result=experiment_result,
+                    papers=papers,
+                    user_requirements=user_requirements,
+                    status_callback=status_callback,
+                )
                 
-                sections = [Section.METHODS, Section.RESULTS, Section.DISCUSSION, Section.INTRODUCTION, Section.RELATED_WORK, Section.CONCLUSION]
-                
-                for section in sections:
-                     self.after(0, lambda s=section: popup.update_status(f"Gathering evidence for {s.value}"))
-                     default_queries = pipeline.query_builder.build_default_queries(section, paper_concept, experiment_result)
-                     evidence, _ = gatherer.gather_evidence(
-                         section_type=section,
-                         context=paper_concept,
-                         experiment=experiment_result,
-                         default_queries=default_queries,
-                         max_iterations=Settings.EVIDENCE_AGENTIC_ITERATIONS,
-                         initial_chunks=Settings.EVIDENCE_INITIAL_CHUNKS,
-                         filtered_chunks=Settings.EVIDENCE_FILTERED_CHUNKS,
-                         user_requirements=None
-                     )
-                     evidence_by_section[section] = evidence
-                
-                save_evidence(evidence_by_section)
                 self.after(0, lambda: self._on_generation_success(popup))
             except Exception as e:
-                 import traceback
-                 traceback.print_exc()
-                 self.after(0, lambda err=str(e): popup.show_error(err))
-         threading.Thread(target=task, daemon=True).start()
+                import traceback
+                traceback.print_exc()
+                self.after(0, lambda err=str(e): popup.show_error(err))
+        
+        threading.Thread(target=task, daemon=True).start()
 
     def _on_generation_success(self, popup):
         popup.close()

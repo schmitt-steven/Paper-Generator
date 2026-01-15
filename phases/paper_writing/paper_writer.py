@@ -4,7 +4,8 @@ from typing import Dict, List, Optional, Sequence, Tuple
 from phases.context_analysis.paper_conception import PaperConcept
 from phases.context_analysis.user_requirements import UserRequirements
 from phases.experimentation.experiment_state import ExperimentResult, Plot
-from phases.paper_writing.data_models import Evidence, PaperDraft, Section
+from phases.paper_search.paper import Paper
+from phases.paper_writing.data_models import Evidence, PaperDraft, Section, SectionCritique
 from phases.paper_writing.section_guidelines import SectionGuidelinesLoader
 from utils.llm_utils import remove_thinking_blocks
 from settings import Settings
@@ -181,12 +182,12 @@ Write the complete {section_type.value} section of the paper based on the provid
 
 {user_requirements_block}
 
-[WRITING REQUIREMENTS — STRICT]
+[WRITING REQUIREMENTS]
 - Produce a cohesive, original, publication-quality academic narrative.
 - CITATION FORMAT: Use square brackets with the EXACT, COMPLETE citation keys provided in the <citation_key> tags in the evidence section.
-- CRITICAL: Copy the citation keys EXACTLY as they appear in <citation_key> tags. Do NOT shorten them, do NOT change them, do NOT generate simplified versions.
-- CRITICAL: NEVER use numeric citations like [1], [2], [30]. These are strictly forbidden.
-- CRITICAL: Do NOT invent citation keys. Do NOT generate "nameYear" format. Use ONLY the exact keys found in the <citation_key> tags.
+- Copy the citation keys EXACTLY as they appear in <citation_key> tags. Do NOT shorten them, do NOT change them, do NOT generate simplified versions.
+- NEVER use numeric citations like [1], [2], [30]. These are strictly forbidden.
+- Do NOT invent citation keys. Do NOT generate "nameYear" format. Use ONLY the exact keys found in the <citation_key> tags.
 - Example: If evidence shows <citation_key>Hoppe2019QgraphboundedQS</citation_key>, use [Hoppe2019QgraphboundedQS] exactly, NOT [Hoppe2019].
 - Place citations immediately before final punctuation: "[exactKeyFromEvidence]."
 - For multiple sources: "[exactKey1, exactKey2]."
@@ -194,6 +195,8 @@ Write the complete {section_type.value} section of the paper based on the provid
 - Cite external papers ONLY using the exact citation keys from the evidence in square brackets.
 - Never fabricate evidence, results, or citations.
 - Integrate and build upon previous sections to ensure full narrative coherence.
+- Do NOT cite papers that are not in the [EVIDENCE] list, even if they are seminal works (e.g. by Sutton, Pearl, Bellman). If you must discuss them, do so without generating a citation key.
+- Do NOT generate a bibliography or references section at the end.
 
 [GENERATION RULES — DO NOT VIOLATE]
 - Do NOT reference the guidelines or instructions.
@@ -201,7 +204,6 @@ Write the complete {section_type.value} section of the paper based on the provid
 - Do NOT include section headings (e.g., "## Introduction", "# Abstract", etc.) in your output.
 - Output ONLY the final written section content without any markdown headings.
 
-[FINAL PRIORITY]
 Your output must strictly follow the requirements and produce a polished academic section.
 """
         
@@ -328,100 +330,7 @@ Your output must strictly follow the requirements and produce a polished academi
         Specifies writing guidelines for each paper section.
         These guidelines are combined with more context and evidence in _build_section_prompt().
         """
-        
-        # Load custom guidelines
-        custom_guidelines = SectionGuidelinesLoader.load_guidelines()
-        
-        # Default fallback guidelines
-        default_guidelines = {
-            Section.ABSTRACT: textwrap.dedent("""\\
-                150-250 words. Structure: (1) problem/gap, (2) approach, (3) key result with metrics, (4) main implication. 
-                Be specific. NO citations."""),
-            
-            Section.INTRODUCTION: textwrap.dedent("""\\
-                Open with the problem and its concrete impact.
-                Identify what's missing in current solutions using evidence.
-                State your contribution as specific, falsifiable claims.
-                End with brief paper roadmap.
-                Justify claims with evidence, don't just assert."""),
-            
-            Section.RELATED_WORK: textwrap.dedent("""\\
-                Group by approach/theme, not chronologically. For each cluster:
-                - What they did (method + reported results)
-                - Limitations relative to this work
-                - Direct comparison where applicable
-                Avoid generic praise. Be precise about differences. Cite liberally."""),
-            
-            Section.METHODS: textwrap.dedent("""\\
-                Reproducibility is the goal. If possible and relevant, include:
-                - Architecture/algorithm with justification for key choices
-                - Hyperparameters, dataset details, compute resources
-                - Baseline comparisons (what and why)
-                - Evaluation metrics with rationale
-                Use present tense. Avoid implementation details unless critical."""),
-            
-            Section.RESULTS: 
-            self._get_results_guidelines(experiment),
-            
-            Section.DISCUSSION: textwrap.dedent("""\\
-                Open by restating main finding in context of hypothesis.
-                Explain why it worked/failed using specific evidence and results. Acknowledge limitations honestly.
-                Compare to related work quantitatively where possible.
-                Speculation allowed but label it clearly.
-                End with concrete future directions, not vague "explore further."""),
-            
-            Section.CONCLUSION: textwrap.dedent("""\\
-                Summarize: what you did, what you found (with key metrics), broader implications (realistic, not grandiose), one actionable next step.
-                No new information. No citations."""),
-            
-            Section.ACKNOWLEDGEMENTS: textwrap.dedent("""\\
-                Format and polish the provided acknowledgements text into a professional academic style.
-                Keep the original meaning and intent, but ensure proper grammar, flow, and academic tone.
-                No citations needed. Keep it concise and appropriate for an academic paper."""),
-        }
-        
-        # Use custom if available, else default
-        # Note: If custom file exists but is missing a section, we fall back to default for that section
-        guideline = custom_guidelines.get(section_type)
-        if not guideline:
-             guideline = default_guidelines.get(section_type, "")
-
-        return guideline
-
-    def _get_results_guidelines(self, experiment: Optional[ExperimentResult]) -> str:
-        """Get Results section guidelines, including figure integration if plots are available."""
-
-        section_guidelines = """Present experiment outcomes with relevant metrics or observations.
-        Compare results against expected improvements or baselines if available.
-        Never fabricate data or results."""
-
-        if experiment and experiment.plots:
-            plots_block = self._format_plots_for_prompt(experiment.plots)
-            
-            section_guidelines += "\n\n" + textwrap.dedent(f"""
-                [FIGURE INTEGRATION]
-                The following figures were generated from the experiment. You MUST integrate all of them into your Results section.
-
-                {plots_block}
-
-                For each figure:
-                1. Reference it naturally in the text (e.g., "As shown in Figure 1..." or "Figure 2 demonstrates...")
-                2. Include the markdown image syntax: ![Brief alt text](relative_path_to_image.png)
-                3. CRITICAL: Use RELATIVE paths from the paper_draft.md location (which is in the output/ directory).
-                   - If filename is "experiments/plots/file.pdf", use exactly that (no "output/" prefix)
-                   - Example: ![Alt text](experiments/plots/convergence_comparison.pdf)
-                4. Add a visible caption line immediately below: *Figure N: Full caption text*
-                5. Use the exact caption text provided above for each figure
-                6. Place figures at appropriate points in the narrative where they support your discussion
-
-                Example:
-                As shown in Figure 1, our method...
-
-                ![Convergence Comparison](experiments/plots/convergence_comparison.pdf)
-                *Figure 1: Learning curves comparing the ...*"""
-            )
-
-        return section_guidelines
+        return SectionGuidelinesLoader.get_guidelines(section_type, experiment)
 
     def generate_title(
         self,
@@ -513,3 +422,242 @@ Format and polish the provided acknowledgements text into a professional academi
         
         return prompt
 
+
+    def generate_section_from_catalog(
+        self,
+        section_type: Section,
+        papers: Sequence[Paper],
+        context: PaperConcept,
+        experiment: Optional[ExperimentResult],
+        previous_sections: Optional[dict[Section, str]] = None,
+        user_requirements: Optional[UserRequirements] = None,
+        temperature: float = 0.3,
+    ) -> str:
+        """Generate initial section draft using paper catalog (not chunked evidence)."""
+        model = lms.llm(Settings.PAPER_WRITING_MODEL)
+        prompt = self._build_catalog_prompt(
+            section_type, papers, context, experiment, previous_sections, user_requirements
+        )
+        response = model.respond(
+            prompt,
+            config={"temperature": temperature},
+        )
+        return remove_thinking_blocks(response.content)
+
+    def rewrite_section(
+        self,
+        section_type: Section,
+        original_draft: str,
+        critique: SectionCritique,
+        new_evidence: Sequence[Evidence],
+        papers: Sequence[Paper],
+        context: PaperConcept,
+        experiment: Optional[ExperimentResult],
+        previous_sections: Optional[dict[Section, str]] = None,
+        user_requirements: Optional[UserRequirements] = None,
+        temperature: float = 0.3,
+    ) -> str:
+        """
+        Rewrite a section incorporating critique feedback and new evidence.
+        
+        This is step 3 of the critique-based pipeline (after critique and search).
+        """
+        model = lms.llm(Settings.PAPER_WRITING_MODEL)
+        prompt = self._build_rewrite_prompt(
+            section_type, original_draft, critique, new_evidence,
+            papers, context, experiment, previous_sections, user_requirements
+        )
+        response = model.respond(
+            prompt,
+            config={"temperature": temperature},
+        )
+        return remove_thinking_blocks(response.content)
+
+    def _build_catalog_prompt(
+        self,
+        section_type: Section,
+        papers: Sequence[Paper],
+        context: PaperConcept,
+        experiment: Optional[ExperimentResult],
+        previous_sections: Optional[dict[Section, str]] = None,
+        user_requirements: Optional[UserRequirements] = None,
+    ) -> str:
+        """Build prompt for initial section draft using paper catalog."""
+        
+        guidelines = self.get_section_guidelines(section_type, experiment)
+        context_block = self._format_context(context, experiment)
+        paper_catalog = self._format_paper_catalog(papers)
+        previous_sections_block = self._format_previous_sections(section_type, previous_sections or {})
+        
+        # Get section-specific user requirements if available
+        user_requirements_block = self._get_user_requirements_block(section_type, user_requirements)
+        
+        return textwrap.dedent(f"""\
+            [ROLE]
+            You are an expert academic writer.
+
+            [TASK]
+            Write the complete {section_type.value} section of the paper based on the provided context and available papers.
+
+            [SECTION TYPE]
+            {section_type.value}
+
+            [RESEARCH CONTEXT]
+            {context_block}
+
+            [PREVIOUS SECTIONS]
+            {previous_sections_block if previous_sections_block else 'None yet.'}
+
+            [AVAILABLE PAPERS]
+            The following papers are available for citation. Use their citation keys in square brackets.
+            {paper_catalog}
+
+            [SECTION GUIDELINES]
+            {guidelines}
+
+            {user_requirements_block}
+
+            [WRITING REQUIREMENTS — STRICT]
+            - Produce a cohesive, original, publication-quality academic narrative.
+            - CITATION FORMAT: Use square brackets with the EXACT citation keys provided (e.g., [AuthorYear]).
+            - CRITICAL: Copy citation keys EXACTLY. Do NOT shorten or modify them.
+            - CRITICAL: NEVER use numeric citations like [1], [2]. These are strictly forbidden.
+            - Place citations immediately before final punctuation: "[exactKey]."
+            - For multiple sources: "[key1, key2]."
+            - Never fabricate evidence, results, or citations.
+            - Integrate and build upon previous sections to ensure full narrative coherence.
+            - STRICTLY FORBIDDEN: Do NOT cite papers that are not in the [AVAILABLE PAPERS] list, even if they are seminal works.
+            - STRICTLY FORBIDDEN: Do NOT generate a bibliography or references section at the end.
+
+            [GENERATION RULES — DO NOT VIOLATE]
+            - Do NOT reference the guidelines or instructions.
+            - Do NOT include section headings (e.g., "## Introduction") in your output.
+            - Output ONLY the final written section content.
+        """)
+
+    def _build_rewrite_prompt(
+        self,
+        section_type: Section,
+        original_draft: str,
+        critique: SectionCritique,
+        new_evidence: Sequence[Evidence],
+        papers: Sequence[Paper],
+        context: PaperConcept,
+        experiment: Optional[ExperimentResult],
+        previous_sections: Optional[dict[Section, str]] = None,
+        user_requirements: Optional[UserRequirements] = None,
+    ) -> str:
+        """Build prompt for rewriting a section with critique and new evidence."""
+        
+        guidelines = self.get_section_guidelines(section_type, experiment)
+        context_block = self._format_context(context, experiment)
+        paper_catalog = self._format_paper_catalog(papers)
+        evidence_block = self._format_evidence_for_prompt(new_evidence)
+        previous_sections_block = self._format_previous_sections(section_type, previous_sections or {})
+        user_requirements_block = self._get_user_requirements_block(section_type, user_requirements)
+        
+        improvements_list = "\n".join(f"- {imp}" for imp in critique.improvements)
+        
+        return textwrap.dedent(f"""\
+            [ROLE]
+            You are an expert academic writer revising a section based on feedback.
+
+            [TASK]
+            Rewrite the {section_type.value} section, addressing the suggested improvements and incorporating new evidence.
+
+            [SECTION TYPE]
+            {section_type.value}
+
+            [ORIGINAL DRAFT]
+            {original_draft}
+
+            [IMPROVEMENTS TO MAKE]
+            {improvements_list}
+
+            [NEW EVIDENCE]
+            {evidence_block if evidence_block else 'No additional evidence retrieved.'}
+
+            [RESEARCH CONTEXT]
+            {context_block}
+
+            [PREVIOUS SECTIONS]
+            {previous_sections_block if previous_sections_block else 'None available.'}
+
+            [AVAILABLE PAPERS]
+            {paper_catalog}
+
+            [SECTION GUIDELINES]
+            {guidelines}
+
+            {user_requirements_block}
+
+            [WRITING REQUIREMENTS — STRICT]
+            - Address ALL suggested improvements.
+            - Incorporate the new evidence naturally with proper citations.
+            - CITATION FORMAT: Use square brackets with the EXACT citation keys provided.
+            - CRITICAL: Copy citation keys EXACTLY. Do NOT shorten or modify them.
+            - CRITICAL: NEVER use numeric citations like [1], [2]. These are strictly forbidden.
+            - Maintain the strengths of the original draft.
+            - Produce a cohesive, publication-quality narrative.
+            - STRICTLY FORBIDDEN: Do NOT cite papers that are not in the [NEW EVIDENCE] or [AVAILABLE PAPERS] lists, even if they are seminal works.
+            - STRICTLY FORBIDDEN: Do NOT generate a bibliography or references section at the end.
+
+            [GENERATION RULES — DO NOT VIOLATE]
+            - Do NOT reference the critique or instructions.
+            - Do NOT include section headings in your output.
+            - Output ONLY the final rewritten section content.
+        """)
+
+    @staticmethod
+    def _format_paper_catalog(papers: Sequence[Paper]) -> str:
+        """Format papers as a catalog for prompts."""
+        if not papers:
+            return "No papers available."
+        
+        items = []
+        for paper in papers:
+            citation_key = paper.citation_key or "unknown"
+            abstract = paper.summary or "No abstract available."
+            conclusion = paper.conclusion or ""
+            
+            # Truncate long abstracts
+            abstract_truncated = abstract[:500] + "..." if len(abstract) > 500 else abstract
+            
+            entry = f"""[{citation_key}]
+Title: {paper.title}
+Abstract: {abstract_truncated}"""
+            
+            if conclusion:
+                conclusion_truncated = conclusion[:300] + "..." if len(conclusion) > 300 else conclusion
+                entry += f"\nConclusion: {conclusion_truncated}"
+            
+            items.append(entry)
+        
+        return "\n\n".join(items)
+
+    def _get_user_requirements_block(
+        self,
+        section_type: Section,
+        user_requirements: Optional[UserRequirements],
+    ) -> str:
+        """Get section-specific user requirements as a formatted block."""
+        if not user_requirements:
+            return ""
+        
+        section_to_requirement = {
+            Section.ABSTRACT: "abstract",
+            Section.INTRODUCTION: "introduction",
+            Section.RELATED_WORK: "related_work",
+            Section.METHODS: "methods",
+            Section.RESULTS: "results",
+            Section.DISCUSSION: "discussion",
+            Section.CONCLUSION: "conclusion",
+        }
+        
+        requirement_field = section_to_requirement.get(section_type)
+        if requirement_field:
+            requirement_text = getattr(user_requirements, requirement_field, None)
+            if requirement_text and requirement_text.strip():
+                return f"[USER REQUIREMENTS]\n{requirement_text.strip()}"
+        
+        return ""

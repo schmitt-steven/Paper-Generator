@@ -48,14 +48,7 @@ class MarkdownToLaTeX:
             - Multiple citations: Convert citations like [key1, key2] or [key1; key2] to \\cite{{key1,key2}} (preserve exact keys, convert semicolons to commas, remove spaces after commas/semicolons)
               - Example: [Memarian2021SelfSupervisedOR; Park2025FromST] -> \\cite{{Memarian2021SelfSupervisedOR,Park2025FromST}}
               - Example: [Ghasemi2024ACS; Lo2022GoalSpacePW] -> \\cite{{Ghasemi2024ACS,Lo2022GoalSpacePW}}
-            - Abbreviations: Identify abbreviations and convert them properly
-                - On FIRST occurrence in the document: Write "Full Form (ABBR)" format, e.g., "Recursive Backwards Q-Learning (RBQL)"
-                - On ALL SUBSEQUENT occurrences: Use \\ac{{ABBR}} format with UPPERCASE abbreviation, e.g., \\ac{{RBQL}}
-                - CRITICAL: Always use UPPERCASE for abbreviation keys in \\ac{{}}, e.g., \\ac{{RBQL}}, \\ac{{EBU}}, NOT \\ac{{rbql}} or \\ac{{Rbql}}
-                - For abbreviations with hyphens like "Dyna-Q", use \\ac{{DYNA-Q}} (uppercase with hyphen)
-                - Do NOT repeat "Full Form (ABBR)" format after the first occurrence - always use \\ac{{ABBR}} for subsequent uses
-                - Do NOT add abbreviations to text that doesn't have them - if text says "Dyna-Q", only convert if it was previously defined as "Dyna-Q (DYNA-Q)"
-            - The full form will be automatically extracted from the first occurrence
+
             - Figures: Convert ![alt text](path/to/filename.png) followed by *Figure N: Caption text* to:
             \\begin{{figure*}}[ht]
             \\centering
@@ -112,7 +105,7 @@ class MarkdownToLaTeX:
             4. Use \\subsection{{}} and \\subsubsection{{}} for any subsections if needed
             5. Ensure all citations are properly formatted as \\cite{{key}} with EXACT citation keys preserved (e.g., \\cite{{Diekhoff2024RecursiveBQ}}, not \\cite{{diekhoff2024}})
             6. Ensure all figures have proper \\begin{{figure}} environments with \\caption and \\label
-            7. Ensure all subsequent abbreviations use \\ac{{ABBR}} format with uppercase abbreviations
+
 
             Convert the markdown to LaTeX now:""")
 
