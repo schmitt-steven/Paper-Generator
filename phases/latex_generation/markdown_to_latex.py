@@ -54,9 +54,14 @@ class MarkdownToLaTeX:
             \\centering
             \\includegraphics[width=\\textwidth]{{images/filename.png}}
             \\caption{{Caption text}}
+            \\Description{{alt text}}
             \\label{{fig:filename}}
             \\end{{figure*}}
             - CRITICAL: Always use figure* (with asterisk) to span full page width!
+            - CRITICAL: Always include \\Description{{}} command for accessibility (required by JAIR/ACM templates)
+              - Use the alt text from the markdown image as the description
+              - If alt text is generic (e.g., "figure", "image"), write a brief description of what the figure shows based on context
+              - Description should be plain text, under 2000 characters, describing what someone who cannot see the image needs to know
             - Use width=\\textwidth to ensure images fit within page boundaries
             - For images: Extract the ACTUAL filename from the markdown path and use it EXACTLY.
               - If markdown has: ![text](experiments/plots/convergence_comparison.png)
@@ -71,6 +76,30 @@ class MarkdownToLaTeX:
               - Do NOT create figure environments unless there is an actual ![alt](path) image markdown in the text
               - Text references to figures (e.g., "Figure 1 shows...") should remain as text, NOT converted to figure environments
             - Example: ![Alt](experiments/plots/my_plot.png) -> \\includegraphics{{images/my_plot.png}} (NOT images/figure1.png)
+
+            - Tables: Convert markdown tables to LaTeX using booktabs style:
+              - Markdown table format:
+                | Header1 | Header2 | Header3 |
+                |---------|---------|---------|
+                | Cell1   | Cell2   | Cell3   |
+              - Convert to LaTeX:
+                \\begin{{table}}[ht]
+                \\caption{{Table caption from context or *Table N: Caption* if present}}
+                \\label{{tab:descriptive_name}}
+                \\centering
+                \\begin{{tabular}}{{@{{}}lll@{{}}}}
+                \\toprule
+                Header1 & Header2 & Header3 \\\\
+                \\midrule
+                Cell1 & Cell2 & Cell3 \\\\
+                \\bottomrule
+                \\end{{tabular}}
+                \\end{{table}}
+              - Use @{{}} to remove extra horizontal padding
+              - Use l (left), c (center), or r (right) alignment based on content type (text=left, numbers=right)
+              - ALWAYS use \\toprule, \\midrule, \\bottomrule (booktabs style) - never use \\hline
+              - Place \\caption ABOVE the tabular (required by many journals)
+              - For wide tables, use table* environment to span full page width
             - Code blocks: Convert ```python ... ``` to \\begin{{lstlisting}}[language=Python]...\\end{{lstlisting}}
             - Math: Preserve $...$ for inline math and $$...$$ for display math (or convert to \\[...\\])
             - Greek letters: Convert Unicode Greek letters to LaTeX math mode:
@@ -105,7 +134,6 @@ class MarkdownToLaTeX:
             4. Use \\subsection{{}} and \\subsubsection{{}} for any subsections if needed
             5. Ensure all citations are properly formatted as \\cite{{key}} with EXACT citation keys preserved (e.g., \\cite{{Diekhoff2024RecursiveBQ}}, not \\cite{{diekhoff2024}})
             6. Ensure all figures have proper \\begin{{figure}} environments with \\caption and \\label
-
 
             Convert the markdown to LaTeX now:""")
 

@@ -158,7 +158,63 @@ class PaperWriter:
                 if requirement_text and requirement_text.strip():
                     user_requirements_block = f"""[USER REQUIREMENTS]\n{requirement_text.strip()}"""
         
-        prompt = f"""\
+        # Add plots block for Results section
+        plots_block = ""
+        if section_type == Section.RESULTS and experiment and experiment.plots:
+            plots_block = f"""[FIGURES TO INCLUDE]
+You MUST include ALL of the following figures in your Results section using markdown image syntax.
+
+{self._format_plots_for_prompt(experiment.plots)}
+
+FIGURE REQUIREMENTS:
+- For each figure above, you MUST include it using: ![Brief description](experiments/plots/file_name.png)
+- Place figures at appropriate points in the narrative
+- Add a caption line below each figure: *Figure N: Full caption text*
+- Reference figures in your text (e.g., "As shown in Figure 1...")
+"""
+        
+        # SPECIAL HANDLING FOR ABSTRACT: No citations allowed
+        if section_type == Section.ABSTRACT:
+            prompt = f"""
+[ROLE]
+You are an expert academic writer.
+
+[TASK]
+Write the complete Abstract section of the paper based on the provided context and previous sections.
+
+[SECTION TYPE]
+Abstract
+
+[RESEARCH CONTEXT]
+{context_block}
+
+[PREVIOUS SECTIONS]
+{previous_sections_block if previous_sections_block else ''}
+
+[SECTION GUIDELINES]
+{guidelines}
+
+{user_requirements_block}
+
+[WRITING REQUIREMENTS — STRICT]
+- Write a publication-quality abstract that summarizes the key contributions.
+- CRITICAL: DO NOT INCLUDE ANY CITATIONS OR REFERENCES.
+- DO NOT use square brackets [] anywhere in the text.
+- DO NOT reference other papers or authors by name.
+- The abstract must be self-contained without external references.
+- Never fabricate evidence or results.
+- Draw from the previous sections to write an accurate summary.
+
+[GENERATION RULES — DO NOT VIOLATE]
+- Do NOT include ANY citations like [AuthorYear], [1], or any bracketed references.
+- Do NOT reference the guidelines or instructions.
+- Do NOT include section headings (e.g., "## Abstract") in your output.
+- Output ONLY the final abstract content without any markdown headings.
+
+Your output must be a polished academic abstract with ZERO citations.
+"""
+        else:
+            prompt = f"""
 [ROLE]
 You are an expert academic writer.
 
@@ -181,6 +237,8 @@ Write the complete {section_type.value} section of the paper based on the provid
 {guidelines}
 
 {user_requirements_block}
+
+{plots_block}
 
 [WRITING REQUIREMENTS]
 - Produce a cohesive, original, publication-quality academic narrative.
@@ -556,7 +614,7 @@ Format and polish the provided acknowledgements text into a professional academi
         previous_sections_block = self._format_previous_sections(section_type, previous_sections or {})
         user_requirements_block = self._get_user_requirements_block(section_type, user_requirements)
         
-        improvements_list = "\n".join(f"- {imp}" for imp in critique.improvements)
+        improvements_text = critique.improvements
         
         return textwrap.dedent(f"""\
             [ROLE]
@@ -572,7 +630,7 @@ Format and polish the provided acknowledgements text into a professional academi
             {original_draft}
 
             [IMPROVEMENTS TO MAKE]
-            {improvements_list}
+            {improvements_text}
 
             [NEW EVIDENCE]
             {evidence_block if evidence_block else 'No additional evidence retrieved.'}

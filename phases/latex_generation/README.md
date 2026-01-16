@@ -16,7 +16,7 @@ Uses LLM to convert markdown sections to LaTeX format.
 
 - Extracts citation keys from markdown text
 - Creates paper mapping from citation keys to Paper objects
-- Generates `literature.bib` from cited papers
+- Generates `bibliography.bib` from cited papers
 
 ### `PaperConverter` ([paper_converter.py](paper_converter.py))
 
@@ -33,7 +33,7 @@ Handles the complete LaTeX conversion workflow:
 `output/latex/` containing:
 - `paper.tex` - Main LaTeX document
 - `chapters/` - LaTeX files for each section
-- `literature.bib` - Generated bibliography
+- `bibliography.bib` - Generated bibliography
 - `abbreviations.tex` - Extracted abbreviations
 - `images/` - Copied plot images
 - `result/paper.pdf` - Final compiled PDF

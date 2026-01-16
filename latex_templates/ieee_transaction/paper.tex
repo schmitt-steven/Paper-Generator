@@ -1,0 +1,98 @@
+\documentclass[lettersize,journal]{IEEEtran}
+\usepackage{amsmath,amsfonts}
+\usepackage{algorithmic}
+\usepackage{array}
+\usepackage[caption=false,font=normalsize,labelfont=sf,textfont=sf]{subfig}
+\usepackage{textcomp}
+\usepackage{stfloats}
+\usepackage{url}
+\usepackage{verbatim}
+\usepackage{graphicx}
+\hyphenation{op-tical net-works semi-conduc-tor IEEE-Xplore}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\usepackage{balance}
+
+%% Additional packages for paper generator
+\usepackage[utf8]{inputenx}
+\graphicspath{{images/}}
+\DeclareGraphicsExtensions{.pdf,.png,.jpeg,.jpg}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{fancyvrb}
+\usepackage[autostyle=true]{csquotes}
+\usepackage[backend=biber,
+            sorting=none,
+            doi=true,
+            isbn=false,
+            url=true,
+            maxnames=6,
+            minnames=1,
+            style=ieee,
+            citestyle=numeric-comp,]{biblatex}
+\usepackage[english]{babel}
+\DefineBibliographyStrings{english}{
+    andothers = {{et al\adddot}},
+}
+\definecolor{darkblue}{RGB}{59, 130, 246}
+\usepackage[
+      unicode=true,
+      hypertexnames=false,
+      colorlinks=false,
+      linkcolor=darkblue,
+      citecolor=darkblue,
+      urlcolor=darkblue,
+      pdftex
+   ]{hyperref}
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
+\addbibresource{bibliography.bib}
+
+\begin{document}
+\title{%%TITLE%%}
+\author{
+%%BEGIN_AUTHOR%%
+{{name}}
+\thanks{{{name}} is with {{department}}, {{affiliation}}, {{address}}. E-mail: {{email}}}
+%%END_AUTHOR%%
+}
+
+\markboth{Journal of \LaTeX\ Class Files,~Vol.~18, No.~9, September~2020}%
+{%%TITLE%%}
+
+\maketitle
+
+\begin{abstract}
+%%ABSTRACT%%
+\end{abstract}
+
+\begin{IEEEkeywords}
+Your, keywords, here
+\end{IEEEkeywords}
+
+\section{Introduction}
+%%INTRODUCTION%%
+
+\section{Related Work}
+%%RELATED_WORK%%
+
+\section{Methods}
+%%METHODS%%
+
+\section{Results}
+%%RESULTS%%
+
+\section{Discussion}
+%%DISCUSSION%%
+
+\section{Conclusion}
+%%CONCLUSION%%
+
+\section{Acknowledgements}
+%%ACKNOWLEDGEMENTS%%
+
+\addcontentsline{toc}{section}{References}
+\printbibliography
+
+\end{document}

@@ -265,6 +265,7 @@ class PaperDraftScreen(BaseFrame):
                     metadata=metadata,
                     indexed_papers=indexed_papers,
                     experiment_result=experiment_result,
+                    progress_callback=lambda msg: self.after(0, lambda: popup.update_status(msg))
                 )
                 
                 # Compile LaTeX

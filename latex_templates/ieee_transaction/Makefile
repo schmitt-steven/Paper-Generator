@@ -1,5 +1,3 @@
-# Makefile for paper compilation
-
 TEMP_DIR = temp
 RESULT_DIR = result
 LATEX = pdflatex
@@ -8,7 +6,7 @@ MAKEINDEX = makeindex
 
 define latex-it
 $(eval FILE = $(firstword $^))
-cp literature.bib $(TEMP_DIR)
+cp bibliography.bib $(TEMP_DIR)
 @echo "Building $(FILE)"
 @echo $(FILE)
 @$(LATEX) -draftmode -output-directory=$(TEMP_DIR) $(FILE)
@@ -32,7 +30,7 @@ clean:
 overleaf:
 	@cd .. && zip -r paper-overleaf.zip tex/*
 
-$(TEMP_DIR)/paper.pdf: paper.tex preamble.tex literature.bib abstract.tex chapters/*.tex
+$(TEMP_DIR)/paper.pdf: paper.tex bibliography.bib
 	$(latex-it)
 
 $(RESULT_DIR)/paper.pdf: $(TEMP_DIR)/paper.pdf
@@ -43,4 +41,3 @@ $(TEMP_DIR):
 
 $(RESULT_DIR):
 	mkdir $(RESULT_DIR)
-

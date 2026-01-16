@@ -1,11 +1,8 @@
 import re
 import textwrap
-import logging
 from typing import Set, List, Dict
 from phases.paper_search.paper import Paper
 from phases.paper_writing.data_models import PaperDraft
-
-logger = logging.getLogger(__name__)
 
 def extract_citation_keys_from_markdown(md_text: str) -> set[str]:
     """
@@ -184,7 +181,7 @@ def generate_literature_bib(
     indexed_papers: list[Paper],
 ) -> str:
     """
-    Generate literature.bib file content from PaperDraft citations.
+    Generate bibliography.bib file content from PaperDraft citations.
     
     Args:
         paper_draft: PaperDraft with sections in markdown format
@@ -209,7 +206,7 @@ def generate_literature_bib(
             bibtex_entries.append(bibtex_entry)
         else:
             missing_keys.append(key)
-            logger.warning(f"[Bibliography] Missing citation key: {key}")
+            print(f"[Bibliography] Missing citation key: {key}")
             # Generate placeholder entry with complete required fields
             placeholder = textwrap.dedent(f"""\
                 @misc{{{key},

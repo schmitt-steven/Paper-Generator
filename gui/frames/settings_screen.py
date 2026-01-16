@@ -2,10 +2,10 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import shutil
 from pathlib import Path
-from settings import Settings, FontSize
+from settings import Settings, FontSize, get_available_templates
 
 from ..base_frame import BaseFrame, CardBorderFrame
-from ..info_texts import SETTINGS_INFO
+from ..info_texts import SETTINGS_INFO, LATEX_TEMPLATE_INFO
 from ..theme_colors import CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT
 from utils.lm_studio_client import get_model_names
 
@@ -82,14 +82,56 @@ class SettingsScreen(BaseFrame):
         self.settings_vars["SEMANTIC_SCHOLAR_API_KEY"] = self.api_key_var
 
     def create_latex_template_section(self):
-        """LaTeX Template section: placeholder for future IEEE/JAIR selection"""
-        frame = self.create_card_frame(self.scrollable_frame, "LaTeX Template")
+        """LaTeX Template section: radio buttons for template selection"""
+        frame = self.create_card_frame(self.scrollable_frame, "LaTeX Template", info_content=LATEX_TEMPLATE_INFO)
 
-        row_frame = ttk.Frame(frame, style="CardRow.TFrame")
-        row_frame.pack(fill="x", pady=2)
+        # Get available templates
+        templates = get_available_templates()
         
-        ttk.Label(row_frame, text="Template selection (IEEE, JAIR)...", 
-                  style="CardRow.TLabel").pack(side="left")
+        if not templates:
+            row_frame = ttk.Frame(frame, style="CardRow.TFrame")
+            row_frame.pack(fill="x", pady=2)
+            ttk.Label(row_frame, text="No templates found in latex_templates/", 
+                      style="CardRow.TLabel").pack(side="left")
+            return
+        
+        # Template variable
+        self.template_var = tk.StringVar(value=Settings.LATEX_TEMPLATE)
+        
+        # Some know acronyms that should be all uppercase
+        acronyms = {"ieee", "jair", "acm", "aaai", "icml", "neurips", "cvpr", "iclr"}
+        
+        # Create radio button for each template
+        for template in templates:
+            row_frame = ttk.Frame(frame, style="CardRow.TFrame")
+            row_frame.pack(fill="x", pady=5)
+            
+            # Format template name for display (e.g., "ieee_transaction" -> "IEEE Transaction")
+            words = template.replace("_", " ").split()
+            display_name = " ".join(
+                word.upper() if word.lower() in acronyms else word.capitalize() 
+                for word in words
+            )
+            
+            radio = ttk.Radiobutton(
+                row_frame,
+                text="",
+                variable=self.template_var,
+                value=template,
+                style="CardRow.TCheckbutton"
+            )
+            radio.pack(side="left", padx=(10, 0))
+            
+            label = ttk.Label(
+                row_frame,
+                text=display_name,
+                style="CardRow.TLabel",
+                cursor="hand2"
+            )
+            label.pack(side="left", padx=(8, 10))
+            
+            # Make label clickable to select the radio button
+            label.bind("<Button-1>", lambda e, t=template: self.template_var.set(t))
 
     def create_authors_section(self):
         """Authors section with add/remove functionality"""
@@ -313,7 +355,8 @@ class SettingsScreen(BaseFrame):
         author_frame = ttk.Frame(self.authors_container, style="CardRow.TFrame", padding="10")
         author_frame.pack(fill="x", pady=5)
         
-        fields = ["Name", "Affiliation", "Department", "Address", "Email"]
+        # Fields for both IEEE and JAIR templates
+        fields = ["Name", "Affiliation", "Department", "City", "Country", "Address", "Email"]
         entries = {}
         
         for field in fields:
@@ -405,6 +448,10 @@ class SettingsScreen(BaseFrame):
 
         # Save LaTeX Title
         Settings.LATEX_TITLE = self.title_var.get()
+
+        # Save LaTeX Template
+        if hasattr(self, 'template_var'):
+            Settings.LATEX_TEMPLATE = self.template_var.get()
 
         # Save Authors
         authors = []

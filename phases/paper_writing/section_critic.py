@@ -10,6 +10,8 @@ from typing import Optional, Sequence
 
 from phases.paper_search.paper import Paper
 from phases.paper_writing.data_models import Section, SectionCritique
+from phases.paper_writing.section_guidelines import SectionGuidelinesLoader
+from phases.context_analysis.user_requirements import UserRequirements
 from utils.llm_utils import remove_thinking_blocks
 from settings import Settings
 import lmstudio as lms
@@ -27,11 +29,14 @@ class SectionCritic:
         draft_text: str,
         papers: Sequence[Paper],
         max_queries: int = 5,
+        user_requirements: Optional[UserRequirements] = None,
     ) -> SectionCritique:
         """Analyze a draft section and return structured critique."""
 
         model = lms.llm(Settings.EVIDENCE_GATHERING_MODEL)
-        prompt = self._build_critique_prompt(section_type, draft_text, papers, max_queries)
+        prompt = self._build_critique_prompt(
+            section_type, draft_text, papers, max_queries, user_requirements
+        )
         
         response = model.respond(
             prompt,
@@ -53,10 +58,38 @@ class SectionCritic:
         draft_text: str,
         papers: Sequence[Paper],
         max_queries: int,
+        user_requirements: Optional[UserRequirements] = None,
     ) -> str:
         """Build the prompt for section critique."""
         
         paper_catalog = self._format_paper_catalog(papers)
+        
+        # Get section guidelines
+        guidelines = SectionGuidelinesLoader.get_guidelines(section_type)
+        
+        # Get section-specific user requirements
+        user_req_block = ""
+        if user_requirements:
+            section_to_field = {
+                Section.ABSTRACT: "abstract",
+                Section.INTRODUCTION: "introduction",
+                Section.RELATED_WORK: "related_work",
+                Section.METHODS: "methods",
+                Section.RESULTS: "results",
+                Section.DISCUSSION: "discussion",
+                Section.CONCLUSION: "conclusion",
+            }
+            field = section_to_field.get(section_type)
+            if field:
+                req_text = getattr(user_requirements, field, None)
+                if req_text and req_text.strip():
+                    user_req_block = f"""
+[USER REQUIREMENTS FOR THIS SECTION]
+The user has specified the following requirements for the {section_type.value} section:
+{req_text.strip()}
+
+CRITICAL: Check if the draft satisfies these user requirements. If not, add specific improvement suggestions.
+"""
         
         return textwrap.dedent(f"""\
             [ROLE]
@@ -65,11 +98,18 @@ class SectionCritic:
 
             [TASK]
             Analyze the draft {section_type.value} section and identify:
-            1. Areas that need improvement (use positive framing - what to add/change, not what's wrong)
-            2. Search queries to find additional supporting evidence (max {max_queries} queries)
+            1. Violations of section guidelines (HIGHEST PRIORITY)
+            2. Areas that need improvement (use positive framing - what to add/change, not what's wrong)
+            3. Search queries to find additional supporting evidence (max {max_queries} queries)
 
             [SECTION TYPE]
             {section_type.value}
+
+            [SECTION GUIDELINES]
+            These are the official guidelines for this section. Check for violations:
+            {guidelines}
+
+            {user_req_block}
 
             [DRAFT TEXT]
             {draft_text}
@@ -79,20 +119,15 @@ class SectionCritic:
             {paper_catalog}
 
             [INSTRUCTIONS]
-            1. For improvements: Focus on constructive suggestions. Instead of "lacks evidence", say "add supporting evidence for X".
-            2. For citations: Verify that ALL citation keys used in the draft (e.g., [Smith2020]) exist in the [AVAILABLE PAPERS] list.
-               - If a key is missing from the list, you MUST add an improvement suggestion: "Remove or correct hallucinated citation [Key]".
-               - This is a CRITICAL check.
-            3. For search queries: Create specific, focused queries that would retrieve relevant academic content.
-               - Queries should target gaps in the current draft
-               - Each query should be semantically distinct (no redundant queries)
-               - Maximum {max_queries} queries
+            1. Check for guideline violations (e.g., citations in Abstract, word count limits)
+            2. Verify all citation keys exist in [AVAILABLE PAPERS]; flag missing ones
+            3. Suggest improvements: be concise, actionable, 1 sentence each
+            4. Generate focused search queries for missing evidence (max {max_queries})
 
             [OUTPUT FORMAT]
-            Return a JSON object with:
-            - improvements: list of constructive improvement suggestions (including citation corrections)
-            - search_queries: list of search query strings (max {max_queries})"""
-        )
+            Return JSON with:
+            - improvements: concise text with all suggestions (guideline violations first)
+            - search_queries: list of query strings (max {max_queries})""")
 
     @staticmethod
     def _format_paper_catalog(papers: Sequence[Paper]) -> str:

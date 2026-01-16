@@ -166,7 +166,7 @@ class WritingPromptsScreen(BaseFrame):
             has_next=False,
             has_back=True,
             back_text="Back",
-            header_file_path=PROMPTS_FILE,
+            #header_file_path=PROMPTS_FILE,
             info_content=WRITING_PROMPTS_INFO
         )
     

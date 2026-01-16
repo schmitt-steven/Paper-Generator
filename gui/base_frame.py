@@ -663,8 +663,14 @@ class BaseFrame(ttk.Frame):
         # Re-apply theme colors to created widgets (TextBorderFrame, Text etc.)
         self.controller.apply_theme_colors(self)
 
-    def create_card_frame(self, parent, title):
-        """Helper to create a unified card-styled section with title and separator."""
+    def create_card_frame(self, parent, title, info_content=None):
+        """Helper to create a unified card-styled section with title and separator.
+        
+        Args:
+            parent: Parent widget
+            title: Card title
+            info_content: Optional info text to show in popup when info icon clicked
+        """
         card = CardBorderFrame(parent, padx=1, pady=1)
         card.pack(fill="x", padx=0, pady=10)
         
@@ -680,6 +686,17 @@ class BaseFrame(ttk.Frame):
             bg=header_bg,
             fg=header_fg
         ).pack(side="left")
+        
+        # Add info icon if info_content provided
+        if info_content:
+            info_btn = self.controller.icons.create_icon_label(
+                header,
+                icon_name="info",
+                command=lambda: InfoPopup(self.controller, title, info_content),
+                scale=1.5,
+                hover_color=HoverColor.BLUE
+            )
+            info_btn.pack(side="right", padx=(10, 0))
         
         ttk.Separator(card, orient="horizontal").pack(fill="x")
         

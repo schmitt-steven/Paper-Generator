@@ -204,6 +204,7 @@ class PaperWritingPipeline:
         
         sections: dict[Section, str] = {}
         evidence_by_section: dict[Section, Sequence[Evidence]] = {}
+        prompts_by_section: dict[str, str] = {}
         
         with LMSJITSettings():
             for section_type in section_order:
@@ -215,6 +216,17 @@ class PaperWritingPipeline:
                 if status_callback:
                     status_callback(f"Drafting {section_type.value} section")
                 print(f"  [Step 1] Writing initial draft using paper catalog...")
+                
+                # Build and save the prompt
+                prompt = self.writer._build_catalog_prompt(
+                    section_type=section_type,
+                    papers=papers,
+                    context=paper_concept,
+                    experiment=experiment_result,
+                    previous_sections=sections,
+                    user_requirements=user_requirements,
+                )
+                prompts_by_section[section_type.value] = prompt
                 
                 draft_v1 = self.writer.generate_section_from_catalog(
                     section_type=section_type,
@@ -236,8 +248,9 @@ class PaperWritingPipeline:
                     draft_text=draft_v1,
                     papers=papers,
                     max_queries=max_critique_queries,
+                    user_requirements=user_requirements,
                 )
-                print(f"    Found {len(critique.improvements)} improvements, {len(critique.search_queries)} queries")
+                print(f"    Critique: {len(critique.improvements)} chars, {len(critique.search_queries)} queries")
                 
                 # Step 3: Batch search for additional evidence
                 new_evidence: list[Evidence] = []
@@ -329,6 +342,7 @@ class PaperWritingPipeline:
         )
         
         self._save_paper_draft(paper_draft=paper_draft)
+        self._save_prompts(prompts_by_section)
         
         print(f"\n{'='*80}")
         print(f"PAPER WRITING COMPLETE")

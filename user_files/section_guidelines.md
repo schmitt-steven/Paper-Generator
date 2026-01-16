@@ -1,10 +1,9 @@
 # Section Guidelines
 ## Abstract
-150-250 words MAX.
+150-300 words MAX.
 Structure: (1) Problem/Gap, (2) Approach, (3) Key Results (with specific metrics), (4) Main Implication.
 Be specific and verifiable.
-CITATIONS: STRICTLY FORBIDDEN. Do NOT include ANY citations in the Abstract.
-Do NOT use square brackets [ ] for references.
+CITATIONS ARE STRICTLY FORBIDDEN. Do NOT include ANY citations in the Abstract.
 Do NOT use generic phrases like "In this paper, we propose...". Jump straight into the problem or approach.
 
 ## Introduction

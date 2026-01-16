@@ -1,12 +1,11 @@
 """Convert PaperDraft to LaTeX project."""
 
-import logging
 import os
 import re
 import shutil
 import subprocess
 from dataclasses import dataclass
-from typing import Optional, Any, List, Set
+from typing import Optional, Any, List, Set, Callable
 from pathlib import Path
 from settings import Settings
 from phases.paper_search.paper import Paper
@@ -15,8 +14,6 @@ from utils.lazy_model_loader import LazyModelMixin
 from phases.latex_generation.bibliography import generate_literature_bib
 from phases.latex_generation.markdown_to_latex import MarkdownToLaTeX
 from phases.experimentation.experiment_state import ExperimentResult
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -57,28 +54,31 @@ class PaperConverter(LazyModelMixin):
         metadata: LaTeXMetadata,
         indexed_papers: list[Paper],
         experiment_result: Optional[ExperimentResult] = None,
+        progress_callback: Optional[Callable[[str], None]] = None,
     ) -> Path:
-        """Convert PaperDraft to LaTeX project."""
+        """Convert PaperDraft to LaTeX project.
+        
+        Args:
+            progress_callback: Optional function(str) to report progress
+        """
 
         output_dir = Path("output/latex")
         output_dir.mkdir(parents=True, exist_ok=True)
         
-        logger.info(f"[PaperConverter] Converting PaperDraft to LaTeX")
+        print(f"[PaperConverter] Converting PaperDraft to LaTeX")
         
         latex_dir = self._setup_latex_directory(output_dir)
         
         self._populate_metadata(latex_dir, metadata)
         
-        self._inject_sections_into_tex(latex_dir, paper_draft)
+        self._inject_sections_into_tex(latex_dir, paper_draft, progress_callback)
         
         self._generate_bibliography(latex_dir, paper_draft, indexed_papers)
-        
-
         
         if experiment_result:
             self._copy_plot_images(latex_dir, experiment_result)
         
-        logger.info(f"[PaperConverter] LaTeX project generated at {latex_dir}")
+        print(f"[PaperConverter] LaTeX project generated at {latex_dir}")
         return latex_dir
 
     @staticmethod
@@ -110,13 +110,13 @@ class PaperConverter(LazyModelMixin):
                 f"Set LOAD_LATEX = False to generate it."
             )
         
-        logger.info(f"[PaperConverter] Loaded existing LaTeX project from {latex_dir}")
+        print(f"[PaperConverter] Loaded existing LaTeX project from {latex_dir}")
         return latex_dir
 
     def compile_latex(self, latex_dir: Path) -> bool:
         """Compile LaTeX project to PDF using Makefile."""
         try:
-            logger.info(f"[PaperConverter] Compiling LaTeX project...")
+            print(f"[PaperConverter] Compiling LaTeX project...")
             result = subprocess.run(
                 ["make"],
                 cwd=latex_dir,
@@ -127,16 +127,16 @@ class PaperConverter(LazyModelMixin):
             )
             pdf_path = latex_dir / "result" / "paper.pdf"
             if pdf_path.exists():
-                logger.info(f"[PaperConverter] PDF generated at {pdf_path}")
+                print(f"[PaperConverter] PDF generated at {pdf_path}")
                 return True
             else:
-                logger.error(f"[PaperConverter] Compilation succeeded but PDF not found at {pdf_path}")
+                print(f"[PaperConverter] Compilation succeeded but PDF not found at {pdf_path}")
                 return False
         except subprocess.TimeoutExpired:
-            logger.error(f"[PaperConverter] LaTeX compilation timed out after 60 seconds")
+            print(f"[PaperConverter] LaTeX compilation timed out after 60 seconds")
             return False
         except subprocess.CalledProcessError as e:
-            logger.error(f"[PaperConverter] LaTeX compilation failed with exit code {e.returncode}")
+            print(f"[PaperConverter] LaTeX compilation failed with exit code {e.returncode}")
             if e.stdout:
                 print(f"STDOUT:\n{e.stdout}")
             if e.stderr:
@@ -151,7 +151,7 @@ class PaperConverter(LazyModelMixin):
                         print(line.rstrip())
             return False
         except Exception as e:
-            logger.error(f"[PaperConverter] Error during compilation: {e}")
+            print(f"[PaperConverter] Error during compilation: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -159,7 +159,7 @@ class PaperConverter(LazyModelMixin):
     def _setup_latex_directory(self, output_dir: Path) -> Path:
         """Copy LaTeX template to output directory."""
 
-        template_dir = Path("latex_template/tex")
+        template_dir = Path(f"latex_templates/{Settings.LATEX_TEMPLATE}")
         
         if not template_dir.exists():
             raise FileNotFoundError(f"LaTeX template not found at {template_dir}")
@@ -172,145 +172,192 @@ class PaperConverter(LazyModelMixin):
         
         shutil.copytree(template_dir, latex_dir)
         
-        logger.info(f"[PaperConverter] Copied LaTeX template to {latex_dir}")
+        print(f"[PaperConverter] Copied LaTeX template to {latex_dir}")
         return latex_dir
 
     def _populate_metadata(self, latex_dir: Path, metadata: LaTeXMetadata) -> None:
-        """Update paper.tex with metadata for IEEEtran template."""
+        """Update paper.tex with metadata using template-defined author format."""
         
         paper_path = latex_dir / "paper.tex"
         
         if not paper_path.exists():
-            logger.error(f"[PaperConverter] paper.tex not found at {paper_path}")
+            print(f"[PaperConverter] paper.tex not found at {paper_path}")
             return
         
         # Read current paper.tex content
         content = paper_path.read_text(encoding="utf-8")
         
-        # Replace title
-        content = content.replace(
-            r"\newcommand{\dokumententitel}[0]{Paper Title}",
-            f"\\newcommand{{\\dokumententitel}}[0]{{{metadata.title}}}"
+        # Replace title placeholder (graceful if missing)
+        if "%%TITLE%%" in content:
+            content = content.replace("%%TITLE%%", metadata.title)
+            print(f"[PaperConverter] Set title: {metadata.title[:50]}...")
+        else:
+            print("[PaperConverter] No %%TITLE%% placeholder found in template, skipping title")
+        
+        # Extract author block template from paper.tex
+        # Template is between %%BEGIN_AUTHOR%% and %%END_AUTHOR%%
+        author_pattern = re.compile(
+            r'%%BEGIN_AUTHOR%%\s*(.*?)\s*%%END_AUTHOR%%',
+            re.DOTALL
         )
+        match = author_pattern.search(content)
         
-        # Generate author blocks for IEEEtran format
-        author_blocks: list[str] = []
-        for i, author in enumerate(metadata.authors):
-            # Build author block
-            author_name = author.get("name", "Author Name")
-            author_lines = [f"  \\IEEEauthorblockN{{{author_name}}}"]
+        if match:
+            author_template = match.group(1)
             
-            # Build affiliation block
-            affiliation_parts = []
-            if author.get("affiliation"):
-                affiliation_parts.append(author["affiliation"])
-            if author.get("department"):
-                affiliation_parts.append(author["department"])
-            if author.get("address"):
-                affiliation_parts.append(author["address"])
-            if author.get("email"):
-                affiliation_parts.append(f"Email: {author['email']}")
+            # Generate author blocks using template
+            author_blocks: list[str] = []
+            for author in metadata.authors:
+                block = author_template
+                # Replace template placeholders with author data
+                # Support both IEEE-style and JAIR-style fields
+                block = block.replace("{{name}}", author.get("name", "") or "Author")
+                block = block.replace("{{affiliation}}", author.get("affiliation", "") or "Institution")
+                block = block.replace("{{department}}", author.get("department", ""))
+                block = block.replace("{{address}}", author.get("address", ""))
+                block = block.replace("{{email}}", author.get("email", "") or "author@institution.com")
+                # JAIR-specific fields - country is REQUIRED by acmart
+                block = block.replace("{{city}}", author.get("city", "") or "City")
+                block = block.replace("{{country}}", author.get("country", "") or "Country")
+                block = block.replace("{{state}}", author.get("state", ""))
+                author_blocks.append(block.strip())
             
-            if affiliation_parts:
-                affiliation = "\\\\\n    ".join(affiliation_parts)
-                author_lines.append(f"  \\IEEEauthorblockA{{\n    {affiliation}\n    }}")
+            # Join all authors (JAIR uses separate \author blocks, IEEE uses \and)
+            # Check if template uses \and separator or separate author blocks
+            if "\\and" in author_template or "\\And" in author_template:
+                full_author_section = "\n\\and\n".join(author_blocks)
+            else:
+                # JAIR-style: each author is a separate block
+                full_author_section = "\n\n".join(author_blocks)
             
-            # Join this author's blocks
-            author_block = "\n".join(author_lines)
-            author_blocks.append(author_block)
+            # Replace the entire author block (including markers) with formatted authors
+            # Use lambda to avoid backslash interpretation in replacement string
+            content = author_pattern.sub(lambda m: full_author_section, content)
+            print(f"[PaperConverter] Applied template-based author formatting for {len(metadata.authors)} author(s)")
+        else:
+            print("[PaperConverter] No %%BEGIN_AUTHOR%%...%%END_AUTHOR%% block found in template")
         
-        # Join all authors with \and separator (except last one)
-        full_author_section = "\n  \\and\n".join(author_blocks)
-        
-        # Replace the placeholder
-        content = content.replace("%%AUTHOR_BLOCKS%%", full_author_section)
+        # Handle %%SHORTAUTHORS%% placeholder (used by JAIR template)
+        if "%%SHORTAUTHORS%%" in content:
+            if metadata.authors:
+                # Extract last names
+                last_names = []
+                for author in metadata.authors:
+                    name = author.get("name", "")
+                    if name:
+                        # Assume last word is last name
+                        parts = name.strip().split()
+                        if parts:
+                            last_names.append(parts[-1])
+                
+                if len(last_names) == 1:
+                    short_authors = last_names[0]
+                elif len(last_names) == 2:
+                    short_authors = f"{last_names[0]} \\& {last_names[1]}"
+                elif len(last_names) > 2:
+                    short_authors = f"{last_names[0]} et al."
+                else:
+                    short_authors = "Author"
+                
+                content = content.replace("%%SHORTAUTHORS%%", short_authors)
+                print(f"[PaperConverter] Set short authors: {short_authors}")
+            else:
+                content = content.replace("%%SHORTAUTHORS%%", "Author")
         
         # Write updated content
         paper_path.write_text(content, encoding="utf-8")
-        logger.info(f"[PaperConverter] Updated paper.tex with {len(metadata.authors)} author(s)")
+        print(f"[PaperConverter] Updated paper.tex with metadata")
 
-    def _inject_sections_into_tex(self, latex_dir: Path, paper_draft: PaperDraft) -> None:
-        """Convert PaperDraft sections to LaTeX and inject directly into paper.tex."""
+    def _inject_sections_into_tex(self, latex_dir: Path, paper_draft: PaperDraft, progress_callback: Optional[Callable[[str], None]] = None) -> None:
+        """Convert PaperDraft sections to LaTeX and inject at %%CONTENT%% placeholder."""
         
         paper_path = latex_dir / "paper.tex"
         if not paper_path.exists():
-             logger.error(f"[PaperConverter] paper.tex not found at {paper_path}")
+             print(f"[PaperConverter] paper.tex not found at {paper_path}")
              return
              
-        # Read the template with placeholders
+        # Read the template with %%CONTENT%% placeholder
         paper_content = paper_path.read_text(encoding="utf-8")
         
-        # Map sections to placeholders (e.g. Section.INTRODUCTION -> %%INTRODUCTION%%)
-        section_mapping = {
-            Section.ABSTRACT: "%%ABSTRACT%%",
-            Section.INTRODUCTION: "%%INTRODUCTION%%",
-            Section.RELATED_WORK: "%%RELATED_WORK%%",
-            Section.METHODS: "%%METHODS%%",
-            Section.RESULTS: "%%RESULTS%%",
-            Section.DISCUSSION: "%%DISCUSSION%%",
-            Section.CONCLUSION: "%%CONCLUSION%%",
-            Section.ACKNOWLEDGEMENTS: "%%ACKNOWLEDGEMENTS%%",
-        }
+        # Define section order and attribute mapping
+        sections_order = [
+            (Section.INTRODUCTION, "introduction"),
+            (Section.RELATED_WORK, "related_work"),
+            (Section.METHODS, "methods"),
+            (Section.RESULTS, "results"),
+            (Section.DISCUSSION, "discussion"),
+            (Section.CONCLUSION, "conclusion"),
+            (Section.ACKNOWLEDGEMENTS, "acknowledgements"),
+        ]
         
-        # Map Section enum to PaperDraft attribute names
-        attr_map = {
-            Section.ABSTRACT: "abstract",
-            Section.INTRODUCTION: "introduction",
-            Section.RELATED_WORK: "related_work",
-            Section.METHODS: "methods",
-            Section.RESULTS: "results",
-            Section.DISCUSSION: "discussion",
-            Section.CONCLUSION: "conclusion",
-            Section.ACKNOWLEDGEMENTS: "acknowledgements",
-        }
-
-        for section_type, placeholder in section_mapping.items():
-            # Get markdown content
-            attr_name = attr_map[section_type]
+        # Handle abstract separately (has its own %%ABSTRACT%% placeholder)
+        abstract_content = paper_draft.abstract
+        if "%%ABSTRACT%%" in paper_content:
+            if abstract_content:
+                if progress_callback:
+                    progress_callback("Converting Abstract to LaTeX")
+                latex_abstract = MarkdownToLaTeX.convert_section_to_latex(abstract_content, Section.ABSTRACT, self.model)
+                paper_content = paper_content.replace("%%ABSTRACT%%", latex_abstract)
+            else:
+                paper_content = paper_content.replace("%%ABSTRACT%%", "% No abstract provided")
+        else:
+            print("[PaperConverter] No %%ABSTRACT%% placeholder found in template, skipping abstract")
+        
+        # Process each section with its own placeholder
+        for section_type, attr_name in sections_order:
+            placeholder = f"%%{section_type.name}%%"  # e.g., %%INTRODUCTION%%, %%METHODS%%
             section_content = getattr(paper_draft, attr_name, None)
             
+
+            # Check if placeholder exists in template
+            if placeholder not in paper_content:
+                if section_type != Section.ACKNOWLEDGEMENTS:
+                    print(f"[PaperConverter] No {placeholder} placeholder in template, skipping {section_type.value}")
+                else:
+                    print(f"[PaperConverter] No {placeholder} placeholder in template for ACKNOWLEDGEMENTS")
+                continue
+            
+            print(f"[PaperConverter] Found placeholder {placeholder}")
+
             # Handle empty content
             if not section_content:
                 if section_type == Section.ACKNOWLEDGEMENTS:
-                    logger.info(f"[PaperConverter] Skipping {section_type.value} (not provided)")
-                    # Remove placeholder
+                    # Remove placeholder entirely for missing acknowledgements
                     paper_content = paper_content.replace(placeholder, "")
+                    print(f"[PaperConverter] Skipping {section_type.value} (not provided)")
                 else:
-                    logger.warning(f"[PaperConverter] Empty section: {section_type.value}")
-                    # Replace with empty string or comment
                     paper_content = paper_content.replace(placeholder, f"% Empty section: {section_type.value}")
+                    print(f"[PaperConverter] Empty section: {section_type.value}")
                 continue
             
             # Convert to LaTeX
-            logger.info(f"[PaperConverter] Converting {section_type.value} to LaTeX...")
+            print(f"[PaperConverter] Converting {section_type.value} to LaTeX (length: {len(section_content)})")
+            if progress_callback:
+                progress_callback(f"Converting {section_type.value} to LaTeX")
+            
             latex_content = MarkdownToLaTeX.convert_section_to_latex(section_content, section_type, self.model)
             
-            # Post-processing
-            if section_type == Section.ABSTRACT:
-                # Abstract is just the content, environment is already in paper.tex
-                pass
-            else:
-                # Append section header if missing
-                if "\\section{" not in latex_content and section_type != Section.ACKNOWLEDGEMENTS:
-                    section_title = section_type.value
-                    latex_content = f"\\section{{{section_title}}}\n\\label{{sec:{section_title.lower().replace(' ', '_')}}}\n\n{latex_content}"
+            if not latex_content:
+                print(f"[PaperConverter] Conversion returned empty string for {section_type.value}!")
+                # Keep placeholder but verify why content was lost
             
-            # Inject into paper content
+            # Inject into placeholder
             paper_content = paper_content.replace(placeholder, latex_content)
-            
-        # Write back the fully fully populated LaTeX file
+            print(f"[PaperConverter] Injected {len(latex_content)} chars into {placeholder}")
+        
+        # Write back the fully populated LaTeX file
         paper_path.write_text(paper_content, encoding="utf-8")
-        logger.info(f"[PaperConverter] Injected all sections into {paper_path}")
+        print(f"[PaperConverter] Injected all sections into {paper_path}")
 
     def _generate_bibliography(self, latex_dir: Path, paper_draft: PaperDraft, indexed_papers: list[Paper]) -> None:
-        """Generate literature.bib from citations in PaperDraft."""
+        """Generate bibliography.bib from citations in PaperDraft."""
 
         bib_content = generate_literature_bib(paper_draft, indexed_papers)
         
-        bib_path = latex_dir / "literature.bib"
+        bib_path = latex_dir / "bibliography.bib"
         bib_path.write_text(bib_content, encoding="utf-8")
         
-        logger.info(f"[PaperConverter] Generated literature.bib with {len(bib_content.split('@')) - 1} entries")
+        print(f"[PaperConverter] Generated bibliography.bib with {len(bib_content.split('@')) - 1} entries")
 
 
 
@@ -322,7 +369,7 @@ class PaperConverter(LazyModelMixin):
         
         plots_dir = Path("output/experiments/plots")
         if not plots_dir.exists():
-            logger.info("[PaperConverter] No plots directory found")
+            print("[PaperConverter] No plots directory found")
             return
         
         # Copy all plot files from plots directory
@@ -333,7 +380,6 @@ class PaperConverter(LazyModelMixin):
                 dest_path = images_dir / plot_file.name
                 shutil.copy2(plot_file, dest_path)
                 copied_count += 1
-                logger.debug(f"[PaperConverter] Copied plot: {plot_file.name}")
+                print(f"[PaperConverter] Copied plot: {plot_file.name}")
         
-        logger.info(f"[PaperConverter] Copied {copied_count} plot image(s) to images/")
-
+        print(f"[PaperConverter] Copied {copied_count} plot image(s) to images/")

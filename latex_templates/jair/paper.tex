@@ -1,0 +1,399 @@
+%% This is a JAIR Example File Compiled by Nicholas Mattei (nsmattei@tulane.edu) 
+%% and Odd Erik Gundersen (odderik@ntnu.no)
+%% and Mykel Kochenderfer (mykel@stanford.edu)
+%% September 15, 2025
+%%
+%% This file is based off the ACM Latex Template https://www.acm.org/publications/proceedings-template
+%% Revision 2.12 (12/28/2024)
+%% 
+%% Please see https://www.jair.org/index.php/jair for more information and submission instructions.
+%%
+
+%% The first command in your LaTeX source must be the \documentclass
+%% command.
+%%
+%% For final camera ready please change the
+%% command to \documentclass[]{jair}.
+%%
+\documentclass[manuscript, screen, review]{jair}
+
+
+\setcopyright{cc}
+\copyrightyear{2025}
+\acmDOI{10.1613/jair.1.xxxxx}
+
+%%
+\JAIRAE{Insert JAIR AE Name}
+\JAIRTrack{} % Insert JAIR Track Name only if part of a special track
+\acmVolume{1}
+\acmArticle{1}
+\acmMonth{1}
+\acmYear{2026}
+
+\RequirePackage[
+  datamodel=acmdatamodel,
+  style=acmauthoryear,
+  backend=biber,
+  giveninits=true,
+  uniquename=init
+  ]{biblatex}
+
+\renewcommand*{\bibopenbracket}{(}
+\renewcommand*{\bibclosebracket}{)}
+
+%%
+%% For managing citations, use BibLaTeX with the acmauthoryear style.
+%% The next line specifies the bibliography file.
+\addbibresource{bibliography.bib}
+
+%% Additional packages for paper generator
+\usepackage[utf8]{inputenx}
+\graphicspath{{images/}}
+\DeclareGraphicsExtensions{.pdf,.png,.jpeg,.jpg}
+%% Note: hyperref and xcolor are already loaded by acmart.cls
+
+%%
+%% end of the preamble, start of the body of the document source.
+\begin{document}
+
+%%
+%% The "title" command has an optional parameter,
+%% allowing the author to define a "short title" to be used in page headers.
+%% Usage: \title[short title]{full title}
+%%
+\title{%%TITLE%%}
+
+%%
+%% The "author" command and its associated commands are used to define
+%% the authors and their affiliations.
+%% Of note is the shared affiliation of the first two authors, and the
+%% "authornote" and "authornotemark" commands
+%% used to denote shared contribution to the research and/or corresponding author.
+%%
+%% Each author must be defined separately for accurate metadata identification.
+%% As an exception, multiple authors may share one affiliation. 
+%% Authors' names should not be abbreviated; use full first names wherever possible. 
+%% Include authors' e-mail addresses whenever possible. 
+%% Including ORCID information for each author is highly recommended.
+%% Example ORCID: \orcid{0000-0002-2037-3694}
+%%
+%% Grouping authors' names or e-mail addresses is not acceptable:
+%%   BAD: \author{Brooke Aster, David Mehldau}
+%%   BAD: \email{dave,judy,steve@university.edu}
+%%
+%% The authornote and authornotemark commands allow a note to apply to 
+%% multiple authors -- for example, if the first two authors contributed equally.
+%%
+%% Author format:
+%% \author{Author Name}
+%% \authornote{Corresponding Author.}  % optional
+%% \orcid{0000-0000-0000-0000}  % optional
+%% \email{author@institution.edu}
+%% \affiliation{%
+%%   \institution{Institution Name}
+%%   \city{City}
+%%   \state{State/Province}
+%%   \country{Country}
+%% }
+%%
+
+%%BEGIN_AUTHOR%%
+\author{{{name}}}
+\email{{{email}}}
+\affiliation{%
+  \institution{{{affiliation}}}
+  \city{{{city}}}
+  \country{{{country}}}
+}
+%%END_AUTHOR%%
+
+%% The short list of authors must be made of the list of all authors' lastnames.
+%% If this is too long and overlaps other information printed in the page headers, use:
+%% \renewcommand{\shortauthors}{First Author et al.}
+\renewcommand{\shortauthors}{%%SHORTAUTHORS%%}
+
+%%
+%% The abstract is a short summary of the work to be presented in the
+%% article.
+\begin{abstract}
+%%ABSTRACT%%
+\end{abstract}
+
+%% JAIR Note: 
+%% Do not include ACM CCS Concepts or Keywords
+
+%% To be updated by authors.
+\received{Date received}
+\received[accepted]{Date accepted}
+
+%% This command processes the author and affiliation and title
+%% information and builds the first part of the formatted document.
+\maketitle
+
+\section{Introduction}
+%%INTRODUCTION%%
+
+\section{Related Work}
+%%RELATED_WORK%%
+
+\section{Methods}
+%%METHODS%%
+
+\section{Results}
+%%RESULTS%%
+
+\section{Discussion}
+%%DISCUSSION%%
+
+\section{Conclusion}
+%%CONCLUSION%%
+
+%%
+%% The acknowledgments section is defined using the "acks" environment
+%% (and NOT an unnumbered section). This ensures the proper
+%% identification of the section in the article metadata, and the
+%% consistent spelling of the heading.
+\begin{acks}
+%%ACKNOWLEDGEMENTS%%
+\end{acks}
+
+%%
+%% The next line prints the references.
+\printbibliography
+
+
+%%
+%% If your work has an appendix, this is the place to put it.
+%% Start the appendix with the "appendix" command:
+%%   \appendix
+%% Note that in the appendix, sections are lettered, not numbered.
+
+
+\end{document}
+\endinput
+%%
+%% End of file `sample-acmlarge.tex'.
+
+%% ===========================================================================
+%% JAIR TEMPLATE DOCUMENTATION (preserved as comments for reference)
+%% ===========================================================================
+%%
+%% MODIFICATIONS:
+%% Modifying the template --- including but not limited to: adjusting
+%% margins, typeface sizes, line spacing, paragraph and list definitions,
+%% and the use of the \vspace command to manually adjust the
+%% vertical spacing between elements of your work --- is not allowed.
+%% Your document will be returned to you for revision if modifications 
+%% are discovered.
+%%
+%% ---------------------------------------------------------------------------
+%% TYPEFACES:
+%% The "acmart" document class requires the use of the
+%% "Libertine" typeface family. Your TeX installation should include
+%% this set of packages. Please do not substitute other typefaces. The
+%% "lmodern" and "ltimes" packages should not be used,
+%% as they will override the built-in typeface families.
+%%
+%% ---------------------------------------------------------------------------
+%% TITLE INFORMATION:
+%% The title of your work should use capital letters appropriately -
+%% https://capitalizemytitle.com/ has useful rules for capitalization. 
+%% Use the title command to define the title of your work. 
+%% If your work has a subtitle, define it with the subtitle command. 
+%% Do not insert line breaks in your title.
+%%
+%% If your title is lengthy, you must define a short version to be used
+%% in the page headers, to prevent overlapping text:
+%%   \title[short title]{full title}
+%%
+%% ---------------------------------------------------------------------------
+%% RIGHTS INFORMATION:
+%% JAIR articles are freely available, and a copyright notice referencing 
+%% the Creative Commons CC BY license is included in the template. 
+%% This copyright notice should be included in all JAIR articles.
+%%
+%% ---------------------------------------------------------------------------
+%% SECTIONING COMMANDS:
+%% Your work should use standard LaTeX sectioning commands:
+%% section, subsection, subsubsection, and paragraph. They should be numbered; 
+%% do not remove the numbering from the commands.
+%%
+%% Simulating a sectioning command by setting the first word or words of
+%% a paragraph in boldface or italicized text is not allowed.
+%%
+%% ---------------------------------------------------------------------------
+%% TABLES:
+%% The "acmart" document class includes the "booktabs"
+%% package --- https://ctan.org/pkg/booktabs --- for preparing high-quality tables.
+%%
+%% Table captions are placed above the table.
+%%
+%% Because tables cannot be split across pages, the best placement for
+%% them is typically the top of the page nearest their initial cite. To
+%% ensure this proper "floating" placement of tables, use the
+%% environment table to enclose the table's contents and the
+%% table caption. The contents of the table itself must go in the
+%% tabular environment.
+%%
+%% Always use midrule to separate table header rows from data rows, and
+%% use it only for this purpose. This enables assistive technologies to
+%% recognise table headers and support their users in navigating tables.
+%%
+%% Example table:
+%% \begin{table}
+%%   \caption{Frequency of Special Characters}
+%%   \label{tab:freq}
+%%   \begin{tabular}{@{}ccl@{}}
+%%     \toprule
+%%     Non-English or Math&Frequency&Comments\\
+%%     \midrule
+%%     \O & 1 in 1,000& For Swedish names\\
+%%     $\pi$ & 1 in 5& Common in math\\
+%%     \$ & 4 in 5 & Used in business\\
+%%     $\Psi^2_1$ & 1 in 40,000& Unexplained usage\\
+%%   \bottomrule
+%% \end{tabular}
+%% \end{table}
+%%
+%% ---------------------------------------------------------------------------
+%% MATH EQUATIONS:
+%% You may want to display math equations in three distinct styles:
+%% inline, numbered or non-numbered display. 
+%%
+%% JAIR authors are discouraged from using sophisticated mathematical notation 
+%% in the abstract (especially notation that is difficult to reproduce in 
+%% vanilla HTML), since the abstract will also be formatted in HTML on the 
+%% JAIR web site.
+%%
+%% Inline (In-text) Equations:
+%% A formula that appears in the running text is called an inline or
+%% in-text formula. It is produced by the math environment,
+%% with the usual \begin...\end construction or with \$...\$.
+%%
+%% Display Equations:
+%% A numbered display equation is produced by the equation environment.
+%% An unnumbered display equation is produced by the displaymath environment.
+%%
+%% ---------------------------------------------------------------------------
+%% FIGURES:
+%% The "figure" environment should be used for figures. One or
+%% more images can be placed within a figure. If your figure contains
+%% third-party material, you must clearly identify it as such.
+%%
+%% Your figures should contain a caption which describes the figure to the reader.
+%% Figure captions are placed below the figure.
+%%
+%% Every figure should also have a figure description. These descriptions 
+%% convey what is in the image to someone who cannot see it. They are also 
+%% used by search engine crawlers for indexing images, and when images 
+%% cannot be loaded.
+%%
+%% A figure description must be unformatted plain text less than 2000
+%% characters long (including spaces). Figure descriptions
+%% should not repeat the figure caption – their purpose is to capture
+%% important information that is not already provided in the caption or
+%% the main text of the paper.
+%%
+%% For additional information regarding how best to write figure descriptions 
+%% and why doing this is so important, please see
+%% https://www.acm.org/publications/taps/describing-figures/
+%%
+%% Example figure:
+%% \begin{figure}[ht]
+%%   \centering
+%%   \includegraphics[width=0.6\linewidth]{image-file}
+%%   \caption{Caption text here.}
+%%   \Description{Description for accessibility.}
+%% \end{figure}
+%%
+%% ---------------------------------------------------------------------------
+%% CITATIONS AND BIBLIOGRAPHIES:
+%% For managing citations, use bibliography files in BibTeX format.
+%% You can then use BibLaTeX with the acmauthoryear style. 
+%% Do not use the acmnumeric style.
+%%
+%% The bibliography is included in your source document with the command:
+%%   \addbibresource{bibfile.bib}
+%% where "bibfile.bib" is the name of the bibliography file.
+%%
+%% We can reference the work of the authors using the \citet command. 
+%% Do not use a parenthetical citation as a noun in a sentence.
+%%
+%% ---------------------------------------------------------------------------
+%% ACKNOWLEDGMENTS:
+%% Identification of funding sources and other support, and thanks to
+%% individuals and groups that assisted in the research and the
+%% preparation of the work should be included in an acknowledgment
+%% section, which is placed just before the reference section.
+%%
+%% This section has a special environment:
+%%   \begin{acks}
+%%   ...
+%%   \end{acks}
+%% so that the information contained therein can be more easily collected
+%% during the article metadata extraction phase, and to ensure
+%% consistency in the spelling of the section heading.
+%%
+%% Authors should not prepare this section as a numbered or unnumbered section;
+%% please use the "acks" environment.
+%%
+%% ---------------------------------------------------------------------------
+%% APPENDICES:
+%% If your work needs an appendix, add it before the
+%% \end{document} command at the conclusion of your source document.
+%%
+%% Start the appendix with the "appendix" command:
+%%   \appendix
+%% and note that in the appendix, sections are lettered, not numbered.
+%%
+%% ---------------------------------------------------------------------------
+%% REPRODUCIBILITY CHECKLIST FOR JAIR:
+%% Select the answers that apply to your research -- one per item.
+%%
+%% ALL ARTICLES:
+%% 1. All claims investigated in this work are clearly stated. [yes/partially/no]
+%% 2. Clear explanations are given how the work reported substantiates the claims. [yes/partially/no]
+%% 3. Limitations or technical assumptions are stated clearly and explicitly. [yes/partially/no]
+%% 4. Conceptual outlines and/or pseudo-code descriptions of the AI methods introduced in this work are provided, and important implementation details are discussed. [yes/partially/no/NA]
+%% 5. Motivation is provided for all design choices, including algorithms, implementation choices, parameters, data sets and experimental protocols beyond metrics. [yes/partially/no]
+%%
+%% ARTICLES CONTAINING THEORETICAL CONTRIBUTIONS:
+%% Does this paper make theoretical contributions? [yes/no]
+%% If yes:
+%% 1. All assumptions and restrictions are stated clearly and formally. [yes/partially/no]
+%% 2. All novel claims are stated formally (e.g., in theorem statements). [yes/partially/no]
+%% 3. Proofs of all non-trivial claims are provided in sufficient detail. [yes/partially/no]
+%% 4. Complex formalism, such as definitions or proofs, is motivated and explained clearly. [yes/partially/no]
+%% 5. The use of mathematical notation and formalism serves the purpose of enhancing clarity and precision. [yes/partially/no]
+%% 6. Appropriate citations are given for all non-trivial theoretical tools and techniques. [yes/partially/no]
+%%
+%% ARTICLES REPORTING ON COMPUTATIONAL EXPERIMENTS:
+%% Does this paper include computational experiments? [yes/no]
+%% If yes:
+%% 1. All source code required for conducting experiments is included online. [yes/partially/no]
+%% 2. The source code comes with a license for reproducibility purposes. [yes/partially/no]
+%% 3. The source code comes with a license for research purposes. [yes/partially/no]
+%% 4. Raw, unaggregated data from all experiments is included online. [yes/partially/no]
+%% 5. The unaggregated data comes with a license for reproducibility purposes. [yes/partially/no]
+%% 6. The unaggregated data comes with a license for research purposes. [yes/partially/no]
+%% 7. If an algorithm depends on randomness, then the method for random numbers is described. [yes/partially/no/NA]
+%% 8. The execution environment for experiments is described. [yes/partially/no]
+%% 9. The evaluation metrics used in experiments are clearly explained. [yes/partially/no]
+%% 10. The number of algorithm runs used to compute each result is reported. [yes/no]
+%% 11. Reported results have not been "cherry-picked". [yes/partially/no]
+%% 12. Analysis of results goes beyond single-dimensional summaries. [yes/no]
+%% 13. All (hyper-) parameter settings have been reported. [yes/partially/no/NA]
+%% 14. The number and range of (hyper-) parameter settings explored is indicated. [yes/partially/no/NA]
+%% 15. Appropriately chosen statistical hypothesis tests are used. [yes/partially/no/NA]
+%%
+%% ARTICLES USING DATA SETS:
+%% Does this work rely on one or more data sets? [yes/no]
+%% If yes:
+%% 1. All newly introduced data sets are included online. [yes/partially/no/NA]
+%% 2. The newly introduced data set comes with a license for reproducibility. [yes/partially/no]
+%% 3. The newly introduced data set comes with a license for research. [yes/partially/no]
+%% 4. All data sets drawn from the literature are accompanied by appropriate citations. [yes/no/NA]
+%% 5. All data sets drawn from the existing literature are publicly available. [yes/partially/no/NA]
+%% 6. All new data sets and non-public data sets are described in detail. [yes/partially/no/NA]
+%% 7. All methods used for preprocessing, augmenting, batching or splitting data sets are described. [yes/partially/no/NA]
+%%
