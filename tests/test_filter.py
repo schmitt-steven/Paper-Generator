@@ -1,130 +1,140 @@
-"""Test script for the clustering-based paper filter."""
+"""Test script to compare paper filtering methods."""
+import sys
+import os
+
+# Add the project root directory to the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from phases.paper_search.literature_search import LiteratureSearch
 from phases.paper_search.paper_filter import PaperFilter
 from phases.paper_search.paper_ranking import PaperRanker
 from phases.context_analysis.paper_conception import PaperConception
 from settings import Settings
 
-def main():
-    # Load unfiltered papers
+# ============================================================
+# CONFIGURATION
+# ============================================================
+RUN_PAPER_SEARCH = False  # Set to True to run a new paper search
+PAPER_COUNT = 40          # Number of papers to show for each method
+
+
+def search_papers():
+    """Run a new paper search based on the paper concept."""
     print("=" * 60)
-    print("Loading papers_unfiltered.json...")
-    papers = LiteratureSearch.load_papers("output/papers_unfiltered.json")
-    print(f"Loaded {len(papers)} papers\n")
-    
-    # Check if embeddings exist
-    has_embeddings = all(getattr(p, 'title_abstract_embedding', None) is not None for p in papers)
-    
-    if not has_embeddings:
-        print("Papers don't have embeddings stored. Re-computing...")
-        paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
-        ranker = PaperRanker(embedding_model_name=Settings.PAPER_RANKING_EMBEDDING_MODEL)
-        ranking_context = f"{paper_concept.description}\nOpen Research Questions:\n{paper_concept.open_questions}"
-        papers = ranker.rank_papers(
-            papers=papers,
-            context=ranking_context,
-            weights={'relevance': 0.7, 'citations': 0.2, 'recency': 0.1}
-        )
-        # Save with embeddings for future runs
-        LiteratureSearch.save_papers(papers, filename="papers_unfiltered.json", output_dir="output")
-        print("Saved papers with embeddings.\n")
-    
-    # Run the new filter with verbose output
-    print("=" * 60)
-    print("Running clustering filter...")
-    print("=" * 60)
-    
-    # Step 1: Filter and calibrate (print happens inside)
-    unique_map = {}
-    min_relevance = 0.4
-    for p in papers:
-        current_score = p.ranking.final_score if p.ranking else 0
-        if current_score < min_relevance:
-            continue
-        if p.id not in unique_map:
-            unique_map[p.id] = p
-        else:
-            existing_score = unique_map[p.id].ranking.final_score if unique_map[p.id].ranking else 0
-            if current_score > existing_score:
-                unique_map[p.id] = p
-    
-    qualified_papers = list(unique_map.values())
-    qualified_papers.sort(key=lambda p: p.ranking.final_score if p.ranking else 0, reverse=True)
-    
-    print(f"\nQualified papers (score >= {min_relevance}): {len(qualified_papers)}")
-    
-    # Step 2: Calibrate threshold
-    print("\n--- Calibration ---")
-    similarity_threshold = PaperFilter._calibrate_threshold(qualified_papers)
-    
-    # Step 3: Cluster
-    print("\n--- Clustering ---")
-    clusters = PaperFilter._cluster_papers(qualified_papers, similarity_threshold)
-    print(f"Found {len(clusters)} clusters\n")
-    
-    # Step 4: Show cluster details
-    print("=" * 60)
-    print("CLUSTER DETAILS")
-    print("=" * 60)
-    
-    # Sort clusters by leader score
-    sorted_clusters = sorted(
-        clusters.items(),
-        key=lambda x: x[1][0].ranking.final_score if x[1][0].ranking else 0,
-        reverse=True
-    )
-    
-    for i, (leader_id, cluster_papers) in enumerate(sorted_clusters, 1):
-        leader = cluster_papers[0]
-        leader_score = leader.ranking.final_score if leader.ranking else 0
-        print(f"\nCluster {i} ({len(cluster_papers)} papers) - Score: {leader_score:.3f}")
-        print(f"  Leader: {leader.title[:70]}...")
-        
-        if len(cluster_papers) > 1:
-            print(f"  Other papers:")
-            for p in cluster_papers[1:]:
-                p_score = p.ranking.final_score if p.ranking else 0
-                print(f"    - [{p_score:.3f}] {p.title[:60]}...")
-    
-    # =============================================
-    # Run New Cluster Filter + LLM Verification
-    # =============================================
-    print("\n" + "=" * 60)
-    print("CLUSTER FILTER SELECTION")
-    print("=" * 60)
-    
-    selected = PaperFilter.run(papers, target_count=50, max_per_cluster=5, min_relevance=0.4)
-    
-    print(f"\nSelected {len(selected)} papers:")
-    for i, p in enumerate(selected, 1):
-        score = p.ranking.final_score if p.ranking else 0
-        print(f"  {i:2d}. [{score:.3f}] {p.title[:60]}...")
-    
-    # LLM Verification
-    print("\n" + "=" * 60)
-    print("LLM VERIFICATION (removing false positives)")
+    print("PAPER SEARCH")
     print("=" * 60)
     
     paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
+    print(f"Paper Concept: {paper_concept.description}")
+    
+    lit_search = LiteratureSearch(model_name=Settings.LITERATURE_SEARCH_MODEL)
+    
+    print("\n--- Generating Search Queries ---")
+    queries = lit_search.build_search_queries(paper_concept)
+    
+    print("\n--- Executing Search ---")
+    papers = lit_search.search_papers(queries, max_results_per_query=30)
+    print(f"\nFound {len(papers)} unique papers")
+    
+    print("\n--- Ranking Papers ---")
+    ranker = PaperRanker(embedding_model_name=Settings.PAPER_RANKING_EMBEDDING_MODEL)
+    ranking_context = paper_concept.description
+    papers = ranker.rank_papers(
+        papers=papers,
+        context=ranking_context,
+        weights={'relevance': 0.75, 'citations': 0.15, 'recency': 0.1}
+    )
+    
+    LiteratureSearch.save_papers(papers, filename="papers.json", output_dir="output")
+    print(f"Saved {len(papers)} papers to output/papers.json")
+    
+    return papers
+
+
+def load_papers():
+    """Load existing papers from papers.json."""
+    print("Loading papers.json...")
+    papers = LiteratureSearch.load_papers("output/papers.json")
+    print(f"Loaded {len(papers)} papers")
+    return papers
+
+
+def ensure_embeddings(papers):
+    """Ensure papers have embeddings."""
+    has_embeddings = all(getattr(p, 'title_abstract_embedding', None) is not None for p in papers)
+    
+    if not has_embeddings:
+        print("Re-computing embeddings...")
+        paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
+        ranker = PaperRanker(embedding_model_name=Settings.PAPER_RANKING_EMBEDDING_MODEL)
+        papers = ranker.rank_papers(
+            papers=papers,
+            context=paper_concept.description,
+            weights={'relevance': 0.75, 'citations': 0.15, 'recency': 0.1}
+        )
+        LiteratureSearch.save_papers(papers, filename="papers.json", output_dir="output")
+    
+    return papers
+
+
+def print_papers(papers, title):
+    """Print a list of papers with open access stats."""
+    open_count = sum(1 for p in papers if p.is_open_access)
+    closed_count = len(papers) - open_count
+    
+    print(f"\n{title}")
+    print(f"Open Access: {open_count} | Closed Access: {closed_count}")
+    print("-" * 60)
+    for i, p in enumerate(papers, 1):
+        score = p.ranking.final_score if p.ranking else 0
+        year = p.published.year if hasattr(p.published, 'year') else str(p.published)[:4] if p.published else 'N/A'
+        access = "OA" if p.is_open_access else "CA"
+        print(f"{i:2d}. [{score:.3f}] [{access}] ({year}) {p.title[:45]}...")
+
+
+def main():
+    # Load or search papers
+    if RUN_PAPER_SEARCH:
+        papers = search_papers()
+    else:
+        papers = load_papers()
+    
+    if not papers:
+        print("No papers found.")
+        return
+    
+    papers = ensure_embeddings(papers)
+    
+    # Get research context for LLM verification
+    paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
     research_context = f"{paper_concept.description}\n\nOpen Research Questions:\n{paper_concept.open_questions}"
     
-    verified = PaperFilter.verify_with_llm(
-        papers=selected,
+    # Simple Filter
+    print("\n" + "=" * 60)
+    print("FILTER 1(Composite Score + LLM)")
+    print("=" * 60)
+    simple_papers = PaperFilter.filter_papers(
+        papers=papers,
+        research_context=research_context,
+        model_name=Settings.LITERATURE_SEARCH_MODEL,
+        target_count=PAPER_COUNT,
+        min_relevance=0.5
+    )
+    print_papers(simple_papers, f"Simple Filter Results ({len(simple_papers)} papers)")
+    
+    # Complex Filter
+    print("\n" + "=" * 60)
+    print("FILTER 2(Clustering + LLM)")
+    print("=" * 60)
+    clustered = PaperFilter.filter_papers_complex(papers, target_count=PAPER_COUNT * 2, min_relevance=0.4)
+    complex_papers = PaperFilter.verify_with_llm(
+        papers=clustered,
         research_context=research_context,
         model_name=Settings.LITERATURE_SEARCH_MODEL,
         batch_size=10
-    )
-    
-    print(f"\nFinal verified papers: {len(verified)}")
-    for i, p in enumerate(verified, 1):
-        score = p.ranking.final_score if p.ranking else 0
-        print(f"  {i:2d}. [{score:.3f}] {p.title[:60]}...")
-    
-    # Save
-    print("\n" + "=" * 60)
-    output_file = "papers_filtered_test.json"
-    LiteratureSearch.save_papers(verified, filename=output_file, output_dir="output")
-    print(f"Saved {len(verified)} papers to output/{output_file}")
+    )[:PAPER_COUNT]
+    print_papers(complex_papers, f"Complex Filter Results ({len(complex_papers)} papers)")
+
 
 if __name__ == "__main__":
     main()

@@ -81,6 +81,18 @@ class SettingsScreen(BaseFrame):
         
         self.settings_vars["SEMANTIC_SCHOLAR_API_KEY"] = self.api_key_var
 
+        # User Email (for Unpaywall API)
+        row_frame = ttk.Frame(frame, style="CardRow.TFrame")
+        row_frame.pack(fill="x", pady=(10, 2))
+        
+        ttk.Label(row_frame, text="Unpaywall Email", width=35, style="CardRow.TLabel").pack(side="left")
+        
+        self.unpaywall_email_var = tk.StringVar(value=getattr(Settings, "UNPAYWALL_EMAIL", ""))
+        email_entry = ttk.Entry(row_frame, textvariable=self.unpaywall_email_var)
+        email_entry.pack(side="right", fill="x", expand=True, padx=(10, 0))
+        
+        self.settings_vars["UNPAYWALL_EMAIL"] = self.unpaywall_email_var
+
     def create_latex_template_section(self):
         """LaTeX Template section: radio buttons for template selection"""
         frame = self.create_card_frame(self.scrollable_frame, "LaTeX Template", info_content=LATEX_TEMPLATE_INFO)

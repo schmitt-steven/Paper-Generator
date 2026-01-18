@@ -1,4 +1,5 @@
 from typing import List, Optional
+from dateutil import parser
 import textwrap
 import json
 import time
@@ -41,42 +42,51 @@ class LiteratureSearch(LazyModelMixin):
         """Generate multiple search queries from paper concept for comprehensive literature search."""
 
         prompt = textwrap.dedent(f"""\
-            Generate 15 Semantic Scholar search queries for academic literature review.
+            Generate 15 Semantic Scholar search queries for a comprehensive academic literature review.
 
-            QUERY RULES:
-            - Use ONLY established academic terminology (no invented terms)
-            - Use "quoted phrases" for multi-word concepts
-            - Keep queries short: 2-5 words
+            STRICT QUERY RULES:
+            - Use ONLY established academic terminology from the research domain
+            - Use "quoted phrases" for multi-word algorithm names or concepts
+            - Keep queries concise: 2-4 words
             - NO boolean operators (+, |, -)
+            - AVOID generic terms that appear in many fields (e.g., "deterministic", "optimal", "efficient", "one-pass")
+            - PREFER specific algorithm names, method names, and domain-specific vocabulary
 
-            QUERY CATEGORIES (generate queries for each):
-            1. FOUNDATIONAL (2-3 queries): Classic/seminal work, textbook concepts
-            Example: "temporal difference learning", "Bellman equation"
+            MANDATORY CATEGORY DISTRIBUTION:
+
+            1. SURVEYS & REVIEWS (3 queries):
+               - Focus on high-level overviews of the specific research topic
+               - Include "survey" or "review" combined with the specific domain/method name
             
-            2. SURVEYS (2-3 queries): Review papers, add "survey" or "review" keyword
-            Example: "reinforcement learning survey", "credit assignment review"
+            2. FOUNDATIONAL (3 queries):
+               - Target the core theories and seminal algorithms of this topic
+               - Use exact names of the foundational math or models
             
-            3. CORE METHODS (4-5 queries): Directly related algorithms and techniques
-            Example: "eligibility traces", "n-step returns", "Q-learning convergence"
+            3. CORE METHODS (3 queries):
+               - Specific algorithm names or technical approaches central to this topic
+               - Focus on the most distinct terminology for the method
             
-            4. RELATED APPROACHES (3-4 queries): Alternative methods, adjacent research
-            Example: "model-based reinforcement learning", "hindsight experience replay"
+            4. RELATED WORK (3 queries):
+               - Alternative approaches to the same problem
+               - Competing algorithms or methods often cited in comparison
             
-            5. APPLICATIONS/BENCHMARKS (2 queries): Practical use cases, evaluation
-            Example: "Atari deep reinforcement learning", "continuous control RL"
+            5. BENCHMARKS (3 queries):
+               - Standard evaluation environments, datasets, or tasks used in this field
+               - Specific names of test suites or data repositories
 
             RESEARCH TOPIC:
             {paper_concept.description}
 
-            OPEN QUESTIONS:
-            {paper_concept.open_questions if paper_concept.open_questions else "None"}
-
-            CRITICAL: Use only real academic terms that appear in published papers. Do NOT invent terminology.
+            AVOID THESE GENERIC TERMS (they match too many unrelated papers):
+            - deterministic, stochastic, optimal, efficient, robust
+            - one-pass, single-pass, forward, backward (unless part of specific algorithm name)
+            - convergence, analysis, optimization, learning (alone)
+            - graph, network, model (alone)
 
             Output format:
-            {{"queries": [{{"query": "term here", "year": null}}, {{"query": "recent topic", "year": "2020-2024"}}]}}
+            {{"queries": [{{"query": "specific algorithm name", "year": null}}, {{"query": "method survey", "year": null}}]}}
 
-            Generate about 15 queries now:"""
+            Generate exactly 15 queries now:"""
         )
 
         print("Generating search queries...")
@@ -90,7 +100,7 @@ class LiteratureSearch(LazyModelMixin):
                 prompt,
                 response_format=SearchQueriesResult,
                 config={
-                    'temperature': 0.2 + (attempt * 0.1),  # Slightly increase temperature on retry
+                    'temperature': 0.1,
                 }
             ).parsed
             
@@ -318,7 +328,7 @@ class LiteratureSearch(LazyModelMixin):
             List of unique Paper objects from all queries combined (duplicates removed)
         """
         # Default fields of study for auto-searched papers
-        DEFAULT_FIELDS_OF_STUDY = "Computer Science,Mathematics,Engineering"
+        DEFAULT_FIELDS_OF_STUDY = "Computer Science"
         
         all_papers = []
         for i, query_obj in enumerate(queries, 1):
@@ -335,7 +345,7 @@ class LiteratureSearch(LazyModelMixin):
             
             # Add delay between queries to respect rate limit
             if i < len(queries):
-                time.sleep(1.0)
+                time.sleep(2.0)
         
         # Remove duplicates
         unique_papers = self.remove_duplicates(all_papers)
@@ -373,7 +383,7 @@ class LiteratureSearch(LazyModelMixin):
             {
                 "id": paper.id,
                 "title": paper.title,
-                "published": paper.published,
+                "published": paper.published.isoformat() if isinstance(paper.published, datetime) else paper.published,
                 "authors": paper.authors,
                 "summary": paper.summary,
                 "pdf_url": paper.pdf_url,
@@ -413,6 +423,13 @@ class LiteratureSearch(LazyModelMixin):
             # Extract citation_key if present (it won't be passed to constructor due to init=False)
             citation_key = p.pop('citation_key', None)
 
+            # Parse published date if string
+            if isinstance(p.get('published'), str):
+                try:
+                    p['published'] = parser.parse(p['published'])
+                except (ValueError, TypeError):
+                    pass
+            
             # Create Paper object (citation_key will be auto-generated in __post_init__ if None)
             paper = Paper(**p)
 

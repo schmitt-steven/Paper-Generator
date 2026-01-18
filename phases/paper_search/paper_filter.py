@@ -83,20 +83,27 @@ class PaperFilter:
         return clusters
 
     @staticmethod
-    def run(
+    def filter_papers(
         papers: List[Paper],
-        target_count: int = 50,
-        max_per_cluster: int = 5,
-        min_relevance: float = 0.4
+        research_context: str,
+        model_name: str,
+        target_count: int = 40,
+        min_relevance: float = 0.5,
+        autoselect_count: int = 10
     ) -> List[Paper]:
+        """
+        Filter papers: pick top N by composite score, then run LLM verification.
+        Always includes top papers by semantic similarity.
+        """
+        if not papers:
+            return []
         
-        if not papers: return []
-        
-        # Remove duplicates and quality filter
+        # Step 1: Remove duplicates and apply minimum score filter
         unique_map = {}
         for p in papers:
             current_score = p.ranking.final_score if p.ranking else 0
-            if current_score < min_relevance: continue
+            if current_score < min_relevance:
+                continue
             
             if p.id not in unique_map:
                 unique_map[p.id] = p
@@ -106,52 +113,46 @@ class PaperFilter:
                     unique_map[p.id] = p
         
         qualified_papers = list(unique_map.values())
-        # Sort for calibration step
-        qualified_papers.sort(key=lambda p: p.ranking.final_score if p.ranking else 0, reverse=True)
         
-        print(f"Filtering: {len(qualified_papers)} papers qualified for clustering.")
+        # Step 2: Get top N papers by semantic similarity (relevance score), these are always included
+        by_relevance = sorted(
+            qualified_papers,
+            key=lambda p: p.ranking.relevance_score if p.ranking else 0,
+            reverse=True
+        )
+        autoselected_papers = by_relevance[:autoselect_count]
+        protected_ids = {p.id for p in autoselected_papers}
         
-        # Auto-calibration (get threshold based on this specific batches embeddings)
-        similarity_threshold = PaperFilter._calibrate_threshold(qualified_papers)
-
-        # Clustering
-        clusters = PaperFilter._cluster_papers(qualified_papers, similarity_threshold)
-        print(f"Clustering: Grouped into {len(clusters)} topics using threshold {similarity_threshold:.3f}")
+        print(f"Filter: Protected top {len(autoselected_papers)} papers by semantic similarity")
         
-        # Ticket System (Weighted Selection)
-        # Give high-scoring clusters more tickets/slots, pool all papers, then sort all papers by quality
-        candidates = []
-        quota_stats = {3: 0, 2: 0, 1: 0}
+        # Step 3: Sort remaining by composite score and take enough to fill target
+        remaining = [p for p in qualified_papers if p.id not in protected_ids]
+        remaining.sort(key=lambda p: p.ranking.final_score if p.ranking else 0, reverse=True)
         
-        for cid, cluster_papers in clusters.items():
-            if not cluster_papers: 
-                continue
-            
-            # Determine quota based on leader's score
-            leader_score = cluster_papers[0].ranking.final_score if cluster_papers[0].ranking else 0
-            
-            if leader_score >= 0.78:
-                quota = 3
-            elif leader_score >= 0.72:
-                quota = 2
-            else:
-                quota = 1
-            
-            quota_stats[quota] += 1
-            
-            # Take top n papers from this cluster
-            candidates.extend(cluster_papers[:quota])
-
-        print(f"  > Quotas: {quota_stats[3]} clusters@3, {quota_stats[2]} clusters@2, {quota_stats[1]} clusters@1")
+        # Take enough from remaining to fill target_count
+        additional_needed = target_count - len(autoselected_papers)
+        additional_papers = remaining[:additional_needed]
         
-        # Global sort by quality, so lower ranked papers from great clusters beat leaders of weak ones
-        candidates.sort(key=lambda p: p.ranking.final_score if p.ranking else 0, reverse=True)
+        print(f"Filter: Selected {len(additional_papers)} additional papers by composite score")
         
-        # Cut to target
-        selected_papers = candidates[:target_count]
+        # Step 4: Let LLM check papers to remove "false positives"
+        if additional_papers:
+            verified_additional = PaperFilter.verify_with_llm(
+                papers=additional_papers,
+                research_context=research_context,
+                model_name=model_name,
+                batch_size=10
+            )
+        else:
+            verified_additional = []
         
-        print(f"Selection: Kept top {len(selected_papers)} from {len(candidates)} candidates.")
-        return selected_papers
+        # Step 5: Combine autoselected + verified, sort by composite score
+        final_papers = autoselected_papers + verified_additional
+        final_papers.sort(key=lambda p: p.ranking.final_score if p.ranking else 0, reverse=True)
+        
+        print(f"Filter: Final selection = {len(autoselected_papers)} autoselected + {len(verified_additional)} verified = {len(final_papers)} total")
+        
+        return final_papers
     
     @staticmethod
     def verify_with_llm(

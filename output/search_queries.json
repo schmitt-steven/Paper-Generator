@@ -1,6 +1,26 @@
 [
   {
-    "query": "model-based reinforcement learning",
+    "query": "Recursive Backwards Q-Learning",
+    "year": null
+  },
+  {
+    "query": "Model-Based Q-Learning BFS",
+    "year": null
+  },
+  {
+    "query": "Backward Induction Q-Update",
+    "year": null
+  },
+  {
+    "query": "survey Recursive Backwards Q-Learning",
+    "year": null
+  },
+  {
+    "query": "review Model-Based Q-Learning",
+    "year": null
+  },
+  {
+    "query": "survey Backward Induction RL",
     "year": null
   },
   {
@@ -8,55 +28,35 @@
     "year": null
   },
   {
-    "query": "temporal difference learning",
+    "query": "episodic MDP value propagation",
     "year": null
   },
   {
-    "query": "Dyna-Q survey",
+    "query": "topological Q-value update",
     "year": null
   },
   {
-    "query": "sample efficiency review",
+    "query": "Dyna-Q algorithm",
     "year": null
   },
   {
-    "query": "backward value propagation",
+    "query": "Monte Carlo Q-learning",
     "year": null
   },
   {
-    "query": "Q-learning convergence",
+    "query": "value iteration MDP",
     "year": null
   },
   {
-    "query": "episodic MDP deterministic",
+    "query": "GridWorld benchmark",
     "year": null
   },
   {
-    "query": "value iteration online",
+    "query": "CliffWalking dataset",
     "year": null
   },
   {
-    "query": "Monte Carlo reinforcement learning",
-    "year": null
-  },
-  {
-    "query": "deterministic MDP sample complexity",
-    "year": null
-  },
-  {
-    "query": "persistent transition model",
-    "year": null
-  },
-  {
-    "query": "grid world reinforcement learning",
-    "year": null
-  },
-  {
-    "query": "online dynamic programming",
-    "year": null
-  },
-  {
-    "query": "backward propagation RL",
+    "query": "FrozenLake test suite",
     "year": null
   }
 ]

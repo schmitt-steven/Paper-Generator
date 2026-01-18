@@ -1,8 +1,12 @@
 import os
 import re
+import pymupdf4llm
+from dataclasses import dataclass
 from phases.paper_search.paper import Paper
 from utils.file_utils import preprocess_markdown, remove_references_section, extract_conclusion
 
+
+@dataclass
 class MarkdownParseResult:
     pdf_name: str
     markdown_path: str

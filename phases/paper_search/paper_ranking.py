@@ -22,21 +22,11 @@ class PaperRanker(LazyEmbeddingMixin):
         context: str,
         weights: dict[str, float] = None
     ) -> list[Paper]:
-        """
-        Rank papers by composite score and populate their ranking field.
-        
-        Args:
-            papers: List of Paper objects to rank
-            context: Research context string to compare against
-            weights: Dict with keys 'relevance', 'citations', 'recency' (default: 0.6, 0.2, 0.2)
-        
-        Returns:
-            List of Paper objects with ranking field populated, sorted by final_score descending (best first)
-        """
+        """Rank papers by composite score and populate their ranking field."""
         if weights is None:
             weights = {
-                'relevance': 0.7,
-                'citations': 0.2 ,
+                'relevance': 0.8,
+                'citations': 0.1,
                 'recency': 0.1
             }
         
@@ -163,12 +153,18 @@ class PaperRanker(LazyEmbeddingMixin):
         
         return np.clip(score, 0.0, 1.0)
     
-    def _parse_date(self, published: str) -> datetime:
+    def _parse_date(self, published: Any) -> datetime:
         """Parse date string in various formats (ISO, year-only, year-month)."""
         if not published:
             return datetime.now()  # Fallback for missing dates
         
-        published = published.strip()
+        if isinstance(published, datetime):
+            return published
+            
+        if isinstance(published, int):
+            return datetime(published, 1, 1)
+        
+        published = str(published).strip()
         
         # Try full ISO format first (e.g., "2024-05-05" or "2024-05-05T00:00:00Z")
         try:

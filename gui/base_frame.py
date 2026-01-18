@@ -94,9 +94,7 @@ class ProgressPopup(tk.Toplevel):
         self.title("Processing...")
         self.transient(parent)
         self.resizable(False, False)
-        
-        # Set minimum size for the popup
-        self.minsize(200, 100)
+        self.minsize(200, 90)
         
         # Content
         self.content_frame = ttk.Frame(self, padding=40)
@@ -105,8 +103,10 @@ class ProgressPopup(tk.Toplevel):
         self.status_label = ttk.Label(self.content_frame, text=initial_status, font=self.parent.fonts.default_font)
         self.status_label.pack(pady=(0, 15))
         
-        self.dots_label = ttk.Label(self.content_frame, text="", font=self.parent.fonts.default_font, foreground="gray")
-        self.dots_label.pack()
+        self._spinner_chars = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+        self._spinner_idx = 0
+        self.spinner_label = ttk.Label(self.content_frame, text=self._spinner_chars[0], font=("", 24), foreground="gray")
+        self.spinner_label.pack()
         
         self.close_btn = ttk.Button(self.content_frame, text="Close", command=self.close)
         
@@ -123,9 +123,7 @@ class ProgressPopup(tk.Toplevel):
         # Handle window close (X button) to ensure buttons are reenabled
         self.protocol("WM_DELETE_WINDOW", self.close)
         
-        # Animate dots
-        self._dots_count = 0
-        self._animate_dots()
+        self._animate_spinner()
     
     def _disable_parent_buttons(self):
         """Find and disable all buttons in parent window."""
@@ -154,12 +152,12 @@ class ProgressPopup(tk.Toplevel):
                 pass
         self._disabled_buttons = []
     
-    def _animate_dots(self):
+    def _animate_spinner(self):
         if self._is_error or not self.winfo_exists():
             return
-        self._dots_count = (self._dots_count + 1) % 4
-        self.dots_label.config(text="." * self._dots_count)
-        self.after(500, self._animate_dots)
+        self._spinner_idx = (self._spinner_idx + 1) % len(self._spinner_chars)
+        self.spinner_label.config(text=self._spinner_chars[self._spinner_idx])
+        self.after(80, self._animate_spinner)
     
     def update_status(self, status: str):
         """Update status text. Call from main thread via parent.after(0, ...)"""
@@ -172,9 +170,9 @@ class ProgressPopup(tk.Toplevel):
             return
         self._is_error = True
         
-        # Hide status and dots labels
+        # Hide status and spinner labels
         self.status_label.pack_forget()
-        self.dots_label.pack_forget()
+        self.spinner_label.pack_forget()
         
         # Clear existing content frame and rebuild for error
         self.content_frame.destroy()

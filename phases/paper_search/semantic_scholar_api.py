@@ -2,6 +2,7 @@ import requests
 import time
 import os
 from typing import List, Optional
+from dateutil import parser
 from phases.paper_search.paper import Paper
 
 class SemanticScholarAPI:
@@ -197,10 +198,26 @@ class SemanticScholarAPI:
         if data.get("citationStyles"):
             bibtex = data["citationStyles"].get("bibtex")
         
+        # Parse publication date
+        published = None
+        pub_date_str = data.get("publicationDate")
+        if pub_date_str:
+            try:
+                published = parser.parse(pub_date_str)
+            except (ValueError, TypeError):
+                published = None
+        
+        # Fallback to year if full date parsing failed
+        if not published and data.get("year"):
+            try:
+                published = parser.parse(str(data["year"]))
+            except (ValueError, TypeError):
+                pass
+
         return Paper(
             id=data.get("paperId", "No ID found"),
             title=data.get("title", "No title found"),
-            published=data.get("publicationDate") or str(data.get("year", "")),
+            published=published,
             authors=authors,
             summary=data.get("abstract", "No abstract found"),
             pdf_url=pdf_url,

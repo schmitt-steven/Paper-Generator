@@ -59,6 +59,7 @@ class Settings:
 
     # API Keys
     SEMANTIC_SCHOLAR_API_KEY = ""  # Optional Semantic Scholar API key for better rate limits
+    UNPAYWALL_EMAIL = ""  # Email for Unpaywall API (for finding free PDFs)
 
     # LaTeX Data
     LATEX_TEMPLATE = "jair"  # Template directory name from latex_templates/
@@ -103,6 +104,7 @@ class Settings:
                 "FONT_SIZE": cls.FONT_SIZE.name,
                 "DARK_MODE": cls.DARK_MODE,
                 "SEMANTIC_SCHOLAR_API_KEY": cls.SEMANTIC_SCHOLAR_API_KEY,
+                "UNPAYWALL_EMAIL": cls.UNPAYWALL_EMAIL,
                 "LATEX_TITLE": cls.LATEX_TITLE,
                 "LATEX_TEMPLATE": cls.LATEX_TEMPLATE,
             }

@@ -4,6 +4,7 @@ import webbrowser
 import threading
 import shutil
 import re
+from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Callable, Any, Optional
 
@@ -56,9 +57,6 @@ class PaperSelectionScreen(BaseFrame):
         # Track if papers have been loaded
         self._papers_loaded = False
         
-        # Track original paper IDs to detect new papers
-        self._original_paper_ids: set = set()
-        
         next_text = "Continue" if HYPOTHESES_FILE.exists() else "Generate Hypothesis"
         
         super().__init__(
@@ -91,8 +89,6 @@ class PaperSelectionScreen(BaseFrame):
             self.user_papers = [p for p in all_papers if p.user_provided]
             self.searched_papers = [p for p in all_papers if not p.user_provided]
             
-            # Track original IDs to detect new papers later
-            self._original_paper_ids = {p.id for p in all_papers}
             
             print(f"[Papers] Loaded {len(self.user_papers)} user papers, {len(self.searched_papers)} searched papers")
             
@@ -246,23 +242,11 @@ class PaperSelectionScreen(BaseFrame):
         return entry_frame
 
     def _get_paper_status(self, paper: Paper) -> tuple[Optional[str], Optional[str]]:
-        """Return status text and color if applicable."""
+        """Return status text and color for closed-access papers."""
         if not paper.is_open_access and not paper.user_provided:
-             # Check if PDF for paper was provided
-             has_local_pdf = False
-             if paper.pdf_path:
-                 has_local_pdf = True
-             elif paper.id:
-                 safe_id = "".join([c for c in paper.id if c.isalnum() or c in ('-', '_', '.')])
-                 expected_pdf_path = Path("output/literature") / safe_id / f"{safe_id}.pdf"
-                 if expected_pdf_path.exists():
-                     has_local_pdf = True
-            
-             if has_local_pdf:
-                 return "PDF Uploaded", "green"
-             else:
-                 return "Closed Access", "red"
-        
+            if self._check_pdf_exists(paper):
+                return "PDF Uploaded", "green"
+            return "Closed Access", "red"
         return None, None
 
     def _format_paper_bibliographic_info(self, paper: Paper, is_user_paper: bool = True) -> str:
@@ -278,9 +262,12 @@ class PaperSelectionScreen(BaseFrame):
             parts.append(f"{last_name} et al." if len(paper.authors) > 1 else last_name)
         
         if paper.published:
-            year_match = re.search(r'(\d{4})', paper.published)
-            if year_match:
-                parts.append(year_match.group(1))
+            if isinstance(paper.published, datetime):
+                parts.append(str(paper.published.year))
+            else:
+                year_match = re.search(r'(\d{4})', str(paper.published))
+                if year_match:
+                    parts.append(year_match.group(1))
         
         if paper.citation_count is not None:
             parts.append(f"{paper.citation_count:,} citations")
@@ -292,25 +279,11 @@ class PaperSelectionScreen(BaseFrame):
         return "  \u00B7  ".join(parts)
 
     def _on_paper_click(self, paper: Paper, is_user_paper: bool):
-        # Check if pdf_path is set and file exists
-        if paper.pdf_path:
-            pdf_path = Path(paper.pdf_path)
-            if not pdf_path.is_absolute():
-                pdf_path = Path.cwd() / pdf_path
-            if pdf_path.exists():
-                webbrowser.open(f"file://{pdf_path.resolve()}")
-                return
-        
-        # Check if downloaded PDF exists at expected location (for auto-searched papers)
-        if not is_user_paper and paper.id:
-            safe_id = "".join([c for c in paper.id if c.isalnum() or c in ('-', '_', '.')])
-            expected_pdf_path = Path("output/literature") / safe_id / f"{safe_id}.pdf"
-            if expected_pdf_path.exists():
-                webbrowser.open(f"file://{expected_pdf_path.resolve()}")
-                return
-        
-        # Fallback to Semantic Scholar URL
-        if paper.id:
+        """Open the paper's PDF or Semantic Scholar page."""
+        pdf_path = self._get_pdf_path(paper)
+        if pdf_path:
+            webbrowser.open(f"file://{pdf_path.resolve()}")
+        elif paper.id:
             webbrowser.open(f"https://www.semanticscholar.org/paper/{paper.id}")
         elif paper.pdf_url:
             webbrowser.open(paper.pdf_url)
@@ -473,11 +446,11 @@ class PaperSelectionScreen(BaseFrame):
                 # Step 2: Rank papers
                 self.after(0, lambda: popup.update_status("Ranking papers for relevance"))
                 ranker = PaperRanker(embedding_model_name=Settings.PAPER_RANKING_EMBEDDING_MODEL)
-                ranking_context = f"{paper_concept.description}\nOpen Research Questions:\n{paper_concept.open_questions}"
+                ranking_context = paper_concept.description
                 ranked_papers = ranker.rank_papers(
                     papers=searched_papers,
                     context=ranking_context,
-                    weights={'relevance': 0.7, 'citations': 0.2, 'recency': 0.1}
+                    weights={'relevance': 0.8, 'citations': 0.1, 'recency': 0.1}
                 )
                 
                 # Save unfiltered papers
@@ -485,13 +458,21 @@ class PaperSelectionScreen(BaseFrame):
                 
                 # Step 3: Filter papers
                 self.after(0, lambda: popup.update_status("Filtering found papers"))
-                filtered_papers = PaperFilter.run(
-                    ranked_papers,
-                    target_count=60,
-                    min_relevance=0.4
+                research_context = f"{paper_concept.description}\n\nOpen Research Questions:\n{paper_concept.open_questions}"
+                filtered_papers = PaperFilter.filter_papers(
+                    papers=ranked_papers,
+                    research_context=research_context,
+                    model_name=Settings.LITERATURE_SEARCH_MODEL,
+                    target_count=50,
+                    min_relevance=0.5
                 )
                 
-                # Step 4: Show results on screen
+                # Step 4: Check arXiv for free PDF versions
+                self.after(0, lambda: popup.update_status("Checking arXiv for free PDFs"))
+                from utils.open_access_finder import find_open_access_pdfs
+                filtered_papers = find_open_access_pdfs(filtered_papers)
+                
+                # Step 5: Show results on screen
                 self.after(0, lambda: self._on_search_complete(filtered_papers, popup))
                 
             except Exception as e:
@@ -569,35 +550,29 @@ class PaperSelectionScreen(BaseFrame):
             closed_count = total - open_count
             self.searched_count_label.config(text=f"{total} ({open_count} open, {closed_count} closed access)")
 
-    def _remove_user_paper(self, paper_id: str):
-        removed = next((p for p in self.user_papers if p.id == paper_id), None)
+    def _remove_paper(self, paper_id: str, is_user_paper: bool):
+        """Remove a paper and delete its literature folder."""
+        papers = self.user_papers if is_user_paper else self.searched_papers
+        removed = next((p for p in papers if p.id == paper_id), None)
         if removed:
-            print(f"[Papers] Removed user paper: {removed.title[:60]}")
-            
-            # Delete the output folder for this paper
+            print(f"[Papers] Removed: {removed.title[:60]}")
             output_folder = Path("output/literature") / paper_id
             if output_folder.exists():
                 shutil.rmtree(output_folder)
         
-        self.user_papers = [p for p in self.user_papers if p.id != paper_id]
-        self._original_paper_ids.discard(paper_id)
-        self._refresh_user_papers_list()
+        if is_user_paper:
+            self.user_papers = [p for p in self.user_papers if p.id != paper_id]
+            self._refresh_user_papers_list()
+        else:
+            self.searched_papers = [p for p in self.searched_papers if p.id != paper_id]
+            self._refresh_searched_papers_list()
         self._save_papers()
 
+    def _remove_user_paper(self, paper_id: str):
+        self._remove_paper(paper_id, is_user_paper=True)
+
     def _remove_searched_paper(self, paper_id: str):
-        removed = next((p for p in self.searched_papers if p.id == paper_id), None)
-        if removed:
-            print(f"[Papers] Removed searched paper: {removed.title[:60]}")
-            
-            # Delete the output folder for this paper
-            output_folder = Path("output/literature") / paper_id
-            if output_folder.exists():
-                shutil.rmtree(output_folder)
-        
-        self.searched_papers = [p for p in self.searched_papers if p.id != paper_id]
-        self._original_paper_ids.discard(paper_id)
-        self._refresh_searched_papers_list()
-        self._save_papers()
+        self._remove_paper(paper_id, is_user_paper=False)
 
     def _save_papers(self):
         """Save current paper selection to papers.json."""
@@ -620,25 +595,19 @@ class PaperSelectionScreen(BaseFrame):
             super().on_next()
             return
         
-        # Find new papers (not in original loaded set)
-        new_papers = [p for p in all_papers if p.id not in self._original_paper_ids]
-        
         # Find papers that need processing (download and/or conversion)
         papers_needing_download, papers_needing_conversion = self._find_papers_needing_processing(all_papers)
         
-        # Combine all papers that need processing (deduplicate by ID)
+        # Combine papers that need processing (deduplicate by ID)
         seen_ids = set()
         papers_to_process = []
-        for paper in new_papers + papers_needing_download + papers_needing_conversion:
+        for paper in papers_needing_download + papers_needing_conversion:
             if paper.id not in seen_ids:
                 seen_ids.add(paper.id)
                 papers_to_process.append(paper)
         
         if papers_to_process:
-            print(f"[Papers] Found {len(papers_to_process)} papers to process:")
-            print(f"    - {len(new_papers)} new papers")
-            print(f"    - {len(papers_needing_download)} need PDF download")
-            print(f"    - {len(papers_needing_conversion)} need conversion")
+            print(f"[Papers] Processing {len(papers_to_process)} papers: {len(papers_needing_download)} download, {len(papers_needing_conversion)} convert")
             self._process_new_papers(all_papers, papers_to_process, papers_needing_download)
         elif HYPOTHESES_FILE.exists():
             # No papers to process, hypothesis exists -> continue
@@ -678,22 +647,24 @@ class PaperSelectionScreen(BaseFrame):
         
         return papers_needing_download, papers_needing_conversion
     
-    def _check_pdf_exists(self, paper: Paper) -> bool:
-        """Check if a PDF file exists for the given paper."""
+    def _get_pdf_path(self, paper: Paper) -> Optional[Path]:
+        """Return the PDF path if it exists, None otherwise."""
         # Check pdf_path first
         if paper.pdf_path:
             pdf_path = Path(paper.pdf_path)
-            if pdf_path.is_absolute() and pdf_path.exists():
-                return True
-            elif not pdf_path.is_absolute():
-                full_path = Path.cwd() / pdf_path
-                if full_path.exists():
-                    return True
+            if not pdf_path.is_absolute():
+                pdf_path = Path.cwd() / pdf_path
+            if pdf_path.exists():
+                return pdf_path
         
-        # Check standard location in output/literature/{id}/
+        # Check standard location
         safe_id = "".join([c for c in paper.id if c.isalnum() or c in ('-', '_', '.')])
-        pdf_path = Path("output/literature") / safe_id / f"{safe_id}.pdf"
-        return pdf_path.exists()
+        standard_path = Path("output/literature") / safe_id / f"{safe_id}.pdf"
+        return standard_path if standard_path.exists() else None
+
+    def _check_pdf_exists(self, paper: Paper) -> bool:
+        """Check if a PDF file exists for the given paper."""
+        return self._get_pdf_path(paper) is not None
 
     def _process_new_papers(self, all_papers: list[Paper], papers_to_process: list[Paper], papers_needing_download: list[Paper] = None):
         """Download and convert papers, save all, then continue or generate hypotheses."""
@@ -719,16 +690,12 @@ class PaperSelectionScreen(BaseFrame):
                 converter = PDFConverter()
                 converter.convert_all_papers(papers_to_process, base_folder="output/literature/")
                 
-                # Step 3: Save all papers to papers.json
+                # Step 3: Save and continue
                 self.after(0, lambda: popup.update_status("Saving papers"))
                 LiteratureSearch.save_papers(all_papers, filename="papers.json", output_dir="output")
                 
-                # Step 4: Update tracking set
-                self._original_paper_ids = {p.id for p in all_papers}
-                
-                # Step 5: Continue or generate hypotheses
                 if HYPOTHESES_FILE.exists():
-                    self.after(0, lambda: self._on_processing_complete(popup))
+                    self.after(0, lambda: self._finish_processing(popup))
                 else:
                     self._run_hypothesis_generation(all_papers, popup)
                 
@@ -740,74 +707,37 @@ class PaperSelectionScreen(BaseFrame):
         thread = threading.Thread(target=task, daemon=True)
         thread.start()
 
-    def _on_processing_complete(self, popup: ProgressPopup):
-        """Handle completion when hypotheses already exist."""
+    def _finish_processing(self, popup: ProgressPopup):
+        """Close popup and go to next screen."""
         popup.close()
         self.controller.next_screen()
     
     def _run_hypothesis_generation(self, all_papers: list[Paper], popup: Optional[ProgressPopup] = None):
-        """Run hypothesis generation from user input only."""
-        # Create popup if not provided (called from on_next without processing)
+        """Generate hypothesis from user input."""
         if popup is None:
             popup = ProgressPopup(self.controller, "Processing")
         
         def task():
             try:
-                # Load paper concept
                 self.after(0, lambda: popup.update_status("Loading paper concept"))
                 paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
-                
-                # Check if user provided hypothesis
                 user_requirements = UserRequirements.load_user_requirements("user_files/user_requirements.md")
-                user_provided_hypothesis = bool(user_requirements.hypothesis and user_requirements.hypothesis.strip())
                 
-                # Step 1: Check all papers are converted to markdown
-                papers_needing_download, papers_needing_conversion = self._find_papers_needing_processing(all_papers)
-                if papers_needing_download or papers_needing_conversion:
-                    # Download papers that need it
-                    if papers_needing_download:
-                        self.after(0, lambda: popup.update_status(f"Downloading {len(papers_needing_download)} PDF(s)"))
-                        PDFDownloader.download_papers_as_pdfs(papers_needing_download, base_folder="output/literature/")
-                    
-                    # Convert all papers that need it
-                    papers_to_convert = papers_needing_download + papers_needing_conversion
-                    self.after(0, lambda: popup.update_status(f"Converting {len(papers_to_convert)} PDF(s) to markdown"))
-                    converter = PDFConverter()
-                    converter.convert_all_papers(papers_to_convert, base_folder="output/literature/")
-                
-                # Step 2: Filter by markdown availability
-                self.after(0, lambda: popup.update_status("Filtering papers with markdown"))
-                papers_with_markdown: list[Paper] = []
-                for p in all_papers:
-                    if getattr(p, "markdown_text", None) and isinstance(p.markdown_text, str) and p.markdown_text.strip():
-                        papers_with_markdown.append(p)
-                
-                # Update papers.json with filtered results
-                LiteratureSearch.save_papers(papers_with_markdown, filename="papers.json", output_dir="output")
-                
-                # Only generate hypothesis if user provided one in requirements
-                if user_provided_hypothesis:
+                # Only generate if user provided hypothesis
+                if user_requirements.hypothesis and user_requirements.hypothesis.strip():
                     self.after(0, lambda: popup.update_status("Creating hypothesis from user input"))
-                    hypothesis_builder = HypothesisBuilder(
+                    HypothesisBuilder(
                         model_name=Settings.HYPOTHESIS_BUILDER_MODEL,
                         paper_concept=paper_concept,
                         top_limitations=[],
                         num_papers_analyzed=0
-                    )
-                    hypothesis_builder.create_hypothesis_from_user_input(user_requirements)
+                    ).create_hypothesis_from_user_input(user_requirements)
                 
-                # Success - close popup and go to next screen
-                self.after(0, lambda: self._on_generation_success(popup))
+                self.after(0, lambda: self._finish_processing(popup))
                 
             except Exception as e:
                 import traceback
                 traceback.print_exc()
                 self.after(0, lambda err=str(e): popup.show_error(err))
         
-        thread = threading.Thread(target=task, daemon=True)
-        thread.start()
-
-    def _on_generation_success(self, popup: ProgressPopup):
-        """Handle successful generation."""
-        popup.close()
-        self.controller.next_screen()
+        threading.Thread(target=task, daemon=True).start()
