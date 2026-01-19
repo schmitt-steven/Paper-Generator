@@ -76,5 +76,5 @@ class Evidence:
 
 class SectionCritique(BaseModel):
     """Structured critique output from the SectionCritic."""
-    improvements: str              # Concise text describing what to improve
-    search_queries: list[str]      # Max 5 queries to fill evidence gaps
+    improvements: str              # Short text describing what to improve
+    search_queries: list[str]      # Queries to fill evidence gaps

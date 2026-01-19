@@ -450,4 +450,3 @@ class PaperGeneratorApp(tk.Tk):
 if __name__ == "__main__":
     app: PaperGeneratorApp = PaperGeneratorApp()
     app.mainloop()
-
