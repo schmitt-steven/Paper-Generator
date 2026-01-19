@@ -17,7 +17,7 @@ from settings import Settings
 
 
 class PaperWritingPipeline:
-    """Orchestrates critique-based paper writing."""
+    """Orchestrates the entire paper writing process."""
 
     def __init__(self) -> None:
         self.indexer = PaperIndexer()
@@ -148,12 +148,7 @@ class PaperWritingPipeline:
 
         return paper_draft
 
-    def reset_index(self) -> None:
-        """Reset the cached indexed corpus."""
-
-        self._indexed_corpus = None
-
-    def write_paper_with_critique(
+    def write_paper(
         self,
         paper_concept: PaperConcept,
         experiment_result: ExperimentResult,
@@ -164,25 +159,13 @@ class PaperWritingPipeline:
         chunks_per_query: int = 3,
     ) -> PaperDraft:
         """
-        Write paper using the critique-based pipeline.
+        Writes a paper in markdown format.
         
         Flow per section:
         1. Draft v1 using paper catalog (title + abstract + conclusion)
-        2. Critique: identify improvements and search queries
-        3. Search: batch execute queries for additional evidence
+        2. Critique: identify improvements and generate search queries
+        3. Search: execute queries for additional evidence
         4. Rewrite: incorporate critique and new evidence
-        
-        Args:
-            paper_concept: The paper concept/context
-            experiment_result: Experiment results to incorporate
-            papers: Selected papers for citation
-            user_requirements: Optional user requirements per section
-            status_callback: Callback for status updates
-            max_critique_queries: Max search queries from critique (default 5)
-            chunks_per_query: Evidence chunks per query (default 3)
-            
-        Returns:
-            PaperDraft with all sections
         """
         # Index papers for critique-based evidence search
         if not self._indexed_corpus:
@@ -218,7 +201,7 @@ class PaperWritingPipeline:
                 print(f"  [Step 1] Writing initial draft using paper catalog...")
                 
                 # Build and save the prompt
-                prompt = self.writer._build_catalog_prompt(
+                prompt = self.writer._build_initial_section_prompt(
                     section_type=section_type,
                     papers=papers,
                     context=paper_concept,
@@ -228,7 +211,7 @@ class PaperWritingPipeline:
                 )
                 prompts_by_section[section_type.value] = prompt
                 
-                draft_v1 = self.writer.generate_section_from_catalog(
+                section_draft_v1 = self.writer.generate_initial_section(
                     section_type=section_type,
                     papers=papers,
                     context=paper_concept,
@@ -236,7 +219,7 @@ class PaperWritingPipeline:
                     previous_sections=sections,
                     user_requirements=user_requirements,
                 )
-                print(f"    Draft complete ({len(draft_v1)} chars)")
+                print(f"    Draft complete ({len(section_draft_v1)} chars)")
                 
                 # Step 2: Critique the draft
                 if status_callback:
@@ -245,7 +228,7 @@ class PaperWritingPipeline:
                 
                 critique = critic.critique_section(
                     section_type=section_type,
-                    draft_text=draft_v1,
+                    draft_text=section_draft_v1,
                     papers=papers,
                     max_queries=max_critique_queries,
                     user_requirements=user_requirements,
@@ -281,7 +264,7 @@ class PaperWritingPipeline:
                 
                 final_section = self.writer.rewrite_section(
                     section_type=section_type,
-                    original_draft=draft_v1,
+                    text_to_rewrite=section_draft_v1,
                     critique=critique,
                     new_evidence=new_evidence,
                     papers=papers,
@@ -293,24 +276,6 @@ class PaperWritingPipeline:
                 
                 sections[section_type] = final_section
                 print(f"    Section complete ({len(final_section)} chars)")
-                
-                # Intermediate save:
-                current_title = "Draft in Progress"
-                if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
-                     current_title = Settings.LATEX_TITLE
-                     
-                partial_draft = PaperDraft(
-                    title=current_title,
-                    abstract=sections.get(Section.ABSTRACT, ""),
-                    introduction=sections.get(Section.INTRODUCTION, ""),
-                    related_work=sections.get(Section.RELATED_WORK, ""),
-                    methods=sections.get(Section.METHODS, ""),
-                    results=sections.get(Section.RESULTS, ""),
-                    discussion=sections.get(Section.DISCUSSION, ""),
-                    conclusion=sections.get(Section.CONCLUSION, ""),
-                    acknowledgements=None
-                )
-                self._save_paper_draft(paper_draft=partial_draft)
 
         # Generate acknowledgements if enabled
         acknowledgements = None
@@ -318,19 +283,9 @@ class PaperWritingPipeline:
             print("\nWriting Acknowledgements section...")
             acknowledgements = self.writer.generate_acknowledgements(user_requirements.acknowledgements)
 
-        # Generate or use provided title
-        if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
-            title = Settings.LATEX_TITLE
-        else:
-            title = self.writer.generate_title(
-                abstract=sections[Section.ABSTRACT],
-                introduction=sections[Section.INTRODUCTION],
-                conclusion=sections[Section.CONCLUSION],
-                context=paper_concept,
-            )
-
+        # Create draft (title will be set below)
         paper_draft = PaperDraft(
-            title=title,
+            title="",
             abstract=sections[Section.ABSTRACT],
             introduction=sections[Section.INTRODUCTION],
             related_work=sections[Section.RELATED_WORK],
@@ -340,6 +295,12 @@ class PaperWritingPipeline:
             conclusion=sections[Section.CONCLUSION],
             acknowledgements=acknowledgements,
         )
+
+        # Use settings title if provided, otherwise generate one
+        if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
+            paper_draft.title = Settings.LATEX_TITLE
+        else:
+            paper_draft.title = self.writer.generate_title(draft=paper_draft, context=paper_concept)
         
         self._save_paper_draft(paper_draft=paper_draft)
         self._save_prompts(prompts_by_section)

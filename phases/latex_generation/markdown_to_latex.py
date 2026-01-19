@@ -137,9 +137,44 @@ class MarkdownToLaTeX:
 
             Convert the markdown to LaTeX now:""")
 
+    # Unicode to LaTeX conversion mapping for Greek letters and common math symbols
+    UNICODE_TO_LATEX = {
+        # Greek lowercase
+        'α': r'$\alpha$', 'β': r'$\beta$', 'γ': r'$\gamma$', 'δ': r'$\delta$',
+        'ε': r'$\varepsilon$', 'ζ': r'$\zeta$', 'η': r'$\eta$', 'θ': r'$\theta$',
+        'ι': r'$\iota$', 'κ': r'$\kappa$', 'λ': r'$\lambda$', 'μ': r'$\mu$',
+        'ν': r'$\nu$', 'ξ': r'$\xi$', 'π': r'$\pi$', 'ρ': r'$\rho$',
+        'σ': r'$\sigma$', 'τ': r'$\tau$', 'υ': r'$\upsilon$', 'φ': r'$\phi$',
+        'χ': r'$\chi$', 'ψ': r'$\psi$', 'ω': r'$\omega$',
+        # Greek uppercase
+        'Α': r'$A$', 'Β': r'$B$', 'Γ': r'$\Gamma$', 'Δ': r'$\Delta$',
+        'Ε': r'$E$', 'Ζ': r'$Z$', 'Η': r'$H$', 'Θ': r'$\Theta$',
+        'Ι': r'$I$', 'Κ': r'$K$', 'Λ': r'$\Lambda$', 'Μ': r'$M$',
+        'Ν': r'$N$', 'Ξ': r'$\Xi$', 'Π': r'$\Pi$', 'Ρ': r'$P$',
+        'Σ': r'$\Sigma$', 'Τ': r'$T$', 'Υ': r'$\Upsilon$', 'Φ': r'$\Phi$',
+        'Χ': r'$X$', 'Ψ': r'$\Psi$', 'Ω': r'$\Omega$',
+        # Common math symbols
+        '∈': r'$\in$', '∉': r'$\notin$', '⊂': r'$\subset$', '⊃': r'$\supset$',
+        '⊆': r'$\subseteq$', '⊇': r'$\supseteq$', '∪': r'$\cup$', '∩': r'$\cap$',
+        '∅': r'$\emptyset$', '∞': r'$\infty$', '≤': r'$\leq$', '≥': r'$\geq$',
+        '≠': r'$\neq$', '≈': r'$\approx$', '±': r'$\pm$', '×': r'$\times$',
+        '÷': r'$\div$', '·': r'$\cdot$', '∑': r'$\sum$', '∏': r'$\prod$',
+        '∫': r'$\int$', '∂': r'$\partial$', '∇': r'$\nabla$', '√': r'$\sqrt{}$',
+        '→': r'$\rightarrow$', '←': r'$\leftarrow$', '↔': r'$\leftrightarrow$',
+        '⇒': r'$\Rightarrow$', '⇐': r'$\Leftarrow$', '⇔': r'$\Leftrightarrow$',
+        '∀': r'$\forall$', '∃': r'$\exists$', '¬': r'$\neg$', '∧': r'$\land$',
+        '∨': r'$\lor$', '⊕': r'$\oplus$', '⊗': r'$\otimes$',
+        # Superscripts and subscripts (common ones)
+        '²': r'$^2$', '³': r'$^3$', '⁴': r'$^4$', '⁵': r'$^5$',
+        '⁶': r'$^6$', '⁷': r'$^7$', '⁸': r'$^8$', '⁹': r'$^9$',
+        '₀': r'$_0$', '₁': r'$_1$', '₂': r'$_2$', '₃': r'$_3$',
+        '₄': r'$_4$', '₅': r'$_5$', '₆': r'$_6$', '₇': r'$_7$',
+        '₈': r'$_8$', '₉': r'$_9$',
+    }
+
     @staticmethod
     def _clean_latex_output(latex_text: str) -> str:
-        """Clean up LaTeX output by removing remaining markdown syntax if present."""
+        """Clean up LaTeX output by removing remaining markdown syntax and converting any remaining Unicode characters to LaTeX equivalents."""
 
         latex_text = latex_text.strip()
         if latex_text.startswith("```"):
@@ -150,6 +185,17 @@ class MarkdownToLaTeX:
             if lines and lines[-1].strip() == "```":
                 lines = lines[:-1]
             latex_text = "\n".join(lines)
+        
+        # Convert Unicode characters to LaTeX equivalents
+        latex_text = MarkdownToLaTeX._convert_unicode_to_latex(latex_text)
+        
         return latex_text
+
+    @staticmethod
+    def _convert_unicode_to_latex(text: str) -> str:
+        """Convert Unicode Greek letters and math symbols to LaTeX equivalents."""
+        for unicode_char, latex_equiv in MarkdownToLaTeX.UNICODE_TO_LATEX.items():
+            text = text.replace(unicode_char, latex_equiv)
+        return text
 
 

@@ -351,7 +351,7 @@ class PaperDraftScreen(BaseFrame):
                 
                 self.after(0, lambda: popup.update_status("Starting paper generation"))
                 
-                pipeline.write_paper_with_critique(
+                pipeline.write_paper(
                     paper_concept=paper_concept,
                     experiment_result=experiment_result,
                     papers=papers,

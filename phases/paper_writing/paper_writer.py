@@ -71,19 +71,9 @@ class PaperWriter:
             acknowledgements = self.generate_acknowledgements(user_requirements.acknowledgements)
             prompts_by_section[Section.ACKNOWLEDGEMENTS.value] = self._build_acknowledgements_prompt(user_requirements.acknowledgements)
 
-        # Use settings title if provided, otherwise generate one
-        if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
-            title = Settings.LATEX_TITLE
-        else:
-            title = self.generate_title(
-                abstract=sections[Section.ABSTRACT],
-                introduction=sections[Section.INTRODUCTION],
-                conclusion=sections[Section.CONCLUSION],
-                context=context,
-            )
-
+        # Create draft (title will be set below)
         draft = PaperDraft(
-            title=title,
+            title="",
             abstract=sections[Section.ABSTRACT],
             introduction=sections[Section.INTRODUCTION],
             related_work=sections[Section.RELATED_WORK],
@@ -93,6 +83,12 @@ class PaperWriter:
             conclusion=sections[Section.CONCLUSION],
             acknowledgements=acknowledgements,
         )
+
+        # Use settings title if provided, otherwise generate one
+        if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
+            draft.title = Settings.LATEX_TITLE
+        else:
+            draft.title = self.generate_title(draft=draft, context=context)
         return draft, prompts_by_section
 
     def generate_section(
@@ -162,109 +158,115 @@ class PaperWriter:
         plots_block = ""
         if section_type == Section.RESULTS and experiment and experiment.plots:
             plots_block = f"""[FIGURES TO INCLUDE]
-You MUST include ALL of the following figures in your Results section using markdown image syntax.
+                You MUST include ALL of the following figures in your Results section using markdown image syntax.
 
-{self._format_plots_for_prompt(experiment.plots)}
+                {self._format_plots_for_prompt(experiment.plots)}
 
-FIGURE REQUIREMENTS:
-- For each figure above, you MUST include it using: ![Brief description](experiments/plots/file_name.png)
-- Place figures at appropriate points in the narrative
-- Add a caption line below each figure: *Figure N: Full caption text*
-- Reference figures in your text (e.g., "As shown in Figure 1...")
-"""
+                FIGURE REQUIREMENTS:
+                - For each figure above, you MUST include it using: ![Brief description](experiments/plots/file_name.png)
+                - Place figures at appropriate points in the narrative
+                - Add a caption line below each figure: *Figure N: Full caption text*
+                - Reference figures in your text (e.g., "As shown in Figure 1...")"""
         
-        # SPECIAL HANDLING FOR ABSTRACT: No citations allowed
+        # Special handling for abstract: No citations allowed
         if section_type == Section.ABSTRACT:
-            prompt = f"""
-[ROLE]
-You are an expert academic writer.
+            prompt = f"""\
+            [ROLE]
+            You are an expert academic writer.
 
-[TASK]
-Write the complete Abstract section of the paper based on the provided context and previous sections.
+            [TASK]
+            Write the complete Abstract section of the paper based on the provided context and previous sections.
 
-[SECTION TYPE]
-Abstract
+            [SECTION TYPE]
+            Abstract
 
-[RESEARCH CONTEXT]
-{context_block}
+            [RESEARCH CONTEXT]
+            {context_block}
 
-[PREVIOUS SECTIONS]
-{previous_sections_block if previous_sections_block else ''}
+            [PREVIOUS SECTIONS]
+            {previous_sections_block if previous_sections_block else 'None'}
 
-[SECTION GUIDELINES]
-{guidelines}
+            [SECTION GUIDELINES]
+            {guidelines}
 
-{user_requirements_block}
+            {user_requirements_block}
 
-[WRITING REQUIREMENTS — STRICT]
-- Write a publication-quality abstract that summarizes the key contributions.
-- CRITICAL: DO NOT INCLUDE ANY CITATIONS OR REFERENCES.
-- DO NOT use square brackets [] anywhere in the text.
-- DO NOT reference other papers or authors by name.
-- The abstract must be self-contained without external references.
-- Never fabricate evidence or results.
-- Draw from the previous sections to write an accurate summary.
+            [WRITING REQUIREMENTS — STRICT]
+            - Write a publication-quality abstract that summarizes the key contributions.
+            - CRITICAL: DO NOT INCLUDE ANY CITATIONS OR REFERENCES.
+            - DO NOT use square brackets [] anywhere in the text.
+            - DO NOT reference other papers or authors by name.
+            - The abstract must be self-contained without external references.
+            - Never fabricate evidence or results.
+            - Draw from the previous sections to write an accurate summary.
+            - MATHEMATICAL NOTATION: Use LaTeX-compatible notation for all formulas and symbols.
+            - Greek letters: Write as *\\alpha*, *\\beta*, *\\gamma*, etc. (NOT Unicode symbols like α, β, γ)
+            - Formulas: Wrap in single asterisks for inline math: *x = \\alpha + \\beta*
+            - Subscripts/superscripts: Use LaTeX syntax: *x_i*, *x^2*, *Q_{max}*
 
-[GENERATION RULES — DO NOT VIOLATE]
-- Do NOT include ANY citations like [AuthorYear], [1], or any bracketed references.
-- Do NOT reference the guidelines or instructions.
-- Do NOT include section headings (e.g., "## Abstract") in your output.
-- Output ONLY the final abstract content without any markdown headings.
+            [GENERATION RULES — DO NOT VIOLATE]
+            - Do NOT include ANY citations like [AuthorYear], [1], or any bracketed references.
+            - Do NOT reference the guidelines or instructions.
+            - Do NOT include section headings (e.g., "## Abstract") in your output.
+            - Output ONLY the final abstract content without any markdown headings.
 
-Your output must be a polished academic abstract with ZERO citations.
-"""
+            Your output must be a polished academic abstract with ZERO citations."""
         else:
-            prompt = f"""
-[ROLE]
-You are an expert academic writer.
+            prompt = f"""\
+            [ROLE]
+            You are an expert academic writer.
 
-[TASK]
-Write the complete {section_type.value} section of the paper based on the provided context.
+            [TASK]
+            Write the complete {section_type.value} section of the paper based on the provided context.
 
-[SECTION TYPE]
-{section_type.value}
+            [SECTION TYPE]
+            {section_type.value}
 
-[RESEARCH CONTEXT]
-{context_block}
+            [RESEARCH CONTEXT]
+            {context_block}
 
-[PREVIOUS SECTIONS]
-{previous_sections_block if previous_sections_block else ''}
+            [PREVIOUS SECTIONS]
+            {previous_sections_block if previous_sections_block else ''}
 
-[EVIDENCE]
-{evidence_block if evidence_block else 'No evidence available.'}
+            [EVIDENCE]
+            {evidence_block if evidence_block else 'No evidence available.'}
 
-[SECTION GUIDELINES]
-{guidelines}
+            [SECTION GUIDELINES]
+            {guidelines}
 
-{user_requirements_block}
+            {user_requirements_block}
 
-{plots_block}
+            {plots_block}
 
-[WRITING REQUIREMENTS]
-- Produce a cohesive, original, publication-quality academic narrative.
-- CITATION FORMAT: Use square brackets with the EXACT, COMPLETE citation keys provided in the <citation_key> tags in the evidence section.
-- Copy the citation keys EXACTLY as they appear in <citation_key> tags. Do NOT shorten them, do NOT change them, do NOT generate simplified versions.
-- NEVER use numeric citations like [1], [2], [30]. These are strictly forbidden.
-- Do NOT invent citation keys. Do NOT generate "nameYear" format. Use ONLY the exact keys found in the <citation_key> tags.
-- Example: If evidence shows <citation_key>Hoppe2019QgraphboundedQS</citation_key>, use [Hoppe2019QgraphboundedQS] exactly, NOT [Hoppe2019].
-- Place citations immediately before final punctuation: "[exactKeyFromEvidence]."
-- For multiple sources: "[exactKey1, exactKey2]."
-- If a source in the evidence has "unknown" or "n.d." as a key, do NOT cite it.
-- Cite external papers ONLY using the exact citation keys from the evidence in square brackets.
-- Never fabricate evidence, results, or citations.
-- Integrate and build upon previous sections to ensure full narrative coherence.
-- Do NOT cite papers that are not in the [EVIDENCE] list, even if they are seminal works (e.g. by Sutton, Pearl, Bellman). If you must discuss them, do so without generating a citation key.
-- Do NOT generate a bibliography or references section at the end.
+            [WRITING REQUIREMENTS]
+            - Produce a cohesive, original, publication-quality academic narrative.
+            - CITATION FORMAT: Use square brackets with the EXACT, COMPLETE citation keys provided in the <citation_key> tags in the evidence section.
+            - Copy the citation keys EXACTLY as they appear in <citation_key> tags. Do NOT shorten them, do NOT change them, do NOT generate simplified versions.
+            - NEVER use numeric citations like [1], [2], [30]. These are strictly forbidden.
+            - Do NOT invent citation keys. Do NOT generate "nameYear" format. Use ONLY the exact keys found in the <citation_key> tags.
+            - Example: If evidence shows <citation_key>Hoppe2019QgraphboundedQS</citation_key>, use [Hoppe2019QgraphboundedQS] exactly, NOT [Hoppe2019].
+            - Place citations immediately before final punctuation: "[exactKeyFromEvidence]."
+            - For multiple sources: "[exactKey1, exactKey2]."
+            - If a source in the evidence has "unknown" or "n.d." as a key, do NOT cite it.
+            - Cite external papers ONLY using the exact citation keys from the evidence in square brackets.
+            - Never fabricate evidence, results, or citations.
+            - Integrate and build upon previous sections to ensure full narrative coherence.
+            - Do NOT cite papers that are not in the [EVIDENCE] list, even if they are seminal works (e.g. by Sutton, Pearl, Bellman). If you must discuss them, do so without generating a citation key.
+            - Do NOT generate a bibliography or references section at the end.
+            - MATHEMATICAL NOTATION: Use LaTeX-compatible notation for all formulas and symbols.
+            - Greek letters: Write as *\\alpha*, *\\beta*, *\\gamma*, etc. (NOT Unicode symbols like α, β, γ)
+            - Formulas: Wrap in single asterisks for inline math: *x = \\alpha + \\beta*
+            - Subscripts/superscripts: Use LaTeX syntax: *x_i*, *x^2*, *Q_{max}*
+            - Common symbols: *\\leq*, *\\geq*, *\\neq*, *\\approx*, *\\infty*, *\\sum*, *\\prod*
 
-[GENERATION RULES — DO NOT VIOLATE]
-- Do NOT reference the guidelines or instructions.
-- Do NOT comment on the evidence structure.
-- Do NOT include section headings (e.g., "## Introduction", "# Abstract", etc.) in your output.
-- Output ONLY the final written section content without any markdown headings.
+            [GENERATION RULES — DO NOT VIOLATE]
+            - Do NOT reference the guidelines or instructions.
+            - Do NOT comment on the evidence structure.
+            - Do NOT include section headings (e.g., "## Introduction", "# Abstract", etc.) in your output.
+            - Output ONLY the final written section content without any markdown headings.
 
-Your output must strictly follow the requirements and produce a polished academic section.
-"""
-        
+            Your output must strictly follow the requirements and produce a polished academic section.
+            """
         return prompt
 
     @staticmethod
@@ -392,36 +394,41 @@ Your output must strictly follow the requirements and produce a polished academi
 
     def generate_title(
         self,
-        abstract: str,
-        introduction: str,
-        conclusion: str,
+        draft: PaperDraft,
         context: PaperConcept,
         temperature: float = 0.3,
-        max_tokens: int = 100,
+        max_tokens: int = 200,
     ) -> str:
-        """Generate a paper title based on abstract, introduction, and conclusion."""
+        """Generate a paper title based on the complete paper draft."""
 
         prompt = f"""\
-[ROLE]
-You are an expert academic writer.
+            [ROLE]
+            You are an expert academic writer.
 
-[TASK]
-Create a concise, informative paper title based on the abstract and conclusion.
+            [TASK]
+            Create a concise, informative paper title based on the complete paper draft.
 
-[REQUIREMENTS]
-- Be clear, concise and descriptive
-- Use standard academic title formatting (title case)
-- Avoid unnecessary words like 'A Study of' or 'An Investigation into'
-- ONLY output the title text, without quotes, additional text or formatting
+            [REQUIREMENTS]
+            - Be clear, concise and descriptive
+            - Use standard academic title formatting (title case)
+            - Avoid unnecessary words like 'A Study of' or 'An Investigation into'
+            - ONLY output the title text, without quotes, additional text or formatting
 
-[ABSTRACT]
-{abstract}
+            [PAPER DRAFT]
+            Abstract: {draft.abstract}
+            
+            Introduction: {draft.introduction}
+            
+            Methods: {draft.methods}
+            
+            Results: {draft.results}
+            
+            Discussion: {draft.discussion}
+            
+            Conclusion: {draft.conclusion}
 
-[CONCLUSION]
-{conclusion}
-
-Now generate only the title text.
-"""
+            Now generate only the title text.
+            """
 
         model = lms.llm(Settings.PAPER_WRITING_MODEL)
         response = model.respond(
@@ -453,35 +460,35 @@ Now generate only the title text.
         guidelines = self.get_section_guidelines(Section.ACKNOWLEDGEMENTS)
         
         prompt = f"""\
-[ROLE]
-You are an expert academic writer.
+            [ROLE]
+            You are an expert academic writer.
 
-[TASK]
-Format and polish the provided acknowledgements text into a professional academic acknowledgements section.
+            [TASK]
+            Format and polish the provided acknowledgements text into a professional academic acknowledgements section.
 
-[USER PROVIDED ACKNOWLEDGEMENTS]
-{user_acknowledgements}
+            [USER PROVIDED ACKNOWLEDGEMENTS]
+            {user_acknowledgements}
 
-[SECTION GUIDELINES]
-{guidelines}
+            [SECTION GUIDELINES]
+            {guidelines}
 
-[WRITING REQUIREMENTS]
-- Preserve the original meaning and intent of the user's text
-- Ensure proper grammar, flow, and academic tone
-- Keep it concise and appropriate for an academic paper
-- Do NOT add citations or references
-- Do NOT include section headings (e.g., "## Acknowledgements")
-- Output ONLY the polished acknowledgements text
+            [WRITING REQUIREMENTS]
+            - Preserve the original meaning and intent of the user's text
+            - Ensure proper grammar, flow, and academic tone
+            - Keep it concise and appropriate for an academic paper
+            - Do NOT add citations or references
+            - Do NOT include section headings (e.g., "## Acknowledgements")
+            - Output ONLY the polished acknowledgements text
 
-[GENERATION RULES]
-- Do NOT reference the guidelines or instructions
-- Output ONLY the final acknowledgements content without any markdown headings
-"""
+            [GENERATION RULES]
+            - Do NOT reference the guidelines or instructions
+            - Output ONLY the final acknowledgements content without any markdown headings
+            """
         
         return prompt
 
 
-    def generate_section_from_catalog(
+    def generate_initial_section(
         self,
         section_type: Section,
         papers: Sequence[Paper],
@@ -493,9 +500,16 @@ Format and polish the provided acknowledgements text into a professional academi
     ) -> str:
         """Generate initial section draft using paper catalog (not chunked evidence)."""
         model = lms.llm(Settings.PAPER_WRITING_MODEL)
-        prompt = self._build_catalog_prompt(
-            section_type, papers, context, experiment, previous_sections, user_requirements
+        prompt = self._build_initial_section_prompt(
+            section_type,
+            papers,
+            context,
+            experiment,
+            previous_sections,
+            user_requirements,
+            temperature,
         )
+
         response = model.respond(
             prompt,
             config={"temperature": temperature},
@@ -505,7 +519,7 @@ Format and polish the provided acknowledgements text into a professional academi
     def rewrite_section(
         self,
         section_type: Section,
-        original_draft: str,
+        text_to_rewrite: str,
         critique: SectionCritique,
         new_evidence: Sequence[Evidence],
         papers: Sequence[Paper],
@@ -515,15 +529,19 @@ Format and polish the provided acknowledgements text into a professional academi
         user_requirements: Optional[UserRequirements] = None,
         temperature: float = 0.3,
     ) -> str:
-        """
-        Rewrite a section incorporating critique feedback and new evidence.
-        
-        This is step 3 of the critique-based pipeline (after critique and search).
-        """
+        """Rewrite a section using the critique feedback and new evidence."""
         model = lms.llm(Settings.PAPER_WRITING_MODEL)
         prompt = self._build_rewrite_prompt(
-            section_type, original_draft, critique, new_evidence,
-            papers, context, experiment, previous_sections, user_requirements
+            section_type,
+            text_to_rewrite,
+            critique,
+            new_evidence,
+            papers,
+            context,
+            experiment,
+            previous_sections,
+            user_requirements,
+            temperature,
         )
         response = model.respond(
             prompt,
@@ -531,7 +549,7 @@ Format and polish the provided acknowledgements text into a professional academi
         )
         return remove_thinking_blocks(response.content)
 
-    def _build_catalog_prompt(
+    def _build_initial_section_prompt(
         self,
         section_type: Section,
         papers: Sequence[Paper],
@@ -567,7 +585,7 @@ Format and polish the provided acknowledgements text into a professional academi
             {previous_sections_block if previous_sections_block else 'None yet.'}
 
             [AVAILABLE PAPERS]
-            The following papers are available for citation. Use their citation keys in square brackets.
+            The following papers are available for citation. Use their citation keys in square brackets (e.g. [HintonRL2016]).
             {paper_catalog}
 
             [SECTION GUIDELINES]
@@ -586,6 +604,10 @@ Format and polish the provided acknowledgements text into a professional academi
             - Integrate and build upon previous sections to ensure full narrative coherence.
             - STRICTLY FORBIDDEN: Do NOT cite papers that are not in the [AVAILABLE PAPERS] list, even if they are seminal works.
             - STRICTLY FORBIDDEN: Do NOT generate a bibliography or references section at the end.
+            - MATHEMATICAL NOTATION: Use LaTeX-compatible notation for all formulas and symbols.
+              - Greek letters: Write as *\\alpha*, *\\beta*, *\\gamma*, etc. (NOT Unicode symbols)
+              - Formulas: Wrap in single asterisks for inline math: *x = \\alpha + \\beta*
+              - Subscripts/superscripts: Use LaTeX syntax: *x_i*, *x^2*, *Q_{max}*
 
             [GENERATION RULES — DO NOT VIOLATE]
             - Do NOT reference the guidelines or instructions.
@@ -596,7 +618,7 @@ Format and polish the provided acknowledgements text into a professional academi
     def _build_rewrite_prompt(
         self,
         section_type: Section,
-        original_draft: str,
+        initial_section: str,
         critique: SectionCritique,
         new_evidence: Sequence[Evidence],
         papers: Sequence[Paper],
@@ -626,8 +648,8 @@ Format and polish the provided acknowledgements text into a professional academi
             [SECTION TYPE]
             {section_type.value}
 
-            [ORIGINAL DRAFT]
-            {original_draft}
+            [ORIGINAL SECTION]
+            {initial_section}
 
             [IMPROVEMENTS TO MAKE]
             {improvements_text}
@@ -659,6 +681,10 @@ Format and polish the provided acknowledgements text into a professional academi
             - Produce a cohesive, publication-quality narrative.
             - STRICTLY FORBIDDEN: Do NOT cite papers that are not in the [NEW EVIDENCE] or [AVAILABLE PAPERS] lists, even if they are seminal works.
             - STRICTLY FORBIDDEN: Do NOT generate a bibliography or references section at the end.
+            - MATHEMATICAL NOTATION: Use LaTeX-compatible notation for all formulas and symbols.
+              - Greek letters: Write as *\\alpha*, *\\beta*, *\\gamma*, etc. (NOT Unicode symbols)
+              - Formulas: Wrap in single asterisks for inline math: *x = \\alpha + \\beta*
+              - Subscripts/superscripts: Use LaTeX syntax: *x_i*, *x^2*, *Q_{max}*
 
             [GENERATION RULES — DO NOT VIOLATE]
             - Do NOT reference the critique or instructions.
@@ -681,12 +707,13 @@ Format and polish the provided acknowledgements text into a professional academi
             # Truncate long abstracts
             abstract_truncated = abstract[:500] + "..." if len(abstract) > 500 else abstract
             
-            entry = f"""[{citation_key}]
-Title: {paper.title}
-Abstract: {abstract_truncated}"""
+            entry = textwrap.dedent(f"""\
+                [{citation_key}]
+                Title: {paper.title}
+                Abstract: {abstract_truncated}""")
             
             if conclusion:
-                conclusion_truncated = conclusion[:300] + "..." if len(conclusion) > 300 else conclusion
+                conclusion_truncated = conclusion[:500] + "..." if len(conclusion) > 500 else conclusion
                 entry += f"\nConclusion: {conclusion_truncated}"
             
             items.append(entry)

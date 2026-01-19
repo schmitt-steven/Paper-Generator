@@ -733,7 +733,7 @@ class ExperimentResultsScreen(BaseFrame):
                 def status_callback(status: str):
                     self.after(0, lambda s=status: popup.update_status(s))
                 
-                pipeline.write_paper_with_critique(
+                pipeline.write_paper(
                     paper_concept=paper_concept,
                     experiment_result=experiment_result,
                     papers=papers,

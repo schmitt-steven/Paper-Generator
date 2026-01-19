@@ -206,7 +206,6 @@ class SettingsScreen(BaseFrame):
             ("EXPERIMENT_PLOT_CAPTION_MODEL", "Plot Caption Model (Vision)", self.vision_models),
             ("EXPERIMENT_VERDICT_MODEL", "Verdict Model", self.llm_models),
             ("PAPER_INDEXING_EMBEDDING_MODEL", "Paper Indexing Embedding Model", self.embedding_models),
-            ("EVIDENCE_GATHERING_MODEL", "Evidence Gathering Model", self.llm_models),
             ("PAPER_WRITING_MODEL", "Paper Writing Model", self.llm_models),
             ("LATEX_GENERATION_MODEL", "LaTeX Generation Model", self.llm_models),
         ]
@@ -424,7 +423,6 @@ class SettingsScreen(BaseFrame):
             "EXPERIMENT_PLOT_CAPTION_MODEL": "Plot Caption Model (Vision)",
             "EXPERIMENT_VERDICT_MODEL": "Verdict Model",
             "PAPER_INDEXING_EMBEDDING_MODEL": "Paper Indexing Embedding Model",
-            "EVIDENCE_GATHERING_MODEL": "Evidence Gathering Model",
             "PAPER_WRITING_MODEL": "Paper Writing Model",
             "LATEX_GENERATION_MODEL": "LaTeX Generation Model",
         }

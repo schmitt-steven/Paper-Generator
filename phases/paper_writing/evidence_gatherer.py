@@ -349,7 +349,7 @@ class EvidenceGatherer:
         
         # Load models once for all queries
         embedding_model = lms.embedding_model(Settings.PAPER_INDEXING_EMBEDDING_MODEL)
-        llm_model = lms.llm(Settings.EVIDENCE_GATHERING_MODEL)
+        llm_model = lms.llm(Settings.PAPER_WRITING_MODEL)
         
         all_evidence: list[Evidence] = []
         seen_chunk_ids: set[str] = set()

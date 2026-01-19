@@ -44,20 +44,17 @@ class Settings:
     
     # Paper Writing Phase
     PAPER_INDEXING_EMBEDDING_MODEL = "text-embedding-qwen3-embedding-4b@q5_0"  # Must be an embedding model!
-
-    EVIDENCE_GATHERING_MODEL = "qwen/qwen3-next-80b"  
     PAPER_WRITING_MODEL = "qwen/qwen3-next-80b"
-    
-    GENERATE_ACKNOWLEDGEMENTS = True  # Set to False to skip acknowledgements section entirely
+    GENERATE_ACKNOWLEDGEMENTS = True
 
     # LaTeX Generation Phase
     LATEX_GENERATION_MODEL = "qwen/qwen3-next-80b"
 
     # UI Settings
     FONT_SIZE = FontSize.SMALL
-    DARK_MODE = True  # True for dark theme, False for light theme
+    DARK_MODE = True
 
-    # API Keys
+    # API related
     SEMANTIC_SCHOLAR_API_KEY = ""  # Optional Semantic Scholar API key for better rate limits
     UNPAYWALL_EMAIL = ""  # Email for Unpaywall API (for finding free PDFs)
 
@@ -98,7 +95,6 @@ class Settings:
                 "EXPERIMENT_PLOT_CAPTION_MODEL": cls.EXPERIMENT_PLOT_CAPTION_MODEL,
                 "EXPERIMENT_VERDICT_MODEL": cls.EXPERIMENT_VERDICT_MODEL,
                 "PAPER_INDEXING_EMBEDDING_MODEL": cls.PAPER_INDEXING_EMBEDDING_MODEL,
-                "EVIDENCE_GATHERING_MODEL": cls.EVIDENCE_GATHERING_MODEL,
                 "PAPER_WRITING_MODEL": cls.PAPER_WRITING_MODEL,
                 "LATEX_GENERATION_MODEL": cls.LATEX_GENERATION_MODEL,
                 "FONT_SIZE": cls.FONT_SIZE.name,
@@ -172,7 +168,7 @@ def get_available_templates() -> list[str]:
     """Discover available LaTeX templates.
     
     Scans latex_templates/ directory for valid template folders.
-    A valid template has a tex/paper.tex file.
+    A valid template has a paper.tex file and Makefile.
     
     Returns:
         List of template directory names (e.g., ['ieee_conference', 'jair'])
@@ -186,7 +182,8 @@ def get_available_templates() -> list[str]:
     for item in sorted(templates_dir.iterdir()):
         if item.is_dir():
             paper_tex = item / "paper.tex"
-            if paper_tex.exists():
+            makefile = item / "Makefile"
+            if paper_tex.exists() and makefile.exists():
                 templates.append(item.name)
     
     return templates

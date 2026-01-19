@@ -33,7 +33,7 @@ class SectionCritic:
     ) -> SectionCritique:
         """Analyze a draft section and return structured critique."""
 
-        model = lms.llm(Settings.EVIDENCE_GATHERING_MODEL)
+        model = lms.llm(Settings.PAPER_WRITING_MODEL)
         prompt = self._build_critique_prompt(
             section_type, draft_text, papers, max_queries, user_requirements
         )

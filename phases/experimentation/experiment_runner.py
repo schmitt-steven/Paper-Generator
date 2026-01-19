@@ -1215,20 +1215,24 @@ Do NOT do this:
 
                     [HYPOTHESIS]
                     Description: {hypothesis.description}
-                    Rationale: {hypothesis.rationale}
                     Success Criteria: {hypothesis.success_criteria}
 
-                    [STDOUT_OUTPUT]
+                    [EXPERIMENT OUTPUT]
                     {stdout_summary}
 
-                    [PLOT_CAPTIONS]
+                    [PLOT CAPTIONS]
                     {plot_captions_text}
 
                     [TASK]
-                    Based on the execution results and generated plots, provide:
-                    1. A concise reasoning about whether the hypothesis is proven, disproven, or inconclusive
-                    2. Your concise analysis of the results and observations of the experiment
-                    Then determine the verdict with a single word: 'proven', 'disproven', or 'inconclusive'.
+                    Determine if the hypothesis is PROVEN, DISPROVEN, or INCONCLUSIVE based only on:
+                    1. Whether the SUCCESS CRITERIA were met according to the experiment output
+                    2. The actual results shown in the output and plots
+                    
+                    Focus ONLY on whether the results satisfy the success criteria.
+                    
+                    Provide:
+                    1. Your verdict: 'proven', 'disproven', or 'inconclusive'
+                    2. Brief reasoning based on the success criteria and observed results
                 """)
                 
                 try:
