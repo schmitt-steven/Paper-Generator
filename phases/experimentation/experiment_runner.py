@@ -736,6 +736,11 @@ Do NOT do this:
         if user_code:
             code_instructions = "\n[IMPORTANT: USER CODE PROVIDED]\nBuild upon and adapt the existing user code files provided below. Do not start from scratch - extend and modify the existing code to test the hypothesis. Identify what needs to be added, modified, or adapted in the existing code."
 
+        # Paper title if provided by user
+        title_section = ""
+        if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
+            title_section = f"[PAPER TITLE]\n{Settings.LATEX_TITLE}\n\n"
+
         prompt = textwrap.dedent(f"""\
             [TASK]
             Create a detailed, concise experiment plan for testing a given hypothesis.
@@ -756,7 +761,7 @@ Do NOT do this:
               * Plot(s) for visualization (saved as .pdf)
             - Experiment MUST complete in under 5 minutes. Use reasonable parameter ranges and reduce iterations/computations/parameter combinations if needed.
 
-            [RESEARCH_CONTEXT]
+            {title_section}[RESEARCH_CONTEXT]
             {paper_concept.description}
 
             [HYPOTHESIS]

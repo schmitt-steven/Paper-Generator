@@ -6,6 +6,7 @@ from pathlib import Path
 from dataclasses import dataclass
 from typing import cast
 from pydantic import BaseModel
+from settings import Settings
 from utils.lazy_model_loader import LazyModelMixin
 from utils.llm_utils import remove_thinking_blocks
 
@@ -99,6 +100,11 @@ class CodeAnalyzer(LazyModelMixin):
     def analyze_code_file(self, code_analysis: UserCode) -> UserCode:
         """Analyze a code file using a single structured LLM call."""
         print(f"Analyzing {code_analysis.file_name}...")
+        
+        # Paper title if provided by user
+        title_section = ""
+        if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
+            title_section = f"[PAPER TITLE]\n{Settings.LATEX_TITLE}\n\n"
 
         prompt = textwrap.dedent(f"""\
             [ROLE]
@@ -120,7 +126,7 @@ class CodeAnalyzer(LazyModelMixin):
                 "contribution": "What role does this play in the research? (e.g., 'Core training loop' or 'Data augmentation pipeline')."
             }}
 
-            [CODE FILE] 
+            {title_section}[CODE FILE] 
             {code_analysis.file_name}
 
             [CODE CONTENT]
@@ -148,12 +154,17 @@ class CodeAnalyzer(LazyModelMixin):
 
     def extract_important_snippets(self, code_analysis: UserCode) -> UserCode:
         """Extract important code snippets from a file."""
+        
+        # Paper title if provided by user
+        title_section = ""
+        if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
+            title_section = f"[PAPER TITLE]\n{Settings.LATEX_TITLE}\n\n"
                 
         prompt = textwrap.dedent(f"""\
             [ROLE]
             You are a Technical Editor. Your job is to select code blocks for a paper's "Methodology" section.
 
-            [INPUT CONTEXT]
+            {title_section}[INPUT CONTEXT]
             File: {code_analysis.file_name}
             Core Logic Identified: {code_analysis.method}
             Keywords: {', '.join(code_analysis.keywords)}

@@ -168,6 +168,11 @@ class PaperWriter:
                 - Add a caption line below each figure: *Figure N: Full caption text*
                 - Reference figures in your text (e.g., "As shown in Figure 1...")"""
         
+        # Paper title if provided by user
+        title_section = ""
+        if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
+            title_section = f"[PAPER TITLE]\n            {Settings.LATEX_TITLE}\n\n            "
+        
         # Special handling for abstract: No citations allowed
         if section_type == Section.ABSTRACT:
             prompt = f"""\
@@ -180,7 +185,7 @@ class PaperWriter:
             [SECTION TYPE]
             Abstract
 
-            [RESEARCH CONTEXT]
+            {title_section}[RESEARCH CONTEXT]
             {context_block}
 
             [PREVIOUS SECTIONS]
@@ -222,7 +227,7 @@ class PaperWriter:
             [SECTION TYPE]
             {section_type.value}
 
-            [RESEARCH CONTEXT]
+            {title_section}[RESEARCH CONTEXT]
             {context_block}
 
             [PREVIOUS SECTIONS]
@@ -568,6 +573,11 @@ class PaperWriter:
         # Get section-specific user requirements if available
         user_requirements_block = self._get_user_requirements_block(section_type, user_requirements)
         
+        # Paper title if provided by user
+        title_section = ""
+        if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
+            title_section = f"[PAPER TITLE]\n{Settings.LATEX_TITLE}\n\n"
+        
         return textwrap.dedent(f"""\
             [ROLE]
             You are an expert academic writer.
@@ -578,7 +588,7 @@ class PaperWriter:
             [SECTION TYPE]
             {section_type.value}
 
-            [RESEARCH CONTEXT]
+            {title_section}[RESEARCH CONTEXT]
             {context_block}
 
             [PREVIOUS SECTIONS]
@@ -638,6 +648,11 @@ class PaperWriter:
         
         improvements_text = critique.improvements
         
+        # Paper title if provided by user
+        title_section = ""
+        if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
+            title_section = f"[PAPER TITLE]\n{Settings.LATEX_TITLE}\n\n"
+        
         return textwrap.dedent(f"""\
             [ROLE]
             You are an expert academic writer revising a section based on feedback.
@@ -657,7 +672,7 @@ class PaperWriter:
             [NEW EVIDENCE]
             {evidence_block if evidence_block else 'No additional evidence retrieved.'}
 
-            [RESEARCH CONTEXT]
+            {title_section}[RESEARCH CONTEXT]
             {context_block}
 
             [PREVIOUS SECTIONS]

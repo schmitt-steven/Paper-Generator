@@ -8,6 +8,7 @@ from phases.context_analysis.user_code_analysis import (
     UserCode,
 )
 from phases.context_analysis.user_requirements import UserRequirements
+from settings import Settings
 from utils.file_utils import load_markdown, save_markdown
 from utils.lazy_model_loader import LazyModelMixin
 from utils.llm_utils import remove_thinking_blocks
@@ -65,6 +66,11 @@ class PaperConception(LazyModelMixin):
     def generate_core_information(self) -> PaperConcept:
         
         code_analysis_report = CodeAnalyzer.get_analysis_report(self.user_code)
+        
+        # Paper title if provided by user
+        title_section = ""
+        if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
+            title_section = f"[PAPER TITLE]\n{Settings.LATEX_TITLE}\n\n"
                 
         prompt = textwrap.dedent(f"""\
             [ROLE]
@@ -86,10 +92,7 @@ class PaperConception(LazyModelMixin):
             3. **Semantic Density:** Use specific field terminology found in the code (e.g., "Cross-Entropy Loss," "Monte Carlo Tree Search") rather than generic terms (e.g., "Standard Loss," "Search Algorithm").
             4. **Inference:** If the notes are vague, strictly infer the methodology from the logic present in the **Code Snippets**.
 
-            ---
-
             [OUTPUT FORMAT]
-
             ## 1. Taxonomic Classification
             *Keywords that define the search space.*
             - **Primary Domain:** (e.g., Natural Language Processing)
@@ -110,11 +113,11 @@ class PaperConception(LazyModelMixin):
             *The "How" - strictly derived from code/notes.*
             - **Architecture:** Define the structural logic (e.g., "A dual-encoder framework...").
             - **Key differentiator:** How does this implementation differ from the standard approach? (e.g., "Replaces standard Softmax with Sparsemax to...").
-
+            
             [USER REQUIREMENTS]
             {self._format_user_requirements_section()}
 
-            [CODE ANALYSIS]
+            {title_section}[CODE ANALYSIS]
             {code_analysis_report}"""
         )
 
@@ -129,6 +132,11 @@ class PaperConception(LazyModelMixin):
         Analyze the paper concept and identify what information is needed to write
         a high-quality academic paper. These questions will guide literature search.
         """
+        
+        # Paper title if provided by user
+        title_section = ""
+        if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
+            title_section = f"[PAPER TITLE]\n{Settings.LATEX_TITLE}\n\n"
         
         prompt = textwrap.dedent(f"""\
             [ROLE]
@@ -170,7 +178,7 @@ class PaperConception(LazyModelMixin):
             - Every question should have clear literature search targets
             - Adapt questions to the specific research domain identified in the paper concept
 
-            [PAPER CONCEPT TO ANALYZE]
+            {title_section}[PAPER CONCEPT TO ANALYZE]
             {concept.description}
 
             [CODE ANALYSIS]

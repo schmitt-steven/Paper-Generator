@@ -7,6 +7,7 @@ from phases.context_analysis.paper_conception import PaperConcept
 from phases.context_analysis.paper_conception import PaperConcept
 from pydantic import BaseModel
 from dataclasses import dataclass
+from settings import Settings
 from typing import List, Dict, Tuple, Optional
 
 class Hypothesis(BaseModel):
@@ -84,6 +85,11 @@ class HypothesisBuilder(LazyModelMixin):
         user_hypothesis_text = user_requirements.hypothesis
         print(f"\nProcessing user-provided hypothesis...")
         
+        # Paper title if provided by user
+        title_section = ""
+        if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
+            title_section = f"Paper Title: {Settings.LATEX_TITLE}\n\n"
+        
         prompt = textwrap.dedent(f"""\
             You are a research assistant helping to structure a user's research hypothesis.
                         
@@ -107,7 +113,7 @@ class HypothesisBuilder(LazyModelMixin):
               Use qualitative, observable criteria instead.
             
             Research Context:
-            {self.paper_concept.description}
+            {title_section}{self.paper_concept.description}
 
             User's raw hypothesis:
             "{user_hypothesis_text}"
