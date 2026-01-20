@@ -161,8 +161,32 @@ def extract_conclusion(text: str) -> str:
         return ""
         
     # Pattern to find Conclusion section headers
-    # Matches: ## Conclusion, # Conclusions, **6** **Conclusion**, 5. Conclusion, **7. Conclusions and Future Work**
-    pattern = r'^\s*(?:#+\s*)?(?:\*\*)?(?:[\d\.]+\s+)?(?:\*\*)?(?:\s+)?(?:\*\*)?(?:DISCUSSION\s+AND\s+)?(?:CONCLUSIONS?|CONCLUDING\s+REMARKS)(?:[:\.]|(?:\s.*))?(?:\*\*)?\s*$'
+    # Handles various formats in real papers:
+    # - **6** **Conclusion**
+    # - **Conclusions**
+    # - **6. Closing Remarks** 
+    # - IV. CONCLUSION 
+    # - **Conclusion** 
+    # - 7 CONCLUSION 
+    # - ### **6 Conclusion** 
+    # - 6. Closing Remarks
+    # - DISCUSSION AND CONCLUSION
+    #
+    # Regex:
+    # ^\s*                           : Start of line, optional whitespace
+    # (?:#+\s*)?                     : Optional markdown headers (###)
+    # (?:\*\*)?                      : Optional bold start
+    # (?:                            : Section number group:
+    #   (?:[IVXivx]+\.?\s*)|         :   Roman numerals (IV., V, etc.) OR
+    #   (?:\d+\.?\s*)                :   Arabic numerals (6., 7, etc.)
+    # )?
+    # (?:\*\*)?\s*                   : Optional bold end for number + spaces
+    # (?:\*\*)?                      : Optional bold start for title
+    # (?:DISCUSSION\s+AND\s+)?       : Optional "Discussion and" prefix
+    # (?:CONCLUSIONS?|CONCLUDING\s+REMARKS?|CLOSING\s+REMARKS?)  : Main keywords
+    # (?:[:\.]|(?:\s[^\n]*))?        : Optional colon/period or trailing text
+    # (?:\*\*)?                      : Optional bold end
+    pattern = r'^\s*(?:#+\s*)?(?:\*\*)?(?:(?:[IVXivx]+\.?\s*)|(?:\d+\.?\s*))?(?:\*\*)?\s*(?:\*\*)?(?:DISCUSSION\s+AND\s+)?(?:CONCLUSIONS?|CONCLUDING\s+REMARKS?|CLOSING\s+REMARKS?)(?:[:\.\s][^\n]*)?(?:\*\*)?\s*$'
     
     lines = text.split('\n')
     start_index = -1

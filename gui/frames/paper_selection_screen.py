@@ -401,6 +401,11 @@ class PaperSelectionScreen(BaseFrame):
         self._refresh_user_papers_list()
         self._set_upload_loading(False)
         popup.close()
+        
+        # Show success popup
+        count = len(new_papers)
+        if count > 0:
+            messagebox.showinfo("Upload Complete", f"Successfully uploaded {count} paper(s).")
 
     def _set_upload_loading(self, loading: bool):
         self.is_uploading = loading
@@ -492,6 +497,13 @@ class PaperSelectionScreen(BaseFrame):
         self._save_papers()  # Save immediately after search
         self._refresh_searched_papers_list()
         self._set_search_loading(False)
+        
+        # Show success popup
+        count = len(papers)
+        if count > 0:
+            messagebox.showinfo("Search Complete", f"Found {count} papers matching your research topic.")
+        else:
+            messagebox.showinfo("Search Complete", "No matching papers found. Try adjusting your paper concept.")
 
     def _set_search_loading(self, loading: bool):
         self.is_searching = loading
@@ -707,9 +719,11 @@ class PaperSelectionScreen(BaseFrame):
         thread = threading.Thread(target=task, daemon=True)
         thread.start()
 
-    def _finish_processing(self, popup: ProgressPopup):
+    def _finish_processing(self, popup: ProgressPopup, show_hypothesis_popup: bool = False):
         """Close popup and go to next screen."""
         popup.close()
+        if show_hypothesis_popup:
+            messagebox.showinfo("Success", "Hypothesis successfully generated.")
         self.controller.next_screen()
     
     def _run_hypothesis_generation(self, all_papers: list[Paper], popup: Optional[ProgressPopup] = None):
@@ -733,7 +747,7 @@ class PaperSelectionScreen(BaseFrame):
                         num_papers_analyzed=0
                     ).create_hypothesis_from_user_input(user_requirements)
                 
-                self.after(0, lambda: self._finish_processing(popup))
+                self.after(0, lambda: self._finish_processing(popup, show_hypothesis_popup=True))
                 
             except Exception as e:
                 import traceback

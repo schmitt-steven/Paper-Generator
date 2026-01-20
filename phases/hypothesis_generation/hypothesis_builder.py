@@ -133,7 +133,7 @@ class HypothesisBuilder(LazyModelMixin):
             result = self.model.respond(
                 prompt,
                 response_format=HypothesesList,
-                config={"temperature": 0.3, "maxTokens": 1000}
+                config={"temperature": 0.2, "maxTokens": 1000}
             )
             
             response_data = result.parsed

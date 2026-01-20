@@ -100,7 +100,7 @@ class LiteratureSearch(LazyModelMixin):
                 prompt,
                 response_format=SearchQueriesResult,
                 config={
-                    'temperature': 0.1,
+                    'temperature': 0.2,
                 }
             ).parsed
             

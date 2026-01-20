@@ -154,7 +154,7 @@ class ExperimentRunner:
                 chat.add_user_message(chunk_message)
 
                 model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
-                response = model.respond(chat, config={"temperature": 0.4})
+                response = model.respond(chat, config={"temperature": 0.1})
                 current_code = self._remove_markdown_formatting(remove_thinking_blocks(response.content))
             except Exception as e:
                 error_msg = f"ERROR generating imports chunk: {e}"
@@ -179,7 +179,7 @@ class ExperimentRunner:
                 chat.add_user_message(chunk_message)
 
                 model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
-                response = model.respond(chat, config={"temperature": 0.4})
+                response = model.respond(chat, config={"temperature": 0.1})
                 current_code = self._remove_markdown_formatting(remove_thinking_blocks(response.content))
             except Exception as e:
                 error_msg = f"ERROR generating algorithms chunk: {e}"
@@ -208,7 +208,7 @@ class ExperimentRunner:
                 chat.add_user_message(chunk_message)
 
                 model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
-                response = model.respond(chat, config={"temperature": 0.4})
+                response = model.respond(chat, config={"temperature": 0.1})
                 current_code = self._remove_markdown_formatting(remove_thinking_blocks(response.content))
             except Exception as e:
                 error_msg = f"ERROR generating experiment chunk: {e}"
@@ -235,7 +235,7 @@ class ExperimentRunner:
                 chat.add_user_message(chunk_message)
 
                 model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
-                response = model.respond(chat, config={"temperature": 0.4})
+                response = model.respond(chat, config={"temperature": 0.1})
                 current_code = self._remove_markdown_formatting(remove_thinking_blocks(response.content))
             except Exception as e:
                 error_msg = f"ERROR generating visualization chunk: {e}"
@@ -380,7 +380,7 @@ class ExperimentRunner:
             print(f"Fixing experiment code (attempt {fix_attempt}/{max_attempts}): {code_file_path}")
             chat.add_user_message(user_message)
             model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
-            result = model.respond(chat, config={"temperature": 0.4})
+            result = model.respond(chat, config={"temperature": 0.1})
             cleaned_code = remove_thinking_blocks(result.content)
             
             # Remove markdown code block markers
@@ -581,7 +581,7 @@ class ExperimentRunner:
             """)
 
             model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
-            result = model.respond(prompt, config={"temperature": 0.4})
+            result = model.respond(prompt, config={"temperature": 0.1})
             improved_code = remove_thinking_blocks(result.content)
             
             # Remove markdown code block markers
@@ -687,7 +687,7 @@ Do NOT do this:
                 chat = lms.Chat(plot_caption_prompt)
                 chat.add_user_message(user_message, images=[image_handle])
                 model = lms.llm(self.settings.EXPERIMENT_PLOT_CAPTION_MODEL)
-                result = model.respond(chat, config={"temperature": 0.3})
+                result = model.respond(chat, config={"temperature": 0.1})
                 caption = remove_thinking_blocks(result.content).strip()
                 # Remove any quotes if the model wrapped the caption
                 if caption.startswith('"') and caption.endswith('"'):
@@ -777,7 +777,7 @@ Do NOT do this:
 
         try:
             model = lms.llm(self.settings.EXPERIMENT_PLAN_MODEL)
-            result = model.respond(prompt, config={"temperature": 0.4})
+            result = model.respond(prompt, config={"temperature": 0.1})
             return remove_thinking_blocks(result.content)
         except Exception as e:
             print(f"ERROR: Failed to generate experiment plan: {e}")

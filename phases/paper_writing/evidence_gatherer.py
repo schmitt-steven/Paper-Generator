@@ -105,7 +105,7 @@ class EvidenceGatherer:
                 response = llm_model.respond(
                     prompt,
                     response_format=SummaryBatchResult,
-                    config={"temperature": 0.3},
+                    config={"temperature": 0.2},
                 )
                 
                 batch_results = response.parsed.get('results', [])

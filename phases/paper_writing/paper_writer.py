@@ -99,7 +99,7 @@ class PaperWriter:
         evidence: Sequence[Evidence],
 
         previous_sections: Optional[dict[Section, str]] = None,
-        temperature: float = 0.3,
+        temperature: float = 0.2,
         user_requirements: Optional[UserRequirements] = None,
         existing_prompt: Optional[str] = None,
     ) -> str:
@@ -401,7 +401,7 @@ class PaperWriter:
         self,
         draft: PaperDraft,
         context: PaperConcept,
-        temperature: float = 0.3,
+        temperature: float = 0.2,
         max_tokens: int = 200,
     ) -> str:
         """Generate a paper title based on the complete paper draft."""
@@ -446,7 +446,7 @@ class PaperWriter:
         title = remove_thinking_blocks(response.content).strip().strip('"').strip("'")
         return title
 
-    def generate_acknowledgements(self, user_acknowledgements: str, temperature: float = 0.3) -> str:
+    def generate_acknowledgements(self, user_acknowledgements: str, temperature: float = 0.2) -> str:
         """Generate acknowledgements section by formatting/polishing user-provided text."""
         
         model = lms.llm(Settings.PAPER_WRITING_MODEL)
@@ -501,7 +501,7 @@ class PaperWriter:
         experiment: Optional[ExperimentResult],
         previous_sections: Optional[dict[Section, str]] = None,
         user_requirements: Optional[UserRequirements] = None,
-        temperature: float = 0.3,
+        temperature: float = 0.2,
     ) -> str:
         """Generate initial section draft using paper catalog (not chunked evidence)."""
         model = lms.llm(Settings.PAPER_WRITING_MODEL)
@@ -532,7 +532,7 @@ class PaperWriter:
         experiment: Optional[ExperimentResult],
         previous_sections: Optional[dict[Section, str]] = None,
         user_requirements: Optional[UserRequirements] = None,
-        temperature: float = 0.3,
+        temperature: float = 0.2,
     ) -> str:
         """Rewrite a section using the critique feedback and new evidence."""
         model = lms.llm(Settings.PAPER_WRITING_MODEL)

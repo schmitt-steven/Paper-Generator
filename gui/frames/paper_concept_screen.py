@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from pathlib import Path
 import threading
 from ..base_frame import BaseFrame, CardBorderFrame, ProgressPopup
@@ -253,3 +253,5 @@ class PaperConceptScreen(BaseFrame):
         
         # Re-apply theme colors to newly created widgets
         self.controller.apply_theme_colors(self)
+        
+        messagebox.showinfo("Success", "Paper concept successfully regenerated.")
