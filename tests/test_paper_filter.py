@@ -109,9 +109,9 @@ def main():
     paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
     research_context = f"{paper_concept.description}\n\nOpen Research Questions:\n{paper_concept.open_questions}"
     
-    # Simple Filter
+    # Filter
     print("\n" + "=" * 60)
-    print("FILTER 1(Composite Score + LLM)")
+    print("FILTER (Composite Score + LLM)")
     print("=" * 60)
     simple_papers = PaperFilter.filter_papers(
         papers=papers,
@@ -120,21 +120,8 @@ def main():
         target_count=PAPER_COUNT,
         min_relevance=0.5
     )
-    print_papers(simple_papers, f"Simple Filter Results ({len(simple_papers)} papers)")
+    print_papers(simple_papers, f"Filter Results ({len(simple_papers)} papers)")
     
-    # Complex Filter
-    print("\n" + "=" * 60)
-    print("FILTER 2(Clustering + LLM)")
-    print("=" * 60)
-    clustered = PaperFilter.filter_papers_complex(papers, target_count=PAPER_COUNT * 2, min_relevance=0.4)
-    complex_papers = PaperFilter.verify_with_llm(
-        papers=clustered,
-        research_context=research_context,
-        model_name=Settings.LITERATURE_SEARCH_MODEL,
-        batch_size=10
-    )[:PAPER_COUNT]
-    print_papers(complex_papers, f"Complex Filter Results ({len(complex_papers)} papers)")
-
 
 if __name__ == "__main__":
     main()

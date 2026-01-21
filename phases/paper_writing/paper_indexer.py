@@ -18,6 +18,22 @@ class PaperIndexer:
     EMBEDDINGS_FILE = "output/paper_embeddings.json"
 
     CODE_BLOCK_PATTERN = re.compile(r"```.+?```", re.DOTALL)
+    
+    # Patterns to identify abstract and conclusion sections
+    # These are excluded from embeddings since they're always in the prompt
+    ABSTRACT_PATTERN = re.compile(
+        r'^\s*(?:#+\s*)?(?:\*\*)?ABSTRACT(?:\*\*)?(?:[:\.]|\s+|$)',
+        re.IGNORECASE | re.MULTILINE
+    )
+    CONCLUSION_PATTERN = re.compile(
+        r'^\s*(?:#+\s*)?(?:\*\*)?(?:(?:[IVXivx]+\.?\s*)|(?:\d+\.?\s*))?(?:\*\*)?\s*(?:\*\*)?(?:DISCUSSION\s+AND\s+)?(?:CONCLUSIONS?|CONCLUDING\s+REMARKS?|CLOSING\s+REMARKS?)(?:[:\.\s][^\n]*)?(?:\*\*)?\s*$',
+        re.IGNORECASE | re.MULTILINE
+    )
+    # Pattern for next section after abstract (to know where abstract ends)
+    NEXT_SECTION_PATTERN = re.compile(
+        r'^\s*(?:#+\s*)?(?:\*\*)?(?:(?:[IVXivx]+\.?\s+)|(?:\d+\.?\s+))?(?:\*\*)?\s*(?:\*\*)?(?:INTRODUCTION|BACKGROUND|RELATED|METHODS?|PRELIMINAR)(?:[:\.\s][^\n]*)?(?:\*\*)?\s*$',
+        re.IGNORECASE | re.MULTILINE
+    )
 
     def __init__(
         self,
@@ -107,8 +123,9 @@ class PaperIndexer:
             if not paper.markdown_text:
                 continue
 
-            # Markdown is already preprocessed and stripped during PDF conversion
-            markdown = paper.markdown_text
+            # Strip abstract and conclusion before chunking
+            # (theyre already included in the prompts by default)
+            markdown = self._strip_abstract_conclusion(paper.markdown_text)
                 
             chunks = self._chunk_document(markdown)
             for chunk_idx, chunk_text in enumerate(chunks):
@@ -123,6 +140,61 @@ class PaperIndexer:
         print(f"  Total chunks created: {len(chunk_definitions)}\n")
             
         return chunk_definitions
+
+    @classmethod
+    def _strip_abstract_conclusion(cls, text: str) -> str:
+        """Remove Abstract and Conclusion sections from text for embeddings."""
+        # 1. Find Abstract
+        abstract_match = cls.ABSTRACT_PATTERN.search(text)
+        intro_match = cls.NEXT_SECTION_PATTERN.search(text)
+        
+        # 2. Find Conclusion
+        conclusion_match = cls.CONCLUSION_PATTERN.search(text)
+        
+        # Build new text without these sections
+        # We process conclusion first if its at the end, then abstract
+        
+        # Calculate cut ranges
+        cuts = [] # list of (start, end) to remove
+        
+        if abstract_match:
+            # We want to remove everything before the abstract too (Title, Authors, etc.)
+            # So start is 0
+            start = 0
+            
+            # End is start of next section (Intro) OR some heuristic length if intro not found
+            if intro_match and intro_match.start() > abstract_match.start():
+                end = intro_match.start()
+            else:
+                # Fallback
+                remaining = text[abstract_match.end():]
+                # Look for next Markdown header (#) OR bold header (**)
+                next_heading = re.search(r'^\s*(?:#|\*\*)', remaining, re.MULTILINE)
+                if next_heading:
+                     end = abstract_match.end() + next_heading.start()
+                else:
+                     end = abstract_match.start() # Minimal safe cut (Title + Authors)
+            
+            if end > start:
+                cuts.append((start, end))
+                
+        if conclusion_match:
+            start = conclusion_match.start()
+            # removes everything from conclusion onwards
+            end = len(text)
+            
+            cuts.append((start, end))
+            
+        # Apply cuts in reverse order to keep indices valid
+        cuts.sort(key=lambda x: x[0], reverse=True)
+        
+        current_text = text
+        for start, end in cuts:
+             # Leave a marker so we know something was removed (optional, but good for debugging)
+             # current_text = current_text[:start] + "\n\n[SECTION REDACTED_FOR_EMBEDDING]\n\n" + current_text[end:]
+             current_text = current_text[:start] + current_text[end:]
+             
+        return current_text
 
     def _chunk_document(self, document_text: str) -> list[str]:
         """Chunk document text into overlapping windows while preserving structures."""

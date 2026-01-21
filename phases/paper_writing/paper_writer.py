@@ -102,6 +102,7 @@ class PaperWriter:
         temperature: float = 0.2,
         user_requirements: Optional[UserRequirements] = None,
         existing_prompt: Optional[str] = None,
+        next_section_type: Optional[Section] = None,
     ) -> str:
         """Generate a single section given context and evidence."""
 
@@ -109,7 +110,9 @@ class PaperWriter:
         if existing_prompt:
              prompt = existing_prompt
         else:
-             prompt = self._build_section_prompt(section_type, context, experiment, evidence, previous_sections, user_requirements)
+             prompt = self._build_section_prompt(
+                 section_type, context, experiment, evidence, previous_sections, user_requirements, next_section_type
+             )
         response = model.respond(
             prompt,
             config={
@@ -126,6 +129,7 @@ class PaperWriter:
         evidence: Sequence[Evidence],
         previous_sections: Optional[dict[Section, str]] = None,
         user_requirements: Optional[UserRequirements] = None,
+        next_section_type: Optional[Section] = None,
     ) -> str:
         """Create the generation prompt for a specific section."""
 
@@ -172,6 +176,17 @@ class PaperWriter:
         title_section = ""
         if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
             title_section = f"[PAPER TITLE]\n            {Settings.LATEX_TITLE}\n\n            "
+        
+        # Forward Look Instruction
+        forward_look_block = ""
+        if next_section_type:
+            forward_look_block = f"""
+            [FORWARD LOOK]
+            You are writing the {section_type.value} section.
+            The NEXT section will be: {next_section_type.value}.
+            INSTRUCTION: wrap up the current section appropriately, but STOP before you discuss the topics reserved for the {next_section_type.value} section.
+            Transitions are fine, but do not steal the content of the next section.
+            """
         
         # Special handling for abstract: No citations allowed
         if section_type == Section.ABSTRACT:
@@ -241,6 +256,8 @@ class PaperWriter:
 
             {user_requirements_block}
 
+            {user_requirements_block}
+            {forward_look_block}
             {plots_block}
 
             [WRITING REQUIREMENTS]
@@ -502,6 +519,7 @@ class PaperWriter:
         previous_sections: Optional[dict[Section, str]] = None,
         user_requirements: Optional[UserRequirements] = None,
         temperature: float = 0.2,
+        next_section_type: Optional[Section] = None,
     ) -> str:
         """Generate initial section draft using paper catalog (not chunked evidence)."""
         model = lms.llm(Settings.PAPER_WRITING_MODEL)
@@ -512,7 +530,7 @@ class PaperWriter:
             experiment,
             previous_sections,
             user_requirements,
-            temperature,
+            next_section_type,
         )
 
         response = model.respond(
@@ -533,6 +551,7 @@ class PaperWriter:
         previous_sections: Optional[dict[Section, str]] = None,
         user_requirements: Optional[UserRequirements] = None,
         temperature: float = 0.2,
+        next_section_type: Optional[Section] = None,
     ) -> str:
         """Rewrite a section using the critique feedback and new evidence."""
         model = lms.llm(Settings.PAPER_WRITING_MODEL)
@@ -547,6 +566,7 @@ class PaperWriter:
             previous_sections,
             user_requirements,
             temperature,
+            next_section_type,
         )
         response = model.respond(
             prompt,
@@ -562,6 +582,7 @@ class PaperWriter:
         experiment: Optional[ExperimentResult],
         previous_sections: Optional[dict[Section, str]] = None,
         user_requirements: Optional[UserRequirements] = None,
+        next_section_type: Optional[Section] = None,
     ) -> str:
         """Build prompt for initial section draft using paper catalog."""
         
@@ -577,6 +598,17 @@ class PaperWriter:
         title_section = ""
         if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
             title_section = f"[PAPER TITLE]\n{Settings.LATEX_TITLE}\n\n"
+        
+        # Forward Look Instruction
+        forward_look_block = ""
+        if next_section_type:
+            forward_look_block = f"""
+            [FORWARD LOOK]
+            You are writing the {section_type.value} section.
+            The NEXT section will be: {next_section_type.value}.
+            INSTRUCTION: wrap up the current section appropriately, but STOP before you discuss the topics reserved for the {next_section_type.value} section.
+            Transitions are fine, but do not steal the content of the next section.
+            """
         
         return textwrap.dedent(f"""\
             [ROLE]
@@ -602,6 +634,8 @@ class PaperWriter:
             {guidelines}
 
             {user_requirements_block}
+            {user_requirements_block}
+            {forward_look_block}
 
             [WRITING REQUIREMENTS — STRICT]
             - Produce a cohesive, original, publication-quality academic narrative.
@@ -636,6 +670,8 @@ class PaperWriter:
         experiment: Optional[ExperimentResult],
         previous_sections: Optional[dict[Section, str]] = None,
         user_requirements: Optional[UserRequirements] = None,
+        temperature: float = 0.2,
+        next_section_type: Optional[Section] = None,
     ) -> str:
         """Build prompt for rewriting a section with critique and new evidence."""
         
@@ -652,6 +688,17 @@ class PaperWriter:
         title_section = ""
         if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
             title_section = f"[PAPER TITLE]\n{Settings.LATEX_TITLE}\n\n"
+        
+        # Forward Look Instruction
+        forward_look_block = ""
+        if next_section_type:
+            forward_look_block = f"""
+            [FORWARD LOOK]
+            You are writing the {section_type.value} section.
+            The NEXT section will be: {next_section_type.value}.
+            INSTRUCTION: wrap up the current section appropriately, but STOP before you discuss the topics reserved for the {next_section_type.value} section.
+            Transitions are fine, but do not steal the content of the next section.
+            """
         
         return textwrap.dedent(f"""\
             [ROLE]
@@ -685,6 +732,7 @@ class PaperWriter:
             {guidelines}
 
             {user_requirements_block}
+            {forward_look_block}
 
             [WRITING REQUIREMENTS — STRICT]
             - Address ALL suggested improvements.

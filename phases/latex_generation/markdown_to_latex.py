@@ -100,8 +100,30 @@ class MarkdownToLaTeX:
               - ALWAYS use \\toprule, \\midrule, \\bottomrule (booktabs style) - never use \\hline
               - Place \\caption ABOVE the tabular (required by many journals)
               - For wide tables, use table* environment to span full page width
+
             - Code blocks: Convert ```python ... ``` to \\begin{{lstlisting}}[language=Python]...\\end{{lstlisting}}
+            - Inline code: Convert `code` to \\texttt{{code}} (ensure special chars inside are escaped)
             - Math: Preserve $...$ for inline math and $$...$$ for display math (or convert to \\[...\\])
+            - Headers: Convert # Title to \\subsection{{Title}}, ## Subtitle to \\subsubsection{{Subtitle}} (Note: Main sections use \\section and are added by the generator)
+            - Bold/italic: Convert **text** to \\textbf{{text}}, *text* to \\textit{{text}}
+            - Lists: Convert markdown lists to LaTeX \\begin{{itemize}}...\\end{{itemize}} or \\begin{{enumerate}}...\\end{{enumerate}}
+            - Paragraphs: Preserve paragraph breaks (double newlines)
+            - NEVER alter text content, only convert formatting
+            - Follow academic LaTeX conventions
+
+            - Hyperlinks: Convert markdown links [text](url) to \\href{{url}}{{text}} (requires hyperref package, already included in templates)
+              - If the link text equals the URL, use \\url{{url}} instead
+              - Do NOT confuse with citations [citationKey] which have no parentheses URL part
+
+            - Smart quotes and typography:
+              - " (left double quote) and " (right double quote) -> ``text''
+              - ' (left single quote) and ' (right single quote) -> `text'
+              - Straight quotes "text" -> ``text''
+              - … (ellipsis) -> \\ldots
+              - — (em-dash) -> ---
+              - – (en-dash) -> --
+              - Non-breaking space (\\u00A0) -> ~
+
             - Greek letters: Convert Unicode Greek letters to LaTeX math mode:
               - α (alpha) -> $\\alpha$ or \\alpha (in math mode)
               - β (beta) -> $\\beta$ or \\beta (in math mode)
@@ -116,13 +138,21 @@ class MarkdownToLaTeX:
               - φ (phi) -> $\\phi$ or \\phi (in math mode)
               - ω (omega) -> $\\omega$ or \\omega (in math mode)
               - Always wrap Greek letters in math mode: if you see "α=1", convert to "$\\alpha=1$"
-            - Headers: Convert # Title to \\subsection{{Title}}, ## Subtitle to \\subsubsection{{Subtitle}} (Note: Main sections use \\section and are added by the generator)
-            - Bold/italic: Convert **text** to \\textbf{{text}}, *text* to \\textit{{text}}
-            - Lists: Convert markdown lists to LaTeX \\begin{{itemize}}...\\end{{itemize}} or \\begin{{enumerate}}...\\end{{enumerate}}
-            - Escape LaTeX special characters: _, &, %, {{, }} must be escaped as \\_, \\&, \\%, \\{{, \\}}
-            - Paragraphs: Preserve paragraph breaks (double newlines)
-            - Never alter text content, only convert formatting
-            - Follow academic LaTeX conventions
+            
+            - Escape LaTeX special characters:
+              - You MUST escape the following characters in normal text (unless in a code block or URL macro):
+                - \\ (backslash) -> \\textbackslash
+                - _ (underscore) -> \\_
+                - % (percent) -> \\%
+                - $ (dollar) -> \\$ (unless determining math mode)
+                - # (hash) -> \\#
+                - & (ampersand) -> \\&
+                - {{ (curly brace) -> \\{{
+                - }} (curly brace) -> \\}}
+                - ~ (tilde) -> \\textasciitilde
+                - ^ (caret) -> \\textasciicircum
+              - Forward slash /: Leave as is in text (e.g., "input/output" remains "input/output"). Do not escape / as it is not a special character in LaTeX text.
+              - URLs and File Paths: If a path or URL appears in text (not in a listing), consider deciding if it needs \\path{{...}} or \\url{{...}} to handle breaking, but at minimum ensure special chars are escaped if written as plain text.
 
             [INPUT MARKDOWN]
             {md_text}
@@ -134,6 +164,7 @@ class MarkdownToLaTeX:
             4. Use \\subsection{{}} and \\subsubsection{{}} for any subsections if needed
             5. Ensure all citations are properly formatted as \\cite{{key}} with EXACT citation keys preserved (e.g., \\cite{{Diekhoff2024RecursiveBQ}}, not \\cite{{diekhoff2024}})
             6. Ensure all figures have proper \\begin{{figure}} environments with \\caption and \\label
+            7. Check and escape ALL special characters (e.g., underscores in filenames or variable names that are not in code/math mode).
 
             Convert the markdown to LaTeX now:""")
 

@@ -94,27 +94,41 @@ class ProgressPopup(tk.Toplevel):
         self.title("Processing...")
         self.transient(parent)
         self.resizable(False, False)
-        self.minsize(200, 90)
         
-        # Content
-        self.content_frame = ttk.Frame(self, padding=40)
+        self._popup_width = 450
+        self._popup_height = 125
+        self.minsize(self._popup_width, self._popup_height)
+        self.geometry(f"{self._popup_width}x{self._popup_height}")
+        
+        self.content_frame = ttk.Frame(self, padding=(40, 30))
         self.content_frame.pack(fill="both", expand=True)
+        self.content_frame.columnconfigure(0, weight=1)
         
-        self.status_label = ttk.Label(self.content_frame, text=initial_status, font=self.parent.fonts.default_font)
-        self.status_label.pack(pady=(0, 15))
+        self.status_label = ttk.Label(
+            self.content_frame, 
+            text=initial_status, 
+            font=self.parent.fonts.default_font,
+            anchor="center",
+            justify="center"
+        )
+        self.status_label.grid(row=0, column=0, pady=(0, 15), sticky="ew")
         
+        # Spinner
         self._spinner_chars = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
         self._spinner_idx = 0
-        self.spinner_label = ttk.Label(self.content_frame, text=self._spinner_chars[0], font=("", 24), foreground="gray")
-        self.spinner_label.pack()
+        self.spinner_label = ttk.Label(
+            self.content_frame, 
+            text=self._spinner_chars[0], 
+            font=("", 24), 
+            foreground="gray",
+            anchor="center"
+        )
+        self.spinner_label.grid(row=1, column=0, sticky="ew")
         
         self.close_btn = ttk.Button(self.content_frame, text="Close", command=self.close)
         
         # Center on parent
-        self.update_idletasks()
-        x = parent.winfo_x() + (parent.winfo_width() - self.winfo_width()) // 2
-        y = parent.winfo_y() + (parent.winfo_height() - self.winfo_height()) // 2
-        self.geometry(f"+{x}+{y}")
+        self._center_on_parent()
         
         # Make modal
         self.grab_set()
@@ -159,6 +173,13 @@ class ProgressPopup(tk.Toplevel):
         self.spinner_label.config(text=self._spinner_chars[self._spinner_idx])
         self.after(80, self._animate_spinner)
     
+    def _center_on_parent(self):
+        """Center popup on parent window."""
+        self.update_idletasks()
+        x = self.parent.winfo_x() + (self.parent.winfo_width() - self._popup_width) // 2
+        y = self.parent.winfo_y() + (self.parent.winfo_height() - self._popup_height) // 2
+        self.geometry(f"+{x}+{y}")
+
     def update_status(self, status: str):
         """Update status text. Call from main thread via parent.after(0, ...)"""
         if self.winfo_exists() and not self._is_error:

@@ -78,3 +78,15 @@ class SectionCritique(BaseModel):
     """Structured critique output from the SectionCritic."""
     improvements: str              # Short text describing what to improve
     search_queries: list[str]      # Queries to fill evidence gaps
+
+
+class ScoreAndSummaryItem(BaseModel):
+    """Combined output for scoring and summarization."""
+    score: float
+    reason: str
+    summary: str
+
+
+class BatchResult(BaseModel):
+    """Batch list of combined results."""
+    results: list[ScoreAndSummaryItem]

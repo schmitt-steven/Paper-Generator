@@ -155,8 +155,9 @@ class PaperWritingPipeline:
         papers: Sequence[Paper],
         user_requirements: Optional[UserRequirements] = None,
         status_callback: Optional[Callable[[str], None]] = None,
-        max_critique_queries: int = 5,
-        chunks_per_query: int = 3,
+        max_critique_queries: int = 5,  # Num of search suggestions/queries the critique generates
+        chunks_per_query: int = 5,  # Num of kept chunks per query
+        max_chunks_per_paper: int = 2,  # Max num of chunks from the same paper for a query
     ) -> PaperDraft:
         """
         Writes a paper in markdown format.
@@ -190,7 +191,10 @@ class PaperWritingPipeline:
         prompts_by_section: dict[str, str] = {}
         
         with LMSJITSettings():
-            for section_type in section_order:
+            for idx, section_type in enumerate(section_order):
+                # Identify next section for forward look
+                next_section_type = section_order[idx + 1] if idx + 1 < len(section_order) else None
+
                 print(f"\n{'─'*60}")
                 print(f"[{section_type.value}] Processing section...")
                 print(f"{'─'*60}")
@@ -208,6 +212,7 @@ class PaperWritingPipeline:
                     experiment=experiment_result,
                     previous_sections=sections,
                     user_requirements=user_requirements,
+                    next_section_type=next_section_type,
                 )
                 prompts_by_section[section_type.value] = prompt
                 
@@ -218,6 +223,7 @@ class PaperWritingPipeline:
                     experiment=experiment_result,
                     previous_sections=sections,
                     user_requirements=user_requirements,
+                    next_section_type=next_section_type,
                 )
                 print(f"    Draft complete ({len(section_draft_v1)} chars)")
                 
@@ -250,6 +256,7 @@ class PaperWritingPipeline:
                         queries=critique.search_queries,
                         section_type=section_type,
                         chunks_per_query=chunks_per_query,
+                        max_chunks_per_paper=max_chunks_per_paper,
                     )
                 else:
                     reason = "skipped by policy" if skip_search else "no queries suggested"
@@ -272,6 +279,7 @@ class PaperWritingPipeline:
                     experiment=experiment_result,
                     previous_sections=sections,
                     user_requirements=user_requirements,
+                    next_section_type=next_section_type,
                 )
                 
                 sections[section_type] = final_section
