@@ -24,7 +24,7 @@ Splits papers into overlapping text chunks and creates their embeddings.
 
 Handles evidence retrieval for the paper writing pipeline.
 - `batch_search`: Executes a list queries from the critic (sequentially but with internal batching).
-- Internal `_search_evidence` pipeline: vector search → batch summarization → batch scoring → filter.
+- Internal `_search_evidence` pipeline: vector search → combined summarization & scoring → filter.
 
 ### `SectionCritic` ([section_critic.py](section_critic.py))
 
@@ -39,13 +39,15 @@ Loads user-defined writing guidelines from `user_files/section_guidelines.md`.
 ### `PaperWriter` ([paper_writer.py](paper_writer.py))
 
 Generates and rewrites paper sections.
-- `generate_section_from_catalog`: Creates initial draft using only title/abstract/conclusion catalog.
+- `generate_initial_section`: Creates initial draft using a catalog of titles/abstracts/conclusions.
 - `rewrite_section`: Refines the draft using critique feedback and gathered evidence.
+- `generate_title`: Generates a paper title from the full draft.
+- `generate_acknowledgements`: Formats user-provided acknowledgements.
 - `generate_paper_sections`: Orchestrates the writing of all sections in order.
 
 ### `PaperWritingPipeline` ([paper_writing_pipeline.py](paper_writing_pipeline.py))
 
-High-level orchestrator for the critique-based writing workflow:
+High-level orchestrator for the entire paper writing workflow:
 1. Index papers
 2. Loop through sections (Methods → Results → Discussion → etc.)
 3. For each section:

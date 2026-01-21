@@ -22,7 +22,7 @@ Handles the paper search process:
 - Generates search queries from paper concept using LLM
 - Executes searches via Semantic Scholar API
 - Removes duplicates and merges user papers with searched papers
-- Downloads PDFs and converts them to markdown
+- Downloads PDFs
 
 ### `PaperRanker` ([paper_ranking.py](paper_ranking.py))
 
@@ -31,7 +31,7 @@ Ranks papers using embedding similarity and composite scoring:
 - Citation score (age-aware citation impact)
 - Recency score
 
-### `PaperFilter` ([paper_filtering.py](paper_filtering.py))
+### `PaperFilter` ([paper_filter.py](paper_filter.py))
 
 Filters papers for a diverse selection across categories:
 - "High Relevance" (top 10% by relevance, always included)
@@ -44,4 +44,4 @@ Filters papers for a diverse selection across categories:
 
 - `output/search_queries.json` - Generated search queries
 - `output/papers.json` - All papers with metadata and rankings
-- `output/literature/` - Downloaded PDFs and markdown files
+- `output/literature/` - Downloaded PDFs

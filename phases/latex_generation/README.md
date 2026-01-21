@@ -31,9 +31,40 @@ Handles the complete LaTeX conversion workflow:
 ## Output
 
 `output/latex/` containing:
-- `paper.tex` - Main LaTeX document
-- `chapters/` - LaTeX files for each section
+- `paper.tex` - Main LaTeX document (with injected content)
 - `bibliography.bib` - Generated bibliography
-- `abbreviations.tex` - Extracted abbreviations
 - `images/` - Copied plot images
 - `result/paper.pdf` - Final compiled PDF
+
+
+## Adding Custom LaTeX Templates
+
+Templates are stored in the `latex_templates/` directory.
+
+### Required Structure
+
+```text
+latex_templates/
+└── your_template_name/
+    ├── paper.tex (main file, MUST be named "paper.tex")
+    ├── Makefile (for compilation)
+    └── ... (any .cls, .sty or other template dependencies)
+```
+
+### Placeholders
+
+The template system uses placeholders in the `paper.tex` file:
+
+- **Metadata**: `%%TITLE%%`, `%%ABSTRACT%%`
+- **Sections**: `%%INTRODUCTION%%`, `%%RELATED_WORK%%`, `%%METHODS%%`, `%%RESULTS%%`, `%%DISCUSSION%%`, `%%CONCLUSION%%`, `%%ACKNOWLEDGEMENTS%%`
+- **Authors**:
+  - `%%BEGIN_AUTHOR%% ... %%END_AUTHOR%%`
+  - Available fields: `{{name}}`, `{{affiliation}}`, `{{department}}`, `{{city}}`, `{{country}}`, `{{address}}`, `{{email}}`
+  - `%%SHORTAUTHORS%%`: Auto-generated from author last names.
+  - *Note: Only one author placeholder block is required; the generator handles multiple authors automatically.*
+
+### Bibliography
+
+No placeholder is needed. The generator creates a `bibliography.bib` file in the output directory. Include it in your template via `\addbibresource{bibliography.bib}` or similar.
+
+After adding a template folder, restart the app to select it on the settings page.

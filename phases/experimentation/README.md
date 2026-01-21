@@ -34,3 +34,4 @@ Handles the complete experimentation process:
 - `plots/` - Generated plots (PNG, SVG, etc.)
 - `plot_captions.json` - VLM-generated captions for plots
 - `hypothesis_evaluation.json` - Final verdict on hypothesis
+- `experiment_result.json` - Detailed execution and validation results
