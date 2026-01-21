@@ -6,12 +6,12 @@ Work in progress, everything subject to change...
 
 ## Generation Process
 
-1. **[Context Analysis](phases/context_analysis/)** — Analyze user code and requirements to generate a paper concept
-2. **[Paper Search](phases/paper_search/)** — Search, rank, filter, and download relevant academic papers
-3. **[Hypothesis Generation](phases/hypothesis_generation/)** — Create a structured research hypothesis
-4. **[Experimentation](phases/experimentation/)** — Run experiments to test the hypothesis
-5. **[Paper Writing](phases/paper_writing/)** — Gather evidence and write each section using RAG
-6. **[LaTeX Generation](phases/latex_generation/)** — Convert to LaTeX and compile to PDF
+1. **[Context Analysis](phases/context_analysis/)** — Analyzes user code and requirements to generate a novel research concept
+2. **[Paper Search](phases/paper_search/)** — Automated literature review: searches, ranks, filters, and downloads relevant papers
+3. **[Hypothesis Generation](phases/hypothesis_generation/)** — Generates valid, testable research hypotheses
+4. **[Experimentation](phases/experimentation/)** — Automated experimentation: generates, executes, debugs, and validates scientific experiments
+5. **[Paper Writing](phases/paper_writing/)** — Iterative writing pipeline: drafts, critiques, searches for evidence, and improves each section
+6. **[LaTeX Generation](phases/latex_generation/)** — Converts the draft to a compiled LaTeX PDF
 
 ## Requirements
 
@@ -27,13 +27,16 @@ Work in progress, everything subject to change...
 ### macOS
 
 ```bash
-# (if not yet installed)
+# Xcode tools
 xcode-select --install
+
+# Homebrew
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-# Install LaTeX
+# LaTeX
 brew install --cask mactex
-# Install Python dependencies
+
+# Python dependencies
 pip install -r requirements.txt
 ```
 
@@ -43,7 +46,7 @@ pip install -r requirements.txt
 # Install LaTeX
 sudo apt install texlive-full
 
-# Install Python dependencies
+# Python dependencies
 pip install -r requirements.txt
 ```
 
@@ -57,13 +60,29 @@ pip install -r requirements.txt
 
 ## Usage
 
+After the dependencies are installed, run:
+
 ```bash
 ./main.py
 # or
-python3 main.py
+python main.py
 ```
+## Configuration
 
-All generated files are saved to the `output/` folder.
+Simply use the in-app Settings screen to change:
+
+- **LLM Models:** Select specific models to use for each phase (Analysis, Search, Writing, etc.).
+  - *Note: MLX embedding models are currently NOT supported by LM Studio. Please use GGUF embedding models (e.g., `text-embedding-qwen3-embedding-4b`).*
+- **API Keys:**
+  - `SEMANTIC_SCHOLAR_API_KEY`: (Optional) for higher rate limits and faster paper search.
+  - `UNPAYWALL_EMAIL`: (Optional) to identify open-access PDF versions of papers.
+- **LaTeX:**
+  - `LATEX_TEMPLATE`: Choose the template for the final PDF (e.g., `ieee_conference`, `jair`).
+  - `LATEX_AUTHORS`: Configure the author details.
+
+
+
+All generated files (PDFs, markdown drafts, experiment results) are saved to the `output/` folder.
 
 ## LM Studio Settings
 
@@ -71,6 +90,3 @@ All generated files are saved to the `output/` folder.
 
 - Developer → Server Settings → **Enable** "Only keep last JIT loaded models"
 - App Settings → Developer → Local LLM Service → **Enable** "Enable Local LLM Service"
-
-**Note:** MLX embedding models are NOT supported by LM Studio yet.
-See https://github.com/lmstudio-ai/lmstudio-bug-tracker/issues/808
