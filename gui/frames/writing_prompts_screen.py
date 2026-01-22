@@ -185,17 +185,15 @@ class WritingPromptsScreen(BaseFrame):
     def _load_prompts(self):
         """Load and parse the prompts file."""
         if not PROMPTS_FILE.exists():
-            ttk.Label(
-                self.scrollable_frame,
-                text=f"Prompts file not found: {PROMPTS_FILE}",
-                foreground="red"
-            ).pack(pady=20)
+            self.show_error_message("Prompts file not found", str(PROMPTS_FILE))
             return
-        
+
+        # Load JSON
         try:
             content = PROMPTS_FILE.read_text(encoding="utf-8")
-            sections = self._parse_sections(content)
+            sections = json.loads(content)
             
+            # Display sections
             for i, (section_name, prompt_content) in enumerate(sections.items()):
                 card = CollapsiblePromptCard(
                     self.scrollable_frame,
@@ -207,29 +205,9 @@ class WritingPromptsScreen(BaseFrame):
                 self.prompt_cards[section_name] = card
                 
         except Exception as e:
-            ttk.Label(
-                self.scrollable_frame,
-                text=f"Error loading prompts: {e}",
-                foreground="red"
-            ).pack(pady=20)
+            self.show_error_message("Error loading prompts", str(e))
     
-    def _parse_sections(self, content: str) -> Dict[str, str]:
-        """Parse markdown content into sections by # headers."""
-        sections = {}
-        
-        # Split by top-level headers (# SectionName)
-        pattern = r'^# (.+)$'
-        parts = re.split(pattern, content, flags=re.MULTILINE)
-        
-        # parts[0] is content before first header (usually empty)
-        # Then alternating: header, content, header, content...
-        for i in range(1, len(parts), 2):
-            if i + 1 < len(parts):
-                section_name = parts[i].strip()
-                section_content = parts[i + 1]
-                sections[section_name] = section_content
-        
-        return sections
+
     
     def on_back(self):
         """Navigate back to Paper Draft screen."""

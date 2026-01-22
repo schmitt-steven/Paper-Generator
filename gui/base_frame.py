@@ -615,6 +615,52 @@ class BaseFrame(ttk.Frame):
             # Linux - simple attempt to open folder
             subprocess.call(['xdg-open', os.path.dirname(path)])
 
+    def show_error_message(self, title: str, message: str):
+        """Display an error message for this screen in a copyable text widget.
+        clears the scrollable frame first.
+        """
+        # Clear existing content
+        for widget in self.scrollable_frame.winfo_children():
+            widget.destroy()
+            
+        error_frame = ttk.Frame(self.scrollable_frame)
+        error_frame.pack(fill="x", pady=20, padx=20)
+        
+        # Error Title
+        ttk.Label(
+            error_frame, 
+            text=f"{title}:", 
+            foreground="red", 
+            font=self.controller.fonts.sub_header_font
+        ).pack(anchor="w")
+        
+        # Scrollable Text Container
+        container = ttk.Frame(error_frame)
+        container.pack(fill="x", expand=True)
+        
+        # Copyable Text Widget
+        text_bg = TEXT_BG_DARK_ALT if self.controller.current_theme == "dark" else TEXT_BG_LIGHT_ALT
+        error_text = tk.Text(
+            container, 
+            height=10, 
+            wrap="word", 
+            relief="flat", 
+            font=self.controller.fonts.default_font,
+            padx=10, 
+            pady=10,
+            bg=text_bg,
+            highlightthickness=0
+        )
+        
+        scrollbar = ttk.Scrollbar(container, orient="vertical", command=error_text.yview)
+        error_text.configure(yscrollcommand=scrollbar.set)
+        
+        scrollbar.pack(side="right", fill="y")
+        error_text.pack(side="left", fill="both", expand=True)
+
+        error_text.insert("1.0", str(message))
+        error_text.config(state="disabled", foreground="red")
+
     def reload_content(self):
         """
         Reload the content of the screen. 

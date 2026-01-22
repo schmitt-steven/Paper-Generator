@@ -156,25 +156,14 @@ class HypothesisScreen(BaseFrame):
                 print(f"Error loading hypothesis: {e}")
         
         # No file or load failed
-        self._show_error("No hypothesis found. Please complete previous steps.")
+        self.show_error_message("Hypothesis Error", "No hypothesis found. Please complete previous steps.")
     
     def on_show(self):
         """Called when screen is shown - load hypothesis if not already loaded."""
         if not hasattr(self, 'current_hypothesis') or self.current_hypothesis is None:
             self._load_hypothesis()
 
-    def _show_error(self, message: str):
-        """Display an error message."""
-        error_frame = ttk.Frame(self.scrollable_frame, padding="20")
-        error_frame.pack(fill="x", pady=20)
-        
-        ttk.Label(
-            error_frame,
-            text=message,
-            font=self.controller.fonts.default_font,
-            foreground="red",
-            wraplength=500
-        ).pack()
+
 
     def _create_hypothesis_cards(self):
         """Create collapsible cards for the hypothesis fields."""

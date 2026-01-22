@@ -167,13 +167,14 @@ class ExperimentPlanScreen(BaseFrame):
         try:
             plan_content = load_markdown(EXPERIMENT_PLAN_FILE, EXPERIMENTS_DIR)
         except FileNotFoundError:
-            self._show_error(
+            self.show_error_message(
+                "Experiment Plan Error",
                 f"Experiment plan not found: {EXPERIMENTS_DIR}/{EXPERIMENT_PLAN_FILE}\n\n"
                 "Please complete the previous steps first."
             )
             return
         except Exception as e:
-            self._show_error(f"Error loading experiment plan: {e}")
+            self.show_error_message("Error", f"Error loading experiment plan: {e}")
             return
         
         # Clear existing
@@ -192,18 +193,7 @@ class ExperimentPlanScreen(BaseFrame):
         card.pack(fill="both", expand=True, pady=10)
         self.cards.append(card)
 
-    def _show_error(self, message: str):
-        """Display an error message."""
-        error_frame = ttk.Frame(self.scrollable_frame, padding="20")
-        error_frame.pack(fill="x", pady=20)
-        
-        ttk.Label(
-            error_frame,
-            text=message,
-            font=self.controller.fonts.default_font,
-            foreground="red",
-            wraplength=500
-        ).pack()
+
 
     def on_next(self):
         """Proceed or run experiments (no saving)."""

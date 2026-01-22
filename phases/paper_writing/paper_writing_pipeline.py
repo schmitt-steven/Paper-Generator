@@ -12,7 +12,7 @@ from phases.paper_writing.evidence_gatherer import EvidenceGatherer
 from phases.paper_writing.section_critic import SectionCritic
 from phases.experimentation.experiment_state import ExperimentResult
 from utils.lms_settings import LMSJITSettings
-from utils.file_utils import save_markdown, load_markdown
+from utils.file_utils import save_markdown, load_markdown, save_json, load_json
 from settings import Settings
 
 
@@ -34,49 +34,33 @@ class PaperWritingPipeline:
     @staticmethod
     def _save_prompts(
         prompts_by_section: dict[str, str],
-        filename: str = "section_writing_prompts.md",
+        filename: str = "section_writing_prompts.json",
         output_dir: str = "output"
     ) -> None:
-        """Save section writing prompts to a Markdown file."""
+        """Save section writing prompts to a JSON file."""
         
-        content_parts = []
-        
-        # Sort by section order logic if possible, otherwise alphabetical or just iteration order
-        # Iteration order is usually preserving insertion order in modern Python, which works for us
-        
-        for section_name, prompt in prompts_by_section.items():
-             content_parts.append(f"# {section_name}\n\n{prompt.strip()}\n")
-             
-        markdown_content = "\n".join(content_parts)
-        
-        output_path = save_markdown(markdown_content, filename, output_dir)
+        # Save as JSON directly (preserving dictionary structure)
+        output_path = save_json(prompts_by_section, filename, output_dir)
 
         print(f"[PaperWritingPipeline] Saved section writing prompts to {output_path}")
 
     @staticmethod
     def load_section_writing_prompts(
-        filepath: str = "output/section_writing_prompts.md",
+        filepath: str = "output/section_writing_prompts.json",
     ) -> dict[str, str]:
-        """Load section writing prompts from a Markdown file."""
+        """Load section writing prompts from a JSON file."""
 
         path_obj = Path(filepath)
         if not path_obj.exists():
             raise FileNotFoundError(f"Section writing prompts file not found: {filepath}")
 
-        content = load_markdown(path_obj.name, str(path_obj.parent))
-
-        prompts = {}
-        pattern = r'^# (.+)$'
-        parts = re.split(pattern, content, flags=re.MULTILINE)
+        # Load from JSON
+        prompts = load_json(path_obj.name, str(path_obj.parent))
         
-        # parts[0] is content before first header
-        # Then alternating: header, content, header, content...
-        for i in range(1, len(parts), 2):
-            if i + 1 < len(parts):
-                section_name = parts[i].strip()
-                section_content = parts[i + 1].strip()
-                if section_content:  # Only add if there's actual content
-                    prompts[section_name] = section_content
+        # Ensure it's a dict
+        if not isinstance(prompts, dict):
+             # If it wrapped in a list or something, try to handle or fail
+             raise ValueError(f"Expected dict from prompts file, got {type(prompts)}")
 
         print(f"[PaperWritingPipeline] Loaded {len(prompts)} section writing prompts from {filepath}")
         return prompts

@@ -146,10 +146,10 @@ class PaperConceptScreen(BaseFrame):
         try:
             self.concept = PaperConception.load_paper_concept(self.file_path)
         except FileNotFoundError:
-            self._show_error(f"Paper concept not found: {self.file_path}\n\nPlease complete the previous steps first.")
+            self.show_error_message("Paper Concept Error", f"Paper concept not found: {self.file_path}\n\nPlease complete the previous steps first.")
             return
         except Exception as e:
-            self._show_error(f"Error loading paper concept: {e}")
+            self.show_error_message("Error", f"Error loading paper concept: {e}")
             return
         
         # Create collapsible sections
@@ -171,18 +171,7 @@ class PaperConceptScreen(BaseFrame):
             card.pack(fill="x", pady=(10 if i == 0 else 0, 8))
             self.concept_cards.append(card)
 
-    def _show_error(self, message: str):
-        """Display an error message."""
-        error_frame = ttk.Frame(self.scrollable_frame, padding="20")
-        error_frame.pack(fill="x", pady=20)
-        
-        ttk.Label(
-            error_frame,
-            text=message,
-            font=self.controller.fonts.default_font,
-            foreground="red",
-            wraplength=500
-        ).pack()
+
 
     def on_next(self):
         """Proceed to next screen (no saving needed - content is read-only)."""

@@ -188,7 +188,10 @@ class PaperDraftScreen(BaseFrame):
             draft_content = load_markdown(PAPER_DRAFT_FILE, OUTPUT_DIR)
         except (FileNotFoundError, Exception) as e:
             msg = f"Paper draft not found: {OUTPUT_DIR}/{PAPER_DRAFT_FILE}" if isinstance(e, FileNotFoundError) else f"Error loading draft: {e}"
-            self._show_error(msg)
+            self.show_error_message("Paper Draft Error", msg)
+            
+            # Add a button to regenerate if missing (appended after error message)
+            ttk.Button(self.scrollable_frame, text="Generate Draft", command=self.on_regenerate).pack(pady=10)
             return
         
         # Create Card
@@ -202,21 +205,7 @@ class PaperDraftScreen(BaseFrame):
         )
         self.card.pack(fill="x", pady=10)
 
-    def _show_error(self, message: str):
-        """Display an error message."""
-        # Clear existing card and error frame, but not action buttons
-        if self.card:
-            self.card.destroy()
-            self.card = None
-        if hasattr(self, 'error_frame') and self.error_frame:
-            self.error_frame.destroy()
-            
-        self.error_frame = ttk.Frame(self.scrollable_frame, padding="20")
-        self.error_frame.pack(fill="x", pady=20)
-        ttk.Label(self.error_frame, text=message, foreground="red", wraplength=500).pack()
-        
-        # Add a button to regenerate if missing
-        ttk.Button(self.error_frame, text="Generate Draft", command=self.on_regenerate).pack(pady=10)
+
 
     def on_next(self):
         """Proceed to next screen or generate LaTeX."""
@@ -298,7 +287,9 @@ class PaperDraftScreen(BaseFrame):
         if draft_path.exists():
             self._load_draft()
         else:
-             self._show_error(f"No paper draft found at {draft_path}.\nPlease generate the draft.")
+             msg = f"No paper draft found at {draft_path}.\nPlease generate the draft."
+             self.show_error_message("Paper Draft Not Found", msg)
+             ttk.Button(self.scrollable_frame, text="Generate Draft", command=self.on_regenerate).pack(pady=10)
 
     def on_regenerate(self):
         """Regenerate the paper draft from scratch."""

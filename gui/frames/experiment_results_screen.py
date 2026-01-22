@@ -414,7 +414,7 @@ class ExperimentResultsScreen(BaseFrame):
     def _load_and_display_results(self):
         """Load and display experiment results."""
         if not Path(HYPOTHESES_FILE).exists():
-            self._show_error(f"Hypotheses file not found: {HYPOTHESES_FILE}")
+            self.show_error_message("Hypothesis Error", f"Hypotheses file not found: {HYPOTHESES_FILE}")
             return
         
         try:
@@ -426,12 +426,12 @@ class ExperimentResultsScreen(BaseFrame):
             # Load
             selected_hypothesis = HypothesisBuilder.load_hypothesis(HYPOTHESES_FILE)
             if selected_hypothesis is None:
-                self._show_error("No hypothesis found")
+                self.show_error_message("Hypothesis Error", "No hypothesis found")
                 return
             
             experiment_result_file = Path("output/experiments/experiment_result.json")
             if not experiment_result_file.exists():
-                self._show_error(f"Experiment result not found: {experiment_result_file}")
+                self.show_error_message("Result Error", f"Experiment result not found: {experiment_result_file}")
                 return
             
             experiment_result = ExperimentRunner.load_experiment_result(str(experiment_result_file))
@@ -496,7 +496,7 @@ class ExperimentResultsScreen(BaseFrame):
         except Exception as e:
             import traceback
             traceback.print_exc()
-            self._show_error(f"Error loading results: {e}")
+            self.show_error_message("Error", f"Error loading results: {e}")
 
     def _open_code_in_editor(self):
         """Open the experiment code file in the system's default editor."""
@@ -681,10 +681,7 @@ class ExperimentResultsScreen(BaseFrame):
         self._results_loaded = False  # Force reload
         self._load_and_display_results()
 
-    def _show_error(self, message: str):
-        error_frame = ttk.Frame(self.scrollable_frame, padding="20")
-        error_frame.pack(fill="x", pady=20)
-        ttk.Label(error_frame, text=message, foreground="red", wraplength=500).pack()
+
 
     def on_show(self):
         if not hasattr(self, '_results_loaded') or not self._results_loaded:

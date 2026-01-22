@@ -83,7 +83,7 @@ class ResultScreen(BaseFrame):
 
         path = Path(PDF_PATH)
         if not path.exists():
-            ttk.Label(self.preview_container, text="PDF not found.", style="CardRow.TLabel").pack(pady=20)
+            self.show_error_message("PDF Not Found", f"PDF not found at {path}.\nPlease compile the project.")
             return
 
         try:
@@ -92,7 +92,7 @@ class ResultScreen(BaseFrame):
             
             if len(doc) == 0:
                 print("PDF is empty")
-                ttk.Label(self.preview_container, text="PDF is empty.", foreground="gray", style="CardRow.TLabel").pack(pady=20)
+                self.show_error_message("Empty PDF", "The generated PDF file is empty.")
                 return
 
             # Show pages
@@ -148,7 +148,7 @@ class ResultScreen(BaseFrame):
             import traceback
             traceback.print_exc()
             print(f"Error generating preview: {e}")
-            ttk.Label(self.preview_container, text=f"Preview error: {e}", foreground="red", style="CardRow.TLabel").pack(pady=20)
+            self.show_error_message("Preview Error", f"Error generating preview: {e}")
 
 
     def _open_pdf(self):
@@ -159,15 +159,15 @@ class ResultScreen(BaseFrame):
                 webbrowser.open(f"file://{path.absolute()}")
             except Exception as e:
                 print(f"Error opening PDF: {e}")
-                self._show_error(f"Could not open PDF: {e}")
+                self.show_error_message("PDF Error", f"Could not open PDF: {e}")
         else:
-            self._show_error(f"PDF not found at {path}")
+            self.show_error_message("PDF Not Found", f"PDF not found at {path}")
 
     def _show_file(self):
         """Show the PDF file in the system file explorer."""
         path = Path(PDF_PATH).absolute()
         if not path.exists():
-             self._show_error(f"File not found: {path}")
+             self.show_error_message("File Not Found", f"File not found: {path}")
              return
 
         try:
@@ -179,7 +179,7 @@ class ResultScreen(BaseFrame):
                 # Linux
                 subprocess.run(["xdg-open", str(path.parent)])
         except Exception as e:
-             self._show_error(f"Error showing file: {e}")
+             self.show_error_message("System Error", f"Error showing file: {e}")
 
     def on_next(self):
         """Next button now triggers Compile TeX Only."""
@@ -290,6 +290,4 @@ class ResultScreen(BaseFrame):
         self.show_preview()
         messagebox.showinfo("Success", "PDF compiled successfully!")
 
-    def _show_error(self, msg):
-        err_label = ttk.Label(self.scrollable_frame, text=msg, foreground="red")
-        err_label.pack(pady=5)
+
