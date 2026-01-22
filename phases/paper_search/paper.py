@@ -1,6 +1,7 @@
 from typing import List, Optional
 from dataclasses import dataclass, field
 import re
+import unicodedata
 
 
 @dataclass
@@ -53,7 +54,14 @@ def _generate_citation_key(bibtex: Optional[str], authors: list[str], published:
             # Look for pattern: @article{key, or @inproceedings{key, etc.
             match = re.search(r'@\w+\{([^,]+)', bibtex)
             if match:
-                return match.group(1).strip()
+                raw_key = match.group(1).strip()
+                # Normalize unicode characters (expands ligatures like ﬃ -> ffi)
+                normalized_key = unicodedata.normalize('NFKD', raw_key)
+                # Remove any non-ascii characters that might remain
+                ascii_key = normalized_key.encode('ascii', 'ignore').decode('ascii')
+                # Remove any remaining special characters, keep alphanumeric
+                clean_key = re.sub(r'[^a-zA-Z0-9]', '', ascii_key)
+                return clean_key
         
         # Fallback: Generate from first author + year
         if authors and len(authors) > 0:

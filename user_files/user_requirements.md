@@ -22,19 +22,24 @@ Describe RBQL algorithm precisely:
 1. Persistent model stores (s, a) → (s', r) transitions
 2. Epsilon-greedy exploration with decay
 3. On terminal state: build backward graph, BFS from terminal, update Q(s,a) = r + γ·max(Q(s'))
-4. Describe experiment setup: environment (simple grid or pong-like game), state space, action space, hyperparameters (γ, ε decay schedule), baseline (standard Q-learning with same ε schedule)
 
 ### Results
-Compare RBQL vs standard Q-learning on:
-- Episodes to convergence (optimal policy)
-- Cumulative reward over episodes
-- Include statistical measures (like mean, std over multiple runs)
+Experiment Setup:
+Comparison: RBQL vs. Standard Q-Learning.
+Runs: N=30 independent runs per algorithm (Seeds 0–29).
+Termination: Max 500 episodes or until convergence.
+Convergence Metric: First episode where avg reward $\ge 0.9$ (over rolling window of 10).
 
-Try to get generalizable results.
+Data Collection & Analysis:
+Metric 1 (Efficiency): Episodes to convergence.
+Metric 2 (Cost): Wall-clock time (seconds) to convergence.
+Significance: Compute Welch’s t-test ($p$-value) for both metrics.
+Uncertainty: Calculate 95% Confidence Intervals (CI) for all means.
 
-Required plots:
-1. **Learning curve**: Cumulative reward (y-axis) vs Episode number (x-axis), two lines (RBQL vs Q-learning), with shaded std regions
-2. **Convergence speed**: Bar chart showing episodes required to reach 90% of optimal performance for each algorithm
+Required Plots:
+Learning Curve: Episode vs. Reward. Use shaded 95% CI (not std dev).
+Efficiency Frontier (Scatter): Wall-clock time ($x$) vs. Episodes to converge ($y$). Plot all 60 data points.
+Significance Bar Chart: Mean episodes to converge with error bars (95% CI) and annotated $p$-values.
 
 ### Discussion
 Analyze why RBQL outperforms Q-learning in deterministic settings. Discuss limitations: only works for deterministic environments, requires storing full transition model (memory), episodic tasks only. Suggest extensions: stochastic environments (weighted propagation), continuous state spaces, memory-efficient model compression.

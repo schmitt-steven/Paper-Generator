@@ -634,12 +634,17 @@ class BaseFrame(ttk.Frame):
             'concept', 
             'hypotheses', 
             'current_hypothesis',
-            '_results_loaded'
+            '_results_loaded',
+            'cards'
         ]
         for attr in common_attrs:
             if hasattr(self, attr):
                 try:
-                    delattr(self, attr)
+                    if attr == 'cards':
+                        # Reset cards to empty list
+                        setattr(self, attr, [])
+                    else:
+                        delattr(self, attr)
                 except:
                     setattr(self, attr, None)
 

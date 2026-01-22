@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import ast
 import textwrap
 from pathlib import Path
 from dataclasses import dataclass
@@ -22,12 +23,15 @@ class UserCode:
     method: str = ""
     contribution: str = ""
     important_snippets: list['CodeSnippet'] | None = None
+    signatures: list[str] | None = None
     
     def __post_init__(self):
         if self.important_snippets is None:
             self.important_snippets = []
         if self.keywords is None:
             self.keywords = []
+        if self.signatures is None:
+            self.signatures = []
 
 
 class CodeSnippet(BaseModel):
@@ -201,6 +205,53 @@ class CodeAnalyzer(LazyModelMixin):
         print(f"Extracted {len(code_analysis.important_snippets)} code snippet(s)")
         return code_analysis
 
+    def extract_signatures(self, code_analysis: UserCode) -> UserCode:
+        """Extract function and class signatures using AST."""
+        if not code_analysis.file_content:
+            return code_analysis
+            
+        try:
+            tree = ast.parse(code_analysis.file_content)
+            signatures = []
+            
+            for node in tree.body:
+                if isinstance(node, ast.FunctionDef):
+                    # Extract function signature
+                    args = [arg.arg for arg in node.args.args]
+                    sig = f"def {node.name}({', '.join(args)})"
+                    if node.returns:
+                        # Simple attempt to get return type annotation as string
+                        try:
+                            ret_type = ast.unparse(node.returns)
+                            sig += f" -> {ret_type}"
+                        except Exception:
+                            pass
+                    signatures.append(f"Function: {sig}")
+                    
+                elif isinstance(node, ast.ClassDef):
+                    signatures.append(f"Class: {node.name}")
+                    for item in node.body:
+                        if isinstance(item, ast.FunctionDef):
+                            args = [arg.arg for arg in item.args.args]
+                            # Only include self if it's there
+                            args_str = ', '.join(args)
+                            sig = f"  - method: {item.name}({args_str})"
+                            if item.returns:
+                                try:
+                                    ret_type = ast.unparse(item.returns)
+                                    sig += f" -> {ret_type}"
+                                except Exception:
+                                    pass
+                            signatures.append(sig)
+            
+            code_analysis.signatures = signatures
+            print(f"Extracted {len(signatures)} signatures from {code_analysis.file_name}")
+            
+        except Exception as e:
+            print(f"Error parsing AST for {code_analysis.file_name}: {e}")
+            
+        return code_analysis
+
     def analyze_all_files(self, code_files: list[UserCode]) -> list[UserCode]:
         """
         Analyze all code files and extract important code snippets.
@@ -209,6 +260,7 @@ class CodeAnalyzer(LazyModelMixin):
         for code_file in code_files:
             analyzed = self.analyze_code_file(code_file)
             analyzed = self.extract_important_snippets(analyzed)
+            analyzed = self.extract_signatures(analyzed)
             analyzed_files.append(analyzed)
         
         print(f"Code analysis complete: analyzed {len(analyzed_files)} file(s)")

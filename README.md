@@ -1,6 +1,6 @@
 # Paper Generator
 
-Automatic academic paper generator using local language and embedding models via LM Studio.
+Automated academic paper generator using local language and embedding models via LM Studio.
 
 Work in progress, everything subject to change...
 
@@ -10,7 +10,7 @@ Work in progress, everything subject to change...
 2. **[Paper Search](phases/paper_search/)** — Automated literature review: searches, ranks, filters, and downloads relevant papers
 3. **[Hypothesis Generation](phases/hypothesis_generation/)** — Generates valid, testable research hypotheses
 4. **[Experimentation](phases/experimentation/)** — Automated experimentation: generates, executes, debugs, and validates scientific experiments
-5. **[Paper Writing](phases/paper_writing/)** — Iterative writing pipeline: drafts, critiques, searches for evidence, and improves each section
+5. **[Paper Writing](phases/paper_writing/)** — Drafts, critiques, searches for evidence, and improves each section
 6. **[LaTeX Generation](phases/latex_generation/)** — Converts the draft to a compiled LaTeX PDF
 
 ## Requirements

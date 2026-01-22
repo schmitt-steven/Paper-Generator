@@ -395,7 +395,7 @@ class PaperWriter:
             sections.extend([
                 format_if_present("Hypothesis", experiment.hypothesis.description),
                 format_if_present("Success criteria", experiment.hypothesis.success_criteria),
-                format_if_present("Experiment plan", experiment.experiment_plan),
+                format_if_present("Experiment code", experiment.experiment_code),
                 format_if_present("Key execution output", experiment.execution_result.stdout),
                 format_if_present("Verdict", experiment.hypothesis_evaluation.verdict),
                 format_if_present("Verdict reasoning", experiment.hypothesis_evaluation.reasoning),

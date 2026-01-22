@@ -12,6 +12,7 @@ from phases.paper_search.paper import Paper
 from phases.paper_writing.data_models import Section, SectionCritique
 from phases.paper_writing.section_guidelines import SectionGuidelinesLoader
 from phases.context_analysis.user_requirements import UserRequirements
+from phases.latex_generation.bibliography import extract_citation_keys_from_markdown, create_paper_mapping
 from utils.llm_utils import remove_thinking_blocks
 from settings import Settings
 import lmstudio as lms
@@ -46,6 +47,31 @@ class SectionCritic:
         
         critique = SectionCritique(**response.parsed)
         
+        # --- VERIFY CITATIONS ---
+        # Extract all citation keys used in the draft
+        used_keys = extract_citation_keys_from_markdown(draft_text)
+        
+        # Create mapping of all valid keys (citation_key and bibtex keys)
+        paper_mapping = create_paper_mapping(papers)
+        valid_keys = set(paper_mapping.keys())
+        
+        # Identify hallucinated keys
+        hallucinated_keys = used_keys - valid_keys
+        
+        # If hallucinations found, force a correction
+        if hallucinated_keys:
+            bad_keys_str = ", ".join(sorted(hallucinated_keys))
+            print(f"[SectionCritic] DETECTED HALLUCINATED CITATIONS: {bad_keys_str}")
+            
+            critique_msg = (
+                f"CRITICAL VIOLATION: The draft contains citations that do not exist in the provided evidence: {bad_keys_str}. "
+                f"You MUST remove these citations or replace them with the correct keys from the [AVAILABLE PAPERS] list. "
+                "Do NOT include any citations that are not explicitly provided."
+            )
+            
+            # Prepend to improvements
+            critique.improvements = f"{critique_msg}\n\n{critique.improvements}"
+
         # Enforce max queries limit
         if len(critique.search_queries) > max_queries:
             critique.search_queries = critique.search_queries[:max_queries]
@@ -143,7 +169,7 @@ CRITICAL: Check if the draft satisfies these user requirements. If not, add spec
             
             items.append(f"""[{citation_key}]
 Title: {paper.title}
-Abstract: {abstract[:500]}{"..." if len(abstract) > 500 else ""}
-Conclusion: {conclusion[:300]}{"..." if len(conclusion) > 300 else ""}""")
+Abstract: {abstract[:300]}{"..." if len(abstract) > 300 else ""}
+Conclusion: {conclusion[:500]}{"..." if len(conclusion) > 500 else ""}""")
         
         return "\n\n".join(items)

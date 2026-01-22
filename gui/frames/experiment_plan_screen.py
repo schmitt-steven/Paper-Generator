@@ -100,6 +100,11 @@ class CollapsiblePlanCard(CardBorderFrame):
             padx=12,
             pady=10
         )
+        
+        v_scrollbar = ttk.Scrollbar(self.content_frame, orient="vertical", command=self.text_widget.yview)
+        self.text_widget.configure(yscrollcommand=v_scrollbar.set)
+        v_scrollbar.pack(side="right", fill="y")
+        
         self.text_widget.pack(side="left", fill="both", expand=True)
         
         self.text_widget.insert("1.0", self.content)

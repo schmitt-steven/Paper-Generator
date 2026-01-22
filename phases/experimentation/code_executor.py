@@ -9,7 +9,7 @@ from phases.experimentation.experiment_state import ExecutionResult
 class CodeExecutor:
     """Execution wrapper for running Python code in subprocess."""
     
-    def __init__(self, default_timeout: int = 300):
+    def __init__(self, default_timeout: int = 600):
         self.default_timeout = default_timeout
     
     def execute_file(

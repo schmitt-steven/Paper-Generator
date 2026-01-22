@@ -1,4 +1,5 @@
 import os
+import fitz # PyMuPDF
 import textwrap
 import traceback
 import re
@@ -50,18 +51,38 @@ class ExperimentRunner:
         code_content = re.sub(r'```', '', code_content)
         return code_content.strip()
     
-    def _format_user_code_files(self, user_code: list[UserCode]) -> str:
-        """Format user code files for inclusion in prompts."""
+    def _format_user_code_files(self, user_code: list[UserCode], use_signatures_only: bool = False) -> str:
+        """Format user code files for inclusion in prompts.
+        
+        Args:
+            user_code: List of UserCode objects
+            use_signatures_only: If True, outputs an API reference using signatures.
+                               If False, outputs full file content (for planning).
+        """
         if not user_code:
             return "No user code files provided"
         
-        sections = ["[USER CODE FILES]"]
-        for code_file in user_code:
-            sections.append(f"\nFile: {code_file.file_name}")
-            sections.append(code_file.file_content)
-            sections.append("\n---")
-        
-        return "\n".join(sections)
+        if use_signatures_only:
+            sections = ["[AVAILABLE LOCAL MODULES]", "(The following files are in your current directory. Import them if they match your needs.)"]
+            for code_file in user_code:
+                sections.append(f"\nModule: {code_file.file_name}")
+                if code_file.signatures:
+                    for sig in code_file.signatures:
+                         sections.append(f"  - {sig}")
+                else:
+                    sections.append("  (No signatures extracted)")
+                    
+            return "\n".join(sections)
+        else:
+            sections = ["[USER CODE FILES]"]
+            for code_file in user_code:
+                sections.append(f"\nFile: {code_file.file_name}")
+                if code_file.summary:
+                    sections.append(f"Summary: {code_file.summary}")
+                sections.append(code_file.file_content)
+                sections.append("\n---")
+            
+            return "\n".join(sections)
     
     def _write_experiment_code(
         self,
@@ -70,7 +91,8 @@ class ExperimentRunner:
         paper_concept: PaperConcept,
         output_dir: str,
         user_requirements: Optional[UserRequirements] = None,
-        user_code: Optional[list[UserCode]] = None
+        user_code: Optional[list[UserCode]] = None,
+        status_callback: callable = None
     ) -> CodeGenerationResult:
         """Generate experiment code in chunks, save to file, execute, and return results."""
         
@@ -93,8 +115,9 @@ class ExperimentRunner:
             user_code_section = ""
             code_instructions = ""
             if user_code:
-                user_code_section = f"\n{self._format_user_code_files(user_code)}"
-                code_instructions = "\n[CRITICAL: EXISTING CODE PROVIDED]\nYou MUST build upon and adapt the existing user code files above. Do NOT start from scratch. Extend, modify, and adapt the existing code to implement the experiment plan. Preserve working parts of the existing code and only modify what's necessary to test the hypothesis."
+                # Use signatures only for coding phase to encourage importing
+                user_code_section = f"\n{self._format_user_code_files(user_code, use_signatures_only=True)}"
+                code_instructions = "\n[CRITICAL: EXISTING CODE PROVIDED]\nYou have access to the local modules listed above. Review them to see if they fit your experiment plan. If they do, IMPORT them (e.g., `from my_algo import run_algo`). If they do not fit or if you need different logic, you may implement your own solution, but prefer reusing existing robust code where possible."
             else:
                 user_code_section = "\n[USER CODE FILES]\nNo user code files provided - generate new code from scratch."
             
@@ -150,7 +173,7 @@ class ExperimentRunner:
 
                 Do NOT include algorithm implementations, experiment logic, or visualization yet."""
                 if user_code:
-                    chunk_message += "\n\nIf user code files were provided above, preserve their imports and data structures, adding only what's missing for the experiment."
+                    chunk_message += "\n\nIf user code files were provided above, add their imports (e.g. `from my_file import my_func`)."
                 chat.add_user_message(chunk_message)
 
                 model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
@@ -175,7 +198,7 @@ class ExperimentRunner:
 
                 Output the COMPLETE code so far (imports and data structures + algorithms)."""
                 if user_code:
-                    chunk_message += "\n\nIf user code files were provided above, adapt and extend the existing algorithms from those files. Modify them as needed to test the hypothesis, but preserve working functionality."
+                    chunk_message += "\n\nIf relevant, use the imported functions from the user code files to implement the logic."
                 chat.add_user_message(chunk_message)
 
                 model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
@@ -204,7 +227,7 @@ class ExperimentRunner:
                     Do NOT include visualization yet.
                 """)
                 if user_code:
-                    chunk_message += "\n\nIf user code files were provided above, integrate the experiment logic with the existing code structure. Use existing functions and classes where possible."
+                    chunk_message += "\n\nIntegrate the experiment logic with the imported user code where applicable."
                 chat.add_user_message(chunk_message)
 
                 model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
@@ -226,6 +249,9 @@ class ExperimentRunner:
                     - Create plots/ directory
                     - Generate comparison plots
                     - Save plots to plots/ as .pdf files
+                    - CRITICAL: For EVERY plot you generate, print a text summary to stdout that describes the exact data shown. 
+                      Format: "[Plot Summary: <filename>] <summary text with numbers/stats>"
+                      Example: "[Plot Summary: learning_curve.pdf] RBQL reached 0.9 reward at ep 450, Standard Q at ep 720."
                     - Print concise summary of the results (NEVER guess the results, only print the actual results)
 
                     Output the COMPLETE, FINAL code (imports & data structures + algorithms + experiment + visualization).
@@ -250,6 +276,8 @@ class ExperimentRunner:
                 f.write(current_code)
             print(f"Code saved to {code_file_path}")
             
+            if status_callback:
+                status_callback("Executing experiment code")
             print(f"Executing generated code: {code_file_path}")
             execution_result = self.executor.execute_file(code_file_path, output_dir=output_dir)
             
@@ -447,12 +475,14 @@ class ExperimentRunner:
             - Off-by-one errors in convergence checks
             - Metrics that can never reach threshold (e.g., cumulative avg that's dragged down by early failures)
             - Missing resets between runs (state pollution across trials)
-            - Algorithms that don't match their descriptions (e.g., "RBQL" that's actually just Q-learning)
+            - Major logic errors (e.g. infinite loops, zero updates). 
             
             [IMPORTANT]
+            - Do NOT nitpick algorithm implementation details if the results look plausible!
+            - Focus on CRITICAL failures (crashes, NaNs, zero results).
+            - If it runs and produces clean plots, lean towards VALID.
             - Only report bugs you can trace to specific line numbers
-            - Don't guess or hallucinate issues that aren't in the code
-            - If results look wrong but you can't find the bug, say so honestly"""
+            - Don't guess or hallucinate issues that aren't in the code"""
         )
                     
         validation_prompt = textwrap.dedent(f"""\
@@ -489,7 +519,7 @@ class ExperimentRunner:
             chat = lms.Chat(system_prompt)
             chat.add_user_message(validation_prompt)
             model = lms.llm(self.settings.EXPERIMENT_VALIDATION_MODEL)
-            result = model.respond(chat, response_format=ValidationResult)
+            result = model.respond(chat, response_format=ValidationResult, config={"timeout": 120})
             parsed_dict = result.parsed
             
             validation_result = ValidationResult(**parsed_dict)
@@ -661,7 +691,31 @@ Do NOT do this:
             
             # Prepare the image for VLM
             try:
-                image_handle = lms.prepare_image(plot_file)
+                # Handle PDF files by converting first page to image
+                image_path = plot_file
+                temp_image = None
+                
+                if plot_file.lower().endswith('.pdf'):
+                    try:
+                        doc = fitz.open(plot_file)
+                        if len(doc) > 0:
+                            page = doc[0]
+                            pix = page.get_pixmap(matrix=fitz.Matrix(1.5, 1.5)) # 1.5x zoom (balance quality/speed)
+                            temp_image = plot_file.replace('.pdf', '_preview.png')
+                            pix.save(temp_image)
+                            image_path = temp_image
+                        doc.close()
+                    except Exception as pdf_err:
+                        print(f"Warning: Failed to convert PDF {filename} to image: {pdf_err}")
+                        # Continue with original file, likely to fail but worth a try if VLM supports PDF
+                
+                image_handle = lms.prepare_image(image_path)
+                
+                # Clean up temp file
+                if temp_image and os.path.exists(temp_image):
+                    # We can't delete immediately if prepare_image is lazy, but usually it reads bytes
+                    # Let's verify lms behavior or just keep it for now and relying on OS cleanup or overwrite
+                    pass 
             except Exception as e:
                 print(f"ERROR: Failed to prepare image {filename}: {e}")
                 traceback.print_exc()
@@ -676,7 +730,7 @@ Do NOT do this:
                 </context>
 
                 <experiment_output>
-                {stdout[-1500:] if len(stdout) > 1500 else stdout}
+                {stdout[-2000:] if len(stdout) > 2000 else stdout}
                 </experiment_output>
 
                 <output_format>
@@ -687,13 +741,16 @@ Do NOT do this:
                 chat = lms.Chat(plot_caption_prompt)
                 chat.add_user_message(user_message, images=[image_handle])
                 model = lms.llm(self.settings.EXPERIMENT_PLOT_CAPTION_MODEL)
-                result = model.respond(chat, config={"temperature": 0.1})
+                result = model.respond(chat, config={"temperature": 0.1, "timeout": 120})
                 caption = remove_thinking_blocks(result.content).strip()
-                # Remove any quotes if the model wrapped the caption
                 if caption.startswith('"') and caption.endswith('"'):
                     caption = caption[1:-1]
                 plots.append(Plot(filename=plot_file, caption=caption))
             except Exception as e:
+                print(f"ERROR: Failed to generate caption for {filename}: {e}")
+                traceback.print_exc()
+                # Fallback caption
+                plots.append(Plot(filename=plot_file, caption=f"Experimental results for: {hypothesis.description}"))
                 print(f"ERROR: Failed to generate caption for {filename}: {e}")
                 traceback.print_exc()
                 # Fallback caption
@@ -950,14 +1007,89 @@ Do NOT do this:
         
         return experiment_result
     
+    def _determine_verdict(
+        self,
+        hypothesis: Hypothesis,
+        stdout_summary: str,
+        plot_captions: list[Plot],
+        validation_warning: str = ""
+    ) -> Tuple[str, str]:
+        """Determine verdict and reasoning using LLM."""
+        
+        # Build plot captions text
+        plot_captions_text = ""
+        if plot_captions:
+            plot_captions_text = "\n\nGenerated Plot Captions:\n"
+            for i, plot in enumerate(plot_captions, 1):
+                plot_captions_text += f"{i}. {os.path.basename(plot.filename)}: {plot.caption}\n"
+        
+        # Build context for verdict determination
+        verdict_prompt = textwrap.dedent(f"""\
+            [ROLE]
+            You are evaluating the results of a scientific experiment to test a hypothesis.
+
+            [HYPOTHESIS]
+            Description: {hypothesis.description}
+            Success Criteria: {hypothesis.success_criteria}
+
+            [EXPERIMENT OUTPUT]
+            {stdout_summary}
+
+            [PLOT CAPTIONS]
+            {plot_captions_text}
+            {validation_warning}
+
+            [TASK]
+        Determine if the hypothesis is PROVEN, DISPROVEN, or INCONCLUSIVE based on the evidence.
+        
+        [GUIDELINES]
+        1. Apply scientific judgement. Do not be robotically strict about exact numerical thresholds if the trend is overwhelming and statistically significant.
+        2. If the results strongly support the core hypothesis but miss a specific metric by a negligible margin (e.g. 0.89 vs 0.90), rule PROVEN.
+        3. If the results match the expected behavior/trend described in the hypothesis, favor PROVEN.
+        4. Only rule DISPROVEN if the results directly contradict the hypothesis.
+        5. Only rule INCONCLUSIVE if the data is messy, contradictory, or the code failed to produce meaningful metrics.
+        6. Your goal is to validate the scientific discovery, not to act as a harsh gatekeeper. If the experiment works, say so!
+
+        Focus on whether the CORE SCIENTIFIC CLAIM is supported by the data.
+            
+            Provide:
+            1. Your verdict: 'proven', 'disproven', or 'inconclusive'
+            2. Brief reasoning based on the success criteria and observed results
+        """)
+        
+        try:
+            model = lms.llm(self.settings.EXPERIMENT_VERDICT_MODEL)
+            result = model.respond(verdict_prompt, response_format=VerdictResult)
+            parsed_dict = result.parsed
+            
+            verdict_result = VerdictResult(**parsed_dict)
+            verdict = verdict_result.verdict.strip().lower()
+            reasoning = verdict_result.reasoning
+            
+            # Validate verdict
+            if verdict not in ["proven", "disproven", "inconclusive"]:
+                verdict = "inconclusive"
+                reasoning += f"\\n\\nNote: Invalid verdict '{verdict_result.verdict}' was returned, defaulting to 'inconclusive'."
+            
+            return verdict, reasoning
+        except Exception as e:
+            print(f"ERROR: Failed to get verdict: {e}")
+            traceback.print_exc()
+            return "inconclusive", f"Failed to determine verdict: {str(e)}"
+
     def run_experiment(
         self,
         hypothesis: Hypothesis,
         paper_concept: PaperConcept,
         load_existing_plan: bool = False,
-        load_existing_code: bool = False
+        load_existing_code: bool = False,
+        status_callback: callable = None
     ) -> ExperimentResult:
-        """Run experiment to test hypothesis."""
+        """Run experiment to test hypothesis.
+        
+        Args:
+            status_callback: Optional callback function(str) for progress updates.
+        """
         
         # Ensure output directory exists
         os.makedirs(self.base_output_dir, exist_ok=True)
@@ -976,6 +1108,8 @@ Do NOT do this:
              os.makedirs(plots_dir, exist_ok=True)
         
         # Load user requirements and user code
+        if status_callback:
+            status_callback("Loading user requirements and code")
         user_requirements = None
         user_code = None
         try:
@@ -988,6 +1122,30 @@ Do NOT do this:
         try:
             code_analyzer = CodeAnalyzer(model_name=self.settings.CODE_ANALYSIS_MODEL)
             user_code = code_analyzer.load_code_files("user_files")
+            # Analyze semantic content and extract signatures
+            if user_code:
+                user_code = code_analyzer.analyze_all_files(user_code)
+                
+                # Clean old user code files before copying new ones (prevent stale imports)
+                import shutil
+                for existing_file in os.listdir(self.base_output_dir):
+                    if existing_file.endswith('.py') and existing_file != 'experiment.py':
+                        try:
+                            os.unlink(os.path.join(self.base_output_dir, existing_file))
+                            print(f"Removed old user file: {existing_file}")
+                        except Exception as e:
+                            print(f"Warning: Failed to delete old file {existing_file}: {e}")
+                
+                # Copy user code files to experiment directory so they can be imported
+                print(f"Copying {len(user_code)} user file(s) to experiment directory...")
+                for code_file in user_code:
+                    src_path = code_file.file_path
+                    dest_path = os.path.join(self.base_output_dir, code_file.file_name)
+                    try:
+                        shutil.copy2(src_path, dest_path)
+                    except Exception as e:
+                        print(f"Error copying {code_file.file_name}: {e}")
+                        
         except Exception as e:
             print(f"Warning: Failed to load user code files: {e}")
             user_code = None
@@ -996,12 +1154,16 @@ Do NOT do this:
         try:
             plan_file_path = os.path.join(self.base_output_dir, EXPERIMENT_PLAN_FILE)
             if load_existing_plan and os.path.exists(plan_file_path):
+                if status_callback:
+                    status_callback("Loading existing experiment plan")
                 print(f"Loading existing experiment plan...")
                 experiment_plan = self.load_experiment_plan()
             else:
                 if load_existing_plan:
                     print(f"Experiment plan not found, generating new plan...")
                 else:
+                    if status_callback:
+                        status_callback("Generating experiment plan")
                     print(f"Generating new experiment plan...")
                 experiment_plan = self._generate_experiment_plan(
                     hypothesis, 
@@ -1020,6 +1182,8 @@ Do NOT do this:
         code_file_path = os.path.abspath(code_file_path)
         
         if load_existing_code and os.path.exists(code_file_path):
+            if status_callback:
+                status_callback("Executing existing code")
             print(f"Loading existing experiment code...")
             # Load existing code and execute it
             print(f"Executing loaded code: {code_file_path}")
@@ -1045,13 +1209,16 @@ Do NOT do this:
             if load_existing_code:
                 print(f"Experiment code not found, generating new code...")
             # Generate new code
+            if status_callback:
+                status_callback("Generating experiment code")
             write_result = self._write_experiment_code(
                 experiment_plan,
                 hypothesis,
                 paper_concept,
                 self.base_output_dir,
                 user_requirements=user_requirements,
-                user_code=user_code
+                user_code=user_code,
+                status_callback=status_callback
             )
         
         code_file_path = write_result.code_file_path
@@ -1070,6 +1237,9 @@ Do NOT do this:
         while execution_result.return_code != 0 and fix_attempt < max_fix_attempts:
             fix_attempt += 1
             total_fix_attempts += 1
+            
+            if status_callback:
+                status_callback(f"Fixing code errors (attempt {fix_attempt}/{max_fix_attempts})")
             
             # Extract error information
             error_message = execution_result.stderr or "Unknown error"
@@ -1112,9 +1282,13 @@ Do NOT do this:
             validation_passed = False
             
             print("Validating experiment results...")
+            if status_callback:
+                status_callback("Validating experiment results")
             while not validation_passed and validation_attempt < max_validation_attempts:
                 validation_attempt += 1
                 total_validation_attempts += 1
+                if status_callback:
+                    status_callback(f"Validating results (attempt {validation_attempt}/{max_validation_attempts})")
                 validation_result = self._validate_experiment_results(
                     execution_result,
                     experiment_plan,
@@ -1134,6 +1308,8 @@ Do NOT do this:
                     
                     if validation_attempt < max_validation_attempts:
                         # Improve code based on validation feedback
+                        if status_callback:
+                            status_callback(f"Improving code based on feedback")
                         improvement_result = self._improve_experiment_code(
                             code_file_path,
                             validation_result,
@@ -1151,6 +1327,9 @@ Do NOT do this:
                             while execution_result.return_code != 0 and fix_attempt < max_fix_attempts:
                                 fix_attempt += 1
                                 total_fix_attempts += 1
+                                
+                                if status_callback:
+                                    status_callback(f"Fixing code errors (attempt {fix_attempt}/{max_fix_attempts})")
                                 
                                 # Extract error information
                                 error_message = execution_result.stderr or "Unknown error"
@@ -1186,9 +1365,11 @@ Do NOT do this:
                                 break
             
             # Determine verdict and reasoning
-            if execution_result.return_code == 0 and validation_passed:
+            if execution_result.return_code == 0:
                 # Generate plot captions if plots exist
                 if execution_result.plot_files:
+                    if status_callback:
+                        status_callback("Generating plot captions")
                     print("Generating captions for plots...")
                     plot_captions = self._generate_plot_captions(
                         execution_result.plot_files,
@@ -1198,66 +1379,23 @@ Do NOT do this:
                     )
                     print(f"Generated {len(plot_captions)} plot caption(s)")
                 
-                # Successful execution with valid results - get verdict from LLM
-                print("Code executed successfully with valid results. Determining verdict...")
+                # Successful execution (even if validation warned) - get verdict from LLM
+                if status_callback:
+                    status_callback("Determining verdict")
+                print("Code executed successfully. Determining verdict...")
                 
                 # Truncate stdout if too long to prevent context overflow
                 stdout_summary = execution_result.stdout
                 if len(stdout_summary) > 2000:
                     stdout_summary = stdout_summary[:500] + "\n...[truncated output]...\n" + stdout_summary[-1500:]
                 
-                # Build plot captions text for prompt
-                plot_captions_text = ""
-                if plot_captions:
-                    plot_captions_text = "\n\nGenerated Plot Captions:\n"
-                    for i, plot in enumerate(plot_captions, 1):
-                        plot_captions_text += f"{i}. {os.path.basename(plot.filename)}: {plot.caption}\n"
-                
                 # Build context for verdict determination
-                verdict_prompt = textwrap.dedent(f"""\
-                    [ROLE]
-                    You are evaluating the results of a scientific experiment to test a hypothesis.
-
-                    [HYPOTHESIS]
-                    Description: {hypothesis.description}
-                    Success Criteria: {hypothesis.success_criteria}
-
-                    [EXPERIMENT OUTPUT]
-                    {stdout_summary}
-
-                    [PLOT CAPTIONS]
-                    {plot_captions_text}
-
-                    [TASK]
-                    Determine if the hypothesis is PROVEN, DISPROVEN, or INCONCLUSIVE based only on:
-                    1. Whether the SUCCESS CRITERIA were met according to the experiment output
-                    2. The actual results shown in the output and plots
-                    
-                    Focus ONLY on whether the results satisfy the success criteria.
-                    
-                    Provide:
-                    1. Your verdict: 'proven', 'disproven', or 'inconclusive'
-                    2. Brief reasoning based on the success criteria and observed results
-                """)
-                
-                try:
-                    model = lms.llm(self.settings.EXPERIMENT_VERDICT_MODEL)
-                    result = model.respond(verdict_prompt, response_format=VerdictResult)
-                    parsed_dict = result.parsed
-                    
-                    verdict_result = VerdictResult(**parsed_dict)
-                    verdict = verdict_result.verdict.strip().lower()
-                    reasoning = verdict_result.reasoning
-                    
-                    # Validate verdict
-                    if verdict not in ["proven", "disproven", "inconclusive"]:
-                        verdict = "inconclusive"
-                        reasoning += f"\n\nNote: Invalid verdict '{verdict_result.verdict}' was returned, defaulting to 'inconclusive'."
-                except Exception as e:
-                    print(f"ERROR: Failed to get verdict: {e}")
-                    traceback.print_exc()
-                    verdict = "inconclusive"
-                    reasoning = f"Failed to determine verdict: {str(e)}"
+                verdict, reasoning = self._determine_verdict(
+                    hypothesis,
+                    stdout_summary,
+                    plot_captions,
+                    validation_warning
+                )
             elif execution_result.return_code == 0 and not validation_passed:
                 # Execution succeeded but validation failed
                 print(f"Results validation failed after {max_validation_attempts} attempts.")

@@ -505,7 +505,7 @@ class ExperimentResultsScreen(BaseFrame):
             return
         
         path = str(self.current_code_path.absolute())
-        print(f"Opening {path} in editor...")
+        print(f"Opening {path} in editor")
         
         try:
             if platform.system() == 'Windows':
@@ -522,7 +522,7 @@ class ExperimentResultsScreen(BaseFrame):
         if not self.current_code_path or not self.current_code_path.exists():
             return
              
-        print(f"Showing {self.current_code_path} in explorer...")
+        print(f"Showing {self.current_code_path} in explorer")
         path = os.path.abspath(self.current_code_path)
         path = os.path.normpath(path)
         
@@ -550,6 +550,17 @@ class ExperimentResultsScreen(BaseFrame):
                 self.after(0, lambda: popup.update_status("Executing code"))
                 
                 runner = ExperimentRunner()
+                
+                # Clear old plots before execution
+                plots_dir = os.path.join(runner.base_output_dir, "plots")
+                if os.path.exists(plots_dir):
+                    for file in os.listdir(plots_dir):
+                        file_path = os.path.join(plots_dir, file)
+                        try:
+                            if os.path.isfile(file_path):
+                                os.unlink(file_path)
+                        except Exception as e:
+                            print(f"Warning: Failed to delete {file_path}: {e}")
                 
                 code_file_abs = str(self.current_code_path.absolute())
                 
@@ -600,50 +611,30 @@ class ExperimentResultsScreen(BaseFrame):
                 verdict = "inconclusive"
                 reasoning = ""
                 
-                if validation_result.is_valid:
-                    # Build plot captions text
-                    plot_captions_text = ""
-                    if plot_captions:
-                        plot_captions_text = "\n\nGenerated Plot Captions:\n"
-                        for i, plot in enumerate(plot_captions, 1):
-                            plot_captions_text += f"{i}. {Path(plot.filename).name}: {plot.caption}\n"
-                    
-                    stdout_summary = execution_result.stdout
-                    if len(stdout_summary) > 2000:
-                        stdout_summary = stdout_summary[:500] + "\n...[truncated]...\n" + stdout_summary[-1500:]
-                    
-                    verdict_prompt = textwrap.dedent(f"""\
-                        [ROLE]
-                        You are evaluating the results of a scientific experiment to test a hypothesis.
+                # Truncate stdout
+                stdout_summary = execution_result.stdout
+                if len(stdout_summary) > 2000:
+                    stdout_summary = stdout_summary[:500] + "\n...[truncated output]...\n" + stdout_summary[-1500:]
+                
+                # Check validation status for warning
+                validation_warning = ""
+                if not validation_result.is_valid:
+                    validation_warning = f"\n[VALIDATION WARNING]\nThe code validator flagged potential issues: {validation_result.reasoning}\nReview the results carefully to ensure they are valid despite this warning.\n"
+                
+                # Determine verdict using shared Runner logic
+                # (Passing plot_captions directly as list of Plot objects)
+                verdict, reasoning = runner._determine_verdict(
+                    hypothesis,
+                    stdout_summary,
+                    plot_captions,
+                    validation_warning
+                )
+                
+                # Create result object (mocking lms parsed result for compatibility or just creating new)
+                # The existing code expects verdict_result object
+                verdict_result = VerdictResult(verdict=verdict, reasoning=reasoning)
 
-                        [HYPOTHESIS]
-                        Description: {hypothesis.description}
-                        Rationale: {hypothesis.rationale}
-                        Success Criteria: {hypothesis.success_criteria}
 
-                        [STDOUT_OUTPUT]
-                        {stdout_summary}
-
-                        [PLOT_CAPTIONS]
-                        {plot_captions_text}
-
-                        [TASK]
-                        Based on the execution results and generated plots, provide:
-                        1. A concise reasoning about whether the hypothesis is proven, disproven, or inconclusive
-                        2. Your concise analysis of the results and observations of the experiment
-                        Then determine the verdict with a single word: 'proven', 'disproven', or 'inconclusive'.
-                    """)
-                    
-                    model = lms.llm(Settings.EXPERIMENT_VERDICT_MODEL)
-                    result = model.respond(verdict_prompt, response_format=VerdictResult)
-                    verdict_result = VerdictResult(**result.parsed)
-                    verdict = verdict_result.verdict.strip().lower()
-                    reasoning = verdict_result.reasoning
-                    
-                    if verdict not in ["proven", "disproven", "inconclusive"]:
-                        verdict = "inconclusive"
-                else:
-                    reasoning = f"Validation failed: {validation_result.reasoning}"
                 
                 # Load existing result to preserve some fields
                 experiment_code = ""
@@ -754,22 +745,34 @@ class ExperimentResultsScreen(BaseFrame):
         self.controller.next_screen()
 
     def on_regenerate(self):
-         if not tk.messagebox.askyesno("Regenerate", "Re-run the experiment from scratch?\nThis will generate and execute new code based on the current experiment plan."):
-              return
-         
-         popup = ProgressPopup(self.controller, "Regenerating Experiment")
-         def task():
-              try:
-                   self.after(0, lambda: popup.update_status("Regenerating..."))
-                   hypothesis = HypothesisBuilder.load_hypothesis(HYPOTHESES_FILE)
-                   concept = PaperConception.load_paper_concept("output/paper_concept.md")
-                   runner = ExperimentRunner()
-                   runner.run_experiment(hypothesis, concept, load_existing_plan=True, load_existing_code=False)
-                   self.after(0, lambda: self._on_rerun_success(popup))
-              except Exception as e:
-                   self.after(0, lambda err=str(e): popup.show_error(err))
-         threading.Thread(target=task, daemon=True).start()
+        if not tk.messagebox.askyesno("Regenerate", "Re-run the experiment from scratch?\nThis will generate and execute new code based on the current experiment plan."):
+            return
+        
+        popup = ProgressPopup(self.controller, "Regenerating Experiment")
+        
+        def task():
+            try:
+                self.after(0, lambda: popup.update_status("Loading context"))
+                hypothesis = HypothesisBuilder.load_hypothesis(HYPOTHESES_FILE)
+                concept = PaperConception.load_paper_concept("output/paper_concept.md")
+                
+                def status_callback(status: str):
+                    self.after(0, lambda s=status: popup.update_status(s))
+                
+                runner = ExperimentRunner()
+                runner.run_experiment(
+                    hypothesis, 
+                    concept, 
+                    load_existing_plan=True, 
+                    load_existing_code=False,
+                    status_callback=status_callback
+                )
+                self.after(0, lambda: self._on_rerun_success(popup))
+            except Exception as e:
+                self.after(0, lambda err=str(e): popup.show_error(err))
+        
+        threading.Thread(target=task, daemon=True).start()
 
     def _on_rerun_success(self, popup):
-         popup.close()
-         self._load_and_display_results()
+        popup.close()
+        self._load_and_display_results()

@@ -3,116 +3,94 @@
 ---
 
 **Objective and Success Criteria:**  
-The objective is to empirically validate that Recursive Backwards Q-Learning (RBQL) converges to optimal policies significantly faster than standard Q-learning in deterministic, episodic environments. Success is defined as:  
-- RBQL achieving 90% of optimal cumulative reward in fewer episodes than standard Q-learning.  
-- RBQL’s learning curve showing steeper initial improvement and lower variance in convergence time across multiple runs.  
-- Statistical evidence (mean ± std) demonstrating superior sample efficiency of RBQL.
+The objective is to empirically validate that Recursive Backwards Q-Learning (RBQL) converges to optimal policies faster than standard Q-learning in deterministic, episodic environments. Success is defined as RBQL achieving an average cumulative reward ≥ 0.9 over a rolling window of 10 episodes in significantly fewer episodes and less wall-clock time than standard Q-learning, with statistical significance (p < 0.05) confirmed via Welch’s t-test.
 
 ---
 
 **Required Mathematical Formulas/Technical Details:**  
 - **Bellman Optimality Update (RBQL):**  
-  Upon reaching a terminal state, for each (s, a) in the backward BFS order:  
-  `Q(s, a) ← R(s, a) + γ · max_{a'} Q(s', a')` with α = 1 (no incremental averaging).  
-- **Standard Q-learning Update:**  
-  `Q(s, a) ← Q(s, a) + α · [R(s, a) + γ · max_{a'} Q(s', a') - Q(s, a)]` with α = 0.1 (fixed).  
-- **Epsilon-Greedy Exploration:**  
-  `ε = max(0.05, 1.0 - episode / 400)` for both algorithms (identical decay schedule).  
-- **State Space:** Discrete, deterministic mapping from continuous game state (ball x,y,vx,vy; racket position) to integer index (13×12×2×2×12 = 6,240 states).  
-- **Action Space:** {Left (-1), Right (+1)} → 2 discrete actions.  
-- **Terminal Condition:** Ball reaches bottom row (y=12); reward = +1 if racket overlaps ball, else -1.  
-- **Optimal Policy Benchmark:** Max achievable reward per episode = +1; optimal cumulative reward over N episodes = N (if always successful).
+  Upon reaching a terminal state, update all known Q-values in reverse topological order via BFS:  
+  `Q(s,a) = R(s,a) + γ * max(Q(s'))` with α=1 (no incremental averaging).  
+- **Standard Q-Learning Update:**  
+  `Q(s,a) ← (1−α) * Q(s,a) + α * [R(s,a) + γ * max(Q(s'))]` with α=0.1 (fixed).  
+- **Convergence Criterion:**  
+  First episode where rolling average of last 10 rewards ≥ 0.9.  
+- **Confidence Intervals:**  
+  95% CI for mean episodes and wall-clock time computed as: `mean ± t*(s/√n)` where t is critical value from t-distribution (df = n−1).  
+- **Welch’s t-test:**  
+  Used to compare means between RBQL and standard Q-learning (unequal variances, unequal sample sizes).  
 
 ---
 
 **Experiment Setup:**  
-- **Environment:** Modified Pong-like game from provided code (240×260 pixels, discrete state mapping via `getState()`).  
-- **Episodes:** 300 total episodes per run (sufficient for convergence; under 5 min runtime).  
-- **Runs:** 10 independent runs per algorithm to compute mean and std.  
-- **Hyperparameters (shared):**  
-  - γ = 0.95  
-  - ε decay: `ε = max(0.05, 1.0 - episode / 400)`  
-  - State space: 6,240 discrete states; 2 actions.  
-- **Baseline:** Standard Q-learning with α = 0.1, no persistent model, single-step TD updates.  
-- **RBQL:** Uses persistent transition model; backward BFS update on terminal state with α=1.  
-- **Initialization:** Both algorithms initialize Q-values to small random values (uniform [0, 0.01]).  
-- **Termination:** Episode ends when ball reaches y=12; next episode resets game state.  
+- **Environment:** Deterministic Breakout-like game (as in provided code) with discrete state space (`num_of_states = 13*12*2*2*12`), 2 actions (left/right).  
+- **Algorithms Compared:**  
+  - RBQL: Uses persistent transition model, backward BFS update on terminal state with α=1.  
+  - Standard Q-learning: Same state/action space, fixed α=0.1, no model storage or backward propagation.  
+- **Runs:** 30 independent runs per algorithm (seeds 0–29).  
+- **Episode Limit:** Max 500 episodes per run.  
+- **Termination Condition:** Convergence when rolling average of last 10 rewards ≥ 0.9 (or episode limit reached).  
+- **Exploration:** Epsilon-greedy with decay: `epsilon = max(0, 1.0 - episode/400)` (same for both).  
+- **Hardware:** Single-threaded CPU execution; no GPU used. Wall-clock time measured via `time.time()`.  
+- **Randomization:** Each run uses a unique seed for action selection and environment initialization.  
 
 ---
 
 **Metrics to Measure:**  
-1. **Cumulative Reward per Episode**: Running sum of rewards within each episode (used for learning curve).  
-2. **Episodes to Convergence**: First episode where cumulative reward ≥ 90% of theoretical maximum (i.e., ≥ 0.9 per episode on average over last 5 episodes).  
-3. **Mean and Standard Deviation** of convergence episodes across 10 runs for each algorithm.  
-4. **Final Policy Quality**: Average cumulative reward over last 10 episodes (to assess asymptotic performance).  
+1. **Episodes to Convergence:** Number of episodes until rolling average reward ≥ 0.9.  
+2. **Wall-clock Time to Convergence:** Total seconds elapsed until convergence (rendering MUST be disabled).  
+3. **Final Average Reward:** Mean reward over last 10 episodes (for robustness check).  
+4. **Statistical Significance:** Welch’s t-test p-value for both metrics.  
+5. **95% Confidence Intervals:** For mean episodes and time across 30 runs.  
 
 ---
 
 **Implementation Approach:**  
-- **Modify existing code to support both algorithms in a single run loop.**  
-  - Introduce `algorithm_mode = "RBQL"` or `"StandardQ"` as a switch.  
-  - For Standard Q-learning: replace `propagate_reward_rbql()` with single-step Q-update using α=0.1.  
-  - For RBQL: retain existing backward BFS update logic.  
-- **Remove Pygame rendering** to speed up execution (no visualization needed).  
-- **Store episode rewards and convergence metrics per run.**  
-- **Run 10 independent trials** (each with separate Q-table and model initialization).  
-- **For each run:**  
-  - Initialize Q-tables and (for RBQL) persistent model.  
-  - For episode in 1 to 300:  
-    - Simulate one episode using current policy (epsilon-greedy).  
-    - Record total reward for the episode.  
-    - Update Q-values according to algorithm mode.  
-  - Record: total episodes until convergence (if reached), final 10-episode avg reward.  
-- **Post-experiment:** Compute mean/std of convergence episodes and final rewards across runs.
+1. **Modify Existing Code to Support Comparison:**  
+   - Refactor `recursive_backwards_q_learning.py` into a reusable function that accepts an algorithm flag (`"RBQL"` or `"StandardQ"`).  
+   - Remove PyGame rendering to reduce overhead (keep only for debugging if needed; disable during runs).  
+   - Replace `file.write()` with structured logging of episode rewards.
+   - Crucial: The program must run in "Headless Mode" (no window, no drawing) to keep the execution time low.
+2. **Standard Q-Learning Implementation:** 
+   - Remove `PersistentModel` and `propagate_reward_rbql`.  
+   - Replace backward update with standard Q-update: `q_values[state][action_index] += 0.1 * (reward + gamma * np.max(q_values[next_state]) - q_values[state][action_index])`.  
+3. **Run Controller:**  
+   - Loop over 60 total runs (30 per algorithm), each with unique seed.  
+   - For each run:  
+     - Initialize Q-table (same random initialization per seed).  
+     - Simulate episodes until convergence or 500 episodes.  
+     - Record: episode count at convergence, wall-clock time, final 10-episode avg reward.  
+4. **Data Collection:**  
+   - Store results in JSON: `{"RBQL": [{"episodes": x, "time": y, "final_avg_reward": z}, ...], "StandardQ": [...]}`.  
+5. **Analysis & Visualization:**  
+   - Compute means, 95% CIs, and Welch’s t-test p-values.  
+   - Generate three plots:  
+     a) **Learning Curve:** Episode vs. mean reward (shaded 95% CI for each algorithm).  
+     b) **Efficiency Frontier:** Scatter plot of wall-clock time (x) vs. episodes to converge (y), with 60 points (30 per algorithm).  
+     c) **Significance Bar Chart:** Mean episodes to converge with 95% CI error bars and annotated p-value.  
+   - Save all plots as `.pdf`.  
+6. **Output:**  
+   - Print to stdout: concise summary of mean episodes, time, p-values, and conclusion.  
+   - Ensure total runtime < 5 minutes (disable rendering, reduce max episodes if needed).  
 
 ---
 
 **Output Requirements:**  
-- **JSON File (`results.json`):**  
-  ```json
-  {
-    "RBQL": {
-      "convergence_episodes": [23, 18, 25, ...],   // 10 values
-      "cumulative_rewards": [[r1_1, r1_2, ...], [r2_1, r2_2, ...]], // 10 runs × 300 episodes
-      "final_avg_reward": 0.94,
-      "mean_convergence": 21.5,
-      "std_convergence": 3.2
-    },
-    "StandardQ": {
-      "convergence_episodes": [145, 160, ...],
-      "cumulative_rewards": [...],
-      "final_avg_reward": 0.82,
-      "mean_convergence": 152.3,
-      "std_convergence": 18.7
-    }
-  }
-  ```  
-- **Stdout Output (concise):**  
-  ```
-  RBQL: Mean episodes to convergence = 21.5 ± 3.2
-  StandardQ: Mean episodes to convergence = 152.3 ± 18.7
-  RBQL is 6.9x faster to converge.
-  Final reward: RBQL=0.94, StandardQ=0.82
-  Hypothesis supported: RBQL converges significantly faster.
-  ```  
+- **JSON File (`results.json`):** Structured with keys `"RBQL"` and `"StandardQ"`, each containing list of dicts: `{"episodes": int, "time": float, "final_avg_reward": float}`.  
+- **Stdout Output:** One-line summary: e.g., “RBQL converged in 82.3±5.1 episodes vs StandardQ’s 247.6±18.9 (p=0.001). Time: 4.2s vs 12.8s.”  
 - **Plots (saved as .pdf):**  
-  1. **Learning Curve**: Episode (x) vs Cumulative Reward (y), with two lines (RBQL, StandardQ) and shaded ±1 std regions.  
-  2. **Convergence Speed Bar Chart**: Two bars (RBQL, StandardQ) showing mean episodes to 90% optimal performance with error bars (±std).  
+  - `learning_curve.pdf`  
+  - `efficiency_frontier.pdf`  
+  - `significance_bar_chart.pdf`  
 
 ---
 
-**Execution Constraints:**  
-- Total runtime ≤ 5 minutes: Achieved by disabling rendering, limiting to 300 episodes × 10 runs = 3,000 episodes.  
-- State space is fixed and small (6,240 states); BFS backward propagation is efficient due to limited branching.  
-- No parallelization; single-threaded but optimized for speed (no rendering, no I/O during episode).  
-- All computations use NumPy arrays; no heavy matrix operations.  
+**Constraints & Optimization for Speed:**  
+- Disable PyGame rendering (`pyg.display.set_mode()` skipped) to reduce per-episode overhead.  
+- Use `np.random.seed(seed)` at start of each run for reproducibility.  
+- Limit max episodes to 500 (sufficient for convergence in deterministic setting).  
+- Use vectorized operations where possible; avoid dictionary lookups in inner loops.  
+- Precompute state indices via `getState()` without object creation overhead.  
+- Run all 60 experiments sequentially in a single process (no multiprocessing).  
 
---- 
-
-**Adaptations to Provided Code:**  
-- Remove `pygame` rendering and display logic.  
-- Replace main game loop with a pure simulation loop over episodes and runs.  
-- Add `algorithm_mode` switch to toggle between RBQL and Standard Q-learning updates.  
-- Store rewards per episode per run in nested lists for later analysis.  
-- Add JSON serialization and matplotlib plotting at end of all runs.  
-- Ensure Q-tables are re-initialized for each run to avoid carryover effects.
+---
