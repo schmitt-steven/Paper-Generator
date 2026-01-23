@@ -4,23 +4,11 @@
     "year": null
   },
   {
-    "query": "Model-Based Q-Learning BFS",
+    "query": "Backward Induction Q-Learning",
     "year": null
   },
   {
-    "query": "Backward Induction Q-Update",
-    "year": null
-  },
-  {
-    "query": "survey Recursive Backwards Q-Learning",
-    "year": null
-  },
-  {
-    "query": "review Model-Based Q-Learning",
-    "year": null
-  },
-  {
-    "query": "survey Backward Induction RL",
+    "query": "Model-Based Q-Learning survey",
     "year": null
   },
   {
@@ -28,23 +16,35 @@
     "year": null
   },
   {
-    "query": "episodic MDP value propagation",
+    "query": "Topological value propagation",
     "year": null
   },
   {
-    "query": "topological Q-value update",
+    "query": "Recursive Backwards Q-Learning review",
     "year": null
   },
   {
-    "query": "Dyna-Q algorithm",
+    "query": "Dyna-Q",
     "year": null
   },
   {
-    "query": "Monte Carlo Q-learning",
+    "query": "Monte Carlo Tree Search",
     "year": null
   },
   {
-    "query": "value iteration MDP",
+    "query": "Value Iteration",
+    "year": null
+  },
+  {
+    "query": "Reverse state-transition graph",
+    "year": null
+  },
+  {
+    "query": "Breadth-first value update",
+    "year": null
+  },
+  {
+    "query": "Episodic transition model",
     "year": null
   },
   {
@@ -52,11 +52,11 @@
     "year": null
   },
   {
-    "query": "CliffWalking dataset",
+    "query": "CliffWalking task",
     "year": null
   },
   {
-    "query": "FrozenLake test suite",
+    "query": "FrozenLake dataset",
     "year": null
   }
 ]

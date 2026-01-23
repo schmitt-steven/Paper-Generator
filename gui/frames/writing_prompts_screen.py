@@ -4,9 +4,10 @@ Writing Prompts Screen - Display section writing prompts with collapsible cards 
 
 import tkinter as tk
 from tkinter import ttk
+import json
 from typing import Dict
 from pathlib import Path
-import re
+
 
 from ..base_frame import BaseFrame, CardBorderFrame
 from ..info_texts import WRITING_PROMPTS_INFO
@@ -18,7 +19,7 @@ from ..theme_colors import (
 )
 
 
-PROMPTS_FILE = Path("output/section_writing_prompts.md")
+PROMPTS_FILE = Path("output/section_writing_prompts.json")
 
 
 class CollapsiblePromptCard(CardBorderFrame):

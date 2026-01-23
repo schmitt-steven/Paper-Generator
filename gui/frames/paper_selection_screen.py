@@ -7,7 +7,6 @@ import re
 from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Callable, Any, Optional
-
 from ..base_frame import BaseFrame, ProgressPopup, create_gray_button
 from ..icons import HoverColor
 from ..info_texts import PAPER_SELECTION_INFO
@@ -19,11 +18,11 @@ from phases.paper_search.paper_ranking import PaperRanker
 from phases.paper_search.paper_filter import PaperFilter
 from phases.context_analysis.paper_conception import PaperConception, PaperConcept
 from phases.context_analysis.user_requirements import UserRequirements
-
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from utils.pdf_downloader import PDFDownloader
 from utils.pdf_converter import PDFConverter
 from settings import Settings
+from phases.paper_search.citation_gap_finder import CitationGapFinder
 
 
 HYPOTHESES_FILE = Path("output/hypothesis.md")
@@ -477,7 +476,36 @@ class PaperSelectionScreen(BaseFrame):
                 from utils.open_access_finder import find_open_access_pdfs
                 filtered_papers = find_open_access_pdfs(filtered_papers)
                 
-                # Step 5: Show results on screen
+                # Step 5: Citation Gap Analysis - find missing foundational papers
+                self.after(0, lambda: popup.update_status("Analyzing for missing foundational papers"))
+                gap_finder = CitationGapFinder()
+                research_context = f"{paper_concept.description}\n\nOpen Research Questions:\n{paper_concept.open_questions}"
+                suggestions = gap_finder.identify_missing_papers(
+                    papers=filtered_papers,
+                    research_context=research_context,
+                    model_name=Settings.LITERATURE_SEARCH_MODEL
+                )
+                
+                if suggestions:
+                    self.after(0, lambda n=len(suggestions): popup.update_status(f"Searching for {n} suggested foundational papers"))
+                    existing_ids = {p.id for p in filtered_papers} | {p.id for p in self.user_papers}
+                    foundational_papers = gap_finder.search_suggested_papers(suggestions, existing_ids)
+                    if foundational_papers:
+                        self.after(0, lambda: popup.update_status("Ranking foundational papers"))
+                        foundational_papers = ranker.rank_papers(
+                            papers=foundational_papers,
+                            context=ranking_context,
+                        )
+                        filtered_papers.extend(foundational_papers)
+                        print(f"Added {len(foundational_papers)} foundational papers to the collection")
+                        
+                        # Re-sort collection by relevance score
+                        filtered_papers.sort(
+                            key=lambda p: p.ranking.relevance_score if p.ranking else 0,
+                            reverse=True
+                        )
+                
+                # Step 6: Show results
                 self.after(0, lambda: self._on_search_complete(filtered_papers, popup))
                 
             except Exception as e:

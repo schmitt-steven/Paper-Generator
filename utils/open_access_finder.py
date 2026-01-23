@@ -73,6 +73,8 @@ def find_open_access_pdfs(papers: List[Paper], delay: float = 0.3) -> List[Paper
             paper.pdf_url = pdf_url
             found_count += 1
             print(f"  [FOUND via {source}] {paper.title[:45]}...")
+        else:
+            print(f"  [Not Found] {paper.title[:45]}...")
         
         # Rate limiting
         if i < len(papers_to_check) - 1:

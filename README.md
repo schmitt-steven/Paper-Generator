@@ -6,12 +6,13 @@ Work in progress, everything subject to change...
 
 ## Generation Process
 
-1. **[Context Analysis](phases/context_analysis/)** — Analyzes user code and requirements to generate a novel research concept
-2. **[Paper Search](phases/paper_search/)** — Automated literature review: searches, ranks, filters, and downloads relevant papers
-3. **[Hypothesis Generation](phases/hypothesis_generation/)** — Generates valid, testable research hypotheses
-4. **[Experimentation](phases/experimentation/)** — Automated experimentation: generates, executes, debugs, and validates scientific experiments
-5. **[Paper Writing](phases/paper_writing/)** — Drafts, critiques, searches for evidence, and improves each section
-6. **[LaTeX Generation](phases/latex_generation/)** — Converts the draft to a compiled LaTeX PDF
+The entire process consists of 6 phases:
+1. **[Context Analysis](phases/context_analysis/)** - Analyzes user code and requirements to generate a novel research concept
+2. **[Paper Search](phases/paper_search/)** - Automated literature review: searches (via [Semantic Scholar](https://www.semanticscholar.org/), [arXiv](https://arxiv.org/), [Unpaywall](https://unpaywall.org/)), ranks, filters, and downloads relevant papers
+3. **[Hypothesis Generation](phases/hypothesis_generation/)** - Generates valid, testable research hypotheses
+4. **[Experimentation](phases/experimentation/)** - Automated experimentation: generates, executes, debugs, and validates scientific experiments
+5. **[Paper Writing](phases/paper_writing/)** - Drafts, critiques, searches for evidence, and improves each section
+6. **[LaTeX Generation](phases/latex_generation/)** - Converts the draft to a compiled LaTeX PDF
 
 ## Requirements
 

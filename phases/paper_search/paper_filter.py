@@ -192,8 +192,7 @@ class PaperFilter:
                 abstract = paper.summary or "No abstract available"
                 papers_text += f"<paper_{i}>\n{title}\n{abstract}\n</paper_{i}>\n\n"
             
-            prompt = f"""TASK:
-                You are selecting papers for a research literature review. DEFAULT: KEEP EVERYTHING unless it's obviously wrong.
+            prompt = f"""You are selecting papers for a research literature review. DEFAULT: KEEP EVERYTHING unless it's obviously wrong.
 
                 RESEARCH TOPIC:
                 {research_context}
@@ -201,24 +200,25 @@ class PaperFilter:
                 PAPERS TO EVALUATE:
                 {papers_text}
 
-                YOUR DEFAULT DECISION: KEEP the paper. Only reject if it's OBVIOUSLY from a completely unrelated field.
+                YOUR OBJECTIVE: Filter out IRRELEVANT NOISE, but keep all potentially useful papers.
 
-                KEEP these (give them a spot):
-                - ANY paper directly addressing the research topic or its core methods
-                - ANY survey or review paper covering related areas
-                - ANY benchmark or evaluation paper for methods in this domain
-                - ANY theoretical/foundational paper that informs the research topic
-                - ANY paper that could possibly be cited in a Related Work section
-                - When in doubt, KEEP IT
+                MANDATORY: KEEP the paper if it falls into ANY of these categories:
+                1. [Direct Match] Directly addresses the research topic.
+                2. [Foundational] Discusses the core algorithms or theories used in the topic (e.g. if topic is "Q-Learning for Grid", KEEP all "Q-Learning", "RL", and "MDP" papers).
+                3. [Methodological] Proposes improvements to the methods relevant to the topic.
+                4. [Contextual] Surveys, reviews, or benchmarks in the general field.
+                5. [Related Work] Could be cited as background material.
 
-                REMOVE ONLY these (truly obvious garbage):
-                - Papers from completely unrelated application domains with no methodological connection
-                - Pure domain-specific papers (e.g., clinical trials, material properties, ecological surveys) that don't use any computational or analytical methods relevant to the research topic
-                - Papers where the field overlap is purely superficial (e.g., uses a keyword but in a completely different context)
+                REMOVE ONLY if the paper is:
+                - Completely unrelated in BOTH method and application (e.g. a paper about "Nursing Ethics" when the topic is "Q-Learning").
+                - A specific application of a different method to a different problem.
+                - Purely superficially related (keywords match but meaning is different).
 
-                If a paper's methods, theory, or contributions could reasonably support the research topic above - KEEP IT.
+                CRITICAL: Do NOT remove papers just because they are "general" or "theoretical". Foundational papers are HIGHLY VALUABLE.
 
-                Return the paper numbers (1-{len(batch)}) that EARN a spot (should be MOST of them)."""
+                When in doubt: KEEP THE PAPER.
+
+                Return the paper numbers (1-{len(batch)}) that earn a spot (should be MOST of them)."""
 
             try:
                 response = model.respond(

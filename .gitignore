@@ -38,7 +38,7 @@ ENV/
 
 old_code/
 TODO.md
-
+settings.py
 
 # Logs
 *.log

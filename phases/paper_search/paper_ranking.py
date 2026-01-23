@@ -1,3 +1,4 @@
+import lmstudio as lms
 from typing import List, Dict
 import numpy as np
 from datetime import datetime
@@ -34,6 +35,7 @@ class PaperRanker(LazyEmbeddingMixin):
             return []
         
         print(f"Ranking {len(papers)} papers...")
+        self._embedding_model = lms.embedding_model(self.embedding_model_name)
         
         print("Embedding context...")
         context_emb = self.embedding_model.embed(context)
