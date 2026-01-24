@@ -55,7 +55,7 @@ class ResultScreen(BaseFrame):
             command=self._open_pdf,
             state="normal"
         )
-        view_btn.grid(row=0, column=0, padx=5, sticky="ew")
+        view_btn.grid(row=0, column=0, padx=(0, 5), sticky="ew")
         
         # Show File
         show_btn = ttk.Button(
@@ -64,7 +64,7 @@ class ResultScreen(BaseFrame):
             command=self._show_file,
             state="normal"
         )
-        show_btn.grid(row=0, column=1, padx=5, sticky="ew")
+        show_btn.grid(row=0, column=1, padx=(5, 0), sticky="ew")
         
         # Preview Section
         self.preview_container = self.create_card_frame(self.scrollable_frame, "Preview")

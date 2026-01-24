@@ -13,6 +13,7 @@ from difflib import SequenceMatcher
 from phases.paper_search.paper import Paper, RankingScores
 from phases.paper_search.semantic_scholar_api import SemanticScholarAPI
 from utils.pdf_downloader import PDFDownloader
+from utils.open_access_finder import find_open_access_pdfs
 from utils.lazy_model_loader import LazyModelMixin
 from utils.file_utils import save_json, load_json
 from phases.context_analysis.paper_conception import PaperConcept
@@ -350,6 +351,10 @@ class LiteratureSearch(LazyModelMixin):
         # Remove duplicates
         unique_papers = self.remove_duplicates(all_papers)
         print(f"Papers found: {len(all_papers)}, unique papers: {len(unique_papers)}")
+        
+        # Check for open access PDFs (Unpaywall/arXiv) for any closed source papers
+        if unique_papers:
+            unique_papers = find_open_access_pdfs(unique_papers)
         
         return unique_papers
 

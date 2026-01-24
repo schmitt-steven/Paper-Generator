@@ -12,6 +12,7 @@ from ..theme_colors import (
     TEXT_BG_DARK_ALT, TEXT_BG_LIGHT_ALT, TEXT_FG_DARK, TEXT_FG_LIGHT,
 )
 from utils.file_utils import load_markdown
+from ..markdown_view import MarkdownView
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.context_analysis.paper_conception import PaperConception
 from phases.experimentation.experiment_runner import ExperimentRunner
@@ -87,28 +88,18 @@ class CollapsiblePlanCard(CardBorderFrame):
         text_bg = TEXT_BG_DARK_ALT if self.controller.current_theme == "dark" else TEXT_BG_LIGHT_ALT
         text_fg = TEXT_FG_DARK if self.controller.current_theme == "dark" else TEXT_FG_LIGHT
         
-        self.text_widget = tk.Text(
+        self.text_widget = MarkdownView(
             self.content_frame,
-            height=1,  # Start small, will adjust after insert
-            font=self.controller.fonts.text_area_font,
-            wrap="word",
-            background=text_bg,
-            foreground=text_fg,
-            borderwidth=0,
-            highlightthickness=0,
-            relief="flat",
+            font_manager=self.controller.fonts,
+            theme_mode=self.controller.current_theme,
+            height=100,
             padx=12,
             pady=10
         )
         
-        v_scrollbar = ttk.Scrollbar(self.content_frame, orient="vertical", command=self.text_widget.yview)
-        self.text_widget.configure(yscrollcommand=v_scrollbar.set)
-        v_scrollbar.pack(side="right", fill="y")
-        
         self.text_widget.pack(side="left", fill="both", expand=True)
         
-        self.text_widget.insert("1.0", self.content)
-        self.text_widget.config(state="disabled")  # Read-only
+        self.text_widget.set_markdown(self.content)
         
         # After insert, calculate actual display lines and resize
         def adjust_height():
@@ -158,6 +149,30 @@ class ExperimentPlanScreen(BaseFrame):
             header_file_path=Path(EXPERIMENTS_DIR) / EXPERIMENT_PLAN_FILE,
             info_content=EXPERIMENT_PLAN_INFO
         )
+        
+        # Bind resize event to adjust card height
+        self._canvas.bind("<Configure>", self._update_card_height, add="+")
+
+    def _update_card_height(self, event=None):
+        """Dynamically adjust card height to fill available space."""
+        if not self.cards:
+            return
+            
+        # Get canvas height
+        canvas_height = self._canvas.winfo_height()
+        
+        # Determine target height (canvas height - margins - card header)
+        # Margins: BaseFrame padding ~20, Card margin ~20, Card header ~40, plus safe zone
+        target_height = canvas_height - 140 
+        
+        # Minimum safe height
+        if target_height < 400:
+            target_height = 400
+            
+        # Update the card
+        for card in self.cards:
+            if hasattr(card, 'text_widget'):
+                card.text_widget.configure(height=target_height)
 
     def create_content(self):
         pass
@@ -192,8 +207,9 @@ class ExperimentPlanScreen(BaseFrame):
         )
         card.pack(fill="both", expand=True, pady=10)
         self.cards.append(card)
-
-
+        
+        # Force initial resize
+        self.after(100, self._update_card_height)
 
     def on_next(self):
         """Proceed or run experiments (no saving)."""

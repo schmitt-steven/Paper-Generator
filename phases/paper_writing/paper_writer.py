@@ -167,10 +167,12 @@ class PaperWriter:
                 {self._format_plots_for_prompt(experiment.plots)}
 
                 FIGURE REQUIREMENTS:
-                - For each figure above, you MUST include it using: ![Brief description](experiments/plots/file_name.png)
-                - Place figures at appropriate points in the narrative
-                - Add a caption line below each figure: *Figure N: Full caption text*
-                - Reference figures in your text (e.g., "As shown in Figure 1...")"""
+                - **INTERLEAVED PLACEMENT**: You MUST place the figure markdown immediately after the paragraph where it is discussed. DO NOT dump all figures at the end.
+                - **DYNAMIC NUMBERING**: You MUST assign Figure numbers (Figure 1, Figure 2...) sequentially based on the order you introduce them in the text.
+                - **START AT 1**: The first figure you discuss MUST be "Figure 1", the second "Figure 2", and so on.
+                - **ALL INCLUDED**: You MUST include ALL available plots listed above.
+                - **SYNTAX**: Use markdown: ![Brief description](experiments/plots/file_name.png)
+                - **CAPTION**: Add a caption line below each figure: *Figure N: Full caption text*"""
         
         # Paper title if provided by user
         title_section = ""
@@ -322,7 +324,7 @@ class PaperWriter:
             return ""
         
         lines = []
-        for idx, plot in enumerate(plots, 1):
+        for plot in plots:
             # Convert full path to relative path from output/ directory
             # e.g., "output/experiments/plots/file.png" -> "experiments/plots/file.png"
             filename = plot.filename
@@ -333,7 +335,7 @@ class PaperWriter:
                 if "experiments" in filename:
                     filename = filename[filename.find("experiments"):]
             
-            lines.append(f"Figure {idx}:")
+            lines.append(f"Figure:")
             lines.append(f"  Filename: {filename}")
             lines.append(f"  Caption: {plot.caption}")
             lines.append("")
@@ -392,10 +394,13 @@ class PaperWriter:
         ]
         
         if experiment:
+            # Wrap code in markdown block
+            code_block = f"```python\n{experiment.experiment_code}\n```" if experiment.experiment_code else ""
+            
             sections.extend([
                 format_if_present("Hypothesis", experiment.hypothesis.description),
                 format_if_present("Success criteria", experiment.hypothesis.success_criteria),
-                format_if_present("Experiment code", experiment.experiment_code),
+                format_if_present("Experiment code", code_block),
                 format_if_present("Key execution output", experiment.execution_result.stdout),
                 format_if_present("Verdict", experiment.hypothesis_evaluation.verdict),
                 format_if_present("Verdict reasoning", experiment.hypothesis_evaluation.reasoning),

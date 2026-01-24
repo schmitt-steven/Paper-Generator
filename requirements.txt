@@ -3,7 +3,10 @@
 
 # GUI
 sv-ttk>=2.6.0            # Sun Valley ttk theme
-pillow>=12.0.0           # Image processing for icons
+pillow>=10.4.0           # Image processing for icons
+markdown>=3.4.0          # Markdown to HTML conversion
+markdown>=3.4.0          # Markdown to HTML conversion
+tkinterweb>=3.19.0       # HTML rendering in Tkinter
 
 # LLM Integration
 lmstudio>=1.5.0          # LM Studio SDK

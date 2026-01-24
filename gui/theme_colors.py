@@ -52,8 +52,8 @@ POPDOWN_BG_LIGHT = "#ffffff"
 TEXT_BG_DARK = "#1a1a1a"
 TEXT_BG_LIGHT = "#eff4f6"
 
-TEXT_BG_DARK_ALT = "#242424"
-TEXT_BG_LIGHT_ALT = "#ffffff"
+TEXT_BG_DARK_ALT = "#191919"
+TEXT_BG_LIGHT_ALT = "#edf2f5"
 
 TEXT_FG_DARK = "#ffffff"
 TEXT_FG_LIGHT = "#1c1c1c"
@@ -86,3 +86,24 @@ HOVER_DANGER_LIGHT = "#e05555"
 
 DELETE_ICON_DARK = "#666666"
 DELETE_ICON_LIGHT = "#888888"
+
+# =============================================================================
+# MARKDOWN COLORS
+# =============================================================================
+# Code Blocks
+CODE_BG_DARK = "#2d2d2d"
+CODE_BG_LIGHT = "#e3e3e3"
+
+CODE_FG_DARK = "#e0e0e0"
+CODE_FG_LIGHT = "#2d2d2d"
+
+# Tables
+TABLE_BORDER_DARK = "#444"
+TABLE_BORDER_LIGHT = "#ddd"
+
+TABLE_HEADER_BG_DARK = "#333"
+TABLE_HEADER_BG_LIGHT = "#e5e5e5"
+
+# Headers
+HEADER_BORDER_DARK = "#555"
+HEADER_BORDER_LIGHT = "#ccc"

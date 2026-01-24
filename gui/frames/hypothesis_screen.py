@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 from ..base_frame import BaseFrame, ProgressPopup, CardBorderFrame
+from ..markdown_view import MarkdownView
 from ..info_texts import HYPOTHESIS_INFO
 from ..theme_colors import (
     CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT,
@@ -24,11 +25,12 @@ EXPERIMENT_PLAN_FILE = Path("output/experiments/experiment_plan.md")
 class CollapsibleHypothesisCard(CardBorderFrame):
     """A collapsible card for hypothesis sections (read-only)."""
     
-    def __init__(self, parent, section_name: str, content: str, controller, start_expanded: bool = False):
+    def __init__(self, parent, section_name: str, content: str, controller, start_expanded: bool = False, height: int = 250):
         super().__init__(parent, padx=1, pady=1)
         self.section_name = section_name
         self.content = content
         self.controller = controller
+        self.height = height
         self.expanded = False
         
         self._build_ui()
@@ -79,32 +81,16 @@ class CollapsibleHypothesisCard(CardBorderFrame):
         self.content_frame = ttk.Frame(self, style="CardContent.TFrame", padding=0)
         
         # Text widget to display content
-        text_bg = TEXT_BG_DARK_ALT if self.controller.current_theme == "dark" else TEXT_BG_LIGHT_ALT
-        text_fg = TEXT_FG_DARK if self.controller.current_theme == "dark" else TEXT_FG_LIGHT
-        
-        # Scrollbar
-        scrollbar = ttk.Scrollbar(self.content_frame, orient="vertical")
-        scrollbar.pack(side="right", fill="y")
-        
-        self.text_widget = tk.Text(
+        self.text_widget = MarkdownView(
             self.content_frame,
-            height=12,
-            font=self.controller.fonts.text_area_font,
-            wrap="word",
-            background=text_bg,
-            foreground=text_fg,
-            borderwidth=0,
-            highlightthickness=0,
-            relief="flat",
+            font_manager=self.controller.fonts,
+            theme_mode=self.controller.current_theme,
             padx=12,
             pady=10,
-            yscrollcommand=scrollbar.set
+            height=self.height
         )
         self.text_widget.pack(side="left", fill="both", expand=True)
-        scrollbar.config(command=self.text_widget.yview)
-        
-        self.text_widget.insert("1.0", self.content)
-        self.text_widget.config(state="disabled")  # Read-only
+        self.text_widget.set_markdown(self.content)
     
     def toggle(self):
         """Toggle expansion state."""
@@ -191,7 +177,7 @@ class HypothesisScreen(BaseFrame):
                 self.controller,
                 start_expanded=True  # All expanded by default
             )
-            card.pack(fill="x", pady=(10 if i == 0 else 0, 8))
+            card.pack(fill="x", pady=10)
             self.cards.append(card)
 
     def on_next(self):

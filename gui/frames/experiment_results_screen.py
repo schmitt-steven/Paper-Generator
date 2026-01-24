@@ -10,6 +10,7 @@ import threading
 
 from ..base_frame import BaseFrame, ProgressPopup, CardBorderFrame
 from ..info_texts import EXPERIMENT_RESULTS_INFO
+from ..markdown_view import MarkdownView
 from ..theme_colors import (
     CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT,
     TEXT_BG_DARK_ALT, TEXT_BG_LIGHT_ALT, TEXT_FG_DARK, TEXT_FG_LIGHT,
@@ -81,54 +82,41 @@ class CollapsibleTextCard(CardBorderFrame):
         # Content frame
         self.content_frame = ttk.Frame(self, style="CardContent.TFrame", padding=0)
         
-        # Text widget
-        text_bg = TEXT_BG_DARK_ALT if self.controller.current_theme == "dark" else TEXT_BG_LIGHT_ALT
-        text_fg = TEXT_FG_DARK if self.controller.current_theme == "dark" else TEXT_FG_LIGHT
-        
-        font = self.controller.fonts.code_font if self.code_font else self.controller.fonts.text_area_font
-        wrap = "none" if self.code_font else "word"
-        
-        self.text_widget = tk.Text(
+        # Markdown View
+        self.text_widget = MarkdownView(
             self.content_frame,
-            height=1,  # Start small, will adjust after insert
-            font=font,
-            wrap=wrap,
-            background=text_bg,
-            foreground=text_fg,
-            borderwidth=0,
-            highlightthickness=0,
-            relief="flat",
+            font_manager=self.controller.fonts,
+            theme_mode=self.controller.current_theme,
             padx=12,
             pady=10
         )
-        
-        if self.code_font:
-             # Add scrollbars for code
-             v_bar = ttk.Scrollbar(self.content_frame, orient="vertical", command=self.text_widget.yview)
-             h_bar = ttk.Scrollbar(self.content_frame, orient="horizontal", command=self.text_widget.xview)
-             self.text_widget.configure(yscrollcommand=v_bar.set, xscrollcommand=h_bar.set)
-             v_bar.pack(side="right", fill="y")
-             h_bar.pack(side="bottom", fill="x")
-             
         self.text_widget.pack(side="left", fill="both", expand=True)
+        self.text_widget.set_markdown(self.content)
         
-        self.text_widget.insert("1.0", self.content)
-        self.text_widget.config(state="disabled")
-        
-        # After insert, calculate actual display lines and resize
         def adjust_height():
-            self.text_widget.update_idletasks()
-            try:
-                display_lines = self.text_widget.count("1.0", "end", "displaylines")
-                if display_lines:
-                    actual_lines = display_lines[0] if isinstance(display_lines, tuple) else display_lines
-                    # Cap at reasonable max, add small padding
-                    height = min(actual_lines + 1, 30)
-                    self.text_widget.config(height=height)
-            except:
-                pass  # Fall back to default if count fails
+            # Estimate height based on content length
+            # Base padding + per line height
+            # Assumes approx 90 chars per line wrap width
+            lines = self.content.split('\n')
+            estimated_lines = 0.0
+            
+            for line in lines:
+                length = len(line)
+                if length == 0:
+                    estimated_lines += 1
+                else:
+                    estimated_lines += (length / 90.0) + 1.0
+            
+            # 20px per line approx + 18px padding (reduced from 40 to avoid extra empty line)
+            pixel_height = int(estimated_lines * 22) + 18
+            
+            # Clamp height (min 60, max 500)
+            pixel_height = max(60, min(pixel_height, 500))
+            
+            self.text_widget.configure(height=pixel_height)
         
-        self.text_widget.after(10, adjust_height)
+        # Determine height after a brief delay
+        self.text_widget.after(100, adjust_height)
 
     def toggle(self):
         self.expanded = not self.expanded
@@ -634,8 +622,6 @@ class ExperimentResultsScreen(BaseFrame):
                 # The existing code expects verdict_result object
                 verdict_result = VerdictResult(verdict=verdict, reasoning=reasoning)
 
-
-                
                 # Load existing result to preserve some fields
                 experiment_code = ""
                 try:

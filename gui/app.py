@@ -348,6 +348,9 @@ class PaperGeneratorApp(tk.Tk):
         self.icons._clear_cache()
         self.icons.update_icon_labels()
         self.apply_theme_colors()
+        
+        # Broadcast theme change event for widgets that handle it themselves (e.g. MarkdownView)
+        self.event_generate("<<ThemeChanged>>")
 
     def apply_theme_colors(self, widget=None):
         """Recursively apply theme colors to TextBorderFrame and Text widgets."""

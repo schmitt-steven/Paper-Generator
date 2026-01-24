@@ -11,6 +11,7 @@ from pathlib import Path
 
 from ..base_frame import BaseFrame, CardBorderFrame
 from ..info_texts import WRITING_PROMPTS_INFO
+from ..markdown_view import MarkdownView
 from ..theme_colors import (
     CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT,
     TEXT_BG_DARK_ALT, TEXT_BG_LIGHT_ALT, TEXT_FG_DARK, TEXT_FG_LIGHT,
@@ -98,33 +99,16 @@ class CollapsiblePromptCard(CardBorderFrame):
         self.content_frame = ttk.Frame(self, style="CardContent.TFrame", padding=0)
         # Don't pack yet - only show when expanded
         
-        # Text widget for prompt content
-        text_bg = TEXT_BG_DARK_ALT if self.controller.current_theme == "dark" else TEXT_BG_LIGHT_ALT
-        text_fg = TEXT_FG_DARK if self.controller.current_theme == "dark" else TEXT_FG_LIGHT
-        
-        # Scrollbar
-        scrollbar = ttk.Scrollbar(self.content_frame, orient="vertical")
-        scrollbar.pack(side="right", fill="y")
-        
-        self.text_widget = tk.Text(
+        # Markdown View
+        self.text_widget = MarkdownView(
             self.content_frame,
-            height=20,
-            font=self.controller.fonts.text_area_font,
-            wrap="word",
-            background=text_bg,
-            foreground=text_fg,
-            borderwidth=0,
-            highlightthickness=0,
-            relief="flat",
+            font_manager=self.controller.fonts,
+            theme_mode=self.controller.current_theme,
             padx=12,
-            pady=10,
-            yscrollcommand=scrollbar.set
+            pady=10
         )
         self.text_widget.pack(side="left", fill="both", expand=True)
-        scrollbar.config(command=self.text_widget.yview)
-        
-        self.text_widget.insert("1.0", self.prompt_content)
-        self.text_widget.config(state="disabled")  # Read-only
+        self.text_widget.set_markdown(self.prompt_content)
     
     def toggle(self):
         """Toggle expansion state."""

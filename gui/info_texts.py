@@ -31,40 +31,42 @@ RESULT_INFO = """result"""
 
 SECTION_GUIDELINES_INFO = """section guidelines"""
 
-LATEX_TEMPLATE_INFO = """### Adding Custom LaTeX Templates ###
+LATEX_TEMPLATE_INFO = """\
+## Adding Custom LaTeX Templates
 
-Templates are stored in the latex_templates/ directory.
+All LaTeX templates are stored in the latex_templates/ directory.
 
-Required structure:
+### Required structure
   latex_templates/
   └── your_template_name/
-      ├── paper.tex (your main file, MUST be called "paper.tex")
-      ├── Makefile (for compilation)
-      └── ... (any .cls, .sty or whatever your template uses)
+  &nbsp;&nbsp;├── paper.tex (your main file, MUST be called "paper.tex")
+  &nbsp;&nbsp;├── Makefile (for compilation)
+  &nbsp;&nbsp;└── ... (any .cls, .sty or whatever your template uses)
+
+### Available Placeholders
 
 The template system uses placeholders that can be placed in the paper.tex file.
 
-Available Placeholders:
-  %%TITLE%%
-  %%ABSTRACT%%
-  
-  %%INTRODUCTION%%
-  %%RELATED_WORK%%
-  %%METHODS%%
-  %%RESULTS%%
-  %%DISCUSSION%%
-  %%CONCLUSION%%
-  %%ACKNOWLEDGEMENTS%%
-
-  %%BEGIN_AUTHOR%% ... %%END_AUTHOR%%
-  Available fields: {{name}}, {{affiliation}}, {{department}}, {{city}},{{country}}, {{address}},
-  {{email}}
-  %%SHORTAUTHORS%% - Auto-generated from author last names (for page headers)
+#### Metadata
+  `%%TITLE%%`
+  `%%ABSTRACT%%`
+#### Sections
+  `%%INTRODUCTION%%`
+  `%%RELATED_WORK%%`
+  `%%METHODS%%`
+  `%%RESULTS%%`
+  `%%DISCUSSION%%`
+  `%%CONCLUSION%%`
+  `%%ACKNOWLEDGEMENTS%%`
+#### Authors
+  `%%BEGIN_AUTHOR%% ... %%END_AUTHOR%%`
+  Available fields: `{{name}}`, `{{affiliation}}`, `{{department}}`, `{{city}}`, `{{country}}`, `{{address}}`, `{{email}}`
+  `%%SHORTAUTHORS%%` - Auto-generated from author last names (for page headers)
 
   Only ONE author placeholder is required.
   The generator handles multiple authors automatically.
 
-Bibliography:
+### Bibliography
   No placeholder needed.
   The generator creates a bibliography.bib file and saves it to the output directory.
   Include the bibliography via \\addbibresource{bibliography.bib} or similar.

@@ -471,12 +471,7 @@ class PaperSelectionScreen(BaseFrame):
                     min_relevance=0.5
                 )
                 
-                # Step 4: Check arXiv for free PDF versions
-                self.after(0, lambda: popup.update_status("Checking arXiv for free PDFs"))
-                from utils.open_access_finder import find_open_access_pdfs
-                filtered_papers = find_open_access_pdfs(filtered_papers)
-                
-                # Step 5: Citation Gap Analysis - find missing foundational papers
+                # Step 4: Citation Gap Analysis - find missing foundational papers
                 self.after(0, lambda: popup.update_status("Analyzing for missing foundational papers"))
                 gap_finder = CitationGapFinder()
                 research_context = f"{paper_concept.description}\n\nOpen Research Questions:\n{paper_concept.open_questions}"

@@ -6,6 +6,7 @@ import subprocess
 import platform
 
 from .icons import HoverColor
+from .markdown_view import MarkdownView
 from .theme_colors import (
     NAVBAR_BG_DARK, NAVBAR_BG_LIGHT,
     TEXT_BG_DARK_ALT, TEXT_BG_LIGHT_ALT,
@@ -304,27 +305,15 @@ class InfoPopup(tk.Toplevel):
         content_frame.grid_rowconfigure(0, weight=1)
         content_frame.grid_columnconfigure(0, weight=1)
         
-        text = tk.Text(
+        md_label = MarkdownView(
             content_frame,
-            wrap="word",
-            font=parent.fonts.default_font,
+            font_manager=parent.fonts,
+            theme_mode="dark" if is_dark else "light",
             padx=15,
-            pady=15,
-            relief="flat",
-            highlightthickness=0
+            pady=15
         )
-        text.grid(row=0, column=0, sticky="nsew")
-        text.insert("1.0", content)
-        text.config(state="disabled")
-        
-        text_bg = TEXT_BG_DARK_ALT if is_dark else TEXT_BG_LIGHT_ALT
-        text_fg = TEXT_FG_DARK if is_dark else TEXT_FG_LIGHT
-        text.configure(background=text_bg, foreground=text_fg)
-        
-        # Scrollbar
-        scrollbar = ttk.Scrollbar(content_frame, orient="vertical", command=text.yview)
-        scrollbar.grid(row=0, column=1, sticky="ns")
-        text.config(yscrollcommand=scrollbar.set)
+        md_label.grid(row=0, column=0, sticky="nsew")
+        md_label.set_markdown(content)
         
         # Footer with close button
         ttk.Separator(self, orient="horizontal").grid(row=2, column=0, sticky="ew")

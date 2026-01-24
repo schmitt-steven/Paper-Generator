@@ -4,6 +4,7 @@ import threading
 from pathlib import Path
 
 from ..base_frame import BaseFrame, ProgressPopup, create_scrollable_text_area, CardBorderFrame
+from ..markdown_view import MarkdownView
 from ..info_texts import PAPER_DRAFT_INFO
 from ..theme_colors import (
     CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT,
@@ -94,49 +95,17 @@ class CollapsibleDraftCard(CardBorderFrame):
         # Content frame
         self.content_frame = ttk.Frame(self, style="CardContent.TFrame", padding=0)
         
-        # Read-only Text Widget
-        text_bg = getattr(self.controller, '_text_bg_dark_alt', TEXT_BG_DARK_ALT) if self.controller.current_theme == "dark" else getattr(self.controller, '_text_bg_light_alt', TEXT_BG_LIGHT_ALT)
-        text_fg = getattr(self.controller, '_text_fg_dark', TEXT_FG_DARK) if self.controller.current_theme == "dark" else getattr(self.controller, '_text_fg_light', TEXT_FG_LIGHT)
-        
-        inner = ttk.Frame(self.content_frame, style="CardRow.TFrame")
-        inner.pack(fill="both", expand=True)
-        
-        scrollbar = ttk.Scrollbar(inner, orient="vertical")
-        scrollbar.pack(side="right", fill="y")
-        
-        self.text_widget = tk.Text(
-            inner,
-            height=1,  # Start small, will adjust after insert
-            wrap="word",
-            font=self.controller.fonts.text_area_font,
-            background=text_bg,
-            foreground=text_fg,
-            borderwidth=0,
-            highlightthickness=0,
-            relief="flat",
+        # Markdown View
+        self.text_widget = MarkdownView(
+            self.content_frame,
+            font_manager=self.controller.fonts,
+            theme_mode=self.controller.current_theme,
             padx=12,
             pady=10,
-            yscrollcommand=scrollbar.set
+            height=400 # Default height
         )
         self.text_widget.pack(side="left", fill="both", expand=True)
-        scrollbar.config(command=self.text_widget.yview)
-        
-        self.text_widget.insert("1.0", self.content)
-        self.text_widget.config(state="disabled")
-        
-        # After insert, calculate actual display lines and resize
-        def adjust_height():
-            self.text_widget.update_idletasks()
-            try:
-                display_lines = self.text_widget.count("1.0", "end", "displaylines")
-                if display_lines:
-                    actual_lines = display_lines[0] if isinstance(display_lines, tuple) else display_lines
-                    height = min(actual_lines + 1, 50)
-                    self.text_widget.config(height=height)
-            except:
-                pass
-        
-        self.text_widget.after(10, adjust_height)
+        self.text_widget.set_markdown(self.content)
 
     def toggle(self):
         self.expanded = not self.expanded
@@ -167,6 +136,29 @@ class PaperDraftScreen(BaseFrame):
             info_content=PAPER_DRAFT_INFO
         )
         self.card = None
+        
+        # Bind resize event to adjust card height
+        self._canvas.bind("<Configure>", self._update_card_height, add="+")
+
+    def _update_card_height(self, event=None):
+        """Dynamically adjust card height to fill available space."""
+        if not self.card:
+            return
+            
+        # Get canvas height
+        canvas_height = self._canvas.winfo_height()
+        
+        # Determine target height (canvas height - margins - card header)
+        # Margins: BaseFrame padding ~20, Card margin ~20, Card header ~40, plus safe zone
+        target_height = canvas_height - 140 
+        
+        # Minimum safe height
+        if target_height < 400:
+            target_height = 400
+            
+        # Update the card
+        if hasattr(self.card, 'text_widget'):
+            self.card.text_widget.configure(height=target_height)
 
     def create_content(self):
         """Create the container."""
@@ -186,6 +178,9 @@ class PaperDraftScreen(BaseFrame):
             
         try:
             draft_content = load_markdown(PAPER_DRAFT_FILE, OUTPUT_DIR)
+            # Replace .pdf with .png for preview purposes (tkinterweb can't show PDFs)
+            draft_content = draft_content.replace(".pdf", "_preview.png")
+            draft_content = draft_content.replace("experiments/plots/", "output/experiments/plots/")
         except (FileNotFoundError, Exception) as e:
             msg = f"Paper draft not found: {OUTPUT_DIR}/{PAPER_DRAFT_FILE}" if isinstance(e, FileNotFoundError) else f"Error loading draft: {e}"
             self.show_error_message("Paper Draft Error", msg)
@@ -197,13 +192,16 @@ class PaperDraftScreen(BaseFrame):
         # Create Card
         self.card = CollapsibleDraftCard(
             self.scrollable_frame,
-            "Draft Content",
+            "Draft",
             draft_content,
             self.controller,
             on_show_prompts=self._show_prompts,
             start_expanded=True
         )
         self.card.pack(fill="x", pady=10)
+        
+        # Force initial resize
+        self.after(100, self._update_card_height)
 
 
 

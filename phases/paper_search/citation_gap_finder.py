@@ -14,6 +14,7 @@ from pydantic import BaseModel
 from phases.paper_search.paper import Paper
 from phases.paper_search.semantic_scholar_api import SemanticScholarAPI
 from settings import Settings
+from utils.open_access_finder import find_open_access_pdfs
 
 
 
@@ -87,7 +88,7 @@ Return your suggestions in the structured format."""
             response = model.respond(
                 prompt,
                 response_format=CitationGapResult,
-                config={"temperature": 0.1}
+                config={"temperature": 0.0}
             )
             
             result = response.parsed
@@ -146,6 +147,11 @@ Return your suggestions in the structured format."""
                 continue
         
         print(f"\nCitation Gap Analysis: Found {len(found_papers)} new foundational papers")
+        
+        # Check for open access PDFs (Unpaywall/arXiv) for any closed source papers
+        if found_papers:
+            found_papers = find_open_access_pdfs(found_papers)
+            
         return found_papers
     
     def _build_papers_summary(self, papers: List[Paper], max_papers: int = 100) -> str:
