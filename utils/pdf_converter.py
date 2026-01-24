@@ -69,11 +69,12 @@ class PDFConverter:
         # Merge all pages
         markdown_text = "\n\n".join(page["text"] for page in markdown_pages)
         
-        # Adjust image paths if extracting images
-        if self.extract_media:
-            markdown_text = markdown_text.replace(
-                f"literature/{base_name}/markdown/images/", "images/"
-            )
+        # Adjust image paths from absolute to relative (./images/...)
+        if self.extract_media and image_dir:
+            # Convert any absolute path to the images folder into a relative path
+            # Normalize to forward slashes for cross-platform compatibility (markdown uses forward slashes)
+            abs_image_dir = os.path.abspath(image_dir).replace("\\", "/")
+            markdown_text = markdown_text.replace(f"({abs_image_dir}/", "(./images/")
         
         # Preprocess to remove conversion artifacts
         markdown_text = preprocess_markdown(markdown_text)

@@ -14,16 +14,14 @@ from pydantic import BaseModel
 from phases.paper_search.paper import Paper
 from phases.paper_search.semantic_scholar_api import SemanticScholarAPI
 from settings import Settings
-from difflib import SequenceMatcher
+
 
 
 class SuggestedPaper(BaseModel):
     """A paper suggested by the LLM as missing from the collection."""
     title: str              # Approximate/known title
-    authors: str            # Key author names (e.g., "Sutton and Barto")
-    year: Optional[int]     # Approximate publication year
-    reason: str             # Why this paper is important for this research
-    search_query: str       # Suggested Semantic Scholar query to find it
+
+    reason: str             # Why paper is important for this research
 
 
 class CitationGapResult(BaseModel):
@@ -60,14 +58,14 @@ class CitationGapFinder:
         
         prompt = f"""You are an expert academic researcher. Analyze this paper collection for a literature review and identify MISSING foundational or highly-cited papers.
 
+YOUR TASK:
+Identify up to {max_suggestions} important papers that are commonly cited in this research area but MISSING from the collection above.
+
 RESEARCH TOPIC:
 {research_context}
 
 CURRENT PAPER COLLECTION ({len(papers)} papers):
 {papers_summary}
-
-YOUR TASK:
-Identify up to {max_suggestions} important papers that are commonly cited in this research area but MISSING from the collection above.
 
 Focus on:
 1. FOUNDATIONAL WORKS - Seminal papers that introduced key concepts/algorithms
@@ -77,7 +75,7 @@ Focus on:
 IMPORTANT RULES:
 - Only suggest papers you are CONFIDENT actually exist
 - Suggest papers that would typically be cited in Introduction, Related Work, or Methods sections
-- The search_query should be specific enough to find the exact paper on Semantic Scholar
+- The title must be EXACT and precise. We use it for strict title matching, so typos or approximate titles will fail.
 - Do NOT suggest papers that are already in the collection (check titles carefully)
 
 Return your suggestions in the structured format."""
@@ -100,16 +98,12 @@ Return your suggestions in the structured format."""
             for s in suggestions:
                 suggested_papers.append(SuggestedPaper(
                     title=s.get("title", ""),
-                    authors=s.get("authors", ""),
-                    year=s.get("year"),
-                    reason=s.get("reason", ""),
-                    search_query=s.get("search_query", s.get("title", ""))
+                    reason=s.get("reason", "")
                 ))
             
             print(f"Citation Gap Analysis: LLM suggested {len(suggested_papers)} potentially missing papers:")
             for i, paper in enumerate(suggested_papers, 1):
-                year_str = f" ({paper.year})" if paper.year else ""
-                print(f"  {i}. {paper.title}{year_str} - {paper.authors}")
+                print(f"  {i}. {paper.title}")
             
             return suggested_papers
             
@@ -124,7 +118,7 @@ Return your suggestions in the structured format."""
         suggestions: List[SuggestedPaper],
         existing_paper_ids: set
     ) -> List[Paper]:
-        """Search for suggested papers on Semantic Scholar."""
+        """Search for suggested papers on Semantic Scholar using direct title match."""
         if not suggestions:
             return []
         
@@ -134,39 +128,27 @@ Return your suggestions in the structured format."""
         
         for suggestion in suggestions:
             try:
-                # Search using the suggested query
-                results = self.s2_api.search_papers(
-                    suggestion.search_query,
-                    max_results=3  # Get top 3 results to find the best match
-                )
+                # Match paper using title only (year is often approximate/incorrect in LLM memory)
+                match = self.s2_api.match_paper(query=suggestion.title)
                 
-                if not results:
-                    print(f"  Not found: {suggestion.title}")
-                    continue
-                
-                # Try to find the best match
-                best_match = self._find_best_match(suggestion, results)
-                
-                if best_match and best_match.id not in existing_paper_ids:
-                    found_papers.append(best_match)
-                    existing_paper_ids.add(best_match.id)  # Prevent duplicates in this batch
-                    print(f"  Found: {best_match.title[:60]}...")
-                elif best_match:
-                    print(f"  Already in collection: {best_match.title[:60]}...")
+                if match:
+                    if match.id not in existing_paper_ids:
+                        found_papers.append(match)
+                        existing_paper_ids.add(match.id)
+                        print(f"  Found: {match.title[:60]}...")
+                    else:
+                        print(f"  Already in collection: {match.title[:60]}...")
                 else:
-                    print(f"  No good match for: {suggestion.title}")
+                    print(f"  Not found: {suggestion.title}")
                     
             except Exception as e:
                 print(f"  Error searching for '{suggestion.title}': {e}")
                 continue
-            
-            # delay between searches
-            time.sleep(1.0)
         
         print(f"\nCitation Gap Analysis: Found {len(found_papers)} new foundational papers")
         return found_papers
     
-    def _build_papers_summary(self, papers: List[Paper], max_papers: int = 50) -> str:
+    def _build_papers_summary(self, papers: List[Paper], max_papers: int = 100) -> str:
         """Build a concise summary of papers for the LLM prompt."""
         lines = []
         
@@ -180,6 +162,7 @@ Return your suggestions in the structured format."""
                     year = str(paper.published.year)
                 else:
                     year = str(paper.published)[:4]
+
             
             first_author = paper.authors[0] if paper.authors else "Unknown"
             lines.append(f"- {paper.title} ({first_author}, {year})")
@@ -189,60 +172,4 @@ Return your suggestions in the structured format."""
         
         return "\n".join(lines)
     
-    def _find_best_match(
-        self,
-        suggestion: SuggestedPaper,
-        results: List[Paper]
-    ) -> Optional[Paper]:
-        """Find the best matching paper from search results."""
-        
-        suggested_title = suggestion.title.lower()
-        suggested_authors = suggestion.authors.lower()
-        
-        best_paper = None
-        best_score = 0.0
-        
-        for paper in results:
-            # Title similarity
-            paper_title = paper.title.lower()
-            title_sim = SequenceMatcher(None, suggested_title, paper_title).ratio()
-            
-            # Author matching (check if any suggested author appears)
-            author_score = 0.0
-            if paper.authors:
-                paper_authors_str = " ".join(paper.authors).lower()
-                # Check for author name fragments
-                for author_part in suggested_authors.split():
-                    if len(author_part) > 2 and author_part in paper_authors_str:
-                        author_score = 0.5
-                        break
-            
-            # Year matching bonus
-            year_score = 0.0
-            if suggestion.year and paper.published:
-                try:
-                    paper_year = None
-                    if hasattr(paper.published, "year"):
-                        paper_year = paper.published.year
-                    else:
-                        paper_year = int(str(paper.published)[:4])
-                        
-                    if paper_year == suggestion.year:
-                        year_score = 0.2
-                    elif abs(paper_year - suggestion.year) <= 2:
-                        year_score = 0.1
-                except (ValueError, TypeError):
-                    pass
-            
-            # Combined score
-            total_score = title_sim * 0.6 + author_score * 0.25 + year_score * 0.15
-            
-            if total_score > best_score:
-                best_score = total_score
-                best_paper = paper
-        
-        # Require minimum confidence
-        if best_score >= 0.7:
-            return best_paper
-        
-        return None
+

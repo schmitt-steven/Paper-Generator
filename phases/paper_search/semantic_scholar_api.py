@@ -31,16 +31,7 @@ class SemanticScholarAPI:
         self._last_request_time = time.time()
     
     def search_papers(self, query: str, max_results: int = 100, year: Optional[str] = None, fields_of_study: Optional[str] = None, open_access_only: bool = False) -> list[Paper]:
-        """
-        Search papers using S2 search endpoint.
-        
-        Args:
-            query: Search query string
-            max_results: Maximum number of results to return (max 100)
-            year: Optional year filter (e.g., "2020-2024" or "2020")
-            fields_of_study: Optional comma-separated fields of study filter (e.g., "Computer Science,Mathematics")
-            open_access_only: If True, filter results to only open access papers (client-side)
-        """
+        """Search papers using S2 search endpoint."""
         self._rate_limit()
         
         params = {
@@ -121,17 +112,72 @@ class SemanticScholarAPI:
                 backoff *= 3
         
         return []
+
+    def match_paper(self, query: str, year: Optional[str] = None) -> Optional[Paper]:
+        """Find a single paper by title using S2 match endpoint."""
+        self._rate_limit()
+        
+        params = {
+            "query": query,
+            "fields": ",".join(self.FIELDS)
+        }
+        
+        if year:
+            params["year"] = year
+            
+        max_retries = 3
+        backoff = 2
+        
+        for attempt in range(max_retries):
+            try:
+                response = requests.get(
+                    f"{self.BASE_URL}/paper/search/match",
+                    params=params,
+                    headers=self.headers,
+                    timeout=30
+                )
+                
+                if response.status_code == 404:
+                    return None
+                    
+                if response.status_code == 429:
+                    print(f"Rate limited (429). Retrying in {backoff}s...")
+                    time.sleep(backoff)
+                    backoff *= 3
+                    continue
+                    
+                if response.status_code != 200:
+                    error_text = response.text[:200]
+                    print(f"Match API error ({response.status_code}): {error_text}")
+                    if attempt == max_retries - 1:
+                        return None
+                    time.sleep(backoff)
+                    backoff *= 3
+                    continue
+                
+                data = response.json()
+                
+                # Default response is { "data": [ ... ] } containing one or more matches
+                # We return the first one as the best match
+                if "data" in data and isinstance(data["data"], list) and len(data["data"]) > 0:
+                     return self._to_paper(data["data"][0])
+                
+                # Fallback if structure is unexpected or empty
+                return None
+                
+            except requests.exceptions.RequestException as e:
+                print(f"Request failed: {e}")
+                if attempt == max_retries - 1:
+                    return None
+                time.sleep(backoff)
+                backoff *= 3
+                
+        return None
     
     def get_paper_by_id(self, paper_id: str) -> Optional[Paper]:
         """
         Fetch a single paper by its ID.
         Supports Semantic Scholar IDs and external IDs like ARXIV:2404.15822
-        
-        Args:
-            paper_id: Paper ID (S2 ID or external ID like "ARXIV:2404.15822")
-            
-        Returns:
-            Paper object or None if not found
         """
         params = {
             "fields": ",".join(self.FIELDS)
