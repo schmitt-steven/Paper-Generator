@@ -52,7 +52,7 @@ class Settings:
 
     # UI Settings
     FONT_SIZE = FontSize.SMALL
-    DARK_MODE = True
+    DARK_MODE = False
 
     # API related
     SEMANTIC_SCHOLAR_API_KEY = ""  # Optional Semantic Scholar API key for better rate limits
@@ -103,6 +103,7 @@ class Settings:
                 "UNPAYWALL_EMAIL": cls.UNPAYWALL_EMAIL,
                 "LATEX_TITLE": cls.LATEX_TITLE,
                 "LATEX_TEMPLATE": cls.LATEX_TEMPLATE,
+                "GENERATE_ACKNOWLEDGEMENTS": cls.GENERATE_ACKNOWLEDGEMENTS,
             }
             
             # Update string values

@@ -163,7 +163,7 @@ class ExperimentPlanScreen(BaseFrame):
         
         # Determine target height (canvas height - margins - card header)
         # Margins: BaseFrame padding ~20, Card margin ~20, Card header ~40, plus safe zone
-        target_height = canvas_height - 140 
+        target_height = canvas_height - 145
         
         # Minimum safe height
         if target_height < 400:

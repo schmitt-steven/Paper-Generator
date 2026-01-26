@@ -25,14 +25,7 @@ class LaTeXMetadata:
 
     @classmethod
     def from_settings(cls, generated_title: str) -> "LaTeXMetadata":
-        """Create LaTeXMetadata from settings.
-        
-        Args:
-            generated_title: Title from PaperDraft (respects Settings.LATEX_TITLE if set)
-        
-        Returns:
-            LaTeXMetadata with all fields for IEEEtran template
-        """
+        """Create LaTeXMetadata from settings"""
         return cls(
             title=generated_title,
             authors=Settings.LATEX_AUTHORS,
@@ -340,6 +333,16 @@ class PaperConverter(LazyModelMixin):
             if not latex_content:
                 print(f"[PaperConverter] Conversion returned empty string for {section_type.value}!")
                 # Keep placeholder but verify why content was lost
+            
+            # Special handling for Acknowledgements: Wrap with environment/header if needed
+            if section_type == Section.ACKNOWLEDGEMENTS and latex_content.strip():
+                if Settings.LATEX_TEMPLATE == "jair":
+                    latex_content = f"\\begin{{acks}}\n{latex_content}\n\\end{{acks}}"
+                elif Settings.LATEX_TEMPLATE == "ieee_transaction":
+                    latex_content = f"\\section{{Acknowledgements}}\n{latex_content}"
+                else:
+                    # Default fallback
+                    latex_content = f"\\section{{Acknowledgements}}\n{latex_content}"
             
             # Inject into placeholder
             paper_content = paper_content.replace(placeholder, latex_content)

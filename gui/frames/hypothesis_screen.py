@@ -142,7 +142,7 @@ class HypothesisScreen(BaseFrame):
                 print(f"Error loading hypothesis: {e}")
         
         # No file or load failed
-        self.show_error_message("Hypothesis Error", "No hypothesis found. Please complete previous steps.")
+        self.show_error_message("Hypothesis Error", "No hypothesis found. Please complete previous steps or try to regenerate it.")
     
     def on_show(self):
         """Called when screen is shown - load hypothesis if not already loaded."""

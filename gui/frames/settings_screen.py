@@ -69,6 +69,24 @@ class SettingsScreen(BaseFrame):
         entry = ttk.Entry(row_frame, textvariable=self.title_var, width=60)
         entry.pack(side="right", fill="x", expand=True, padx=(10, 0))
 
+        # Acknowledgements Toggle
+        row_frame = ttk.Frame(frame, style="CardRow.TFrame")
+        row_frame.pack(fill="x", pady=(10, 2))
+        
+        ttk.Label(row_frame, text="Include Acknowledgements", width=35, style="CardRow.TLabel").pack(side="left")
+        
+        self.acknowledgements_var = tk.BooleanVar(value=getattr(Settings, "GENERATE_ACKNOWLEDGEMENTS", True))
+        
+        switch = ttk.Checkbutton(
+            row_frame,
+            variable=self.acknowledgements_var,
+            style="CardRow.Switch.TCheckbutton"
+        )
+        switch.pack(side="right", padx=(10, 0))
+        
+        self.settings_vars["GENERATE_ACKNOWLEDGEMENTS"] = self.acknowledgements_var
+
+
         # Semantic Scholar API Key
         row_frame = ttk.Frame(frame, style="CardRow.TFrame")
         row_frame.pack(fill="x", pady=(10, 2))

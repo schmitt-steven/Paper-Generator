@@ -41,6 +41,18 @@ class CollapsibleTextCard(CardBorderFrame):
         
         if start_expanded:
             self.expand()
+
+        self.bind("<<ThemeChanged>>", self._on_theme_changed, add="+")
+
+    def _on_theme_changed(self, event=None):
+        """Update colors on theme change."""
+        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
+        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
+        
+        # Update header widgets
+        self.left_frame.config(bg=header_bg)
+        self.toggle_label.config(bg=header_bg, fg=header_fg)
+        self.title_label.config(bg=header_bg, fg=header_fg)
     
     def _build_ui(self):
         # Header
@@ -51,12 +63,12 @@ class CollapsibleTextCard(CardBorderFrame):
         header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
         
         # Clickable header
-        left_frame = tk.Frame(header, bg=header_bg)
-        left_frame.pack(side="left", fill="x", expand=True)
-        left_frame.bind("<Button-1>", lambda e: self.toggle())
+        self.left_frame = tk.Frame(header, bg=header_bg)
+        self.left_frame.pack(side="left", fill="x", expand=True)
+        self.left_frame.bind("<Button-1>", lambda e: self.toggle())
         
         self.toggle_label = tk.Label(
-            left_frame,
+            self.left_frame,
             text="▶",
             font=self.controller.fonts.default_font,
             bg=header_bg,
@@ -67,7 +79,7 @@ class CollapsibleTextCard(CardBorderFrame):
         self.toggle_label.bind("<Button-1>", lambda e: self.toggle())
         
         self.title_label = tk.Label(
-            left_frame,
+            self.left_frame,
             text=self.section_name,
             font=self.controller.fonts.sub_header_font,
             bg=header_bg,
@@ -150,6 +162,24 @@ class CollapsibleCodeCard(CardBorderFrame):
         
         if start_expanded:
             self.expand()
+
+        self.bind("<<ThemeChanged>>", self._on_theme_changed, add="+")
+
+    def _on_theme_changed(self, event=None):
+        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
+        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
+        
+        self.left_frame.config(bg=header_bg)
+        self.toggle_label.config(bg=header_bg, fg=header_fg)
+        self.title_label.config(bg=header_bg, fg=header_fg)
+        self.btn_frame.config(bg=header_bg)
+        
+        # Update text widget
+        # Note: self.text_widget might be disabled, so we might need to enable/disable or just config working?
+        # tk.Text background can be changed even if disabled usually.
+        text_bg = TEXT_BG_DARK_ALT if self.controller.current_theme == "dark" else TEXT_BG_LIGHT_ALT
+        text_fg = TEXT_FG_DARK if self.controller.current_theme == "dark" else TEXT_FG_LIGHT
+        self.text_widget.config(background=text_bg, foreground=text_fg)
     
     def _build_ui(self):
         # Header
@@ -160,12 +190,12 @@ class CollapsibleCodeCard(CardBorderFrame):
         header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
         
         # Clickable Left Header (Toggle + Title)
-        left_frame = tk.Frame(header, bg=header_bg)
-        left_frame.pack(side="left", fill="x", expand=True)
-        left_frame.bind("<Button-1>", lambda e: self.toggle())
+        self.left_frame = tk.Frame(header, bg=header_bg)
+        self.left_frame.pack(side="left", fill="x", expand=True)
+        self.left_frame.bind("<Button-1>", lambda e: self.toggle())
         
         self.toggle_label = tk.Label(
-            left_frame,
+            self.left_frame,
             text="▶",
             font=self.controller.fonts.default_font,
             bg=header_bg,
@@ -176,7 +206,7 @@ class CollapsibleCodeCard(CardBorderFrame):
         self.toggle_label.bind("<Button-1>", lambda e: self.toggle())
         
         self.title_label = tk.Label(
-            left_frame,
+            self.left_frame,
             text=self.section_name,
             font=self.controller.fonts.sub_header_font,
             bg=header_bg,
@@ -187,19 +217,19 @@ class CollapsibleCodeCard(CardBorderFrame):
         self.title_label.bind("<Button-1>", lambda e: self.toggle())
         
         # Buttons on Right
-        btn_frame = tk.Frame(header, bg=header_bg)
-        btn_frame.pack(side="right")
+        self.btn_frame = tk.Frame(header, bg=header_bg)
+        self.btn_frame.pack(side="right")
         
         if self.on_execute:
-            execute_btn = ttk.Button(btn_frame, text="Execute", command=self.on_execute)
+            execute_btn = ttk.Button(self.btn_frame, text="Execute", command=self.on_execute)
             execute_btn.pack(side="left", padx=(0, 10))
         
         if self.on_edit:
-            edit_btn = ttk.Button(btn_frame, text="Edit", command=self.on_edit)
+            edit_btn = ttk.Button(self.btn_frame, text="Edit", command=self.on_edit)
             edit_btn.pack(side="left", padx=(0, 10))
         
         if self.on_show_explorer:
-            explorer_btn = ttk.Button(btn_frame, text="Show in Explorer", command=self.on_show_explorer)
+            explorer_btn = ttk.Button(self.btn_frame, text="Show in Explorer", command=self.on_show_explorer)
             explorer_btn.pack(side="left", padx=(0))
         
         ttk.Separator(self, orient="horizontal").pack(fill="x")
@@ -269,21 +299,29 @@ class CollapsibleFigureCard(CardBorderFrame):
         
         if start_expanded:
             self.expand()
+
+    def _on_theme_changed(self, event=None):
+        header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
+        header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
+        
+        self.left_frame.config(bg=header_bg)
+        self.toggle_label.config(bg=header_bg, fg=header_fg)
+        self.title_label.config(bg=header_bg, fg=header_fg)
+            
             
     def _build_ui(self):
-        # Header
         header = ttk.Frame(self, style="CardHeader.TFrame", padding=(10, 8))
         header.pack(fill="x")
         
         header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
         header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
         
-        left_frame = tk.Frame(header, bg=header_bg)
-        left_frame.pack(side="left", fill="x", expand=True)
-        left_frame.bind("<Button-1>", lambda e: self.toggle())
+        self.left_frame = tk.Frame(header, bg=header_bg)
+        self.left_frame.pack(side="left", fill="x", expand=True)
+        self.left_frame.bind("<Button-1>", lambda e: self.toggle())
         
         self.toggle_label = tk.Label(
-            left_frame,
+            self.left_frame,
             text="▶",
             font=self.controller.fonts.default_font,
             bg=header_bg,
@@ -294,7 +332,7 @@ class CollapsibleFigureCard(CardBorderFrame):
         self.toggle_label.bind("<Button-1>", lambda e: self.toggle())
         
         self.title_label = tk.Label(
-            left_frame,
+            self.left_frame,
             text=self.title_text,
             font=self.controller.fonts.sub_header_font,
             bg=header_bg,
@@ -428,7 +466,7 @@ class ExperimentResultsScreen(BaseFrame):
             # --- 1. Verdict Section ---
             verdict = experiment_result.hypothesis_evaluation.verdict.upper()
             reasoning = experiment_result.hypothesis_evaluation.reasoning
-            verdict_text = f"Verdict: {verdict}\n\nReasoning: {reasoning}"
+            verdict_text = f"**Verdict:** {verdict}\n\n**Reasoning:** {reasoning}"
             
             verdict_card = CollapsibleTextCard(
                 self.results_container,

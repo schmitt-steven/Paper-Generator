@@ -1,9 +1,11 @@
 import tkinter as tk
 from tkinter import ttk
 import markdown
+import webbrowser
 from tkinterweb import HtmlFrame
 import sv_ttk
 import re
+import sys
 from .theme_colors import (
     TEXT_BG_DARK, TEXT_BG_LIGHT,
     TEXT_BG_DARK_ALT, TEXT_BG_LIGHT_ALT,
@@ -27,7 +29,8 @@ class MarkdownView(HtmlFrame):
         
         # Initialize HtmlFrame
         # messages_enabled=False prevents debug prints to stdout
-        super().__init__(parent, messages_enabled=False, horizontal_scrollbar="auto", **kwargs)
+        # on_link_click handles external links
+        super().__init__(parent, messages_enabled=False, horizontal_scrollbar="auto", on_link_click=self._on_link_click, **kwargs)
         
         self.font_manager = font_manager
         self.theme_mode = theme_mode
@@ -68,6 +71,10 @@ class MarkdownView(HtmlFrame):
         if self._current_markdown:
             self.set_markdown(self._current_markdown)
 
+    def _on_link_click(self, url):
+        """Open links in default browser instead of inside the widget."""
+        webbrowser.open(url)
+
     def set_markdown(self, markdown_text):
         """Convert markdown to HTML and render it."""
         self._current_markdown = markdown_text
@@ -81,12 +88,19 @@ class MarkdownView(HtmlFrame):
         # Convert markdown to html
         html_content = markdown.markdown(
             markdown_text, 
-            extensions=['fenced_code', 'tables', 'sane_lists', 'extra', 'nl2br']
+            extensions=['fenced_code', 'tables', 'sane_lists', 'extra']
         )
         
         # Determine fonts
-        font_family = "Helvetica"
-        mono_family = "Courier"
+        if sys.platform == "win32":
+            font_family = "Bahnschrift"
+            mono_family = "Consolas"
+        elif sys.platform == "darwin":
+            font_family = "SF Pro"
+            mono_family = "Menlo"
+        else:
+            font_family = "Helvetica"
+            mono_family = "Courier"
         
         # Determine colors based on theme
         is_dark = self.theme_mode == "dark"

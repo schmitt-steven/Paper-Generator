@@ -39,6 +39,29 @@ class ResultScreen(BaseFrame):
         )
         self.preview_images = [] # Keep references to prevent GC
 
+
+        # Bind resize event to adjust card height
+        self._canvas.bind("<Configure>", self._update_card_height, add="+")
+
+    def _update_card_height(self, event=None):
+        """Dynamically adjust card height to fill available space."""
+        if not self.preview_scroll_canvas:
+            return
+            
+        # Get canvas height
+        canvas_height = self._canvas.winfo_height()
+        
+        # Determine target height (canvas height - margins - card header)
+        # Margins: BaseFrame padding ~20, Card margin ~20, Card header ~40, plus safe zone
+        target_height = canvas_height - 160 
+        
+        # Minimum safe height
+        if target_height < 400:
+            target_height = 400
+            
+        # Update the preview canvas height
+        self.preview_scroll_canvas.configure(height=target_height)
+
     def create_content(self):
         # Buttons Section
         btn_frame = ttk.Frame(self.scrollable_frame, style="Scrollable.TFrame")
@@ -67,8 +90,41 @@ class ResultScreen(BaseFrame):
         show_btn.grid(row=0, column=1, padx=(5, 0), sticky="ew")
         
         # Preview Section
+
         self.preview_container = self.create_card_frame(self.scrollable_frame, "Preview")
-        # Preview will be loaded in on_show
+        
+        # Create internal scrolling mechanism for Preview
+        # Use a canvas + scrollbar inside the card content frame
+        self.preview_container.grid_rowconfigure(0, weight=1)
+        self.preview_container.grid_columnconfigure(0, weight=1)
+
+        self.preview_scroll_canvas = tk.Canvas(self.preview_container, highlightthickness=0)
+        self.preview_scrollbar = ttk.Scrollbar(self.preview_container, orient="vertical", command=self.preview_scroll_canvas.yview)
+        
+        self.preview_scroll_canvas.configure(yscrollcommand=self.preview_scrollbar.set)
+
+        self.preview_scroll_canvas.pack(side="left", fill="both", expand=True)
+        self.preview_scrollbar.pack(side="right", fill="y")
+
+        # Inner frame to hold the actual images
+        style = ttk.Style()
+        bg_color = style.lookup("CardContent.TFrame", "background")
+        if not bg_color: # Fallback
+             bg_color = self.preview_container.cget("background")
+
+        self.preview_scroll_canvas.configure(bg=bg_color)
+        
+        # Use a standard Frame for the inner content to attach to window
+        self.preview_inner_frame = ttk.Frame(self.preview_scroll_canvas, style="CardContent.TFrame")
+        self.preview_window_id = self.preview_scroll_canvas.create_window((0, 0), window=self.preview_inner_frame, anchor="nw")
+
+        # Bindings for scrolling
+        self.preview_inner_frame.bind("<Configure>", self._update_preview_scrollregion)
+        self.preview_scroll_canvas.bind("<Configure>", self._update_preview_window_width)
+        
+
+        # Force initial height calculation
+        self.after(100, self._update_card_height)
 
     def on_show(self):
         """Called when the screen is shown."""
@@ -77,7 +133,49 @@ class ResultScreen(BaseFrame):
     def show_preview(self):
         """Render PDF pages as images in the preview container."""
         # Clear existing
-        for widget in self.preview_container.winfo_children():
+    def _update_preview_scrollregion(self, event=None):
+        self.preview_scroll_canvas.configure(scrollregion=self.preview_scroll_canvas.bbox("all"))
+
+    def _update_preview_window_width(self, event):
+        self.preview_scroll_canvas.itemconfig(self.preview_window_id, width=event.width)
+
+    def _is_mouse_in_widget(self, widget_to_check):
+        try:
+            x, y = self.winfo_pointerx(), self.winfo_pointery()
+            widget = self.winfo_containing(x, y)
+            while widget:
+                if widget is widget_to_check:
+                    return True
+                widget = widget.master
+        except:
+            pass
+        return False
+
+    def _on_mousewheel(self, event):
+        """Override global mousewheel to check for preview scrolling first."""
+        if self._is_mouse_in_widget(self.preview_container):
+            self._on_preview_mousewheel(event)
+        else:
+            super()._on_mousewheel(event)
+
+    def _on_preview_mousewheel(self, event):
+        if self.preview_inner_frame.winfo_reqheight() <= self.preview_scroll_canvas.winfo_height():
+            return
+            
+        if event.num == 4:
+            delta = -1
+        elif event.num == 5:
+            delta = 1
+        elif event.delta > 0:
+            delta = -1
+        else:
+            delta = 1
+        self.preview_scroll_canvas.yview_scroll(delta, "units")
+
+    def show_preview(self):
+        """Render PDF pages as images in the preview container."""
+        # Clear existing
+        for widget in self.preview_inner_frame.winfo_children():
             widget.destroy()
         self.preview_images = []
 
@@ -127,7 +225,7 @@ class ResultScreen(BaseFrame):
                     self.preview_images.append(tk_img)
                     
                     # Container for page
-                    page_frame = ttk.Frame(self.preview_container, style="CardRow.TFrame", padding=10)
+                    page_frame = ttk.Frame(self.preview_inner_frame, style="CardRow.TFrame", padding=10)
                     page_frame.pack(fill="x")
                     
                     # Page Image
@@ -137,10 +235,10 @@ class ResultScreen(BaseFrame):
                     # Separator between pages (only if showing multiple preview pages)
                     pages_to_show = min(len(doc), MAX_PREVIEW_PAGES)
                     if page_num < pages_to_show - 1:
-                        ttk.Separator(self.preview_container, orient="horizontal").pack(fill="x", padx=50, pady=10)
+                        ttk.Separator(self.preview_inner_frame, orient="horizontal").pack(fill="x", padx=50, pady=10)
                 except Exception as e_page:
                     print(f"Error processing page {page_num}: {e_page}")
-                    ttk.Label(self.preview_container, text=f"Error processing page {page_num}.", foreground="red", style="CardRow.TLabel").pack()
+                    ttk.Label(self.preview_inner_frame, text=f"Error processing page {page_num}.", foreground="red", style="CardRow.TLabel").pack()
 
             doc.close()
             
@@ -239,7 +337,6 @@ class ResultScreen(BaseFrame):
             try:
                 # Load paper draft
                 self.after(0, lambda: popup.update_status("Loading paper draft"))
-                # Note: PaperWritingPipeline.load_paper_draft is a static method
                 paper_draft = PaperWritingPipeline.load_paper_draft(PAPER_DRAFT_FILE)
                 
                 # Load indexed papers

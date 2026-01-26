@@ -1,15 +1,146 @@
 """Info popup texts"""
 
-START_PAGE_INFO = """Start Page"""
+START_PAGE_INFO = """\
+## Welcome to the Paper Generator!
 
-WRITING_GUIDELINES_INFO = """Writing Guidelines"""
+This app helps your write a scientific paper from start to finish.
 
-SETTINGS_INFO = """Settings screen"""
+### Getting Started
+
+1.  **Configure the app** in the Settings.
+2.  **Define your topic and requirements** in `user_requirements.md`.
+3.  **Check the writing guidelines** in `section_guidelines.md` and adjust them if needed.
+4.  **Upload related code files** (optional, but recommended).
+
+Click **Generate** to begin the process!
+
+---
+
+This project is open source and available on GitHub:
+[https://github.com/schmitt-steven/Paper-Generator](https://github.com/schmitt-steven/Paper-Generator)
+"""
+
+WRITING_GUIDELINES_INFO = """\
+Specify **how** each section of the paper should be written.
+
+For example, you can specify:
+
+- How long the section should be
+- What writing style should be used
+- How the section should be structured
+
+# File Structure
+  
+The section writing guidelines file **must** have the following structure:
+
+```markdown
+# Section Guidelines
+
+## Abstract
+...
+
+## Introduction
+...
+
+## Related Work
+...
+
+## Methods
+...
+
+## Results
+...
+
+## Discussion
+...
+
+## Conclusion
+...
+
+## Acknowledgements
+...
+```
+"""
+
+SETTINGS_INFO = """\
+## General
+
+## LaTeX Template
+
+## Authors
+
+## LLM Models
+
+## Appearance
+"""
 
 
-CODE_FILES_INFO = """code files"""
+CODE_FILES_INFO = """\
+Upload your code files relevant to the topic of the paper here.
 
-USER_REQUIREMENTS_INFO = """user requirements"""
+It's not required to upload code files, but it can help the LLM to better understand your algorithm and generate more accurate results.
+
+The code files will also be used as context for the experimentation phase. The LLM even has the option to import methods or classes from the provided code.
+This can be helpful if you're trying to compare many different algorithms with each other, so the LLM doesn't have to "reinvent the wheel". 
+"""
+
+USER_REQUIREMENTS_INFO = """\
+Specify the topic of your paper and requirements for the sections of the paper here.
+
+Some questions to ask yourself:
+
+- What exactly do you want to write about?
+- Why is it novel or relevant?
+- What are the fundamentals the LLM must know about?
+- What do you want to prove/falsify?
+- What content should each section of the paper contain?
+- ...
+
+The content of this file is the basis of all following steps!<br>
+Make sure it corresponds to the paper you have in your mind!
+
+Note: If you want to specify the style/form the sections should be written in, adjust the `section_guidelines.md` file.
+
+# File Structure
+  
+The requirements file **must** have the following structure:
+
+```markdown
+## General Information
+
+### Topic
+...
+
+### Hypothesis
+...
+
+## Section Requirements
+
+### Abstract
+...
+
+### Introduction
+...
+
+### Related Work
+...
+
+### Methods
+...
+
+### Results
+...
+
+### Discussion
+...
+
+### Conclusion
+...
+
+### Acknowledgements
+...
+```
+"""
 
 PAPER_CONCEPT_INFO = """paper concept"""
 
