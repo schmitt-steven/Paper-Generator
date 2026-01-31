@@ -261,7 +261,7 @@ class ExperimentPlanScreen(BaseFrame):
     def _on_generation_success(self, popup: ProgressPopup):
         """Handle successful generation."""
         popup.close()
-        messagebox.showinfo("Success", "Experiment successfully completed.")
+        self.after(200, lambda: messagebox.showinfo("Success", "Experiment successfully completed."))
         self.controller.next_screen()
     
     def on_show(self):
@@ -336,4 +336,4 @@ class ExperimentPlanScreen(BaseFrame):
         # Re-apply theme colors
         self.controller.apply_theme_colors(self)
         
-        messagebox.showinfo("Success", "Experiment plan successfully regenerated.")
+        self.after(200, lambda: messagebox.showinfo("Success", "Experiment plan successfully regenerated."))

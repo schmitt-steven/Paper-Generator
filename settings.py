@@ -52,7 +52,7 @@ class Settings:
 
     # UI Settings
     FONT_SIZE = FontSize.SMALL
-    DARK_MODE = False
+    DARK_MODE = True
 
     # API related
     SEMANTIC_SCHOLAR_API_KEY = ""  # Optional Semantic Scholar API key for better rate limits

@@ -385,6 +385,6 @@ class ResultScreen(BaseFrame):
         popup.close()
         # Refresh preview
         self.show_preview()
-        messagebox.showinfo("Success", "PDF compiled successfully!")
+        self.after(200, lambda: messagebox.showinfo("Success", "PDF compiled successfully!"))
 
 

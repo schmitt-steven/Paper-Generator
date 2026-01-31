@@ -229,4 +229,4 @@ class PaperConceptScreen(BaseFrame):
         # Re-apply theme colors to newly created widgets
         self.controller.apply_theme_colors(self)
         
-        messagebox.showinfo("Success", "Paper concept successfully regenerated.")
+        self.after(200, lambda: messagebox.showinfo("Success", "Paper concept successfully regenerated."))

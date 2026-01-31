@@ -244,7 +244,7 @@ class HypothesisScreen(BaseFrame):
     def _on_generation_success(self, popup: ProgressPopup):
         """Handle successful generation."""
         popup.close()
-        messagebox.showinfo("Success", "Experiment plan successfully generated.")
+        self.after(200, lambda: messagebox.showinfo("Success", "Experiment plan successfully generated."))
         self.controller.next_screen()
 
     def on_regenerate(self):
@@ -297,7 +297,6 @@ class HypothesisScreen(BaseFrame):
         self.current_hypothesis = None
         self._load_hypothesis()
         
-        # Re-apply theme colors
         self.controller.apply_theme_colors(self)
         
-        messagebox.showinfo("Success", "Hypothesis successfully regenerated.")
+        self.after(200, lambda: messagebox.showinfo("Success", "Hypothesis successfully regenerated."))

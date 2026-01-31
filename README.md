@@ -1,6 +1,6 @@
 # Paper Generator
 
-Automated academic paper generator using local language and embedding models via LM Studio.
+Automated research paper generator using local language and embedding models via LM Studio.
 
 Work in progress, everything subject to change...
 
@@ -16,7 +16,7 @@ The entire process consists of 6 phases:
 
 ## Requirements
 
-- **Python 3.10+**
+- **Python 3.11+**
 - **LaTeX** (MacTeX or TeX Live, MikTeX, etc.)
 - **LM Studio** running in background with at least 3 downloaded models:
   - One LLM capable of tool use
@@ -64,26 +64,8 @@ pip install -r requirements.txt
 After the dependencies are installed, run:
 
 ```bash
-./main.py
-# or
-python main.py
+python main.py  # or ./main.py
 ```
-## Configuration
-
-Simply use the in-app Settings screen to change:
-
-- **LLM Models:** Select specific models to use for each phase (Analysis, Search, Writing, etc.).
-  - *Note: MLX embedding models are currently NOT supported by LM Studio. Please use GGUF embedding models (e.g., `text-embedding-qwen3-embedding-4b`).*
-- **API Keys:**
-  - `SEMANTIC_SCHOLAR_API_KEY`: (Optional) for higher rate limits and faster paper search.
-  - `UNPAYWALL_EMAIL`: (Optional) to identify open-access PDF versions of papers.
-- **LaTeX:**
-  - `LATEX_TEMPLATE`: Choose the template for the final PDF (e.g., `ieee_conference`, `jair`).
-  - `LATEX_AUTHORS`: Configure the author details.
-
-
-
-All generated files (PDFs, markdown drafts, experiment results) are saved to the `output/` folder.
 
 ## LM Studio Settings
 
