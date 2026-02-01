@@ -5,7 +5,6 @@
 sv-ttk>=2.6.0            # Sun Valley ttk theme
 pillow>=10.4.0           # Image processing for icons
 markdown>=3.4.0          # Markdown to HTML conversion
-markdown>=3.4.0          # Markdown to HTML conversion
 tkinterweb>=3.19.0       # HTML rendering in Tkinter
 
 # LLM Integration
@@ -13,7 +12,7 @@ lmstudio>=1.5.0          # LM Studio SDK
 pydantic>=2.0.0          # Data validation
 
 # Paper Search & Processing
-requests>=2.30.0         # HTTP requests for Semantic Scholar API
+requests>=2.30.0         # HTTP requests for APIs
 PyMuPDF>=1.26.0          # PDF parsing
 pymupdf4llm>=0.2.0       # PDF to markdown conversion
 
