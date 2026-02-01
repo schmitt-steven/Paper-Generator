@@ -8,8 +8,8 @@ This app helps your write a scientific paper from start to finish.
 ### Getting Started
 
 1.  **Configure the app** in the Settings.
-2.  **Define your topic and requirements** in `user_requirements.md`.
-3.  **Check the writing guidelines** in `section_guidelines.md` and adjust them if needed.
+2.  **Define your topic and requirements** in `paper_specification.md`.
+3.  **Check the style guidelines** in `style_guidelines.md` and adjust them if needed.
 4.  **Upload related code files** (optional, but recommended).
 
 Click **Generate** to begin the process!
@@ -20,7 +20,7 @@ This project is open source and available on GitHub:
 [https://github.com/schmitt-steven/Paper-Generator](https://github.com/schmitt-steven/Paper-Generator)
 """
 
-WRITING_GUIDELINES_INFO = """\
+STYLE_GUIDELINES_INFO = """\
 Specify **how** each section of the paper should be written.
 
 For example, you can specify:
@@ -31,10 +31,10 @@ For example, you can specify:
 
 # File Structure
   
-The section writing guidelines file **must** have the following structure:
+The section style guidelines file **must** have the following structure:
 
 ```markdown
-# Section Guidelines
+# Style Guidelines
 
 ## Abstract
 ...
@@ -84,7 +84,7 @@ The code files will also be used as context for the experimentation phase. The L
 This can be helpful if you're trying to compare many different algorithms with each other, so the LLM doesn't have to "reinvent the wheel". 
 """
 
-USER_REQUIREMENTS_INFO = """\
+PAPER_SPECIFICATION_INFO = """\
 Specify the topic of your paper and requirements for the sections of the paper here.
 
 Some questions to ask yourself:
@@ -99,7 +99,7 @@ Some questions to ask yourself:
 The content of this file is the basis of all following steps!<br>
 Make sure it corresponds to the paper you have in your mind!
 
-Note: If you want to specify the style/form the sections should be written in, adjust the `section_guidelines.md` file.
+Note: If you want to specify the style/form the sections should be written in, adjust the `style_guidelines.md` file.
 
 # File Structure
   
@@ -160,7 +160,7 @@ PAPER_DRAFT_INFO = """paper draft"""
 
 RESULT_INFO = """result"""
 
-SECTION_GUIDELINES_INFO = """section guidelines"""
+STYLE_GUIDELINES_EDITOR_INFO = """style guidelines"""
 
 LATEX_TEMPLATE_INFO = """\
 ## Adding Custom LaTeX Templates
@@ -169,9 +169,13 @@ All LaTeX templates are stored in the latex_templates/ directory.
 
 ### Required structure
   latex_templates/
+
   └── your_template_name/
+
   &nbsp;&nbsp;├── paper.tex (your main file, MUST be called "paper.tex")
+
   &nbsp;&nbsp;├── Makefile (for compilation)
+  
   &nbsp;&nbsp;└── ... (any .cls, .sty or whatever your template uses)
 
 ### Available Placeholders
@@ -179,28 +183,49 @@ All LaTeX templates are stored in the latex_templates/ directory.
 The template system uses placeholders that can be placed in the paper.tex file.
 
 #### Metadata
-  `%%TITLE%%`
-  `%%ABSTRACT%%`
-#### Sections
-  `%%INTRODUCTION%%`
-  `%%RELATED_WORK%%`
-  `%%METHODS%%`
-  `%%RESULTS%%`
-  `%%DISCUSSION%%`
-  `%%CONCLUSION%%`
-  `%%ACKNOWLEDGEMENTS%%`
-#### Authors
-  `%%BEGIN_AUTHOR%% ... %%END_AUTHOR%%`
-  Available fields: `{{name}}`, `{{affiliation}}`, `{{department}}`, `{{city}}`, `{{country}}`, `{{address}}`, `{{email}}`
-  `%%SHORTAUTHORS%%` - Auto-generated from author last names (for page headers)
+`%%TITLE%%`
 
-  Only ONE author placeholder is required.
-  The generator handles multiple authors automatically.
+`%%ABSTRACT%%`
+#### Sections
+`%%INTRODUCTION%%`
+
+`%%RELATED_WORK%%`
+
+`%%METHODS%%`
+
+`%%RESULTS%%`
+
+`%%DISCUSSION%%`
+
+`%%CONCLUSION%%`
+
+`%%ACKNOWLEDGEMENTS%%`
+
+#### Authors
+`%%BEGIN_AUTHOR%% ... %%END_AUTHOR%%`
+
+Available fields:
+
+- `{{name}}`
+- `{{affiliation}}`
+- `{{department}}`
+- `{{city}}`
+- `{{country}}`
+- `{{address}}`
+- `{{email}}`
+
+`%%SHORTAUTHORS%%` - Auto-generated from author last names (for page headers)
+
+Only ONE author placeholder is required.
+
+The generator handles multiple authors automatically.
 
 ### Bibliography
-  No placeholder needed.
-  The generator creates a bibliography.bib file and saves it to the output directory.
-  Include the bibliography via \\addbibresource{bibliography.bib} or similar.
+No placeholder needed.
+
+The generator creates a bibliography.bib file and saves it to the output directory.
+
+Include the bibliography via \\addbibresource{bibliography.bib} or similar.
 
 After adding a template folder, restart the app to select it on the settings page.
 """

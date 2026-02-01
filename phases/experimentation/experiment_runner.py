@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from utils.file_utils import save_json, load_json, save_markdown, load_markdown
 import lmstudio as lms
 from phases.context_analysis.paper_conception import PaperConcept
-from phases.context_analysis.user_requirements import UserRequirements
+from phases.context_analysis.paper_specification import PaperSpecification
 from phases.context_analysis.user_code_analysis import CodeAnalyzer, UserCode
 from phases.hypothesis_generation.hypothesis_builder import Hypothesis
 from phases.experimentation.experiment_state import (
@@ -90,26 +90,26 @@ class ExperimentRunner:
         hypothesis: Hypothesis,
         paper_concept: PaperConcept,
         output_dir: str,
-        user_requirements: Optional[UserRequirements] = None,
+        paper_specification: Optional[PaperSpecification] = None,
         user_code: Optional[list[UserCode]] = None,
         status_callback: callable = None
     ) -> CodeGenerationResult:
         """Generate experiment code in chunks, save to file, execute, and return results."""
         
         try:
-            # Format user requirements section
-            user_requirements_section = ""
+            # Format paper specification section
+            paper_spec_section = ""
             requirements_parts = []
-            if user_requirements:
-                if user_requirements.methods and user_requirements.methods.strip():
-                    requirements_parts.append(f"Methods: {user_requirements.methods}")
-                if user_requirements.results and user_requirements.results.strip():
-                    requirements_parts.append(f"Results: {user_requirements.results}")
+            if paper_specification:
+                if paper_specification.methods and paper_specification.methods.strip():
+                    requirements_parts.append(f"Methods: {paper_specification.methods}")
+                if paper_specification.results and paper_specification.results.strip():
+                    requirements_parts.append(f"Results: {paper_specification.results}")
             
             if requirements_parts:
-                user_requirements_section = "\n[USER REQUIREMENTS]\n" + "\n\n".join(requirements_parts)
+                paper_spec_section = "\n[PAPER SPECIFICATION]\n" + "\n\n".join(requirements_parts)
             else:
-                user_requirements_section = "\n[USER REQUIREMENTS]\nNo specific experimentation requirements provided"
+                paper_spec_section = "\n[PAPER SPECIFICATION]\nNo specific experimentation requirements provided"
 
             # Format user code files section
             user_code_section = ""
@@ -150,7 +150,7 @@ class ExperimentRunner:
                 Rationale: {hypothesis.rationale}
                 Success Criteria: {hypothesis.success_criteria}
 
-                {user_requirements_section}
+                {paper_spec_section}
                 {user_code_section}
                 {code_instructions}
 
@@ -762,24 +762,24 @@ Do NOT do this:
         self,
         hypothesis: Hypothesis,
         paper_concept: PaperConcept,
-        user_requirements: Optional[UserRequirements] = None,
+        paper_specification: Optional[PaperSpecification] = None,
         user_code: Optional[list[UserCode]] = None
     ) -> str:
         """Generate a detailed experiment plan for testing a hypothesis."""
 
-        # Format user requirements section
-        user_requirements_section = ""
+        # Format paper specification section
+        paper_spec_section = ""
         requirements_parts = []
-        if user_requirements:
-            if user_requirements.methods and user_requirements.methods.strip():
-                requirements_parts.append(f"Methods: {user_requirements.methods}")
-            if user_requirements.results and user_requirements.results.strip():
-                requirements_parts.append(f"Results: {user_requirements.results}")
+        if paper_specification:
+            if paper_specification.methods and paper_specification.methods.strip():
+                requirements_parts.append(f"Methods: {paper_specification.methods}")
+            if paper_specification.results and paper_specification.results.strip():
+                requirements_parts.append(f"Results: {paper_specification.results}")
         
         if requirements_parts:
-            user_requirements_section = "[USER REQUIREMENTS]\n" + "\n\n".join(requirements_parts)
+            paper_spec_section = "[PAPER SPECIFICATION]\n" + "\n\n".join(requirements_parts)
         else:
-            user_requirements_section = "[USER REQUIREMENTS]\nNo specific experimentation requirements provided"
+            paper_spec_section = "[PAPER SPECIFICATION]\nNo specific experimentation requirements provided"
 
         # Format user code files section
         user_code_section = ""
@@ -826,7 +826,7 @@ Do NOT do this:
             Rationale: {hypothesis.rationale}
             Success Criteria: {hypothesis.success_criteria}
 
-            {user_requirements_section}
+            {paper_spec_section}
 
             {user_code_section}
             {code_instructions}"""
@@ -1107,17 +1107,17 @@ Do NOT do this:
         else:
              os.makedirs(plots_dir, exist_ok=True)
         
-        # Load user requirements and user code
+        # Load paper specification and user code
         if status_callback:
-            status_callback("Loading user requirements and code")
-        user_requirements = None
+            status_callback("Loading paper specification and code")
+        paper_specification = None
         user_code = None
         try:
-            user_requirements = UserRequirements.load_user_requirements("user_files/user_requirements.md")
+            paper_specification = PaperSpecification.load("user_files/paper_specification.md")
         except FileNotFoundError:
-            print("User requirements file not found, proceeding without it")
+            print("Paper specification file not found, proceeding without it")
         except Exception as e:
-            print(f"Warning: Failed to load user requirements: {e}")
+            print(f"Warning: Failed to load paper specification: {e}")
         
         try:
             code_analyzer = CodeAnalyzer(model_name=self.settings.CODE_ANALYSIS_MODEL)
@@ -1168,7 +1168,7 @@ Do NOT do this:
                 experiment_plan = self._generate_experiment_plan(
                     hypothesis, 
                     paper_concept,
-                    user_requirements=user_requirements,
+                    paper_specification=paper_specification,
                     user_code=user_code
                 )
                 self.save_experiment_plan(experiment_plan)
@@ -1216,7 +1216,7 @@ Do NOT do this:
                 hypothesis,
                 paper_concept,
                 self.base_output_dir,
-                user_requirements=user_requirements,
+                paper_specification=paper_specification,
                 user_code=user_code,
                 status_callback=status_callback
             )

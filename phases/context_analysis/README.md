@@ -12,16 +12,16 @@ Analyzes user code files for novel concepts and research relevance.
 - Uses LLM to identify novel concepts and research relevance
 - Extracts important code snippets with explanations
 
-### `UserRequirements` ([user_requirements.py](user_requirements.py))
+### `PaperSpecification` ([paper_specification.py](paper_specification.py))
 
-Parses structured user requirements from `user_files/user_requirements.md`.
+Parses structured paper specification from `user_files/paper_specification.md`.
 
 - Topic and hypothesis
 - Section-specific requirements (abstract, introduction, methods, etc.)
 
 ### `PaperConception` ([paper_conception.py](paper_conception.py))
 
-Generates the paper concept using code analysis and user requirements.
+Generates the paper concept using code analysis and paper specification.
 
 - Builds paper description from analyzed code and requirements
 - Identifies open questions to guide literature search

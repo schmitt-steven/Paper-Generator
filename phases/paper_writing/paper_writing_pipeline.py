@@ -3,7 +3,7 @@ from typing import Sequence, Optional, Callable
 from pathlib import Path
 import re
 from phases.context_analysis.paper_conception import PaperConcept
-from phases.context_analysis.user_requirements import UserRequirements
+from phases.context_analysis.paper_specification import PaperSpecification
 from phases.paper_search.paper import Paper
 from phases.paper_writing.data_models import PaperDraft, PaperChunk, Section, Evidence
 from phases.paper_writing.paper_indexer import PaperIndexer
@@ -137,7 +137,7 @@ class PaperWritingPipeline:
         paper_concept: PaperConcept,
         experiment_result: ExperimentResult,
         papers: Sequence[Paper],
-        user_requirements: Optional[UserRequirements] = None,
+        paper_specification: Optional[PaperSpecification] = None,
         status_callback: Optional[Callable[[str], None]] = None,
         max_critique_queries: int = 5,  # Num of search suggestions/queries the critique generates
         chunks_per_query: int = 5,  # Num of kept chunks per query
@@ -195,7 +195,7 @@ class PaperWritingPipeline:
                     context=paper_concept,
                     experiment=experiment_result,
                     previous_sections=sections,
-                    user_requirements=user_requirements,
+                    paper_specification=paper_specification,
                     next_section_type=next_section_type,
                 )
                 prompts_by_section[section_type.value] = prompt
@@ -206,7 +206,7 @@ class PaperWritingPipeline:
                     context=paper_concept,
                     experiment=experiment_result,
                     previous_sections=sections,
-                    user_requirements=user_requirements,
+                    paper_specification=paper_specification,
                     next_section_type=next_section_type,
                 )
                 print(f"    Draft complete ({len(section_draft_v1)} chars)")
@@ -221,7 +221,7 @@ class PaperWritingPipeline:
                     draft_text=section_draft_v1,
                     papers=papers,
                     max_queries=max_critique_queries,
-                    user_requirements=user_requirements,
+                    paper_specification=paper_specification,
                 )
                 print(f"    Critique: {len(critique.improvements)} chars, {len(critique.search_queries)} queries")
                 
@@ -262,7 +262,7 @@ class PaperWritingPipeline:
                     context=paper_concept,
                     experiment=experiment_result,
                     previous_sections=sections,
-                    user_requirements=user_requirements,
+                    paper_specification=paper_specification,
                     next_section_type=next_section_type,
                 )
                 
@@ -271,9 +271,9 @@ class PaperWritingPipeline:
 
         # Generate acknowledgements if enabled
         acknowledgements = None
-        if Settings.GENERATE_ACKNOWLEDGEMENTS and user_requirements and user_requirements.acknowledgements:
+        if Settings.GENERATE_ACKNOWLEDGEMENTS and paper_specification and paper_specification.acknowledgements:
             print("\nWriting Acknowledgements section...")
-            acknowledgements = self.writer.generate_acknowledgements(user_requirements.acknowledgements)
+            acknowledgements = self.writer.generate_acknowledgements(paper_specification.acknowledgements)
 
         # Create draft (title will be set below)
         paper_draft = PaperDraft(

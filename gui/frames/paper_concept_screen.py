@@ -10,7 +10,7 @@ from ..theme_colors import (
     TEXT_BG_DARK_ALT, TEXT_BG_LIGHT_ALT, TEXT_FG_DARK, TEXT_FG_LIGHT,
 )
 from phases.context_analysis.paper_conception import PaperConception, PaperConcept
-from phases.context_analysis.user_requirements import UserRequirements
+from phases.context_analysis.paper_specification import PaperSpecification
 from phases.context_analysis.user_code_analysis import CodeAnalyzer
 from settings import Settings
 
@@ -179,9 +179,9 @@ class PaperConceptScreen(BaseFrame):
         
         def task():
             try:
-                # 1. Load User Requirements
-                self.after(0, lambda: popup.update_status("Loading user requirements"))
-                user_requirements = UserRequirements.load_user_requirements("user_files/user_requirements.md")
+                # 1. Load Paper Specification
+                self.after(0, lambda: popup.update_status("Loading paper specification"))
+                paper_specification = PaperSpecification.load_paper_specification("user_files/paper_specification.md")
                 
                 # 2. Analyze Code
                 self.after(0, lambda: popup.update_status("Analyzing code files"))
@@ -194,7 +194,7 @@ class PaperConceptScreen(BaseFrame):
                 paper_conception = PaperConception(
                     model_name=Settings.PAPER_CONCEPTION_MODEL,
                     user_code=analyzed_code,
-                    user_requirements=user_requirements
+                    paper_specification=paper_specification
                 )
                 
                 # This automatically saves to file

@@ -5,7 +5,7 @@ from phases.paper_writing.data_models import Section
 class SectionGuidelinesLoader:
     """Manages loading and saving of per-section style guidelines."""
     
-    FILE_PATH = Path("user_files/section_guidelines.md")
+    FILE_PATH = Path("user_files/style_guidelines.md")
 
     @classmethod
     def load_guidelines(cls) -> dict[Section, str]:

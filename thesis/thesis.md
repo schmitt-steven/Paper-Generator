@@ -7,7 +7,6 @@ Important concepts: Language Models, Embedding Models, RAG, (Local) Inference, P
 
 ## 3. Related Work
 CycleResearcher, Agent Laboratory, AI-Researcher, The AI-Scientist, Meow, DORA AI...
-- Table: Feature Comparison?
 
 ## 4. System Design
 
@@ -27,8 +26,11 @@ CycleResearcher, Agent Laboratory, AI-Researcher, The AI-Scientist, Meow, DORA A
 | C2 | Constraint | Hardware Baseline | The system shall be fully functional on a hardware baseline of 16GB System RAM and 4GB VRAM. |
 
 ### 4.2 Overview
-- Activity diagram of the entire workflow (the 6 phases)
-- Component Diagram of the system architecture (LM Studio + Tkinter  + APIs)
+- Activity diagram or Chevron Diagram of the entire workflow (the 6 phases), something like:
+![Chevron Diagram](Phase_Diagram.svg)
+
+- Component or Block Diagram of the system architecture, something like:
+![Architecture Diagram](architecture.svg)
 
 ### 4.3 Generation Process (Process Specification)
 - Activity Diagram for each phase
@@ -41,7 +43,7 @@ CycleResearcher, Agent Laboratory, AI-Researcher, The AI-Scientist, Meow, DORA A
 
 #### 4.3.4 Experimentation
 
-#### 4.3.5 Section Generation
+#### 4.3.5 Section Writing
 
 #### 4.3.6 Document Compilation
 

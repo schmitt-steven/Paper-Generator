@@ -18,7 +18,7 @@ from ..theme_colors import (
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.experimentation.experiment_runner import ExperimentRunner
 from phases.context_analysis.paper_conception import PaperConception
-from phases.context_analysis.user_requirements import UserRequirements
+from phases.context_analysis.paper_specification import PaperSpecification
 from phases.paper_writing.paper_writing_pipeline import PaperWritingPipeline
 
 
@@ -732,11 +732,11 @@ class ExperimentResultsScreen(BaseFrame):
                 from phases.paper_search.literature_search import LiteratureSearch
                 papers = LiteratureSearch.load_papers("output/papers.json")
                 
-                # Load user requirements if available
-                user_requirements = None
+                # Load paper specification if available
+                paper_specification = None
                 try:
-                    from phases.context_analysis.user_requirements import UserRequirements
-                    user_requirements = UserRequirements.load("output/user_requirements.json")
+                    from phases.context_analysis.paper_specification import PaperSpecification
+                    paper_specification = PaperSpecification.load("output/paper_specification.json")
                 except:
                     pass
                 
@@ -749,7 +749,7 @@ class ExperimentResultsScreen(BaseFrame):
                     paper_concept=paper_concept,
                     experiment_result=experiment_result,
                     papers=papers,
-                    user_requirements=user_requirements,
+                    paper_specification=paper_specification,
                     status_callback=status_callback,
                 )
                 

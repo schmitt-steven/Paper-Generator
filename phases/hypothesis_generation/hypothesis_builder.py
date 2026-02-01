@@ -77,12 +77,12 @@ class HypothesisBuilder(LazyModelMixin):
         self.top_limitations = top_limitations
         self.num_papers_analyzed = num_papers_analyzed
         
-    def create_hypothesis_from_user_input(self, user_requirements) -> Hypothesis:
+    def create_hypothesis_from_user_input(self, paper_specification) -> Hypothesis:
         """
         Create a Hypothesis object from a user-provided string.
         Uses LLM to structure the raw text into a proper Hypothesis object.
         """
-        user_hypothesis_text = user_requirements.hypothesis
+        user_hypothesis_text = paper_specification.hypothesis
         print(f"\nProcessing user-provided hypothesis...")
         
         # Paper title if provided by user
@@ -99,7 +99,7 @@ class HypothesisBuilder(LazyModelMixin):
             1. Extract/Infer a clear description, rationale, and success criteria.
             2. If information is missing, infer reasonable defaults based on the context or mark as "Not specified".
             3. Ensure the output is a valid Hypothesis object.
-            4. Use the additional user requirements to better understand the context and intent of the hypothesis.
+            4. Use the additional paper specification to better understand the context and intent of the hypothesis.
             5. CRITICAL for success_criteria: Do NOT include specific numbers, percentages, multipliers, or quantitative targets (e.g., "10x faster", "50% improvement", "reduces error by 20%"). 
                These are impossible to know before running experiments and are pure speculation. 
                Instead, use qualitative, observable criteria (e.g., "shows improved convergence", "demonstrates better sample efficiency", "exhibits reduced memory usage", "achieves stable performance")
@@ -118,11 +118,11 @@ class HypothesisBuilder(LazyModelMixin):
             User's raw hypothesis:
             "{user_hypothesis_text}"
             
-            Additional User Requirements/Context:
-            Topic: {user_requirements.topic}
-            Methods: {user_requirements.methods}
-            Results: {user_requirements.results}
-            Discussion: {user_requirements.discussion}
+            Additional Paper Specification/Context:
+            Topic: {paper_specification.topic}
+            Methods: {paper_specification.methods}
+            Results: {paper_specification.results}
+            Discussion: {paper_specification.discussion}
             
             Generate the structured hypothesis now."""
         )

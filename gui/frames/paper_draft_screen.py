@@ -18,7 +18,7 @@ from phases.latex_generation.paper_converter import PaperConverter
 from phases.latex_generation.paper_converter import LaTeXMetadata
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.experimentation.experiment_runner import ExperimentRunner
-from phases.context_analysis.user_requirements import UserRequirements
+from phases.context_analysis.paper_specification import PaperSpecification
 from phases.context_analysis.paper_conception import PaperConception
 from settings import Settings
 
@@ -326,9 +326,9 @@ class PaperDraftScreen(BaseFrame):
                 else:
                     raise ValueError("No experiment results found. Please run experiments first.")
                 
-                user_requirements = None
+                paper_specification = None
                 try:
-                    user_requirements = UserRequirements.load_user_requirements("user_files/user_requirements.md")
+                    paper_specification = PaperSpecification.load_paper_specification("user_files/paper_specification.md")
                 except:
                     pass
                 
@@ -344,7 +344,7 @@ class PaperDraftScreen(BaseFrame):
                     paper_concept=paper_concept,
                     experiment_result=experiment_result,
                     papers=papers,
-                    user_requirements=user_requirements,
+                    paper_specification=paper_specification,
                     status_callback=status_update
                 )
                 

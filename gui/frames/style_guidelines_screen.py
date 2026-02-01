@@ -2,21 +2,21 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 from ..base_frame import BaseFrame, create_scrollable_text_area
-from ..info_texts import SECTION_GUIDELINES_INFO
-from phases.paper_writing.section_guidelines import SectionGuidelinesLoader
+from ..info_texts import STYLE_GUIDELINES_EDITOR_INFO
+from phases.paper_writing.style_guidelines import SectionGuidelinesLoader
 from phases.paper_writing.data_models import Section
 
 class SectionGuidelinesScreen(BaseFrame):
     def __init__(self, parent, controller):
-        self.file_path = "user_files/section_guidelines.md"
+        self.file_path = "user_files/style_guidelines.md"
         super().__init__(
             parent=parent,
             controller=controller,
-            title="Section Writing Guidelines",
+            title="Section Style Guidelines",
             next_text="Save",
             has_back=True,
             header_file_path=self.file_path,
-            info_content=SECTION_GUIDELINES_INFO
+            info_content=STYLE_GUIDELINES_EDITOR_INFO
         )
         self.text_areas = {}
         self.section_cards = []  # Track cards for selective clearing
@@ -117,7 +117,7 @@ class SectionGuidelinesScreen(BaseFrame):
         
         SectionGuidelinesLoader.save_guidelines(new_guidelines)
         
-        messagebox.showinfo("Saved", "Section guidelines have been saved successfully.")
+        messagebox.showinfo("Saved", "Style Guidelines have been saved successfully.")
          
     def on_back(self):
         from .settings_screen import SettingsScreen

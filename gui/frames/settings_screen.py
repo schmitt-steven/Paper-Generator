@@ -321,7 +321,7 @@ class SettingsScreen(BaseFrame):
         confirmed = messagebox.askyesno(
             "Clear Cache",
             "This will delete all files from the output folder and temporary files from user_files.\n\n"
-            "Section guidelines and user requirements will be preserved.\n\n"
+            "Style Guidelines and paper specification will be preserved.\n\n"
             "Are you sure you want to continue?",
             icon="warning"
         )
@@ -348,9 +348,9 @@ class SettingsScreen(BaseFrame):
                 except Exception as e:
                     errors.append(f"{item.name}: {e}")
         
-        # Clear user_files (except section_guidelines.md and user_requirements.md)
+        # Clear user_files (except style_guidelines.md and paper_specification.md)
         user_files_dir = base_dir / "user_files"
-        protected_files = {"section_guidelines.md", "user_requirements.md"}
+        protected_files = {"style_guidelines.md", "paper_specification.md"}
         
         if user_files_dir.exists():
             for item in user_files_dir.iterdir():

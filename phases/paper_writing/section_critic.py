@@ -10,8 +10,8 @@ from typing import Optional, Sequence
 
 from phases.paper_search.paper import Paper
 from phases.paper_writing.data_models import Section, SectionCritique
-from phases.paper_writing.section_guidelines import SectionGuidelinesLoader
-from phases.context_analysis.user_requirements import UserRequirements
+from phases.paper_writing.style_guidelines import SectionGuidelinesLoader
+from phases.context_analysis.paper_specification import PaperSpecification
 from phases.latex_generation.bibliography import extract_citation_keys_from_markdown, create_paper_mapping
 from utils.llm_utils import remove_thinking_blocks
 from settings import Settings
@@ -30,13 +30,13 @@ class SectionCritic:
         draft_text: str,
         papers: Sequence[Paper],
         max_queries: int = 5,
-        user_requirements: Optional[UserRequirements] = None,
+        paper_specification: Optional[PaperSpecification] = None,
     ) -> SectionCritique:
         """Analyze a draft section and return structured critique."""
 
         model = lms.llm(Settings.PAPER_WRITING_MODEL)
         prompt = self._build_critique_prompt(
-            section_type, draft_text, papers, max_queries, user_requirements
+            section_type, draft_text, papers, max_queries, paper_specification
         )
         
         response = model.respond(
@@ -84,18 +84,18 @@ class SectionCritic:
         draft_text: str,
         papers: Sequence[Paper],
         max_queries: int,
-        user_requirements: Optional[UserRequirements] = None,
+        paper_specification: Optional[PaperSpecification] = None,
     ) -> str:
         """Build the prompt for section critique."""
         
         paper_catalog = self._format_paper_catalog(papers)
         
-        # Get section guidelines
+        # Get style guidelines
         guidelines = SectionGuidelinesLoader.get_guidelines(section_type)
         
-        # Get section-specific user requirements
-        user_req_block = ""
-        if user_requirements:
+        # Get section-specific paper specification
+        paper_spec_block = ""
+        if paper_specification:
             section_to_field = {
                 Section.ABSTRACT: "abstract",
                 Section.INTRODUCTION: "introduction",
@@ -107,14 +107,14 @@ class SectionCritic:
             }
             field = section_to_field.get(section_type)
             if field:
-                req_text = getattr(user_requirements, field, None)
+                req_text = getattr(paper_specification, field, None)
                 if req_text and req_text.strip():
-                    user_req_block = f"""
-[USER REQUIREMENTS FOR THIS SECTION]
+                    paper_spec_block = f"""
+[PAPER SPECIFICATION FOR THIS SECTION]
 The user has specified the following requirements for the {section_type.value} section:
 {req_text.strip()}
 
-CRITICAL: Check if the draft satisfies these user requirements. If not, add specific improvement suggestions.
+CRITICAL: Check if the draft satisfies these paper specifications. If not, add specific improvement suggestions.
 """
         
         return textwrap.dedent(f"""\
@@ -124,18 +124,18 @@ CRITICAL: Check if the draft satisfies these user requirements. If not, add spec
 
             [TASK]
             Analyze the draft {section_type.value} section and identify:
-            1. Violations of section guidelines (HIGHEST PRIORITY)
+            1. Violations of style guidelines (HIGHEST PRIORITY)
             2. Areas that need improvement (use positive framing - what to add/change, not what's wrong)
             3. Search queries to find additional supporting evidence (max {max_queries} queries)
 
             [SECTION TYPE]
             {section_type.value}
 
-            [SECTION GUIDELINES]
+            [STYLE GUIDELINES]
             These are the official guidelines for this section. Check for violations:
             {guidelines}
 
-            {user_req_block}
+            {paper_spec_block}
 
             [DRAFT TEXT]
             {draft_text}

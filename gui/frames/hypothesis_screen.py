@@ -13,7 +13,7 @@ from ..theme_colors import (
 )
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder, Hypothesis
 from phases.context_analysis.paper_conception import PaperConception
-from phases.context_analysis.user_requirements import UserRequirements
+from phases.context_analysis.paper_specification import PaperSpecification
 from phases.experimentation.experiment_runner import ExperimentRunner
 from settings import Settings
 
@@ -202,12 +202,12 @@ class HypothesisScreen(BaseFrame):
                 self.after(0, lambda: popup.update_status("Loading paper concept"))
                 paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
                 
-                # Load user requirements
-                self.after(0, lambda: popup.update_status("Loading user requirements"))
+                # Load paper specification
+                self.after(0, lambda: popup.update_status("Loading paper specification"))
                 try:
-                    user_requirements = UserRequirements.load_user_requirements("user_files/user_requirements.md")
+                    paper_specification = PaperSpecification.load_paper_specification("user_files/paper_specification.md")
                 except FileNotFoundError:
-                    user_requirements = None
+                    paper_specification = None
                 
                 # Load code files
                 self.after(0, lambda: popup.update_status("Loading code files"))
@@ -225,7 +225,7 @@ class HypothesisScreen(BaseFrame):
                 experiment_plan = experiment_runner._generate_experiment_plan(
                     hypothesis, 
                     paper_concept,
-                    user_requirements=user_requirements,
+                    paper_specification=paper_specification,
                     user_code=user_code
                 )
                 experiment_runner.save_experiment_plan(experiment_plan)
@@ -260,7 +260,7 @@ class HypothesisScreen(BaseFrame):
                 # 1. Load resources
                 self.after(0, lambda: popup.update_status("Loading resources"))
                 paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
-                user_requirements = UserRequirements.load_user_requirements("user_files/user_requirements.md")
+                paper_specification = PaperSpecification.load_paper_specification("user_files/paper_specification.md")
                 
                 # 2. Initialize Builder
                 self.after(0, lambda: popup.update_status("Initializing builder"))
@@ -273,7 +273,7 @@ class HypothesisScreen(BaseFrame):
                 
                 # 3. Generate Hypothesis
                 self.after(0, lambda: popup.update_status("Generating hypothesis"))
-                builder.create_hypothesis_from_user_input(user_requirements)
+                builder.create_hypothesis_from_user_input(paper_specification)
                 
                 # 4. Reload UI
                 self.after(0, lambda: self._on_regeneration_complete(popup))

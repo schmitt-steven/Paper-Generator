@@ -17,7 +17,7 @@ from phases.paper_search.literature_search import LiteratureSearch
 from phases.experimentation.experiment_runner import ExperimentRunner
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.context_analysis.paper_conception import PaperConception
-from phases.context_analysis.user_requirements import UserRequirements
+from phases.context_analysis.paper_specification import PaperSpecification
 
 PDF_PATH = "output/latex/result/paper.pdf"
 PAPER_DRAFT_FILE = "output/paper_draft.md"

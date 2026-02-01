@@ -17,7 +17,7 @@ from phases.paper_search.literature_search import LiteratureSearch
 from phases.paper_search.paper_ranking import PaperRanker
 from phases.paper_search.paper_filter import PaperFilter
 from phases.context_analysis.paper_conception import PaperConception, PaperConcept
-from phases.context_analysis.user_requirements import UserRequirements
+from phases.context_analysis.paper_specification import PaperSpecification
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from utils.pdf_downloader import PDFDownloader
 from utils.pdf_converter import PDFConverter
@@ -758,17 +758,17 @@ class PaperSelectionScreen(BaseFrame):
             try:
                 self.after(0, lambda: popup.update_status("Loading paper concept"))
                 paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
-                user_requirements = UserRequirements.load_user_requirements("user_files/user_requirements.md")
+                paper_specification = PaperSpecification.load_paper_specification("user_files/paper_specification.md")
                 
                 # Only generate if user provided hypothesis
-                if user_requirements.hypothesis and user_requirements.hypothesis.strip():
+                if paper_specification.hypothesis and paper_specification.hypothesis.strip():
                     self.after(0, lambda: popup.update_status("Creating hypothesis from user input"))
                     HypothesisBuilder(
                         model_name=Settings.HYPOTHESIS_BUILDER_MODEL,
                         paper_concept=paper_concept,
                         top_limitations=[],
                         num_papers_analyzed=0
-                    ).create_hypothesis_from_user_input(user_requirements)
+                    ).create_hypothesis_from_user_input(paper_specification)
                 
                 self.after(0, lambda: self._finish_processing(popup, show_hypothesis_popup=True))
                 

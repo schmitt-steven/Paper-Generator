@@ -1,4 +1,4 @@
-# Section Guidelines
+# Style Guidelines
 ## Abstract
 150-300 words MAX.
 Default structure: (1) Problem/Gap, (2) Approach, (3) Key Results (with specific metrics), (4) Main Implication.

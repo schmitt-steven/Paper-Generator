@@ -16,7 +16,7 @@ from ..markdown_view import MarkdownView
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.context_analysis.paper_conception import PaperConception
 from phases.experimentation.experiment_runner import ExperimentRunner
-from phases.context_analysis.user_requirements import UserRequirements
+from phases.context_analysis.paper_specification import PaperSpecification
 from phases.context_analysis.user_code_analysis import CodeAnalyzer
 from settings import Settings
 
@@ -289,9 +289,9 @@ class ExperimentPlanScreen(BaseFrame):
                 
                 paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
                 
-                user_requirements = None
+                paper_specification = None
                 try:
-                    user_requirements = UserRequirements.load_user_requirements("user_files/user_requirements.md")
+                    paper_specification = PaperSpecification.load_paper_specification("user_files/paper_specification.md")
                 except:
                     pass
                 
@@ -309,7 +309,7 @@ class ExperimentPlanScreen(BaseFrame):
                 experiment_plan = experiment_runner._generate_experiment_plan(
                     selected_hypothesis, 
                     paper_concept,
-                    user_requirements=user_requirements,
+                    paper_specification=paper_specification,
                     user_code=user_code
                 )
                 

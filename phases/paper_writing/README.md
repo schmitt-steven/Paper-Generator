@@ -32,9 +32,9 @@ Analyzes draft sections and returns structured feedback:
 - `improvements`: List of specific suggestions (positively framed)
 - `search_queries`: Targeted queries to fill missing evidence gaps
 
-### `SectionGuidelinesLoader` ([section_guidelines.py](section_guidelines.py))
+### `SectionGuidelinesLoader` ([style_guidelines.py](style_guidelines.py))
 
-Loads user-defined writing guidelines from `user_files/section_guidelines.md`.
+Loads user-defined style guidelines from `user_files/style_guidelines.md`.
 
 ### `PaperWriter` ([paper_writer.py](paper_writer.py))
 
@@ -59,5 +59,5 @@ High-level orchestrator for the entire paper writing workflow:
 ## Output
 
 - `output/paper_embeddings.json` - Cached chunk embeddings
-- `output/section_writing_prompts.md` - Prompts used for each section
+- `output/section_writing_prompts.json` - Prompts used for each section
 - `output/paper_draft.md` - Generated paper draft

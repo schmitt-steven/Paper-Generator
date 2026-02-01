@@ -16,7 +16,7 @@ Data class representing a testable research hypothesis.
 
 Uses LLM to convert user-provided hypothesis text into a `Hypothesis` object.
 
-- Takes raw user input from the user requirements and paper concept as context
+- Takes raw user input from the paper specification and paper concept as context
 - Outputs a structured hypothesis with description, rationale and success criteria
 
 ## Output

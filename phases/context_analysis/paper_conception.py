@@ -7,7 +7,7 @@ from phases.context_analysis.user_code_analysis import (
     CodeSnippet,
     UserCode,
 )
-from phases.context_analysis.user_requirements import UserRequirements
+from phases.context_analysis.paper_specification import PaperSpecification
 from settings import Settings
 from utils.file_utils import load_markdown, save_markdown
 from utils.lazy_model_loader import LazyModelMixin
@@ -23,15 +23,15 @@ class PaperConcept():
 
 class PaperConception(LazyModelMixin):
 
-    def __init__(self, model_name, user_code: list[UserCode], user_requirements: UserRequirements):
+    def __init__(self, model_name, user_code: list[UserCode], paper_specification: PaperSpecification):
         self.model_name = model_name
         self._model = None  # Lazy-loaded via LazyModelMixin
         self.user_code = user_code
-        self.user_requirements = user_requirements
+        self.paper_specification = paper_specification
 
-    def _format_user_requirements_section(self) -> str:
-        """Format user requirements into a readable section for the LLM prompt."""
-        req = self.user_requirements
+    def _format_paper_specification_section(self) -> str:
+        """Format paper specification into a readable section for the LLM prompt."""
+        req = self.paper_specification
         
         # Collect all non-empty fields
         sections = []
@@ -61,7 +61,7 @@ class PaperConception(LazyModelMixin):
         if not sections:
             return ""
         
-        return "[User Requirements]\n" + "\n".join(sections)
+        return "[Paper Specification]\n" + "\n".join(sections)
 
     def generate_core_information(self) -> PaperConcept:
         
@@ -114,8 +114,8 @@ class PaperConception(LazyModelMixin):
             - **Architecture:** Define the structural logic (e.g., "A dual-encoder framework...").
             - **Key differentiator:** How does this implementation differ from the standard approach? (e.g., "Replaces standard Softmax with Sparsemax to...").
             
-            [USER REQUIREMENTS]
-            {self._format_user_requirements_section()}
+            [PAPER SPECIFICATION]
+            {self._format_paper_specification_section()}
 
             {title_section}[CODE ANALYSIS]
             {code_analysis_report}"""

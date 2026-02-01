@@ -2,11 +2,11 @@ import textwrap
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from phases.context_analysis.paper_conception import PaperConcept
-from phases.context_analysis.user_requirements import UserRequirements
+from phases.context_analysis.paper_specification import PaperSpecification
 from phases.experimentation.experiment_state import ExperimentResult, Plot
 from phases.paper_search.paper import Paper
 from phases.paper_writing.data_models import Evidence, PaperDraft, Section, SectionCritique
-from phases.paper_writing.section_guidelines import SectionGuidelinesLoader
+from phases.paper_writing.style_guidelines import SectionGuidelinesLoader
 from utils.llm_utils import remove_thinking_blocks
 from settings import Settings
 import lmstudio as lms
@@ -24,7 +24,7 @@ class PaperWriter:
         experiment: ExperimentResult,
         evidence_by_section: dict[Section, Sequence[Evidence]],
 
-        user_requirements: Optional[UserRequirements] = None,
+        paper_specification: Optional[PaperSpecification] = None,
         writing_prompts: Optional[dict[str, str]] = None,
     ) -> tuple[PaperDraft, dict[str, str]]:
         """Generate all paper sections using provided evidence. Returns (draft, prompts_by_section)."""
@@ -44,7 +44,7 @@ class PaperWriter:
                 experiment=experiment,
                 evidence=evidence_by_section.get(section_type, []),
                 previous_sections=sections,
-                user_requirements=user_requirements,
+                paper_specification=paper_specification,
             )
             
             # Use existing prompt if available (override the built one if needed, or just use it)
@@ -60,16 +60,16 @@ class PaperWriter:
                 experiment=experiment,
                 evidence=evidence_by_section.get(section_type, []),
                 previous_sections=sections,
-                user_requirements=user_requirements,
+                paper_specification=paper_specification,
                 existing_prompt=prompt,
             )
 
         # Generate acknowledgements if enabled and user provided content
         acknowledgements = None
-        if Settings.GENERATE_ACKNOWLEDGEMENTS and user_requirements and user_requirements.acknowledgements:
+        if Settings.GENERATE_ACKNOWLEDGEMENTS and paper_specification and paper_specification.acknowledgements:
             print("Writing Acknowledgements section...")
-            acknowledgements = self.generate_acknowledgements(user_requirements.acknowledgements)
-            prompts_by_section[Section.ACKNOWLEDGEMENTS.value] = self._build_acknowledgements_prompt(user_requirements.acknowledgements)
+            acknowledgements = self.generate_acknowledgements(paper_specification.acknowledgements)
+            prompts_by_section[Section.ACKNOWLEDGEMENTS.value] = self._build_acknowledgements_prompt(paper_specification.acknowledgements)
 
         # Create draft (title will be set below)
         draft = PaperDraft(
@@ -100,7 +100,7 @@ class PaperWriter:
 
         previous_sections: Optional[dict[Section, str]] = None,
         temperature: float = 0.2,
-        user_requirements: Optional[UserRequirements] = None,
+        paper_specification: Optional[PaperSpecification] = None,
         existing_prompt: Optional[str] = None,
         next_section_type: Optional[Section] = None,
     ) -> str:
@@ -111,7 +111,7 @@ class PaperWriter:
              prompt = existing_prompt
         else:
              prompt = self._build_section_prompt(
-                 section_type, context, experiment, evidence, previous_sections, user_requirements, next_section_type
+                 section_type, context, experiment, evidence, previous_sections, paper_specification, next_section_type
              )
         response = model.respond(
             prompt,
@@ -128,7 +128,7 @@ class PaperWriter:
         experiment: Optional[ExperimentResult],
         evidence: Sequence[Evidence],
         previous_sections: Optional[dict[Section, str]] = None,
-        user_requirements: Optional[UserRequirements] = None,
+        paper_specification: Optional[PaperSpecification] = None,
         next_section_type: Optional[Section] = None,
     ) -> str:
         """Create the generation prompt for a specific section."""
@@ -138,7 +138,7 @@ class PaperWriter:
         evidence_block = self._format_evidence_for_prompt(evidence)
         previous_sections_block = self._format_previous_sections(section_type, previous_sections or {})
         
-        # Map Section enum to UserRequirements field
+        # Map Section enum to PaperSpecification field
         section_to_requirement = {
             Section.ABSTRACT: "abstract",
             Section.INTRODUCTION: "introduction",
@@ -149,14 +149,14 @@ class PaperWriter:
             Section.CONCLUSION: "conclusion",
         }
         
-        # Get section-specific user requirements if available
-        user_requirements_block = ""
-        if user_requirements:
+        # Get section-specific paper specification if available
+        paper_spec_block = ""
+        if paper_specification:
             requirement_field = section_to_requirement.get(section_type)
             if requirement_field:
-                requirement_text = getattr(user_requirements, requirement_field, None)
+                requirement_text = getattr(paper_specification, requirement_field, None)
                 if requirement_text and requirement_text.strip():
-                    user_requirements_block = f"""[USER REQUIREMENTS]\n{requirement_text.strip()}"""
+                    paper_spec_block = f"""[PAPER SPECIFICATION]\n{requirement_text.strip()}"""
         
         # Add plots block for Results section
         plots_block = ""
@@ -208,10 +208,10 @@ class PaperWriter:
             [PREVIOUS SECTIONS]
             {previous_sections_block if previous_sections_block else 'None'}
 
-            [SECTION GUIDELINES]
+            [STYLE GUIDELINES]
             {guidelines}
 
-            {user_requirements_block}
+            {paper_spec_block}
 
             [WRITING REQUIREMENTS — STRICT]
             - Write a publication-quality abstract that summarizes the key contributions.
@@ -253,12 +253,12 @@ class PaperWriter:
             [EVIDENCE]
             {evidence_block if evidence_block else 'No evidence available.'}
 
-            [SECTION GUIDELINES]
+            [STYLE GUIDELINES]
             {guidelines}
 
-            {user_requirements_block}
+            {paper_spec_block}
 
-            {user_requirements_block}
+            {paper_spec_block}
             {forward_look_block}
             {plots_block}
 
@@ -414,7 +414,7 @@ class PaperWriter:
         experiment: Optional[ExperimentResult] = None,
     ) -> str:
         """
-        Specifies writing guidelines for each paper section.
+        Specifies style guidelines for each paper section.
         These guidelines are combined with more context and evidence in _build_section_prompt().
         """
         return SectionGuidelinesLoader.get_guidelines(section_type, experiment)
@@ -496,7 +496,7 @@ class PaperWriter:
             [USER PROVIDED ACKNOWLEDGEMENTS]
             {user_acknowledgements}
 
-            [SECTION GUIDELINES]
+            [STYLE GUIDELINES]
             {guidelines}
 
             [WRITING REQUIREMENTS]
@@ -522,7 +522,7 @@ class PaperWriter:
         context: PaperConcept,
         experiment: Optional[ExperimentResult],
         previous_sections: Optional[dict[Section, str]] = None,
-        user_requirements: Optional[UserRequirements] = None,
+        paper_specification: Optional[PaperSpecification] = None,
         temperature: float = 0.2,
         next_section_type: Optional[Section] = None,
     ) -> str:
@@ -534,7 +534,7 @@ class PaperWriter:
             context,
             experiment,
             previous_sections,
-            user_requirements,
+            paper_specification,
             next_section_type,
         )
 
@@ -554,7 +554,7 @@ class PaperWriter:
         context: PaperConcept,
         experiment: Optional[ExperimentResult],
         previous_sections: Optional[dict[Section, str]] = None,
-        user_requirements: Optional[UserRequirements] = None,
+        paper_specification: Optional[PaperSpecification] = None,
         temperature: float = 0.2,
         next_section_type: Optional[Section] = None,
     ) -> str:
@@ -569,7 +569,7 @@ class PaperWriter:
             context,
             experiment,
             previous_sections,
-            user_requirements,
+            paper_specification,
             temperature,
             next_section_type,
         )
@@ -586,7 +586,7 @@ class PaperWriter:
         context: PaperConcept,
         experiment: Optional[ExperimentResult],
         previous_sections: Optional[dict[Section, str]] = None,
-        user_requirements: Optional[UserRequirements] = None,
+        paper_specification: Optional[PaperSpecification] = None,
         next_section_type: Optional[Section] = None,
     ) -> str:
         """Build prompt for initial section draft using paper catalog."""
@@ -596,8 +596,8 @@ class PaperWriter:
         paper_catalog = self._format_paper_catalog(papers)
         previous_sections_block = self._format_previous_sections(section_type, previous_sections or {})
         
-        # Get section-specific user requirements if available
-        user_requirements_block = self._get_user_requirements_block(section_type, user_requirements)
+        # Get section-specific paper specification if available
+        paper_spec_block = self._get_paper_spec_block(section_type, paper_specification)
         
         # Paper title if provided by user
         title_section = ""
@@ -635,11 +635,10 @@ class PaperWriter:
             The following papers are available for citation. Use their citation keys in square brackets (e.g. [HintonRL2016]).
             {paper_catalog}
 
-            [SECTION GUIDELINES]
+            [STYLE GUIDELINES]
             {guidelines}
 
-            {user_requirements_block}
-            {user_requirements_block}
+            {paper_spec_block}
             {forward_look_block}
 
             [WRITING REQUIREMENTS — STRICT]
@@ -674,7 +673,7 @@ class PaperWriter:
         context: PaperConcept,
         experiment: Optional[ExperimentResult],
         previous_sections: Optional[dict[Section, str]] = None,
-        user_requirements: Optional[UserRequirements] = None,
+        paper_specification: Optional[PaperSpecification] = None,
         temperature: float = 0.2,
         next_section_type: Optional[Section] = None,
     ) -> str:
@@ -685,7 +684,7 @@ class PaperWriter:
         paper_catalog = self._format_paper_catalog(papers)
         evidence_block = self._format_evidence_for_prompt(new_evidence)
         previous_sections_block = self._format_previous_sections(section_type, previous_sections or {})
-        user_requirements_block = self._get_user_requirements_block(section_type, user_requirements)
+        paper_spec_block = self._get_paper_spec_block(section_type, paper_specification)
         
         improvements_text = critique.improvements
         
@@ -733,10 +732,10 @@ class PaperWriter:
             [AVAILABLE PAPERS]
             {paper_catalog}
 
-            [SECTION GUIDELINES]
+            [STYLE GUIDELINES]
             {guidelines}
 
-            {user_requirements_block}
+            {paper_spec_block}
             {forward_look_block}
 
             [WRITING REQUIREMENTS — STRICT]
@@ -788,13 +787,13 @@ class PaperWriter:
         
         return "\n\n".join(items)
 
-    def _get_user_requirements_block(
+    def _get_paper_spec_block(
         self,
         section_type: Section,
-        user_requirements: Optional[UserRequirements],
+        paper_specification: Optional[PaperSpecification],
     ) -> str:
-        """Get section-specific user requirements as a formatted block."""
-        if not user_requirements:
+        """Get section-specific paper specification as a formatted block."""
+        if not paper_specification:
             return ""
         
         section_to_requirement = {
@@ -809,8 +808,8 @@ class PaperWriter:
         
         requirement_field = section_to_requirement.get(section_type)
         if requirement_field:
-            requirement_text = getattr(user_requirements, requirement_field, None)
+            requirement_text = getattr(paper_specification, requirement_field, None)
             if requirement_text and requirement_text.strip():
-                return f"[USER REQUIREMENTS]\n{requirement_text.strip()}"
+                return f"[PAPER SPECIFICATION]\n{requirement_text.strip()}"
         
         return ""

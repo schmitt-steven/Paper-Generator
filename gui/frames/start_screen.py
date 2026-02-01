@@ -9,7 +9,7 @@ from typing import List
 from dataclasses import dataclass
 
 from ..base_frame import BaseFrame, CardBorderFrame, InfoPopup
-from ..info_texts import START_PAGE_INFO, USER_REQUIREMENTS_INFO, WRITING_GUIDELINES_INFO, CODE_FILES_INFO
+from ..info_texts import START_PAGE_INFO, PAPER_SPECIFICATION_INFO, STYLE_GUIDELINES_INFO, CODE_FILES_INFO
 from ..theme_colors import CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT, MUTED_TEXT
 from ..icons import HoverColor
 
@@ -31,15 +31,15 @@ class CodeFile:
 
 
 class StartScreen(BaseFrame):
-    """Start page with quick access to Settings, User Requirements, Writing Guidelines, and Code Files."""
+    """Start page with quick access to Settings, Paper Specification, Style Guidelines, and Code Files."""
     
     def __init__(self, parent, controller):
         self.code_files: list[CodeFile] = []
         self.file_widgets: dict[str, ttk.Frame] = {}
         
         # File paths
-        self.user_requirements_path = "user_files/user_requirements.md"
-        self.writing_guidelines_path = "user_files/section_guidelines.md"
+        self.paper_specification_path = "user_files/paper_specification.md"
+        self.style_guidelines_path = "user_files/style_guidelines.md"
         
         super().__init__(
             parent=parent,
@@ -54,8 +54,8 @@ class StartScreen(BaseFrame):
     def create_content(self):
         """Create the four main sections."""
         self._create_settings_section()
-        self._create_user_requirements_section()
-        self._create_writing_guidelines_section()
+        self._create_paper_specification_section()
+        self._create_style_guidelines_section()
         self._create_code_files_section()
     
     def on_show(self):
@@ -109,10 +109,10 @@ class StartScreen(BaseFrame):
         from .settings_screen import SettingsScreen
         self.controller.show_frame(SettingsScreen)
 
-    # ==================== User Requirements Section ====================
+    # ==================== Paper Specification Section ====================
     
-    def _create_user_requirements_section(self):
-        """Create the User Requirements card."""
+    def _create_paper_specification_section(self):
+        """Create the Paper Specification card."""
         card = CardBorderFrame(self.scrollable_frame, padx=1, pady=1)
         card.pack(fill="x", pady=10)
         
@@ -125,7 +125,7 @@ class StartScreen(BaseFrame):
         
         tk.Label(
             header, 
-            text="User Requirements", 
+            text="Paper Specification", 
             font=self.controller.fonts.sub_header_font,
             bg=header_bg,
             fg=header_fg
@@ -135,7 +135,7 @@ class StartScreen(BaseFrame):
         info_btn = self.controller.icons.create_icon_label(
             header,
             icon_name="info",
-            command=lambda: InfoPopup(self.controller, "User Requirements", USER_REQUIREMENTS_INFO),
+            command=lambda: InfoPopup(self.controller, "Paper Specification", PAPER_SPECIFICATION_INFO),
             scale=1.5,
             hover_color=HoverColor.BLUE
         )
@@ -152,23 +152,23 @@ class StartScreen(BaseFrame):
         ttk.Button(
             content, 
             text="Edit", 
-            command=self._open_user_requirements
+            command=self._open_paper_specification
         ).grid(row=0, column=0, sticky="ew", padx=(0, 5))
         
         ttk.Button(
             content, 
             text="Show in Explorer", 
-            command=lambda: self._show_in_explorer(self.user_requirements_path)
+            command=lambda: self._show_in_explorer(self.paper_specification_path)
         ).grid(row=0, column=1, sticky="ew", padx=(5, 0))
     
-    def _open_user_requirements(self):
-        """Open the user requirements file directly in the default editor."""
-        self._open_in_editor(self.user_requirements_path)
+    def _open_paper_specification(self):
+        """Open the paper specification file directly in the default editor."""
+        self._open_in_editor(self.paper_specification_path)
 
-    # ==================== Writing Guidelines Section ====================
+    # ==================== Style Guidelines Section ====================
     
-    def _create_writing_guidelines_section(self):
-        """Create the Writing Guidelines card."""
+    def _create_style_guidelines_section(self):
+        """Create the Style Guidelines card."""
         card = CardBorderFrame(self.scrollable_frame, padx=1, pady=1)
         card.pack(fill="x", pady=10)
         
@@ -181,7 +181,7 @@ class StartScreen(BaseFrame):
         
         tk.Label(
             header, 
-            text="Writing Guidelines", 
+            text="Style Guidelines", 
             font=self.controller.fonts.sub_header_font,
             bg=header_bg,
             fg=header_fg
@@ -191,7 +191,7 @@ class StartScreen(BaseFrame):
         info_btn = self.controller.icons.create_icon_label(
             header,
             icon_name="info",
-            command=lambda: InfoPopup(self.controller, "Writing Guidelines", WRITING_GUIDELINES_INFO),
+            command=lambda: InfoPopup(self.controller, "Style Guidelines", STYLE_GUIDELINES_INFO),
             scale=1.5,
             hover_color=HoverColor.BLUE
         )
@@ -208,18 +208,18 @@ class StartScreen(BaseFrame):
         ttk.Button(
             content, 
             text="Edit", 
-            command=self._open_writing_guidelines
+            command=self._open_style_guidelines
         ).grid(row=0, column=0, sticky="ew", padx=(0, 5))
         
         ttk.Button(
             content, 
             text="Show in Explorer", 
-            command=lambda: self._show_in_explorer(self.writing_guidelines_path)
+            command=lambda: self._show_in_explorer(self.style_guidelines_path)
         ).grid(row=0, column=1, sticky="ew", padx=(5, 0))
     
-    def _open_writing_guidelines(self):
-        """Open the writing guidelines file directly in the default editor."""
-        self._open_in_editor(self.writing_guidelines_path)
+    def _open_style_guidelines(self):
+        """Open the style guidelines file directly in the default editor."""
+        self._open_in_editor(self.style_guidelines_path)
 
     # ==================== Code Files Section ====================
     

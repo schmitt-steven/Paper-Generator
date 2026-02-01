@@ -7,6 +7,6 @@ from .experiment_plan_screen import ExperimentPlanScreen
 from .experiment_results_screen import ExperimentResultsScreen
 from .paper_draft_screen import PaperDraftScreen
 from .result_screen import ResultScreen
-from .section_guidelines_screen import SectionGuidelinesScreen
+from .style_guidelines_screen import SectionGuidelinesScreen
 from .writing_prompts_screen import WritingPromptsScreen
 

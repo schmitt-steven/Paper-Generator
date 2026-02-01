@@ -6,8 +6,8 @@ from pathlib import Path
 
 
 @dataclass
-class UserRequirements:
-    """Structured user requirements for paper generation"""
+class PaperSpecification:
+    """Structured paper specification for paper generation"""
     topic: str
     hypothesis: str
     abstract: str
@@ -20,12 +20,12 @@ class UserRequirements:
     acknowledgements: Optional[str] = None
 
     @staticmethod
-    def load_user_requirements(file_path: str) -> UserRequirements:
-        """Load and parse user_requirements.md file into UserRequirements object."""
+    def load(file_path: str) -> PaperSpecification:
+        """Load and parse paper_specification.md file into PaperSpecification object."""
         
         path = Path(file_path)
         if not path.exists():
-            raise FileNotFoundError(f"User requirements file not found: {file_path}")
+            raise FileNotFoundError(f"Paper specification file not found: {file_path}")
 
         content = path.read_text(encoding='utf-8')
 
@@ -91,4 +91,4 @@ class UserRequirements:
         if not sections['acknowledgements'] or sections['acknowledgements'].strip() == "":
             sections['acknowledgements'] = None
 
-        return UserRequirements(**sections)
+        return PaperSpecification(**sections)
