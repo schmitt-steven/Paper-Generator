@@ -226,26 +226,10 @@ class ExperimentPlanScreen(BaseFrame):
         
         def task():
             try:
-                # Load hypothesis
-                self.after(0, lambda: popup.update_status("Loading hypothesis"))
-                selected_hypothesis = HypothesisBuilder.load_hypothesis(HYPOTHESES_FILE)
-
-                if selected_hypothesis is None:
-                    raise ValueError("No hypothesis found")
+                def status_callback(msg):
+                    self.after(0, lambda m=msg: popup.update_status(m))
                 
-                # Load paper concept
-                self.after(0, lambda: popup.update_status("Loading paper concept"))
-                paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
-                
-                # Run experiment
-                self.after(0, lambda: popup.update_status("Running experiment"))
-                experiment_runner = ExperimentRunner()
-                result = experiment_runner.run_experiment(
-                    selected_hypothesis,
-                    paper_concept,
-                    load_existing_plan=True,  # Use existing plan file (we trust it's there)
-                    load_existing_code=False  # Generate new code
-                )
+                ExperimentRunner.run_new_experiment(status_callback=status_callback)
                 
                 # Continue to next screen
                 self.after(0, lambda: self._on_generation_success(popup))
@@ -270,6 +254,11 @@ class ExperimentPlanScreen(BaseFrame):
             plan_path = Path(EXPERIMENTS_DIR) / EXPERIMENT_PLAN_FILE
             if plan_path.exists():
                 self._load_plan()
+        
+        # Update next button text based on result existence
+        experiment_result_file = Path("output/experiments/experiment_result.json")
+        next_text = "Continue" if experiment_result_file.exists() else "Run Experiment"
+        self.set_next_text(next_text)
 
     def on_regenerate(self):
         """Regenerate the experiment plan from scratch."""
@@ -281,42 +270,20 @@ class ExperimentPlanScreen(BaseFrame):
         
         def task():
             try:
-                # 1. Load context
-                self.after(0, lambda: popup.update_status("Loading context..."))
+                # Load hypothesis first (needed for centralized method)
                 selected_hypothesis = HypothesisBuilder.load_hypothesis(HYPOTHESES_FILE)
                 if selected_hypothesis is None:
                     raise ValueError("No hypothesis found")
                 
-                paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
+                def status_callback(msg):
+                    self.after(0, lambda m=msg: popup.update_status(m))
                 
-                paper_specification = None
-                try:
-                    paper_specification = PaperSpecification.load_paper_specification("user_files/paper_specification.md")
-                except:
-                    pass
-                
-                user_code = None
-                try:
-                    code_analyzer = CodeAnalyzer(model_name=Settings.CODE_ANALYSIS_MODEL)
-                    user_code = code_analyzer.load_code_files("user_files")
-                except:
-                    pass
-                
-                # 2. Generate Plan
-                self.after(0, lambda: popup.update_status("Generating new plan"))
-                experiment_runner = ExperimentRunner()
-                
-                experiment_plan = experiment_runner._generate_experiment_plan(
-                    selected_hypothesis, 
-                    paper_concept,
-                    paper_specification=paper_specification,
-                    user_code=user_code
+                ExperimentRunner.generate_new_experiment_plan(
+                    selected_hypothesis,
+                    status_callback=status_callback
                 )
                 
-                # 3. Save Plan
-                experiment_runner.save_experiment_plan(experiment_plan)
-                
-                # 4. Reload UI
+                # Reload UI
                 self.after(0, lambda: self._on_regeneration_complete(popup))
                 
             except Exception as e:

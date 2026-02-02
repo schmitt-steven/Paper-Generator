@@ -352,10 +352,6 @@ class LiteratureSearch(LazyModelMixin):
         unique_papers = self.remove_duplicates(all_papers)
         print(f"Papers found: {len(all_papers)}, unique papers: {len(unique_papers)}")
         
-        # Check for open access PDFs (Unpaywall/arXiv) for any closed source papers
-        if unique_papers:
-            unique_papers = find_open_access_pdfs(unique_papers)
-        
         return unique_papers
 
 

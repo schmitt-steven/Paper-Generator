@@ -82,6 +82,14 @@ It's not required to upload code files, but it can help the LLM to better unders
 
 The code files will also be used as context for the experimentation phase. The LLM even has the option to import methods or classes from the provided code.
 This can be helpful if you're trying to compare many different algorithms with each other, so the LLM doesn't have to "reinvent the wheel". 
+
+# Code Structure Best Practices
+
+To ensure the best results during the experimentation phase, follow these guidelines:
+
+- **Avoid Global State**: Do not rely on global variables for critical logic (e.g., model instances, configuration parameters).
+- **Use Classes/Functions**: Encapsulate logic in classes or functions that accept dependencies as arguments.
+- **Importability**: Ensure your code can be imported without executing immediate side effects (use `if __name__ == "__main__":` for scripts).
 """
 
 PAPER_SPECIFICATION_INFO = """\

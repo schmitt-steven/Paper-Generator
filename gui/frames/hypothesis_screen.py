@@ -148,8 +148,10 @@ class HypothesisScreen(BaseFrame):
         """Called when screen is shown - load hypothesis if not already loaded."""
         if not hasattr(self, 'current_hypothesis') or self.current_hypothesis is None:
             self._load_hypothesis()
-
-
+            
+        # Update next button text
+        next_text = "Continue" if EXPERIMENT_PLAN_FILE.exists() else "Generate Experiment Plan"
+        self.set_next_text(next_text)
 
     def _create_hypothesis_cards(self):
         """Create collapsible cards for the hypothesis fields."""
@@ -198,37 +200,13 @@ class HypothesisScreen(BaseFrame):
         
         def task():
             try:
-                # Load paper concept
-                self.after(0, lambda: popup.update_status("Loading paper concept"))
-                paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
+                def status_callback(msg):
+                    self.after(0, lambda m=msg: popup.update_status(m))
                 
-                # Load paper specification
-                self.after(0, lambda: popup.update_status("Loading paper specification"))
-                try:
-                    paper_specification = PaperSpecification.load_paper_specification("user_files/paper_specification.md")
-                except FileNotFoundError:
-                    paper_specification = None
-                
-                # Load code files
-                self.after(0, lambda: popup.update_status("Loading code files"))
-                from phases.context_analysis.user_code_analysis import CodeAnalyzer
-                user_code = None
-                try:
-                    code_analyzer = CodeAnalyzer(model_name=Settings.CODE_ANALYSIS_MODEL)
-                    user_code = code_analyzer.load_code_files("user_files")
-                except Exception:
-                    pass
-                
-                # Generate experiment plan
-                self.after(0, lambda: popup.update_status("Generating experiment plan"))
-                experiment_runner = ExperimentRunner()
-                experiment_plan = experiment_runner._generate_experiment_plan(
-                    hypothesis, 
-                    paper_concept,
-                    paper_specification=paper_specification,
-                    user_code=user_code
+                ExperimentRunner.generate_new_experiment_plan(
+                    hypothesis,
+                    status_callback=status_callback
                 )
-                experiment_runner.save_experiment_plan(experiment_plan)
                 
                 # Close popup and continue
                 self.after(0, lambda: self._on_generation_success(popup))
@@ -257,25 +235,12 @@ class HypothesisScreen(BaseFrame):
         
         def task():
             try:
-                # 1. Load resources
-                self.after(0, lambda: popup.update_status("Loading resources"))
-                paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
-                paper_specification = PaperSpecification.load_paper_specification("user_files/paper_specification.md")
+                def status_callback(msg):
+                    self.after(0, lambda m=msg: popup.update_status(m))
                 
-                # 2. Initialize Builder
-                self.after(0, lambda: popup.update_status("Initializing builder"))
-                builder = HypothesisBuilder(
-                    model_name=Settings.HYPOTHESIS_BUILDER_MODEL,
-                    paper_concept=paper_concept,
-                    top_limitations=[],
-                    num_papers_analyzed=0
-                )
+                HypothesisBuilder.generate_new_hypothesis(status_callback=status_callback)
                 
-                # 3. Generate Hypothesis
-                self.after(0, lambda: popup.update_status("Generating hypothesis"))
-                builder.create_hypothesis_from_user_input(paper_specification)
-                
-                # 4. Reload UI
+                # Reload UI
                 self.after(0, lambda: self._on_regeneration_complete(popup))
                 
             except Exception as e:

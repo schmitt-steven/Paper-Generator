@@ -4,14 +4,16 @@ import textwrap
 import traceback
 import re
 import json
+import lmstudio as lms
 from settings import Settings
 from dataclasses import asdict, is_dataclass
 from typing import Optional, Tuple, List, Any
 from pathlib import Path
 from pydantic import BaseModel
 from utils.file_utils import save_json, load_json, save_markdown, load_markdown
-import lmstudio as lms
+from phases.context_analysis.paper_conception import PaperConception
 from phases.context_analysis.paper_conception import PaperConcept
+from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.context_analysis.paper_specification import PaperSpecification
 from phases.context_analysis.user_code_analysis import CodeAnalyzer, UserCode
 from phases.hypothesis_generation.hypothesis_builder import Hypothesis
@@ -20,9 +22,7 @@ from phases.experimentation.experiment_state import (
     ExperimentFiles, ValidationResult, VerdictResult, ExperimentResult, Plot
 )
 from phases.experimentation.code_executor import CodeExecutor
-
 from utils.llm_utils import remove_thinking_blocks
-import lmstudio as lms
 
 
 EXPERIMENT_PLAN_FILE = "experiment_plan.md"
@@ -117,7 +117,7 @@ class ExperimentRunner:
             if user_code:
                 # Use signatures only for coding phase to encourage importing
                 user_code_section = f"\n{self._format_user_code_files(user_code, use_signatures_only=True)}"
-                code_instructions = "\n[CRITICAL: EXISTING CODE PROVIDED]\nYou have access to the local modules listed above. Review them to see if they fit your experiment plan. If they do, IMPORT them (e.g., `from my_algo import run_algo`). If they do not fit or if you need different logic, you may implement your own solution, but prefer reusing existing robust code where possible."
+                code_instructions = "\n[CRITICAL: EXISTING CODE PROVIDED]\nYou have access to the local modules listed above. Review them to see if they fit your experiment plan. If they do, IMPORT them (e.g., `from my_algo import run_algo`). If they do not fit or if you need different logic, you may implement your own solution, but prefer reusing existing robust code where possible.\n\n[WARNING: GLOBAL STATE]\nCheck if the user code relies on global variables (e.g., `model = PersistentModel()` defined at module level). If so, you MUST import and use that global variable directly. Do NOT create a new local instance if the functions rely on the global one (e.g., if `propagate_reward` uses the global `model`).\n\n[WARNING: CONSTANTS]\nDo NOT hardcode state/action dimensions (e.g. `num_of_states = 5760`). Instead, READ them from the imported user code/agent if available (e.g. `agent.num_of_states`). Mismatched dimensions cause IndexErrors."
             else:
                 user_code_section = "\n[USER CODE FILES]\nNo user code files provided - generate new code from scratch."
             
@@ -136,13 +136,30 @@ class ExperimentRunner:
                 - Print concise, meaningful output (~100-200 lines max)
                 - Output ONLY Python code, NO markdown formatting
                 - Code MUST complete in under 5 minutes. Reduce iterations, computations, or parameter combinations if needed. Optimize loops and maintain scientific validity.
+                - CRITICAL: Run HEADLESS - no UI windows, no matplotlib interactive mode.
+                - DRY Principle: Reuse existing functions for simulation/execution logic. Do not duplicate complex loops (like game loops or training steps) for visualization - call the original functions to ensure consistency and prevent infinite loops/logic errors.
+                
+                [PYGAME HEADLESS MODE - MANDATORY IF USING PYGAME]
+                If using pygame for game logic, you MUST initialize it in headless mode:
+                ```
+                import os
+                os.environ['SDL_VIDEODRIVER'] = 'dummy'
+                os.environ['SDL_AUDIODRIVER'] = 'dummy'
+                import pygame
+                pygame.init()
+                # Do NOT call pygame.display.set_mode() with real dimensions
+                # Instead: screen = pygame.display.set_mode((1, 1))  # minimal dummy surface
+                ```
+                NEVER use: pygame.display.set_mode((800, 600)) or similar real window sizes.
+                NEVER use: pygame.display.flip(), pygame.event.get() in a render loop.
+                Just compute game states and actions programmatically without rendering.
 
                 [AVAILABLE PACKAGES]
                 The following Python packages are available (optional - use if helpful):
                 - numpy: Numerical computing, arrays, mathematical operations
-                - matplotlib: Plotting and visualization
+                - matplotlib: Plotting and visualization (use 'Agg' backend, save to file only, NO plt.show())
                 - seaborn: Statistical data visualization (built on matplotlib)
-                - pygame: Game development and interactive simulations
+                - pygame: Game LOGIC only with headless mode as shown above
                 These packages are available but not required - use them only if they help test the hypothesis.
 
                 [HYPOTHESIS]
@@ -167,17 +184,19 @@ class ExperimentRunner:
                 chunk_message = """Generate ONLY imports and data structure definitions.
 
                 Include:
-                - All necessary imports
+                - All necessary imports (if using matplotlib, use matplotlib.use('Agg') BEFORE importing pyplot)
                 - Any classes or data structures needed
                 - Global constants
 
-                Do NOT include algorithm implementations, experiment logic, or visualization yet."""
+                Do NOT include algorithm implementations, experiment logic, or visualization yet.
+                
+                CRITICAL: Before writing code, mentally verify there are no syntax errors or obvious bugs."""
                 if user_code:
                     chunk_message += "\n\nIf user code files were provided above, add their imports (e.g. `from my_file import my_func`)."
                 chat.add_user_message(chunk_message)
 
                 model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
-                response = model.respond(chat, config={"temperature": 0.1})
+                response = model.respond(chat, config={"temperature": 0.0})
                 current_code = self._remove_markdown_formatting(remove_thinking_blocks(response.content))
             except Exception as e:
                 error_msg = f"ERROR generating imports chunk: {e}"
@@ -195,6 +214,11 @@ class ExperimentRunner:
                 - The baseline/comparison method (as described in the experiment plan)
                 - Any helper functions needed for the algorithms
                 The most important part is to implement the algorithms as described in the experiment plan.
+                
+                CRITICAL: Before responding, verify:
+                - No infinite loops (all loops have proper termination conditions)
+                - No blocking calls (no input(), no UI windows, no pygame.display)
+                - All variable names and function signatures are consistent
 
                 Output the COMPLETE code so far (imports and data structures + algorithms)."""
                 if user_code:
@@ -202,7 +226,7 @@ class ExperimentRunner:
                 chat.add_user_message(chunk_message)
 
                 model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
-                response = model.respond(chat, config={"temperature": 0.1})
+                response = model.respond(chat, config={"temperature": 0.0})
                 current_code = self._remove_markdown_formatting(remove_thinking_blocks(response.content))
             except Exception as e:
                 error_msg = f"ERROR generating algorithms chunk: {e}"
@@ -222,6 +246,11 @@ class ExperimentRunner:
                     - Metric collection and measurement
                     - Save results to JSON file in current directory
                     - Concise stdout output with key metrics
+                    
+                    CRITICAL: Before responding, verify:
+                    - Experiment will complete in under 5 minutes (reduce iterations if needed)
+                    - No infinite loops, no UI/display calls
+                    - All loops have reasonable bounds and termination conditions
 
                     Output the COMPLETE code so far (imports and data structures + algorithms + experiment).
                     Do NOT include visualization yet.
@@ -231,7 +260,7 @@ class ExperimentRunner:
                 chat.add_user_message(chunk_message)
 
                 model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
-                response = model.respond(chat, config={"temperature": 0.1})
+                response = model.respond(chat, config={"temperature": 0.0})
                 current_code = self._remove_markdown_formatting(remove_thinking_blocks(response.content))
             except Exception as e:
                 error_msg = f"ERROR generating experiment chunk: {e}"
@@ -247,12 +276,18 @@ class ExperimentRunner:
 
                     Include everything from the previous response, then add:
                     - Create plots/ directory
-                    - Generate comparison plots
+                    - Generate comparison plots (use matplotlib Agg backend - NO plt.show())
                     - Save plots to plots/ as .pdf files
                     - CRITICAL: For EVERY plot you generate, print a text summary to stdout that describes the exact data shown. 
                       Format: "[Plot Summary: <filename>] <summary text with numbers/stats>"
                       Example: "[Plot Summary: learning_curve.pdf] RBQL reached 0.9 reward at ep 450, Standard Q at ep 720."
                     - Print concise summary of the results (NEVER guess the results, only print the actual results)
+                    
+                    FINAL CHECK before responding:
+                    - No plt.show() calls (headless execution)
+                    - No pygame.display or UI windows
+                    - All loops terminate properly
+                    - Code will complete in under 10 minutes
 
                     Output the COMPLETE, FINAL code (imports & data structures + algorithms + experiment + visualization).
                 """)
@@ -261,7 +296,7 @@ class ExperimentRunner:
                 chat.add_user_message(chunk_message)
 
                 model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
-                response = model.respond(chat, config={"temperature": 0.1})
+                response = model.respond(chat, config={"temperature": 0.0})
                 current_code = self._remove_markdown_formatting(remove_thinking_blocks(response.content))
             except Exception as e:
                 error_msg = f"ERROR generating visualization chunk: {e}"
@@ -308,6 +343,7 @@ class ExperimentRunner:
         stderr: str,
         hypothesis: Hypothesis,
         output_dir: str,
+        user_code: Optional[list[UserCode]] = None,
         chat: Optional[lms.Chat] = None,
         fix_attempt: int = 1,
         max_attempts: int = 5
@@ -378,15 +414,38 @@ class ExperimentRunner:
                     The error message tells you WHERE it fails - trace back to find WHY it fails.
                 """)
             
+            # Detect timeout errors and add specific guidance
+            timeout_context = ""
+            is_timeout = "timeout" in error_message.lower() or "timed out" in error_message.lower() or "time limit" in stderr.lower()
+            if is_timeout:
+                timeout_context = textwrap.dedent("""\
+                    [TIMEOUT ERROR DETECTED]
+                    The code took too long to execute. You MUST fix this by:
+                    1. REDUCE iterations/episodes/trials (e.g., 1000 -> 100, 100 -> 20)
+                    2. REMOVE any pygame.display, UI windows, or interactive elements - run HEADLESS
+                    3. REMOVE any plt.show() calls - save plots directly without display
+                    4. CHECK for infinite loops - ensure all while loops have proper termination
+                    5. SIMPLIFY computations - use vectorized numpy operations where possible
+                    6. REDUCE parameter combinations if doing grid search
+                    The experiment MUST complete in under 5 minutes total.
+                """)
+            
             # Truncate long outputs to avoid context truncation
             stdout_preview = stdout[:1000] if len(stdout) > 2000 else stdout
             stderr_preview = stderr[:1000] if len(stderr) > 2000 else stderr
+
+            # Add user code context if valid
+            user_code_section = ""
+            if user_code:
+                user_code_section = f"\n[AVAILABLE USER CODE]\n{self._format_user_code_files(user_code, use_signatures_only=True)}\n"
             
             user_message = textwrap.dedent(f"""\
                 [TASK]
                 Fix the errors in this Python code.
 
                 {attempt_context}
+                {timeout_context}
+                {user_code_section}
 
                 [CODE_TO_FIX]
                 ```python
@@ -400,6 +459,8 @@ class ExperimentRunner:
 
                 [INSTRUCTIONS]
                 Analyze the error carefully and fix all faulty parts of the code.
+                [WARNING: GLOBAL STATE] If user code has global variables (like `model = ...`), IMPORT and USE them. Do not shadow them with local instances.
+                [WARNING: CONSTANTS] Do NOT hardcode state dimensions. Use `agent.num_of_states` or similar from user code.
                 
                 [OUTPUT_REQUIREMENT]
                 IMPORTANT: Output the COMPLETE fixed Python code file from start to finish. Do not truncate or omit any parts.
@@ -408,7 +469,7 @@ class ExperimentRunner:
             print(f"Fixing experiment code (attempt {fix_attempt}/{max_attempts}): {code_file_path}")
             chat.add_user_message(user_message)
             model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
-            result = model.respond(chat, config={"temperature": 0.1})
+            result = model.respond(chat, config={"temperature": 0.0})
             cleaned_code = remove_thinking_blocks(result.content)
             
             # Remove markdown code block markers
@@ -442,7 +503,8 @@ class ExperimentRunner:
         execution_result: ExecutionResult,
         experiment_plan: str,
         hypothesis: Hypothesis,
-        code_file_path: str
+        code_file_path: str,
+        user_code: Optional[list[UserCode]] = None
     ) -> ValidationResult:
         """Validate that experiment results are sound/meaningful."""
 
@@ -488,6 +550,8 @@ class ExperimentRunner:
         validation_prompt = textwrap.dedent(f"""\
             [HYPOTHESIS]
             {hypothesis.description}
+
+            {f"\n[AVAILABLE USER CODE]\n{self._format_user_code_files(user_code, use_signatures_only=True)}\n" if user_code else ""}
             
             Success Criteria: {hypothesis.success_criteria}
 
@@ -540,7 +604,8 @@ class ExperimentRunner:
         code_file_path: str,
         validation_result: ValidationResult,
         hypothesis: Hypothesis,
-        output_dir: str
+        output_dir: str,
+        user_code: Optional[list[UserCode]] = None
     ) -> ExecutionResult:
         """
         Improve experiment code based on validation feedback.
@@ -584,14 +649,20 @@ class ExperimentRunner:
                 5. Ensure stdout output is concise and meaningful - key metrics, conclusions and results only, avoid loop spam
                 6. Make sure the experiment is complete and meaningful (e.g., not too short, collects proper metrics, etc.)
                 7. Preserve any working, valid parts of the code
+                8. [WARNING: GLOBAL STATE] If user code has global variables (like `model = ...`), IMPORT and USE them. Do not shadow them with local instances.
+                9. [WARNING: CONSTANTS] Do NOT hardcode state dimensions. Use `agent.num_of_states` or similar from user code.
+                10. DRY Principle: Reuse simulation functions (e.g. `run_episode`) for plotting/metrics. Do not re-write loops inline.
 
                 [AVAILABLE_PACKAGES]
                 The following Python packages are available (optional - use if helpful):
                 - numpy: Numerical computing, arrays, mathematical operations
-                - matplotlib: Plotting and visualization
+                - matplotlib: Plotting and visualization (use 'Agg' backend, save to file only - NO interactive display)
                 - seaborn: Statistical data visualization (built on matplotlib)
-                - pygame: Game development and interactive simulations
+                - pygame: Game logic ONLY - do NOT create display windows, run headless
+                CRITICAL: Run HEADLESS - no UI windows, no pygame display, no matplotlib.show(). Use 'Agg' backend.
                 These packages are available but not required - use them only if they help test the hypothesis.
+
+                {f"\n[AVAILABLE USER CODE]\n{self._format_user_code_files(user_code, use_signatures_only=True)}\n" if user_code else ""}
 
                 [HYPOTHESIS]
                 Description: {hypothesis.description}
@@ -611,7 +682,7 @@ class ExperimentRunner:
             """)
 
             model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
-            result = model.respond(prompt, config={"temperature": 0.1})
+            result = model.respond(prompt, config={"temperature": 0.0})
             improved_code = remove_thinking_blocks(result.content)
             
             # Remove markdown code block markers
@@ -741,7 +812,7 @@ Do NOT do this:
                 chat = lms.Chat(plot_caption_prompt)
                 chat.add_user_message(user_message, images=[image_handle])
                 model = lms.llm(self.settings.EXPERIMENT_PLOT_CAPTION_MODEL)
-                result = model.respond(chat, config={"temperature": 0.1, "timeout": 120})
+                result = model.respond(chat, config={"temperature": 0.0, "timeout": 120})
                 caption = remove_thinking_blocks(result.content).strip()
                 if caption.startswith('"') and caption.endswith('"'):
                     caption = caption[1:-1]
@@ -817,6 +888,14 @@ Do NOT do this:
               * Concise, meaningful output to stdout (key metrics, conclusions)
               * Plot(s) for visualization (saved as .pdf)
             - Experiment MUST complete in under 5 minutes. Use reasonable parameter ranges and reduce iterations/computations/parameter combinations if needed.
+            
+            [CRITICAL: HEADLESS EXECUTION MANDATORY]
+            - NO pygame display windows - if using pygame for game logic, initialize with:
+              os.environ['SDL_VIDEODRIVER'] = 'dummy'
+              os.environ['SDL_AUDIODRIVER'] = 'dummy'
+            - NO plt.show() - save plots directly to file with savefig()
+            - NO interactive visualizations or UI of any kind
+            - If testing game/RL algorithms: simulate game logic WITHOUT rendering frames, just compute states/actions/rewards programmatically
 
             {title_section}[RESEARCH_CONTEXT]
             {paper_concept.description}
@@ -834,7 +913,7 @@ Do NOT do this:
 
         try:
             model = lms.llm(self.settings.EXPERIMENT_PLAN_MODEL)
-            result = model.respond(prompt, config={"temperature": 0.1})
+            result = model.respond(prompt, config={"temperature": 0.0})
             return remove_thinking_blocks(result.content)
         except Exception as e:
             print(f"ERROR: Failed to generate experiment plan: {e}")
@@ -1228,6 +1307,7 @@ Do NOT do this:
         total_fix_attempts = 0
         total_validation_attempts = 0
         validation_result = None
+        validation_warning = None
         
         # Fix code if execution failed
         max_fix_attempts = 5
@@ -1262,6 +1342,7 @@ Do NOT do this:
                 stderr,
                 hypothesis,
                 self.base_output_dir,
+                user_code=user_code,
                 chat=fix_chat,
                 fix_attempt=fix_attempt,
                 max_attempts=max_fix_attempts
@@ -1273,6 +1354,7 @@ Do NOT do this:
         verdict = "inconclusive"
         reasoning = ""
         plot_captions = []  # Will be populated if plots exist and execution succeeds
+        validation_warning = ""  # Will be populated if validation has warnings
         
         # Validate and improve results if execution succeeded
         if execution_result.return_code == 0:
@@ -1293,7 +1375,8 @@ Do NOT do this:
                     execution_result,
                     experiment_plan,
                     hypothesis,
-                    code_file_path
+                    code_file_path,
+                    user_code=user_code
                 )
                 
                 if validation_result.is_valid:
@@ -1314,7 +1397,8 @@ Do NOT do this:
                             code_file_path,
                             validation_result,
                             hypothesis,
-                            self.base_output_dir
+                            self.base_output_dir,
+                            user_code=user_code
                         )
                         execution_result = improvement_result
                         
@@ -1352,6 +1436,7 @@ Do NOT do this:
                                     stderr,
                                     hypothesis,
                                     self.base_output_dir,
+                                    user_code=user_code,
                                     chat=nested_fix_chat,
                                     fix_attempt=fix_attempt,
                                     max_attempts=max_fix_attempts
@@ -1364,9 +1449,28 @@ Do NOT do this:
                             if execution_result.return_code != 0:
                                 break
             
+            # Post-loop check: If execution succeeded but the latest version isnt validated (e.g. from the last fix)
+            if execution_result.return_code == 0 and not validation_passed and total_validation_attempts < max_validation_attempts + 1:
+                 # Check if we should validate the final fixed code
+                 print("Validating final fixed code...")
+                 validation_result = self._validate_experiment_results(
+                    execution_result,
+                    experiment_plan,
+                    hypothesis,
+                    code_file_path,
+                    user_code=user_code
+                 )
+                 if validation_result.is_valid:
+                     validation_passed = True
+                     print("Final validation passed.")
+                     if validation_result.issues:
+                         validation_warning = validation_result.issues
+                 else:
+                     print("Final validation failed.")
+            
             # Determine verdict and reasoning
             if execution_result.return_code == 0:
-                # Generate plot captions if plots exist
+                # Generate plot captions if plots exist (always generate if we have plots and valid execution)
                 if execution_result.plot_files:
                     if status_callback:
                         status_callback("Generating plot captions")
@@ -1379,7 +1483,7 @@ Do NOT do this:
                     )
                     print(f"Generated {len(plot_captions)} plot caption(s)")
                 
-                # Successful execution (even if validation warned) - get verdict from LLM
+                # Successful execution (even if validation warned or failed) - get verdict from LLM
                 if status_callback:
                     status_callback("Determining verdict")
                 print("Code executed successfully. Determining verdict...")
@@ -1390,19 +1494,20 @@ Do NOT do this:
                     stdout_summary = stdout_summary[:500] + "\n...[truncated output]...\n" + stdout_summary[-1500:]
                 
                 # Build context for verdict determination
-                verdict, reasoning = self._determine_verdict(
-                    hypothesis,
-                    stdout_summary,
-                    plot_captions,
-                    validation_warning
-                )
-            elif execution_result.return_code == 0 and not validation_passed:
-                # Execution succeeded but validation failed
-                print(f"Results validation failed after {max_validation_attempts} attempts.")
-                reasoning = f"Code executed successfully but results validation failed after {max_validation_attempts} attempts. Last validation reasoning: {validation_result.reasoning}"
-                if validation_result.issues:
-                    reasoning += f"\nIssues: {validation_result.issues}"
-                verdict = "inconclusive"
+                if validation_passed:
+                    verdict, reasoning = self._determine_verdict(
+                        hypothesis,
+                        stdout_summary,
+                        plot_captions,
+                        validation_warning
+                    )
+                else:
+                    # Execution succeeded but validation failed
+                    print(f"Results validation failed after {max_validation_attempts} attempts.")
+                    reasoning = f"Code executed successfully but results validation failed. Last validation reasoning: {validation_result.reasoning if validation_result else 'None'}"
+                    if validation_result and validation_result.issues:
+                        reasoning += f"\nIssues: {validation_result.issues}"
+                    verdict = "inconclusive"
             else:
                 # Execution failed after all retries
                 print(f"Code execution failed after {max_fix_attempts} fix attempts.")
@@ -1473,4 +1578,96 @@ Do NOT do this:
             traceback.print_exc()
         
         return experiment_result
+
+    @staticmethod
+    def generate_new_experiment_plan(hypothesis: Hypothesis, status_callback: callable = None) -> str:
+        """
+        Generate and save experiment plan.
+        
+        This is the centralized orchestrator method that handles:
+        1. Loading paper concept
+        2. Loading paper specification (optional)
+        3. Loading user code files (optional)
+        4. Generating experiment plan using LLM
+        5. Saving the result
+        
+        Args:
+            hypothesis: The hypothesis to generate a plan for.
+            status_callback: Optional callback function(str) for progress updates.
+            
+        Returns:
+            The generated experiment plan as a string.
+        """
+        
+        if status_callback:
+            status_callback("Loading paper concept")
+        paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
+        
+        if status_callback:
+            status_callback("Loading paper specification")
+        paper_specification = None
+        try:
+            paper_specification = PaperSpecification.load("user_files/paper_specification.md")
+        except FileNotFoundError:
+            pass
+        
+        if status_callback:
+            status_callback("Loading code files")
+        user_code = None
+        try:
+            code_analyzer = CodeAnalyzer(model_name=Settings.CODE_ANALYSIS_MODEL)
+            user_code = code_analyzer.load_code_files("user_files")
+        except Exception:
+            pass
+        
+        if status_callback:
+            status_callback("Generating experiment plan")
+        runner = ExperimentRunner()
+        experiment_plan = runner._generate_experiment_plan(
+            hypothesis, 
+            paper_concept,
+            paper_specification=paper_specification,
+            user_code=user_code
+        )
+        runner.save_experiment_plan(experiment_plan)
+        return experiment_plan
+
+    @staticmethod
+    def run_new_experiment(status_callback: callable = None) -> "ExperimentResult":
+        """
+        Run experiment and save results.
+        
+        This handles:
+        1. Loading hypothesis
+        2. Loading paper concept
+        3. Running the experiment (using existing plan)
+        4. Saving the result
+        
+        Args:
+            status_callback: Optional callback function(str) for progress updates.
+            
+        Returns:
+            The ExperimentResult object.
+        """
+        
+        if status_callback:
+            status_callback("Loading hypothesis")
+        hypothesis = HypothesisBuilder.load_hypothesis("output/hypothesis.md")
+        if hypothesis is None:
+            raise ValueError("No hypothesis found")
+        
+        if status_callback:
+            status_callback("Loading paper concept")
+        paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
+        
+        if status_callback:
+            status_callback("Running experiment")
+        runner = ExperimentRunner()
+        return runner.run_experiment(
+            hypothesis, 
+            paper_concept,
+            load_existing_plan=True,
+            load_existing_code=False,
+            status_callback=status_callback
+        )
 

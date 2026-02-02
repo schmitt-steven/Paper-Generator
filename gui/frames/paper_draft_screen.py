@@ -214,50 +214,14 @@ class PaperDraftScreen(BaseFrame):
 
     def _run_generation(self):
         """Run LaTeX conversion with progress popup."""
-        popup = ProgressPopup(self.controller, "Generating LaTeX")
+        popup = ProgressPopup(self.controller, "Generating PDF")
         
         def task():
             try:
-                # Load paper draft
-                self.after(0, lambda: popup.update_status("Loading paper draft"))
-                paper_draft = PaperWritingPipeline.load_paper_draft(f"{OUTPUT_DIR}/{PAPER_DRAFT_FILE}")
+                def status_callback(msg):
+                    self.after(0, lambda m=msg: popup.update_status(m))
                 
-                # Load indexed papers
-                self.after(0, lambda: popup.update_status("Loading indexed papers"))
-                indexed_papers = LiteratureSearch.load_papers("output/papers.json")
-                
-                # Load experiment result
-                self.after(0, lambda: popup.update_status("Loading experiment results"))
-                # Load hypothesis
-                self.after(0, lambda: popup.update_status("Loading hypothesis"))
-                selected_hypothesis = HypothesisBuilder.load_hypothesis(HYPOTHESES_FILE)
-                
-                if selected_hypothesis is None:
-                    raise ValueError("No hypothesis found")
-                
-                experiment_result = None
-                # Load experiment result
-                experiment_result_file = "output/experiments/experiment_result.json"
-                if Path(experiment_result_file).exists():
-                    experiment_result = ExperimentRunner.load_experiment_result(experiment_result_file)
-                
-                # Create metadata
-                self.after(0, lambda: popup.update_status("Generating LaTeX project"))
-                metadata = LaTeXMetadata.from_settings(generated_title=paper_draft.title)
-                
-                # Convert to LaTeX
-                converter = PaperConverter()
-                latex_dir = converter.convert_to_latex(
-                    paper_draft=paper_draft,
-                    metadata=metadata,
-                    indexed_papers=indexed_papers,
-                    experiment_result=experiment_result,
-                    progress_callback=lambda msg: self.after(0, lambda: popup.update_status(msg))
-                )
-                
-                # Compile LaTeX
-                self.after(0, lambda: popup.update_status("Compiling LaTeX to PDF"))
-                success = converter.compile_latex(latex_dir)
+                success = PaperConverter.generate_new_pdf(status_callback=status_callback)
                 
                 if success:
                     # Close popup and continue
@@ -280,7 +244,7 @@ class PaperDraftScreen(BaseFrame):
     
     def on_show(self):
         """Called when screen is shown - load draft."""
-        # Always reload to ensure content is fresh (since it's read-only in GUI now)
+        # Always reload to ensure content is fresh (since it's read-only in GUI)
         draft_path = Path(OUTPUT_DIR) / PAPER_DRAFT_FILE
         if draft_path.exists():
             self._load_draft()
@@ -288,6 +252,10 @@ class PaperDraftScreen(BaseFrame):
              msg = f"No paper draft found at {draft_path}.\nPlease generate the draft."
              self.show_error_message("Paper Draft Not Found", msg)
              ttk.Button(self.scrollable_frame, text="Generate Draft", command=self.on_regenerate).pack(pady=10)
+             
+        # Update next button text
+        next_text = "Continue" if LATEX_PAPER_FILE.exists() else "Generate PDF"
+        self.set_next_text(next_text)
 
     def on_regenerate(self):
         """Regenerate the paper draft from scratch."""
@@ -297,62 +265,20 @@ class PaperDraftScreen(BaseFrame):
         ):
             return
         
-        self._run_paper_generation(is_regeneration=True)
+        self._run_paper_generation()
 
-    def _run_paper_generation(self, is_regeneration: bool = False):
-        """Generate paper draft using critique-based pipeline.
-        
-        Args:
-            is_regeneration: True if regenerating (refresh text), False if initial (load draft)
-        """
-        title = "Regenerating Paper Draft" if is_regeneration else "Generating Paper Draft"
-        popup = ProgressPopup(self.controller, title)
+    def _run_paper_generation(self):
+        """Generate paper draft using critique-based pipeline."""
+        popup = ProgressPopup(self.controller, "Regenerating Paper Draft")
         
         def task():
             try:
-                # 1. Load context
-                self.after(0, lambda: popup.update_status("Loading context"))
+                def status_callback(msg):
+                    self.after(0, lambda m=msg: popup.update_status(m))
                 
-                paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
+                PaperWritingPipeline.generate_new_draft(status_callback=status_callback)
                 
-                # Load papers for the pipeline
-                papers = LiteratureSearch.load_papers("output/papers.json")
-                
-                # Load experiment result
-                experiment_result = None
-                experiment_result_file = "output/experiments/experiment_result.json"
-                if Path(experiment_result_file).exists():
-                    experiment_result = ExperimentRunner.load_experiment_result(experiment_result_file)
-                else:
-                    raise ValueError("No experiment results found. Please run experiments first.")
-                
-                paper_specification = None
-                try:
-                    paper_specification = PaperSpecification.load_paper_specification("user_files/paper_specification.md")
-                except:
-                    pass
-                
-                # 2. Create pipeline and write paper
-                pipeline = PaperWritingPipeline()
-                
-                def status_update(msg):
-                    self.after(0, lambda: popup.update_status(msg))
-                
-                self.after(0, lambda: popup.update_status("Starting paper generation"))
-                
-                pipeline.write_paper(
-                    paper_concept=paper_concept,
-                    experiment_result=experiment_result,
-                    papers=papers,
-                    paper_specification=paper_specification,
-                    status_callback=status_update
-                )
-                
-                # 3. Complete
-                if is_regeneration:
-                    self.after(0, lambda: self._on_regeneration_complete(popup))
-                else:
-                    self.after(0, lambda: self._on_generation_complete(popup))
+                self.after(0, lambda: self._on_regeneration_complete(popup))
                 
             except Exception as e:
                 import traceback
@@ -361,12 +287,6 @@ class PaperDraftScreen(BaseFrame):
 
         thread = threading.Thread(target=task, daemon=True)
         thread.start()
-
-    def _on_generation_complete(self, popup: ProgressPopup):
-        """Handle initial generation completion."""
-        popup.close()
-        # Load the newly generated draft
-        self._load_draft()
 
     def _on_regeneration_complete(self, popup: ProgressPopup):
         """Handle regeneration completion."""

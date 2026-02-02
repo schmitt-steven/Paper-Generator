@@ -473,11 +473,14 @@ class BaseFrame(ttk.Frame):
             style.configure("Nav.TButton", font=self.controller.fonts.nav_button_font)
             
             if self.has_back:
-                ttk.Button(nav_frame, text=self.back_text, command=self.on_back, style="Nav.TButton").pack(side="left")
+                self.back_btn = ttk.Button(nav_frame, text=self.back_text, command=self.on_back, style="Nav.TButton")
+                self.back_btn.pack(side="left")
             if self.has_next:
-                ttk.Button(nav_frame, text=self.next_text, command=self.on_next, style="Nav.TButton").pack(side="right")
+                self.next_btn = ttk.Button(nav_frame, text=self.next_text, command=self.on_next, style="Nav.TButton")
+                self.next_btn.pack(side="right")
             if self.has_regenerate:
-                ttk.Button(nav_frame, text=self.regenerate_text, command=self.on_regenerate, style="Nav.TButton").pack(side="right", padx=(0, 10))
+                self.regenerate_btn = ttk.Button(nav_frame, text=self.regenerate_text, command=self.on_regenerate, style="Nav.TButton")
+                self.regenerate_btn.pack(side="right", padx=(0, 10))
 
         # Register font updates
         self.controller.fonts.add_callback(self._update_layout)
@@ -500,6 +503,18 @@ class BaseFrame(ttk.Frame):
         Subclasses can override this to load data lazily or refresh dynamic content.
         """
         pass
+
+    def set_next_text(self, text: str):
+        """Update the text of the next button."""
+        self.next_text = text
+        if hasattr(self, 'next_btn'):
+            self.next_btn.config(text=text)
+
+    def set_regenerate_text(self, text: str):
+        """Update the text of the regenerate button."""
+        self.regenerate_text = text
+        if hasattr(self, 'regenerate_btn'):
+            self.regenerate_btn.config(text=text)
 
     def _update_layout(self):
         """Update layout when font size changes."""

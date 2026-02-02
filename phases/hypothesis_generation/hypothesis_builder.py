@@ -4,11 +4,14 @@ import numpy as np
 from typing import List, Tuple
 from pathlib import Path
 from phases.context_analysis.paper_conception import PaperConcept
-from phases.context_analysis.paper_conception import PaperConcept
 from pydantic import BaseModel
 from dataclasses import dataclass
 from settings import Settings
 from typing import List, Dict, Tuple, Optional
+from phases.context_analysis.paper_conception import PaperConception
+from phases.context_analysis.paper_specification import PaperSpecification
+from utils.lazy_model_loader import LazyModelMixin, LazyEmbeddingMixin
+from utils.file_utils import save_markdown, load_markdown
 
 class Hypothesis(BaseModel):
     """A testable research hypothesis"""
@@ -60,11 +63,6 @@ class Hypothesis(BaseModel):
             success_criteria=sections.get('success_criteria', ''),
             selected_for_experimentation=True
         )
-
-
-
-from utils.lazy_model_loader import LazyModelMixin, LazyEmbeddingMixin
-from utils.file_utils import save_markdown, load_markdown
 
 
 class HypothesisBuilder(LazyModelMixin):
@@ -129,28 +127,20 @@ class HypothesisBuilder(LazyModelMixin):
 
         try:
             # Generate hypothesis using structured response
-            # We reuse HypothesesList to keep it consistent, even if it's just one
             result = self.model.respond(
                 prompt,
-                response_format=HypothesesList,
+                response_format=Hypothesis,
                 config={"temperature": 0.2, "maxTokens": 1000}
             )
             
             response_data = result.parsed
-            hypotheses_data = response_data.get("hypotheses", [])
-            
-            # Take the first one or default
-            if hypotheses_data:
-                hyp_data = hypotheses_data[0]
-                hypothesis = Hypothesis(
-                    id="user_hypothesis",
-                    description=hyp_data.get("description", user_hypothesis_text),
-                    rationale=hyp_data.get("rationale", "User provided hypothesis"),
-                    success_criteria=hyp_data.get("success_criteria", "As specified by user"),
-                    selected_for_experimentation=True
-                )
-            else:
-                raise ValueError("No hypothesis returned by LLM")
+            hypothesis = Hypothesis(
+                id="user_hypothesis",
+                description=response_data.get("description", user_hypothesis_text),
+                rationale=response_data.get("rationale", "User provided hypothesis"),
+                success_criteria=response_data.get("success_criteria", "As specified by user"),
+                selected_for_experimentation=True
+            )
 
             # Save it
             HypothesisBuilder.save_hypothesis(hypothesis, "output/hypothesis.md")
@@ -206,5 +196,41 @@ class HypothesisBuilder(LazyModelMixin):
         except Exception as e:
             print(f"Error loading hypothesis: {e}")
             return None
+
+    @staticmethod
+    def generate_new_hypothesis(status_callback: callable = None) -> Hypothesis:
+        """
+        Generate hypothesis from paper specification.
+        
+        This handles:
+        1. Loading paper concept
+        2. Loading paper specification
+        3. Generating hypothesis using LLM
+        4. Saving the result
+        
+        Args:
+            status_callback: Optional callback function(str) for progress updates.
+            
+        Returns:
+            The generated Hypothesis object.
+        """
+        
+        if status_callback:
+            status_callback("Loading paper concept")
+        paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
+        
+        if status_callback:
+            status_callback("Loading paper specification")
+        paper_specification = PaperSpecification.load("user_files/paper_specification.md")
+        
+        if status_callback:
+            status_callback("Generating hypothesis")
+        builder = HypothesisBuilder(
+            model_name=Settings.HYPOTHESIS_BUILDER_MODEL,
+            paper_concept=paper_concept,
+            top_limitations=[],
+            num_papers_analyzed=0
+        )
+        return builder.create_hypothesis_from_user_input(paper_specification)
 
 

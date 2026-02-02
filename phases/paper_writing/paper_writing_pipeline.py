@@ -14,6 +14,9 @@ from phases.experimentation.experiment_state import ExperimentResult
 from utils.lms_settings import LMSJITSettings
 from utils.file_utils import save_markdown, load_markdown, save_json, load_json
 from settings import Settings
+from phases.context_analysis.paper_conception import PaperConception
+from phases.experimentation.experiment_runner import ExperimentRunner
+from phases.paper_search.literature_search import LiteratureSearch
 
 
 class PaperWritingPipeline:
@@ -302,4 +305,52 @@ class PaperWritingPipeline:
         print(f"{'='*80}\n")
 
         return paper_draft
+
+    @staticmethod
+    def generate_new_draft(status_callback: callable = None) -> "PaperDraft":
+        """
+        Generate paper draft.
+        
+        This handles:
+        1. Loading paper concept
+        2. Loading experiment result
+        3. Loading indexed papers
+        4. Loading paper specification (optional)
+        5. Running the paper writing pipeline
+        6. Saving the result
+        
+        Args:
+            status_callback: Optional callback function(str) for progress updates.
+            
+        Returns:
+            The generated PaperDraft object.
+        """
+        
+        if status_callback:
+            status_callback("Loading resources")
+        paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
+        
+        # Check experiment result exists
+        experiment_result_file = "output/experiments/experiment_result.json"
+        from pathlib import Path
+        if not Path(experiment_result_file).exists():
+            raise ValueError("No experiment results found. Please run experiments first.")
+        experiment_result = ExperimentRunner.load_experiment_result(experiment_result_file)
+        
+        papers = LiteratureSearch.load_papers("output/papers.json")
+        
+        paper_specification = None
+        try:
+            paper_specification = PaperSpecification.load("user_files/paper_specification.md")
+        except:
+            pass
+        
+        pipeline = PaperWritingPipeline()
+        return pipeline.write_paper(
+            paper_concept=paper_concept,
+            experiment_result=experiment_result,
+            papers=papers,
+            paper_specification=paper_specification,
+            status_callback=status_callback
+        )
 

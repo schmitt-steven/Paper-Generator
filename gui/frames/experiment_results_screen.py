@@ -704,13 +704,17 @@ class ExperimentResultsScreen(BaseFrame):
         popup.close()
         self._results_loaded = False  # Force reload
         self._load_and_display_results()
-
-
+        self.controller.apply_theme_colors(self)
 
     def on_show(self):
         if not hasattr(self, '_results_loaded') or not self._results_loaded:
             self._load_and_display_results()
             self._results_loaded = True
+            
+        # Update next button text based on paper draft existence
+        paper_draft_file = Path("output/paper_draft.md")
+        next_text = "Continue" if paper_draft_file.exists() else "Write Paper"
+        self.set_next_text(next_text)
             
     def on_next(self):
         from pathlib import Path
@@ -726,32 +730,10 @@ class ExperimentResultsScreen(BaseFrame):
         
         def task():
             try:
-                self.after(0, lambda: popup.update_status("Loading resources"))
-                paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
-                experiment_result = ExperimentRunner.load_experiment_result("output/experiments/experiment_result.json")
-                from phases.paper_search.literature_search import LiteratureSearch
-                papers = LiteratureSearch.load_papers("output/papers.json")
-                
-                # Load paper specification if available
-                paper_specification = None
-                try:
-                    from phases.context_analysis.paper_specification import PaperSpecification
-                    paper_specification = PaperSpecification.load("output/paper_specification.json")
-                except:
-                    pass
-                
-                pipeline = PaperWritingPipeline()
-                
                 def status_callback(status: str):
                     self.after(0, lambda s=status: popup.update_status(s))
                 
-                pipeline.write_paper(
-                    paper_concept=paper_concept,
-                    experiment_result=experiment_result,
-                    papers=papers,
-                    paper_specification=paper_specification,
-                    status_callback=status_callback,
-                )
+                PaperWritingPipeline.generate_new_draft(status_callback=status_callback)
                 
                 self.after(0, lambda: self._on_generation_success(popup))
             except Exception as e:
@@ -773,23 +755,14 @@ class ExperimentResultsScreen(BaseFrame):
         
         def task():
             try:
-                self.after(0, lambda: popup.update_status("Loading context"))
-                hypothesis = HypothesisBuilder.load_hypothesis(HYPOTHESES_FILE)
-                concept = PaperConception.load_paper_concept("output/paper_concept.md")
-                
                 def status_callback(status: str):
                     self.after(0, lambda s=status: popup.update_status(s))
                 
-                runner = ExperimentRunner()
-                runner.run_experiment(
-                    hypothesis, 
-                    concept, 
-                    load_existing_plan=True, 
-                    load_existing_code=False,
-                    status_callback=status_callback
-                )
+                ExperimentRunner.run_new_experiment(status_callback=status_callback)
                 self.after(0, lambda: self._on_rerun_success(popup))
             except Exception as e:
+                import traceback
+                traceback.print_exc()
                 self.after(0, lambda err=str(e): popup.show_error(err))
         
         threading.Thread(target=task, daemon=True).start()
@@ -797,3 +770,5 @@ class ExperimentResultsScreen(BaseFrame):
     def _on_rerun_success(self, popup):
         popup.close()
         self._load_and_display_results()
+        # Apply theme colors to newly created cards (fixes missing borders)
+        self.controller.apply_theme_colors(self)

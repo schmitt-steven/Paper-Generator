@@ -23,6 +23,42 @@ class PaperConcept():
 
 class PaperConception(LazyModelMixin):
 
+    @staticmethod
+    def generate_new_concept(progress_callback=None) -> 'PaperConcept':
+        """
+        Generate a new paper concept from scratch by analyzing user files.
+        This encapsulates the entire generation workflow.
+        
+        Args:
+            progress_callback: Optional callable that takes a string status message.
+        """
+        if progress_callback:
+            progress_callback("Loading paper specification")
+            
+        # 1. Load Paper Specification
+        paper_specification = PaperSpecification.load("user_files/paper_specification.md")
+        
+        # 2. Analyze Code
+        if progress_callback:
+            progress_callback("Analyzing code files")
+            
+        code_analyzer = CodeAnalyzer(model_name=Settings.CODE_ANALYSIS_MODEL)
+        code_files = code_analyzer.load_code_files("user_files") 
+        analyzed_code = code_analyzer.analyze_all_files(code_files)
+        
+        # 3. Generate Paper Concept
+        if progress_callback:
+            progress_callback("Generating concept")
+            
+        paper_conception = PaperConception(
+            model_name=Settings.PAPER_CONCEPTION_MODEL,
+            user_code=analyzed_code,
+            paper_specification=paper_specification
+        )
+        
+        # This automatically saves to file
+        return paper_conception.build_paper_concept()
+
     def __init__(self, model_name, user_code: list[UserCode], paper_specification: PaperSpecification):
         self.model_name = model_name
         self._model = None  # Lazy-loaded via LazyModelMixin
@@ -288,9 +324,6 @@ class PaperConception(LazyModelMixin):
             description = description.split('# Important Code Snippets')[0].strip()
         
         print(f"Loaded paper concept from: {file_path}")
-        print(f"  - Description: {len(description)} characters")
-        print(f"  - Open Questions: {len(open_questions)} characters")
-        print(f"  - Code Snippets: {len(code_snippets_section)} characters")
         
         return PaperConcept(
             description=description,

@@ -179,26 +179,7 @@ class PaperConceptScreen(BaseFrame):
         
         def task():
             try:
-                # 1. Load Paper Specification
-                self.after(0, lambda: popup.update_status("Loading paper specification"))
-                paper_specification = PaperSpecification.load_paper_specification("user_files/paper_specification.md")
-                
-                # 2. Analyze Code
-                self.after(0, lambda: popup.update_status("Analyzing code files"))
-                code_analyzer = CodeAnalyzer(model_name=Settings.CODE_ANALYSIS_MODEL)
-                code_files = code_analyzer.load_code_files("user_files") 
-                analyzed_code = code_analyzer.analyze_all_files(code_files)
-                
-                # 3. Generate Paper Concept
-                self.after(0, lambda: popup.update_status("Generating concept"))
-                paper_conception = PaperConception(
-                    model_name=Settings.PAPER_CONCEPTION_MODEL,
-                    user_code=analyzed_code,
-                    paper_specification=paper_specification
-                )
-                
-                # This automatically saves to file
-                paper_conception.build_paper_concept()
+                PaperConception.generate_new_concept(progress_callback=popup.update_status)
                 
                 # 4. Reload UI
                 self.after(0, lambda: self._on_regeneration_complete(popup))

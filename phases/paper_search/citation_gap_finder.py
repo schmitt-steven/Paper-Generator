@@ -147,10 +147,6 @@ Return your suggestions in the structured format."""
                 continue
         
         print(f"\nCitation Gap Analysis: Found {len(found_papers)} new foundational papers")
-        
-        # Check for open access PDFs (Unpaywall/arXiv) for any closed source papers
-        if found_papers:
-            found_papers = find_open_access_pdfs(found_papers)
             
         return found_papers
     

@@ -14,6 +14,10 @@ from utils.lazy_model_loader import LazyModelMixin
 from phases.latex_generation.bibliography import generate_literature_bib
 from phases.latex_generation.markdown_to_latex import MarkdownToLaTeX
 from phases.experimentation.experiment_state import ExperimentResult
+from phases.paper_writing.paper_writing_pipeline import PaperWritingPipeline
+from phases.paper_search.literature_search import LiteratureSearch
+from phases.experimentation.experiment_runner import ExperimentRunner
+from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 
 
 @dataclass
@@ -386,3 +390,62 @@ class PaperConverter(LazyModelMixin):
                 print(f"[PaperConverter] Copied plot: {plot_file.name}")
         
         print(f"[PaperConverter] Copied {copied_count} plot image(s) to images/")
+
+    @staticmethod
+    def generate_new_pdf(status_callback: callable = None) -> bool:
+        """
+        Generate LaTeX project and compile to PDF.
+        
+        This handles:
+        1. Loading paper draft
+        2. Loading indexed papers
+        3. Loading experiment result (optional)
+        4. Loading hypothesis for metadata
+        5. Converting to LaTeX
+        6. Compiling to PDF
+        
+        Args:
+            status_callback: Optional callback function(str) for progress updates.
+            
+        Returns:
+            True if PDF was successfully generated, False otherwise.
+        """
+        
+        if status_callback:
+            status_callback("Loading paper draft")
+        paper_draft = PaperWritingPipeline.load_paper_draft("output/paper_draft.md")
+        
+        if status_callback:
+            status_callback("Loading indexed papers")
+        indexed_papers = LiteratureSearch.load_papers("output/papers.json")
+        
+        if status_callback:
+            status_callback("Loading experiment results")
+        experiment_result = None
+        experiment_result_file = "output/experiments/experiment_result.json"
+        if Path(experiment_result_file).exists():
+            experiment_result = ExperimentRunner.load_experiment_result(experiment_result_file)
+        
+        if status_callback:
+            status_callback("Loading hypothesis")
+        selected_hypothesis = HypothesisBuilder.load_hypothesis("output/hypothesis.md")
+        if selected_hypothesis is None:
+            raise ValueError("No hypothesis found")
+        
+        metadata = LaTeXMetadata.from_settings(generated_title=paper_draft.title)
+        
+        if status_callback:
+            status_callback("Generating LaTeX project")
+        converter = PaperConverter()
+        latex_dir = converter.convert_to_latex(
+            paper_draft=paper_draft,
+            metadata=metadata,
+            indexed_papers=indexed_papers,
+            experiment_result=experiment_result,
+            progress_callback=status_callback
+        )
+        
+        if status_callback:
+            status_callback("Compiling LaTeX to PDF")
+        return converter.compile_latex(latex_dir)
+

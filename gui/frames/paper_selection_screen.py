@@ -23,6 +23,7 @@ from utils.pdf_downloader import PDFDownloader
 from utils.pdf_converter import PDFConverter
 from settings import Settings
 from phases.paper_search.citation_gap_finder import CitationGapFinder
+from utils.open_access_finder import find_open_access_pdfs
 
 
 HYPOTHESES_FILE = Path("output/hypothesis.md")
@@ -71,10 +72,14 @@ class PaperSelectionScreen(BaseFrame):
         self._create_searched_papers_section()
 
     def on_show(self):
-        """Called when screen is shown - load papers from file if not already loaded."""
+        """Called when screen is shown - load papers from file if not already loaded and update next button."""
         if not self._papers_loaded:
             self._load_papers_from_file()
             self._papers_loaded = True
+            
+        # Update next button text based on if hypothesis exists
+        next_text = "Continue" if HYPOTHESES_FILE.exists() else "Generate Hypothesis"
+        self.set_next_text(next_text)
 
     def _load_papers_from_file(self):
         """Load papers from papers.json and split into user/searched lists."""
@@ -500,6 +505,12 @@ class PaperSelectionScreen(BaseFrame):
                             reverse=True
                         )
                 
+                # Step 5: Check for open access PDFs for papers without URLs
+                papers_without_urls = [p for p in filtered_papers if not p.pdf_url]
+                if papers_without_urls:
+                    self.after(0, lambda n=len(papers_without_urls): popup.update_status(f"Finding open access PDFs for {n} papers"))
+                    find_open_access_pdfs(papers_without_urls)  # Updates papers in-place
+                
                 # Step 6: Show results
                 self.after(0, lambda: self._on_search_complete(filtered_papers, popup))
                 
@@ -756,19 +767,16 @@ class PaperSelectionScreen(BaseFrame):
         
         def task():
             try:
-                self.after(0, lambda: popup.update_status("Loading paper concept"))
-                paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
-                paper_specification = PaperSpecification.load_paper_specification("user_files/paper_specification.md")
+                # Check if user provided a hypothesis first
+                self.after(0, lambda: popup.update_status("Loading paper specification"))
+                paper_specification = PaperSpecification.load("user_files/paper_specification.md")
                 
                 # Only generate if user provided hypothesis
                 if paper_specification.hypothesis and paper_specification.hypothesis.strip():
-                    self.after(0, lambda: popup.update_status("Creating hypothesis from user input"))
-                    HypothesisBuilder(
-                        model_name=Settings.HYPOTHESIS_BUILDER_MODEL,
-                        paper_concept=paper_concept,
-                        top_limitations=[],
-                        num_papers_analyzed=0
-                    ).create_hypothesis_from_user_input(paper_specification)
+                    def status_callback(msg):
+                        self.after(0, lambda m=msg: popup.update_status(m))
+                    
+                    HypothesisBuilder.generate_new_hypothesis(status_callback=status_callback)
                 
                 self.after(0, lambda: self._finish_processing(popup, show_hypothesis_popup=True))
                 
