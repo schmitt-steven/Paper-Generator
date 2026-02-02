@@ -1449,8 +1449,8 @@ Do NOT do this:
                             if execution_result.return_code != 0:
                                 break
             
-            # Post-loop check: If execution succeeded but the latest version isnt validated (e.g. from the last fix)
-            if execution_result.return_code == 0 and not validation_passed and total_validation_attempts < max_validation_attempts + 1:
+            # Post-loop check: If execution succeeded but validation hasn't run yet (e.g. strange loop exit)
+            if execution_result.return_code == 0 and validation_result is None:
                  # Check if we should validate the final fixed code
                  print("Validating final fixed code...")
                  validation_result = self._validate_experiment_results(
