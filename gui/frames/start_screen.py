@@ -12,7 +12,7 @@ from ..base_frame import BaseFrame, CardBorderFrame, InfoPopup, ProgressPopup
 from ..info_texts import START_PAGE_INFO, PAPER_SPECIFICATION_INFO, STYLE_GUIDELINES_INFO, CODE_FILES_INFO
 from ..theme_colors import CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT, MUTED_TEXT
 from ..icons import HoverColor
-from phases.context_analysis.paper_conception import PaperConception
+from phases.context_analysis.research_context_generator import ResearchContextGenerator
 import threading
 
 
@@ -43,9 +43,9 @@ class StartScreen(BaseFrame):
         self.paper_specification_path = "user_files/paper_specification.md"
         self.style_guidelines_path = "user_files/style_guidelines.md"
         
-        # Check if paper concept exists to determine button text
-        paper_concept_path = Path("output/paper_concept.md")
-        next_text = "Continue" if paper_concept_path.exists() else "Generate Paper Concept"
+        # Check if research context exists to determine button text
+        research_context_path = Path("output/research_context.md")
+        next_text = "Continue" if research_context_path.exists() else "Generate Research Context"
         
         super().__init__(
             parent=parent,
@@ -65,20 +65,20 @@ class StartScreen(BaseFrame):
         self._create_code_files_section()
         
     def on_next(self):
-        """Handle next button click. If concept doesn't exist, generate it."""
-        paper_concept_path = Path("output/paper_concept.md")
+        """Handle next button click. If context doesn't exist, generate it."""
+        research_context_path = Path("output/research_context.md")
         
-        if paper_concept_path.exists():
+        if research_context_path.exists():
             super().on_next()
             return
             
-        # Generate concept if it doesn't exist
-        popup = ProgressPopup(self.controller, "Generating Paper Concept")
+        # Generate context if it doesn't exist
+        popup = ProgressPopup(self.controller, "Generating Research Context")
         
         def task():
             try:
                 # Use the centralized generation logic
-                PaperConception.generate_new_concept(progress_callback=popup.update_status)
+                ResearchContextGenerator.generate_new_context(progress_callback=popup.update_status)
                 
                 self.after(0, lambda: self._on_generation_complete(popup))
                 
@@ -93,16 +93,16 @@ class StartScreen(BaseFrame):
     def _on_generation_complete(self, popup: ProgressPopup):
         """Handle generation completion."""
         popup.close()
-        # Proceed to next screen (PaperConceptScreen)
+        # Proceed to next screen (ResearchContextScreen)
         super().on_next()
     
     def on_show(self):
         """Load code files when screen is shown and update next button text."""
         self._load_existing_files()
         
-        # Update next button text based on concept existence
-        paper_concept_path = Path("output/paper_concept.md")
-        next_text = "Continue" if paper_concept_path.exists() else "Generate Concept"
+        # Update next button text based on context existence
+        research_context_path = Path("output/research_context.md")
+        next_text = "Continue" if research_context_path.exists() else "Generate Context"
         self.set_next_text(next_text)
 
     # ==================== Settings Section ====================

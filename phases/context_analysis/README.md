@@ -1,6 +1,6 @@
 # Context Analysis Phase
 
-Analyzes user code and requirements to generate a paper concept.
+Analyzes user code and requirements to generate a research context.
 
 ## Components
 
@@ -19,9 +19,9 @@ Parses structured paper specification from `user_files/paper_specification.md`.
 - Topic and hypothesis
 - Section-specific requirements (abstract, introduction, methods, etc.)
 
-### `PaperConception` ([paper_conception.py](paper_conception.py))
+### `ResearchContextGenerator` ([research_context_generator.py](research_context_generator.py))
 
-Generates the paper concept using code analysis and paper specification.
+Generates the research context using code analysis and paper specification.
 
 - Builds paper description from analyzed code and requirements
 - Identifies open questions to guide literature search
@@ -29,7 +29,7 @@ Generates the paper concept using code analysis and paper specification.
 
 ## Output
 
-`output/paper_concept.md` containing:
+`output/research_context.md` containing:
 - Paper description
 - Open questions for literature search
 - Code snippets with explanations

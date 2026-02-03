@@ -16,7 +16,7 @@ from utils.pdf_downloader import PDFDownloader
 from utils.open_access_finder import find_open_access_pdfs
 from utils.lazy_model_loader import LazyModelMixin
 from utils.file_utils import save_json, load_json
-from phases.context_analysis.paper_conception import PaperConcept
+from phases.context_analysis.research_context_generator import ResearchContext
 from settings import Settings
 
 
@@ -39,8 +39,8 @@ class LiteratureSearch(LazyModelMixin):
         self.s2_api = SemanticScholarAPI(api_key=Settings.SEMANTIC_SCHOLAR_API_KEY or None)
 
 
-    def build_search_queries(self, paper_concept: PaperConcept) -> list[SearchQuery]:
-        """Generate multiple search queries from paper concept for comprehensive literature search."""
+    def build_search_queries(self, research_context: ResearchContext) -> list[SearchQuery]:
+        """Generate multiple search queries from research context for comprehensive literature search."""
 
         prompt = textwrap.dedent(f"""\
             Generate 15 Semantic Scholar search queries for a comprehensive academic literature review.
@@ -76,7 +76,7 @@ class LiteratureSearch(LazyModelMixin):
                - Specific names of test suites or data repositories
 
             RESEARCH TOPIC:
-            {paper_concept.description}
+            {research_context.description}
 
             AVOID THESE GENERIC TERMS (they match too many unrelated papers):
             - deterministic, stochastic, optimal, efficient, robust

@@ -15,18 +15,18 @@ from utils.llm_utils import remove_thinking_blocks
 
 
 @dataclass
-class PaperConcept():
-    """Stores paper concept details"""
+class ResearchContext():
+    """Stores research context details"""
     description: str = ""
     code_snippets: str = ""  # Markdown-formatted code snippets section (as text)
     open_questions: str = ""
 
-class PaperConception(LazyModelMixin):
+class ResearchContextGenerator(LazyModelMixin):
 
     @staticmethod
-    def generate_new_concept(progress_callback=None) -> 'PaperConcept':
+    def generate_new_context(progress_callback=None) -> 'ResearchContext':
         """
-        Generate a new paper concept from scratch by analyzing user files.
+        Generate a new research context from scratch by analyzing user files.
         This encapsulates the entire generation workflow.
         
         Args:
@@ -44,20 +44,20 @@ class PaperConception(LazyModelMixin):
             
         code_analyzer = CodeAnalyzer(model_name=Settings.CODE_ANALYSIS_MODEL)
         code_files = code_analyzer.load_code_files("user_files") 
-        analyzed_code = code_analyzer.analyze_all_files(code_files)
+        analyzed_code = code_analyzer.analyze_all_files(code_files, extract_signatures=False)
         
-        # 3. Generate Paper Concept
+        # 3. Generate Research Context
         if progress_callback:
-            progress_callback("Generating concept")
+            progress_callback("Generating context")
             
-        paper_conception = PaperConception(
-            model_name=Settings.PAPER_CONCEPTION_MODEL,
+        research_context_generator = ResearchContextGenerator(
+            model_name=Settings.research_context_generator_MODEL,
             user_code=analyzed_code,
             paper_specification=paper_specification
         )
         
         # This automatically saves to file
-        return paper_conception.build_paper_concept()
+        return research_context_generator.build_research_context()
 
     def __init__(self, model_name, user_code: list[UserCode], paper_specification: PaperSpecification):
         self.model_name = model_name
@@ -99,7 +99,7 @@ class PaperConception(LazyModelMixin):
         
         return "[Paper Specification]\n" + "\n".join(sections)
 
-    def generate_core_information(self) -> PaperConcept:
+    def generate_core_information(self) -> ResearchContext:
         
         code_analysis_report = CodeAnalyzer.get_analysis_report(self.user_code)
         
@@ -114,7 +114,7 @@ class PaperConception(LazyModelMixin):
             Your task is to distill user notes and code into a **canonical research definition**.
             
             [OBJECTIVE]
-            Create a structured "Paper Concept" that serves as the semantic anchor for this research. 
+            Create a structured "Research Context" that serves as the semantic anchor for this research. 
             This output will be embedded to find similar papers. Therefore, it must use precise, standard terminology and avoid conversational fillers.
 
             [INPUT DATA]
@@ -161,11 +161,11 @@ class PaperConception(LazyModelMixin):
         
         description_text = remove_thinking_blocks(result.content)
         
-        return PaperConcept(description=description_text, code_snippets=code_analysis_report)
+        return ResearchContext(description=description_text, code_snippets=code_analysis_report)
 
-    def identify_open_questions(self, concept: PaperConcept) -> PaperConcept:
+    def identify_open_questions(self, context: ResearchContext) -> ResearchContext:
         """
-        Analyze the paper concept and identify what information is needed to write
+        Analyze the research context and identify what information is needed to write
         a high-quality academic paper. These questions will guide literature search.
         """
         
@@ -184,7 +184,7 @@ class PaperConception(LazyModelMixin):
 
             [ANALYSIS APPROACH]
             1. Identify the MOST CRITICAL gaps in understanding the field and related work
-            2. Focus on: (a) existing methods/prior art, (b) how this work differs, (c) key concepts to understand
+            2. Focus on: (a) existing methods/prior art, (b) how this work differs, (c) key contexts to understand
             3. Questions should guide literature search to establish novelty and context
 
             [QUESTION PRIORITIES]
@@ -212,10 +212,10 @@ class PaperConception(LazyModelMixin):
             - Be SPECIFIC (e.g., "How does Method X differ from Method Y in aspect Z?" not "What is Method Y?")
             - Focus on what's needed to establish novelty and write a strong related work section
             - Every question should have clear literature search targets
-            - Adapt questions to the specific research domain identified in the paper concept
+            - Adapt questions to the specific research domain identified in the research context
 
-            {title_section}[PAPER CONCEPT TO ANALYZE]
-            {concept.description}
+            {title_section}[RESEARCH CONTEXT TO ANALYZE]
+            {context.description}
 
             [CODE ANALYSIS]
             {CodeAnalyzer.get_analysis_report(self.user_code)}
@@ -229,62 +229,62 @@ class PaperConception(LazyModelMixin):
         result = self.model.respond(prompt)
         
         questions_text = remove_thinking_blocks(result.content)
-        concept.open_questions = questions_text
+        context.open_questions = questions_text
         
         print(f"Generated open questions for literature search")
-        return concept
+        return context
 
-    def build_paper_concept(self) -> PaperConcept:
-        """Build the complete paper concept by generating core information and identifying open questions."""
-        print("Generating paper concept...")
+    def build_research_context(self) -> ResearchContext:
+        """Build the complete research context by generating core information and identifying open questions."""
+        print("Generating research context...")
         
-        concept = self.generate_core_information()
-        concept = self.identify_open_questions(concept)
+        context = self.generate_core_information()
+        context = self.identify_open_questions(context)
 
         # Automatically save
-        PaperConception.save_paper_concept(concept, filename="paper_concept.md", output_dir="output")
+        ResearchContextGenerator.save_research_context(context, filename="research_context.md", output_dir="output")
 
-        return concept
+        return context
 
     @staticmethod
-    def save_paper_concept(concept: PaperConcept, filename: str = "paper_concept.md", output_dir: str = "output") -> str:
-        """Save the paper concept to a markdown file with open questions and code snippets. """
+    def save_research_context(context: ResearchContext, filename: str = "research_context.md", output_dir: str = "output") -> str:
+        """Save the research context to a markdown file with open questions and code snippets. """
 
         content_parts = []
         
         content_parts.extend([
-            "# Paper Concept\n",
-            concept.description
+            "# Research Context\n",
+            context.description
         ])
         
-        if concept.open_questions:
+        if context.open_questions:
             content_parts.extend([
                 "\n\n",
                 "# Open Questions for Literature Search\n",
-                concept.open_questions
+                context.open_questions
             ])
         
-        if concept.code_snippets:
+        if context.code_snippets:
             content_parts.extend([
                 "\n\n",
                 "# Important Code Snippets\n",
-                concept.code_snippets
+                context.code_snippets
             ])
         
         full_content = "\n".join(content_parts)
         file_path = save_markdown(full_content, filename, output_dir)
-        print(f"Paper concept saved to: {file_path}")
+        print(f"Research Context saved to: {file_path}")
         
         return file_path
 
     @staticmethod
-    def load_paper_concept(file_path: str) -> PaperConcept:
+    def load_research_context(file_path: str) -> ResearchContext:
         """
-        Load a paper concept from a saved markdown file.
-        Allows users to review and edit the concept before continuing.
+        Load a research context from a saved markdown file.
+        Allows users to review and edit the context before continuing.
 
         Users can edit all sections directly in the markdown file, as long as the 3 large headers are preserved:
-        - Paper concept description
+        - Research Context description
         - Open questions for literature search
         - Code snippets section
         """
@@ -292,7 +292,7 @@ class PaperConception(LazyModelMixin):
 
         path_obj = Path(file_path)
         if not path_obj.exists():
-            raise FileNotFoundError(f"Paper concept file not found: {file_path}")
+            raise FileNotFoundError(f"Research Context file not found: {file_path}")
 
         content = load_markdown(path_obj.name, str(path_obj.parent))
         
@@ -307,7 +307,7 @@ class PaperConception(LazyModelMixin):
         for section in sections:
             section = section.lstrip('# ')
             
-            if section.startswith('Paper Concept'):
+            if section.startswith('Research Context'):
                 desc_content = section.split('\n', 1)[1] if '\n' in section else ""
                 description = desc_content.strip()
                 
@@ -323,18 +323,18 @@ class PaperConception(LazyModelMixin):
         if '# Important Code Snippets' in description:
             description = description.split('# Important Code Snippets')[0].strip()
         
-        print(f"Loaded paper concept from: {file_path}")
+        print(f"Loaded research context from: {file_path}")
         
-        return PaperConcept(
+        return ResearchContext(
             description=description,
             open_questions=open_questions,
             code_snippets=code_snippets_section
         )
     
     @staticmethod
-    def print_paper_concept(concept: PaperConcept):
-        print("=== Paper Concept ===")
-        print(f"Description:\n{concept.description}")
-        print(f"\nCode Snippets ({len(concept.code_snippets)} chars):")
-        print(concept.code_snippets[:500] + "..." if len(concept.code_snippets) > 500 else concept.code_snippets)
-        print(f"\nOpen Questions:\n{concept.open_questions}")
+    def print_research_context(context: ResearchContext):
+        print("=== Research Context ===")
+        print(f"Description:\n{context.description}")
+        print(f"\nCode Snippets ({len(context.code_snippets)} chars):")
+        print(context.code_snippets[:500] + "..." if len(context.code_snippets) > 500 else context.code_snippets)
+        print(f"\nOpen Questions:\n{context.open_questions}")

@@ -1,7 +1,7 @@
 import textwrap
 from typing import Dict, List, Optional, Sequence, Tuple
 
-from phases.context_analysis.paper_conception import PaperConcept
+from phases.context_analysis.research_context_generator import ResearchContext
 from phases.context_analysis.paper_specification import PaperSpecification
 from phases.experimentation.experiment_state import ExperimentResult, Plot
 from phases.paper_search.paper import Paper
@@ -20,7 +20,7 @@ class PaperWriter:
     
     def generate_paper_sections(
         self,
-        context: PaperConcept,
+        context: ResearchContext,
         experiment: ExperimentResult,
         evidence_by_section: dict[Section, Sequence[Evidence]],
 
@@ -94,7 +94,7 @@ class PaperWriter:
     def generate_section(
         self,
         section_type: Section,
-        context: PaperConcept,
+        context: ResearchContext,
         experiment: Optional[ExperimentResult],
         evidence: Sequence[Evidence],
 
@@ -124,7 +124,7 @@ class PaperWriter:
     def _build_section_prompt(
         self,
         section_type: Section,
-        context: PaperConcept,
+        context: ResearchContext,
         experiment: Optional[ExperimentResult],
         evidence: Sequence[Evidence],
         previous_sections: Optional[dict[Section, str]] = None,
@@ -380,7 +380,7 @@ class PaperWriter:
 
     @staticmethod
     def _format_context(
-        context: PaperConcept,
+        context: ResearchContext,
         experiment: Optional[ExperimentResult],
     ) -> str:
         """Format context and experiment data for prompts."""
@@ -389,7 +389,7 @@ class PaperWriter:
             return f"[{label.upper()}]\n{value.strip()}" if isinstance(value, str) and value.strip() else None
         
         sections = [
-            format_if_present("Concept description", context.description),
+            format_if_present("Context description", context.description),
             format_if_present("Open questions", context.open_questions),
         ]
         
@@ -422,7 +422,7 @@ class PaperWriter:
     def generate_title(
         self,
         draft: PaperDraft,
-        context: PaperConcept,
+        context: ResearchContext,
         temperature: float = 0.2,
         max_tokens: int = 200,
     ) -> str:
@@ -519,7 +519,7 @@ class PaperWriter:
         self,
         section_type: Section,
         papers: Sequence[Paper],
-        context: PaperConcept,
+        context: ResearchContext,
         experiment: Optional[ExperimentResult],
         previous_sections: Optional[dict[Section, str]] = None,
         paper_specification: Optional[PaperSpecification] = None,
@@ -551,7 +551,7 @@ class PaperWriter:
         critique: SectionCritique,
         new_evidence: Sequence[Evidence],
         papers: Sequence[Paper],
-        context: PaperConcept,
+        context: ResearchContext,
         experiment: Optional[ExperimentResult],
         previous_sections: Optional[dict[Section, str]] = None,
         paper_specification: Optional[PaperSpecification] = None,
@@ -583,7 +583,7 @@ class PaperWriter:
         self,
         section_type: Section,
         papers: Sequence[Paper],
-        context: PaperConcept,
+        context: ResearchContext,
         experiment: Optional[ExperimentResult],
         previous_sections: Optional[dict[Section, str]] = None,
         paper_specification: Optional[PaperSpecification] = None,
@@ -670,7 +670,7 @@ class PaperWriter:
         critique: SectionCritique,
         new_evidence: Sequence[Evidence],
         papers: Sequence[Paper],
-        context: PaperConcept,
+        context: ResearchContext,
         experiment: Optional[ExperimentResult],
         previous_sections: Optional[dict[Section, str]] = None,
         paper_specification: Optional[PaperSpecification] = None,

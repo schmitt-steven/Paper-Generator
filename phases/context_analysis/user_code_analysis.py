@@ -252,7 +252,7 @@ class CodeAnalyzer(LazyModelMixin):
             
         return code_analysis
 
-    def analyze_all_files(self, code_files: list[UserCode]) -> list[UserCode]:
+    def analyze_all_files(self, code_files: list[UserCode], extract_signatures: bool = True) -> list[UserCode]:
         """
         Analyze all code files and extract important code snippets.
         """
@@ -260,7 +260,10 @@ class CodeAnalyzer(LazyModelMixin):
         for code_file in code_files:
             analyzed = self.analyze_code_file(code_file)
             analyzed = self.extract_important_snippets(analyzed)
-            analyzed = self.extract_signatures(analyzed)
+            
+            if extract_signatures:
+                analyzed = self.extract_signatures(analyzed)
+                
             analyzed_files.append(analyzed)
         
         print(f"Code analysis complete: analyzed {len(analyzed_files)} file(s)")

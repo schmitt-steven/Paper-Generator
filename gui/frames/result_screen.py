@@ -16,7 +16,7 @@ from phases.paper_writing.paper_writing_pipeline import PaperWritingPipeline
 from phases.paper_search.literature_search import LiteratureSearch
 from phases.experimentation.experiment_runner import ExperimentRunner
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
-from phases.context_analysis.paper_conception import PaperConception
+from phases.context_analysis.research_context_generator import ResearchContextGenerator
 from phases.context_analysis.paper_specification import PaperSpecification
 
 PDF_PATH = "output/latex/result/paper.pdf"

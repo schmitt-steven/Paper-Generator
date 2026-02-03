@@ -8,7 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from phases.paper_search.literature_search import LiteratureSearch
 from phases.paper_search.paper_filter import PaperFilter
 from phases.paper_search.paper_ranking import PaperRanker
-from phases.context_analysis.paper_conception import PaperConception
+from phases.context_analysis.research_context_generator import ResearchContextGenerator
 from settings import Settings
 
 # ============================================================
@@ -19,18 +19,18 @@ PAPER_COUNT = 40          # Number of papers to show for each method
 
 
 def search_papers():
-    """Run a new paper search based on the paper concept."""
+    """Run a new paper search based on the research context."""
     print("=" * 60)
     print("PAPER SEARCH")
     print("=" * 60)
     
-    paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
-    print(f"Paper Concept: {paper_concept.description}")
+    research_context = ResearchContextGenerator.load_research_context("output/research_context.md")
+    print(f"Research Context: {research_context.description}")
     
     lit_search = LiteratureSearch(model_name=Settings.LITERATURE_SEARCH_MODEL)
     
     print("\n--- Generating Search Queries ---")
-    queries = lit_search.build_search_queries(paper_concept)
+    queries = lit_search.build_search_queries(research_context)
     
     print("\n--- Executing Search ---")
     papers = lit_search.search_papers(queries, max_results_per_query=30)
@@ -38,7 +38,7 @@ def search_papers():
     
     print("\n--- Ranking Papers ---")
     ranker = PaperRanker(embedding_model_name=Settings.PAPER_RANKING_EMBEDDING_MODEL)
-    ranking_context = paper_concept.description
+    ranking_context = research_context.description
     papers = ranker.rank_papers(
         papers=papers,
         context=ranking_context,
@@ -65,11 +65,11 @@ def ensure_embeddings(papers):
     
     if not has_embeddings:
         print("Re-computing embeddings...")
-        paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
+        research_context = ResearchContextGenerator.load_research_context("output/research_context.md")
         ranker = PaperRanker(embedding_model_name=Settings.PAPER_RANKING_EMBEDDING_MODEL)
         papers = ranker.rank_papers(
             papers=papers,
-            context=paper_concept.description,
+            context=research_context.description,
             weights={'relevance': 0.75, 'citations': 0.15, 'recency': 0.1}
         )
         LiteratureSearch.save_papers(papers, filename="papers.json", output_dir="output")
@@ -106,8 +106,8 @@ def main():
     papers = ensure_embeddings(papers)
     
     # Get research context for LLM verification
-    paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
-    research_context = f"{paper_concept.description}\n\nOpen Research Questions:\n{paper_concept.open_questions}"
+    research_context = ResearchContextGenerator.load_research_context("output/research_context.md")
+    research_context = f"{research_context.description}\n\nOpen Research Questions:\n{research_context.open_questions}"
     
     # Filter
     print("\n" + "=" * 60)

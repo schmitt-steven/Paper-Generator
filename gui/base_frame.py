@@ -681,7 +681,7 @@ class BaseFrame(ttk.Frame):
         common_attrs = [
             'draft_text', 
             'plan_text', 
-            'concept', 
+            'context', 
             'hypotheses', 
             'current_hypothesis',
             '_results_loaded',

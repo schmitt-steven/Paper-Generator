@@ -16,7 +16,7 @@ from phases.paper_search.user_paper_loader import UserPaperLoader
 from phases.paper_search.literature_search import LiteratureSearch
 from phases.paper_search.paper_ranking import PaperRanker
 from phases.paper_search.paper_filter import PaperFilter
-from phases.context_analysis.paper_conception import PaperConception, PaperConcept
+from phases.context_analysis.research_context_generator import ResearchContextGenerator, ResearchContext
 from phases.context_analysis.paper_specification import PaperSpecification
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from utils.pdf_downloader import PDFDownloader
@@ -436,10 +436,10 @@ class LiteratureSearchScreen(BaseFrame):
             try:
                 # Step 1: Search
                 self.after(0, lambda: popup.update_status("Building search queries"))
-                paper_concept: PaperConcept = PaperConception.load_paper_concept("output/paper_concept.md")
+                research_context: ResearchContext = ResearchContextGenerator.load_research_context("output/research_context.md")
                 
                 literature_search = LiteratureSearch(model_name=Settings.LITERATURE_SEARCH_MODEL)
-                search_queries = literature_search.build_search_queries(paper_concept)
+                search_queries = literature_search.build_search_queries(research_context)
                 
                 self.after(0, lambda: popup.update_status(f"Searching related papers with {len(search_queries)} queries"))
                 papers = literature_search.search_papers(search_queries, max_results_per_query=15)
@@ -455,7 +455,7 @@ class LiteratureSearchScreen(BaseFrame):
                 # Step 2: Rank papers
                 self.after(0, lambda: popup.update_status("Ranking papers for relevance"))
                 ranker = PaperRanker(embedding_model_name=Settings.PAPER_RANKING_EMBEDDING_MODEL)
-                ranking_context = paper_concept.description
+                ranking_context = research_context.description
                 ranked_papers = ranker.rank_papers(
                     papers=searched_papers,
                     context=ranking_context,
@@ -467,7 +467,7 @@ class LiteratureSearchScreen(BaseFrame):
                 
                 # Step 3: Filter papers
                 self.after(0, lambda: popup.update_status("Filtering found papers"))
-                research_context = f"{paper_concept.description}\n\nOpen Research Questions:\n{paper_concept.open_questions}"
+                research_context = f"{research_context.description}\n\nOpen Research Questions:\n{research_context.open_questions}"
                 filtered_papers = PaperFilter.filter_papers(
                     papers=ranked_papers,
                     research_context=research_context,
@@ -479,7 +479,7 @@ class LiteratureSearchScreen(BaseFrame):
                 # Step 4: Citation Gap Analysis - find missing foundational papers
                 self.after(0, lambda: popup.update_status("Analyzing for missing foundational papers"))
                 gap_finder = CitationGapFinder()
-                research_context = f"{paper_concept.description}\n\nOpen Research Questions:\n{paper_concept.open_questions}"
+                research_context = f"{research_context.description}\n\nOpen Research Questions:\n{research_context.open_questions}"
                 suggestions = gap_finder.identify_missing_papers(
                     papers=filtered_papers,
                     research_context=research_context,
@@ -537,7 +537,7 @@ class LiteratureSearchScreen(BaseFrame):
         if count > 0:
             messagebox.showinfo("Search Complete", f"Found {count} papers matching your research topic.")
         else:
-            messagebox.showinfo("Search Complete", "No matching papers found. Try adjusting your paper concept.")
+            messagebox.showinfo("Search Complete", "No matching papers found. Try adjusting your research context.")
 
     def _set_search_loading(self, loading: bool):
         self.is_searching = loading

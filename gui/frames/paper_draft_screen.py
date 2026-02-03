@@ -19,7 +19,7 @@ from phases.latex_generation.paper_converter import LaTeXMetadata
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.experimentation.experiment_runner import ExperimentRunner
 from phases.context_analysis.paper_specification import PaperSpecification
-from phases.context_analysis.paper_conception import PaperConception
+from phases.context_analysis.research_context_generator import ResearchContextGenerator
 from settings import Settings
 
 

@@ -1,6 +1,6 @@
 # Hypothesis Generation Phase
 
-Generates a structured research hypothesis from user input and paper concept.
+Generates a structured research hypothesis from user input and research context.
 
 ## Components
 
@@ -16,7 +16,7 @@ Data class representing a testable research hypothesis.
 
 Uses LLM to convert user-provided hypothesis text into a `Hypothesis` object.
 
-- Takes raw user input from the paper specification and paper concept as context
+- Takes raw user input from the paper specification and research context as context
 - Outputs a structured hypothesis with description, rationale and success criteria
 
 ## Output

@@ -3,12 +3,12 @@ import textwrap
 import numpy as np
 from typing import List, Tuple
 from pathlib import Path
-from phases.context_analysis.paper_conception import PaperConcept
+from phases.context_analysis.research_context_generator import ResearchContext
 from pydantic import BaseModel
 from dataclasses import dataclass
 from settings import Settings
 from typing import List, Dict, Tuple, Optional
-from phases.context_analysis.paper_conception import PaperConception
+from phases.context_analysis.research_context_generator import ResearchContextGenerator
 from phases.context_analysis.paper_specification import PaperSpecification
 from utils.lazy_model_loader import LazyModelMixin, LazyEmbeddingMixin
 from utils.file_utils import save_markdown, load_markdown
@@ -68,10 +68,10 @@ class Hypothesis(BaseModel):
 class HypothesisBuilder(LazyModelMixin):
     """Generates and validates research hypotheses"""
     
-    def __init__(self, model_name: str, paper_concept: PaperConcept, top_limitations: list[tuple[str, float]], num_papers_analyzed: int):
+    def __init__(self, model_name: str, research_context: ResearchContext, top_limitations: list[tuple[str, float]], num_papers_analyzed: int):
         self.model_name = model_name
         self._model = None  # Lazy-loaded via LazyModelMixin
-        self.paper_concept = paper_concept
+        self.research_context = research_context
         self.top_limitations = top_limitations
         self.num_papers_analyzed = num_papers_analyzed
         
@@ -111,7 +111,7 @@ class HypothesisBuilder(LazyModelMixin):
               Use qualitative, observable criteria instead.
             
             Research Context:
-            {title_section}{self.paper_concept.description}
+            {title_section}{self.research_context.description}
 
             User's raw hypothesis:
             "{user_hypothesis_text}"
@@ -203,7 +203,7 @@ class HypothesisBuilder(LazyModelMixin):
         Generate hypothesis from paper specification.
         
         This handles:
-        1. Loading paper concept
+        1. Loading research context
         2. Loading paper specification
         3. Generating hypothesis using LLM
         4. Saving the result
@@ -216,8 +216,8 @@ class HypothesisBuilder(LazyModelMixin):
         """
         
         if status_callback:
-            status_callback("Loading paper concept")
-        paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
+            status_callback("Loading research context")
+        research_context = ResearchContextGenerator.load_research_context("output/research_context.md")
         
         if status_callback:
             status_callback("Loading paper specification")
@@ -227,7 +227,7 @@ class HypothesisBuilder(LazyModelMixin):
             status_callback("Generating hypothesis")
         builder = HypothesisBuilder(
             model_name=Settings.HYPOTHESIS_BUILDER_MODEL,
-            paper_concept=paper_concept,
+            research_context=research_context,
             top_limitations=[],
             num_papers_analyzed=0
         )

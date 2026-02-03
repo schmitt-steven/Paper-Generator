@@ -150,7 +150,7 @@ The requirements file **must** have the following structure:
 ```
 """
 
-PAPER_CONCEPT_INFO = """paper concept"""
+RESEARCH_CONTEXT_INFO = """research context"""
 
 LITERATURE_SEARCH_INFO = """literature search"""
 

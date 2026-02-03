@@ -11,8 +11,8 @@ from typing import Optional, Tuple, List, Any
 from pathlib import Path
 from pydantic import BaseModel
 from utils.file_utils import save_json, load_json, save_markdown, load_markdown
-from phases.context_analysis.paper_conception import PaperConception
-from phases.context_analysis.paper_conception import PaperConcept
+from phases.context_analysis.research_context_generator import ResearchContextGenerator
+from phases.context_analysis.research_context_generator import ResearchContext
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.context_analysis.paper_specification import PaperSpecification
 from phases.context_analysis.user_code_analysis import CodeAnalyzer, UserCode
@@ -88,7 +88,7 @@ class ExperimentRunner:
         self,
         experiment_plan: str,
         hypothesis: Hypothesis,
-        paper_concept: PaperConcept,
+        research_context: ResearchContext,
         output_dir: str,
         paper_specification: Optional[PaperSpecification] = None,
         user_code: Optional[list[UserCode]] = None,
@@ -832,7 +832,7 @@ Do NOT do this:
     def _generate_experiment_plan(
         self,
         hypothesis: Hypothesis,
-        paper_concept: PaperConcept,
+        research_context: ResearchContext,
         paper_specification: Optional[PaperSpecification] = None,
         user_code: Optional[list[UserCode]] = None
     ) -> str:
@@ -898,7 +898,7 @@ Do NOT do this:
             - If testing game/RL algorithms: simulate game logic WITHOUT rendering frames, just compute states/actions/rewards programmatically
 
             {title_section}[RESEARCH_CONTEXT]
-            {paper_concept.description}
+            {research_context.description}
 
             [HYPOTHESIS]
             Description: {hypothesis.description}
@@ -1159,7 +1159,7 @@ Do NOT do this:
     def run_experiment(
         self,
         hypothesis: Hypothesis,
-        paper_concept: PaperConcept,
+        research_context: ResearchContext,
         load_existing_plan: bool = False,
         load_existing_code: bool = False,
         status_callback: callable = None
@@ -1246,7 +1246,7 @@ Do NOT do this:
                     print(f"Generating new experiment plan...")
                 experiment_plan = self._generate_experiment_plan(
                     hypothesis, 
-                    paper_concept,
+                    research_context,
                     paper_specification=paper_specification,
                     user_code=user_code
                 )
@@ -1293,7 +1293,7 @@ Do NOT do this:
             write_result = self._write_experiment_code(
                 experiment_plan,
                 hypothesis,
-                paper_concept,
+                research_context,
                 self.base_output_dir,
                 paper_specification=paper_specification,
                 user_code=user_code,
@@ -1585,7 +1585,7 @@ Do NOT do this:
         Generate and save experiment plan.
         
         This is the centralized orchestrator method that handles:
-        1. Loading paper concept
+        1. Loading research context
         2. Loading paper specification (optional)
         3. Loading user code files (optional)
         4. Generating experiment plan using LLM
@@ -1600,8 +1600,8 @@ Do NOT do this:
         """
         
         if status_callback:
-            status_callback("Loading paper concept")
-        paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
+            status_callback("Loading research context")
+        research_context = ResearchContextGenerator.load_research_context("output/research_context.md")
         
         if status_callback:
             status_callback("Loading paper specification")
@@ -1625,7 +1625,7 @@ Do NOT do this:
         runner = ExperimentRunner()
         experiment_plan = runner._generate_experiment_plan(
             hypothesis, 
-            paper_concept,
+            research_context,
             paper_specification=paper_specification,
             user_code=user_code
         )
@@ -1639,7 +1639,7 @@ Do NOT do this:
         
         This handles:
         1. Loading hypothesis
-        2. Loading paper concept
+        2. Loading research context
         3. Running the experiment (using existing plan)
         4. Saving the result
         
@@ -1657,15 +1657,15 @@ Do NOT do this:
             raise ValueError("No hypothesis found")
         
         if status_callback:
-            status_callback("Loading paper concept")
-        paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
+            status_callback("Loading research context")
+        research_context = ResearchContextGenerator.load_research_context("output/research_context.md")
         
         if status_callback:
             status_callback("Running experiment")
         runner = ExperimentRunner()
         return runner.run_experiment(
             hypothesis, 
-            paper_concept,
+            research_context,
             load_existing_plan=True,
             load_existing_code=False,
             status_callback=status_callback

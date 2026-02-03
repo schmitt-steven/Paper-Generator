@@ -24,7 +24,7 @@ from .theme_colors import (
 from .frames import (
     StartScreen,
     SettingsScreen,
-    PaperConceptScreen,
+    ResearchContextScreen,
     LiteratureSearchScreen,
     HypothesisScreen,
     ExperimentPlanScreen,
@@ -124,7 +124,7 @@ class PaperGeneratorApp(tk.Tk):
         self.frames = {}
         self.screen_order = [
             StartScreen,
-            PaperConceptScreen,
+            ResearchContextScreen,
             LiteratureSearchScreen,
             HypothesisScreen,
             ExperimentPlanScreen,

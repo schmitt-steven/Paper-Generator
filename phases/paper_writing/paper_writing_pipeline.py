@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Sequence, Optional, Callable
 from pathlib import Path
 import re
-from phases.context_analysis.paper_conception import PaperConcept
+from phases.context_analysis.research_context_generator import ResearchContext
 from phases.context_analysis.paper_specification import PaperSpecification
 from phases.paper_search.paper import Paper
 from phases.paper_writing.data_models import PaperDraft, PaperChunk, Section, Evidence
@@ -14,7 +14,7 @@ from phases.experimentation.experiment_state import ExperimentResult
 from utils.lms_settings import LMSJITSettings
 from utils.file_utils import save_markdown, load_markdown, save_json, load_json
 from settings import Settings
-from phases.context_analysis.paper_conception import PaperConception
+from phases.context_analysis.research_context_generator import ResearchContextGenerator
 from phases.experimentation.experiment_runner import ExperimentRunner
 from phases.paper_search.literature_search import LiteratureSearch
 
@@ -137,7 +137,7 @@ class PaperWritingPipeline:
 
     def write_paper(
         self,
-        paper_concept: PaperConcept,
+        research_context: ResearchContext,
         experiment_result: ExperimentResult,
         papers: Sequence[Paper],
         paper_specification: Optional[PaperSpecification] = None,
@@ -195,7 +195,7 @@ class PaperWritingPipeline:
                 prompt = self.writer._build_initial_section_prompt(
                     section_type=section_type,
                     papers=papers,
-                    context=paper_concept,
+                    context=research_context,
                     experiment=experiment_result,
                     previous_sections=sections,
                     paper_specification=paper_specification,
@@ -206,7 +206,7 @@ class PaperWritingPipeline:
                 section_draft_v1 = self.writer.generate_initial_section(
                     section_type=section_type,
                     papers=papers,
-                    context=paper_concept,
+                    context=research_context,
                     experiment=experiment_result,
                     previous_sections=sections,
                     paper_specification=paper_specification,
@@ -262,7 +262,7 @@ class PaperWritingPipeline:
                     critique=critique,
                     new_evidence=new_evidence,
                     papers=papers,
-                    context=paper_concept,
+                    context=research_context,
                     experiment=experiment_result,
                     previous_sections=sections,
                     paper_specification=paper_specification,
@@ -295,7 +295,7 @@ class PaperWritingPipeline:
         if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
             paper_draft.title = Settings.LATEX_TITLE
         else:
-            paper_draft.title = self.writer.generate_title(draft=paper_draft, context=paper_concept)
+            paper_draft.title = self.writer.generate_title(draft=paper_draft, context=research_context)
         
         self._save_paper_draft(paper_draft=paper_draft)
         self._save_prompts(prompts_by_section)
@@ -312,7 +312,7 @@ class PaperWritingPipeline:
         Generate paper draft.
         
         This handles:
-        1. Loading paper concept
+        1. Loading research context
         2. Loading experiment result
         3. Loading indexed papers
         4. Loading paper specification (optional)
@@ -328,7 +328,7 @@ class PaperWritingPipeline:
         
         if status_callback:
             status_callback("Loading resources")
-        paper_concept = PaperConception.load_paper_concept("output/paper_concept.md")
+        research_context = ResearchContextGenerator.load_research_context("output/research_context.md")
         
         # Check experiment result exists
         experiment_result_file = "output/experiments/experiment_result.json"
@@ -347,7 +347,7 @@ class PaperWritingPipeline:
         
         pipeline = PaperWritingPipeline()
         return pipeline.write_paper(
-            paper_concept=paper_concept,
+            research_context=research_context,
             experiment_result=experiment_result,
             papers=papers,
             paper_specification=paper_specification,

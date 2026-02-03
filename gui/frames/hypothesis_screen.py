@@ -12,7 +12,7 @@ from ..theme_colors import (
     TEXT_BG_DARK_ALT, TEXT_BG_LIGHT_ALT, TEXT_FG_DARK, TEXT_FG_LIGHT,
 )
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder, Hypothesis
-from phases.context_analysis.paper_conception import PaperConception
+from phases.context_analysis.research_context_generator import ResearchContextGenerator
 from phases.context_analysis.paper_specification import PaperSpecification
 from phases.experimentation.experiment_runner import ExperimentRunner
 from settings import Settings
@@ -228,7 +228,7 @@ class HypothesisScreen(BaseFrame):
     def on_regenerate(self):
         """Regenerate the hypothesis from scratch."""
         if not tk.messagebox.askyesno("Confirm Regeneration", 
-                                      "This will completely overwrite the current hypothesis based on your paper concept and requirements.\n\nDo you want to continue?"):
+                                      "This will completely overwrite the current hypothesis based on your research context and requirements.\n\nDo you want to continue?"):
             return
 
         popup = ProgressPopup(self.controller, "Regenerating Hypothesis")

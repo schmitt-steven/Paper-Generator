@@ -11,7 +11,7 @@ Handles automated paper search.
 
 ### `PaperRanker` ([paper_ranking.py](paper_ranking.py))
 Ranks papers using a composite score:
-- **Semantic Relevance (80%)**: Cosine similarity to research concept.
+- **Semantic Relevance (80%)**: Cosine similarity to research context.
 - **Citation Score (10%)**: Age-aware citation velocity
 - **Recency Score (10%)**: Exponential decay
 

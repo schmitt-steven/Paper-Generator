@@ -162,7 +162,7 @@ class EvidenceGatherer:
             - Content must be completely self-contained.
             - REMOVE all in-text citations (e.g., [11], [Sutton1990]).
             - REMOVE references to specific authors or papers mentioned in the text (e.g., avoid "As Sutton states..." or "In [1] it is shown...").
-            - Focus purely on the concepts, findings, and arguments presented in the provided chunk.
+            - Focus purely on the contexts, findings, and arguments presented in the provided chunk.
             - Do not mention that the text is "citing" other works.
             - If the text says "We propose", summarize it as "The study proposes" or "The authors propose".
             - Do not bring in any outside knowledge, facts, or citations that are not explicitly present in the text chunk.

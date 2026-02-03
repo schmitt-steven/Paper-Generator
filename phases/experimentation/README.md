@@ -19,7 +19,7 @@ Executes experiment code in a subprocess with timeout handling.
 ### `ExperimentRunner` ([experiment_runner.py](experiment_runner.py))
 
 Handles the complete experimentation process:
-- Generates experiment plan from hypothesis and paper concept
+- Generates experiment plan from hypothesis and research context
 - Writes experiment code using LLM
 - Executes code and handles errors with automatic fixing
 - Validates results and improves code if needed

@@ -1,6 +1,6 @@
 from .start_screen import StartScreen
 from .settings_screen import SettingsScreen
-from .paper_concept_screen import PaperConceptScreen
+from .research_context_screen import ResearchContextScreen
 from .literature_search_screen import LiteratureSearchScreen
 from .hypothesis_screen import HypothesisScreen
 from .experiment_plan_screen import ExperimentPlanScreen

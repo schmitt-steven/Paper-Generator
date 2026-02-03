@@ -214,7 +214,7 @@ class SettingsScreen(BaseFrame):
 
         models = [
             ("CODE_ANALYSIS_MODEL", "Code Analysis Model", self.llm_models),
-            ("PAPER_CONCEPTION_MODEL", "Paper Conception Model", self.llm_models),
+            ("research_context_generator_MODEL", "Research Contextion Model", self.llm_models),
             ("LITERATURE_SEARCH_MODEL", "Literature Search Model", self.llm_models),
             ("PAPER_RANKING_EMBEDDING_MODEL", "Paper Ranking Embedding Model", self.embedding_models),
             ("HYPOTHESIS_BUILDER_MODEL", "Hypothesis Generation Model", self.llm_models),
@@ -431,7 +431,7 @@ class SettingsScreen(BaseFrame):
         # Model settings that require selection
         model_settings = {
             "CODE_ANALYSIS_MODEL": "Code Analysis Model",
-            "PAPER_CONCEPTION_MODEL": "Paper Conception Model",
+            "research_context_generator_MODEL": "Research Contextion Model",
             "LITERATURE_SEARCH_MODEL": "Literature Search Model",
             "PAPER_RANKING_EMBEDDING_MODEL": "Paper Ranking Embedding Model",
             "HYPOTHESIS_BUILDER_MODEL": "Hypothesis Generation Model",

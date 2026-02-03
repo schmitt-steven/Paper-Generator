@@ -17,7 +17,7 @@ from ..theme_colors import (
 )
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.experimentation.experiment_runner import ExperimentRunner
-from phases.context_analysis.paper_conception import PaperConception
+from phases.context_analysis.research_context_generator import ResearchContextGenerator
 from phases.context_analysis.paper_specification import PaperSpecification
 from phases.paper_writing.paper_writing_pipeline import PaperWritingPipeline
 

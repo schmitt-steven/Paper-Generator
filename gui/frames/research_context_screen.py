@@ -4,19 +4,19 @@ from pathlib import Path
 import threading
 from ..base_frame import BaseFrame, CardBorderFrame, ProgressPopup
 from ..markdown_view import MarkdownView
-from ..info_texts import PAPER_CONCEPT_INFO
+from ..info_texts import RESEARCH_CONTEXT_INFO
 from ..theme_colors import (
     CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT,
     TEXT_BG_DARK_ALT, TEXT_BG_LIGHT_ALT, TEXT_FG_DARK, TEXT_FG_LIGHT,
 )
-from phases.context_analysis.paper_conception import PaperConception, PaperConcept
+from phases.context_analysis.research_context_generator import ResearchContextGenerator, ResearchContext
 from phases.context_analysis.paper_specification import PaperSpecification
 from phases.context_analysis.user_code_analysis import CodeAnalyzer
 from settings import Settings
 
 
-class CollapsibleConceptCard(CardBorderFrame):
-    """A collapsible card for a paper concept section (read-only, no copy button)."""
+class CollapsibleContextCard(CardBorderFrame):
+    """A collapsible card for a research context section (read-only, no copy button)."""
     
     def __init__(self, parent, section_name: str, content: str, controller, start_expanded: bool = False, height: int = 400):
         super().__init__(parent, padx=1, pady=1)
@@ -107,47 +107,47 @@ class CollapsibleConceptCard(CardBorderFrame):
             self.toggle()
 
 
-class PaperConceptScreen(BaseFrame):
+class ResearchContextScreen(BaseFrame):
     def __init__(self, parent, controller):
-        self.file_path = "output/paper_concept.md"
-        self.concept: PaperConcept | None = None
-        self.concept_cards = []
+        self.file_path = "output/research_context.md"
+        self.context: ResearchContext | None = None
+        self.context_cards = []
         
         super().__init__(
             parent,
             controller,
-            title="Paper Concept",
+            title="Research Context",
             next_text="Continue",
             has_regenerate=True,
             regenerate_text="Regenerate",
             header_file_path=self.file_path,
-            info_content=PAPER_CONCEPT_INFO
+            info_content=RESEARCH_CONTEXT_INFO
         )
 
     def create_content(self):
         pass
 
-    def _load_concept(self):
-        """Load the paper concept from file and create UI sections."""
+    def _load_context(self):
+        """Load the research context from file and create UI sections."""
         try:
-            self.concept = PaperConception.load_paper_concept(self.file_path)
+            self.context = ResearchContextGenerator.load_research_context(self.file_path)
         except FileNotFoundError:
-            self.show_error_message("Paper Concept Error", f"Paper concept not found: {self.file_path}\n\nPlease complete the previous steps first.")
+            self.show_error_message("Research Context Error", f"Research Context not found: {self.file_path}\n\nPlease complete the previous steps first.")
             return
         except Exception as e:
-            self.show_error_message("Error", f"Error loading paper concept: {e}")
+            self.show_error_message("Error", f"Error loading research context: {e}")
             return
         
         # Create collapsible sections
         sections = [
-            ("Description", self.concept.description),
-            ("Important Code Snippets", self.concept.code_snippets),
-            ("Questions for Literature Search", self.concept.open_questions),
+            ("Description", self.context.description),
+            ("Important Code Snippets", self.context.code_snippets),
+            ("Questions for Literature Search", self.context.open_questions),
         ]
         
-        self.concept_cards = []
+        self.context_cards = []
         for i, (title, content) in enumerate(sections):
-            card = CollapsibleConceptCard(
+            card = CollapsibleContextCard(
                 self.scrollable_frame,
                 title,
                 content,
@@ -155,7 +155,7 @@ class PaperConceptScreen(BaseFrame):
                 start_expanded=True
             )
             card.pack(fill="x", pady=10)
-            self.concept_cards.append(card)
+            self.context_cards.append(card)
 
 
 
@@ -164,22 +164,22 @@ class PaperConceptScreen(BaseFrame):
         super().on_next()
     
     def on_show(self):
-        """Called when screen is shown - load concept if not already loaded."""
-        if not hasattr(self, 'concept') or self.concept is None:
+        """Called when screen is shown - load context if not already loaded."""
+        if not hasattr(self, 'context') or self.context is None:
             if Path(self.file_path).exists():
-                self._load_concept()
+                self._load_context()
 
     def on_regenerate(self):
-        """Regenerate the paper concept from scratch."""
+        """Regenerate the research context from scratch."""
         if not tk.messagebox.askyesno("Confirm Regeneration", 
-                                      "This will completely overwrite the current paper concept based on your code and requirements.\n\nDo you want to continue?"):
+                                      "This will completely overwrite the current research context based on your code and requirements.\n\nDo you want to continue?"):
             return
 
-        popup = ProgressPopup(self.controller, "Regenerating Paper Concept")
+        popup = ProgressPopup(self.controller, "Regenerating Research Context")
         
         def task():
             try:
-                PaperConception.generate_new_concept(progress_callback=popup.update_status)
+                ResearchContextGenerator.generate_new_context(progress_callback=popup.update_status)
                 
                 # 4. Reload UI
                 self.after(0, lambda: self._on_regeneration_complete(popup))
@@ -196,18 +196,18 @@ class PaperConceptScreen(BaseFrame):
         """Handle regeneration completion."""
         popup.close()
         
-        # Clear only the concept cards, not the action buttons
-        for card in self.concept_cards:
+        # Clear only the context cards, not the action buttons
+        for card in self.context_cards:
             card.destroy()
         
-        # Reset concept to force reload
-        self.concept = None
-        self.concept_cards = []
+        # Reset context to force reload
+        self.context = None
+        self.context_cards = []
         
-        # Reload UI with new concept
-        self._load_concept()
+        # Reload UI with new context
+        self._load_context()
         
         # Re-apply theme colors to newly created widgets
         self.controller.apply_theme_colors(self)
         
-        self.after(200, lambda: messagebox.showinfo("Success", "Paper concept successfully regenerated."))
+        self.after(200, lambda: messagebox.showinfo("Success", "Research Context successfully regenerated."))

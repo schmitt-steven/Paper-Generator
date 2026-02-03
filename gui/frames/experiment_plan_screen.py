@@ -14,7 +14,7 @@ from ..theme_colors import (
 from utils.file_utils import load_markdown
 from ..markdown_view import MarkdownView
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
-from phases.context_analysis.paper_conception import PaperConception
+from phases.context_analysis.research_context_generator import ResearchContextGenerator
 from phases.experimentation.experiment_runner import ExperimentRunner
 from phases.context_analysis.paper_specification import PaperSpecification
 from phases.context_analysis.user_code_analysis import CodeAnalyzer
