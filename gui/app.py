@@ -25,7 +25,7 @@ from .frames import (
     StartScreen,
     SettingsScreen,
     PaperConceptScreen,
-    PaperSelectionScreen,
+    LiteratureSearchScreen,
     HypothesisScreen,
     ExperimentPlanScreen,
     ExperimentResultsScreen,
@@ -125,7 +125,7 @@ class PaperGeneratorApp(tk.Tk):
         self.screen_order = [
             StartScreen,
             PaperConceptScreen,
-            PaperSelectionScreen,
+            LiteratureSearchScreen,
             HypothesisScreen,
             ExperimentPlanScreen,
             ExperimentResultsScreen,

@@ -152,7 +152,7 @@ The requirements file **must** have the following structure:
 
 PAPER_CONCEPT_INFO = """paper concept"""
 
-PAPER_SELECTION_INFO = """paper selection"""
+LITERATURE_SEARCH_INFO = """literature search"""
 
 HYPOTHESIS_INFO = """hypothesis"""
 

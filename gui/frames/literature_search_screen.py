@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import List, Dict, Callable, Any, Optional
 from ..base_frame import BaseFrame, ProgressPopup, create_gray_button
 from ..icons import HoverColor
-from ..info_texts import PAPER_SELECTION_INFO
+from ..info_texts import LITERATURE_SEARCH_INFO
 from ..theme_colors import CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT, MUTED_TEXT
 from phases.paper_search.paper import Paper
 from phases.paper_search.user_paper_loader import UserPaperLoader
@@ -29,7 +29,7 @@ from utils.open_access_finder import find_open_access_pdfs
 HYPOTHESES_FILE = Path("output/hypothesis.md")
 PAPERS_FILE = Path("output/papers.json")
 
-class PaperSelectionScreen(BaseFrame):
+class LiteratureSearchScreen(BaseFrame):
     def __init__(self, parent, controller):
         self.user_papers: list[Paper] = []
         self.searched_papers: list[Paper] = []
@@ -62,9 +62,9 @@ class PaperSelectionScreen(BaseFrame):
         super().__init__(
             parent=parent,
             controller=controller,
-            title="Paper Selection",
+            title="Literature Search",
             next_text=next_text,
-            info_content=PAPER_SELECTION_INFO
+            info_content=LITERATURE_SEARCH_INFO
         )
 
     def create_content(self):
