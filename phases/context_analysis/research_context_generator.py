@@ -51,7 +51,7 @@ class ResearchContextGenerator(LazyModelMixin):
             progress_callback("Generating context")
             
         research_context_generator = ResearchContextGenerator(
-            model_name=Settings.research_context_generator_MODEL,
+            model_name=Settings.CONTEXT_GENERATOR_MODEL,
             user_code=analyzed_code,
             paper_specification=paper_specification
         )

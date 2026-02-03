@@ -264,4 +264,4 @@ class HypothesisScreen(BaseFrame):
         
         self.controller.apply_theme_colors(self)
         
-        self.after(200, lambda: messagebox.showinfo("Success", "Hypothesis successfully regenerated."))
+        self.after(200, lambda: messagebox.showinfo("Success", "Hypothesis was successfully regenerated!"))

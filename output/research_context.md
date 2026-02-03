@@ -2,34 +2,67 @@
 
 ## 1. Taxonomic Classification  
 - **Primary Domain:** Reinforcement Learning  
-- **Specific Task:** Deterministic Episodic Markov Decision Processes  
-- **Methodological Class:** Model-Based Q-Learning with Backward Induction via BFS  
+- **Specific Task:** Model-Based Policy Optimization in Deterministic Episodic MDPs  
+- **Methodological Class:** Backward Induction via BFS over Persistent Transition Models  
 
 ## 2. Abstract & Core Contribution  
-Standard Q-learning in deterministic episodic environments suffers from slow convergence due to incremental, sample-based value updates requiring repeated state-action visits. Recursive Backwards Q-Learning (RBQL) overcomes this by maintaining a persistent transition model and performing a single backward induction pass via breadth-first search from terminal states upon episode completion. The algorithm constructs a reverse state-transition graph, then applies the Bellman optimality equation with α=1 to update all known Q-values in topological reverse order, enabling exact value propagation without iterative sampling. This mechanism eliminates the need for repeated environmental interactions to propagate rewards, resulting in significantly faster convergence to optimal policies under determinism.  
+Standard Q-learning suffers from slow convergence in deterministic episodic environments due to the need for repeated state-action visits to propagate reward signals. Recursive Backwards Q-Learning (RBQL) overcomes this by maintaining a persistent transition model that records all observed state-action-next_state-reward tuples during exploration. Upon reaching a terminal state, RBQL constructs a backward graph and performs a breadth-first search (BFS) from the terminal to propagate updated Q-values in a single sweep using full credit assignment (α=1) via the Bellman optimality equation: Q(s,a) = R(s,a) + γ·max(Q(s')). This backward induction mechanism eliminates iterative value updates across episodes, enabling immediate and complete credit assignment to all predecessor states. Experiments demonstrate that RBQL achieves statistically significant acceleration in convergence speed compared to standard Q-learning, with reduced episode count and wall-clock time under deterministic dynamics.
 
 ## 3. Problem Definition  
-- **The Bottleneck:** Standard Q-learning updates Q-values incrementally via single-step temporal difference learning, requiring multiple visits to a state-action pair to propagate terminal rewards backward through the state space—a process exponentially inefficient in deterministic environments where transitions are reproducible and fully observable.  
-- **The Constraint:** The method is constrained to deterministic, episodic environments with discrete state and action spaces, where transitions and rewards are fully observable upon execution.  
+- **The Bottleneck:** Standard Q-learning relies on incremental, episode-by-episode updates to propagate rewards backward through the state space, resulting in exponential delays in value convergence for long-horizon deterministic tasks due to sparse reward signals and sequential dependency.  
+- **The Constraint:** The method is constrained to deterministic, episodic Markov Decision Processes (MDPs) where state transitions and rewards are fully observable and reproducible; it is inapplicable to stochastic environments without modification.  
 
 ## 4. Technical Approach  
-- **Architecture:** A dual-component framework combining an episodic transition model (storing (s, a) → (s', r)) with a backward propagation engine that performs breadth-first search over the inverse transition graph.  
-- **Key differentiator:** Replaces incremental Q-learning updates with a global, single-pass Bellman update applied in reverse topological order from terminal states using α=1 (full replacement), leveraging the deterministic structure to compute exact optimal Q-values in one sweep per episode—unlike Dyna-Q or Monte Carlo methods, which rely on iterative sampling or averaging.  
+- **Architecture:** A dual-component framework comprising an online epsilon-greedy exploration policy and a persistent transition model that stores all encountered (s, a, s', r) tuples. Upon episode termination, the system triggers a backward propagation phase via BFS over the inverse transition graph.  
+- **Key differentiator:** Replaces iterative Q-value updates with a single, deterministic backward induction pass using BFS to propagate optimal Q-values from terminal states to all reachable prior states in topological reverse order, enforcing α=1 (full replacement) and eliminating the need for repeated sampling. The backward graph is constructed by inverting transitions: each (s, a) → s' pair becomes an edge from s' to (s, a), enabling reverse traversal.
 
----  
-*Note: The implementation strictly enforces backward induction via BFS over the explored transition graph, with Q-value updates derived directly from the Bellman optimality equation applied in reverse chronological order of state discovery. No bootstrapping or averaging is used—updates are deterministic and exhaustive within the explored subspace.*
+
+
+# Open Questions for Literature Search
+
+1. **What existing model-based or value-propagation methods in deterministic episodic MDPs use backward induction or reverse traversal to propagate rewards, and how do their transition representations (e.g., dynamic programming, value iteration with reverse indexing) compare to RBQL’s persistent transition graph and BFS-based update?**  
+*(Targets: Prior art in backward induction for deterministic MDPs—e.g., classic dynamic programming, tree-based MCTS with backpropagation, or reverse value iteration—and identifies whether RBQL’s persistent graph + BFS is novel or a reimplementation.)*
+
+2. **How do state-of-the-art sample-efficient Q-learning variants (e.g., R-max, MBPO, Dyna-Q) handle credit assignment in deterministic environments, and what are their key limitations in convergence speed or memory use that RBQL explicitly addresses?**  
+*(Targets: Comparison with model-based and model-free baselines; establishes RBQL’s advantage in eliminating iterative updates via single-pass BFS.)*
+
+3. **What theoretical guarantees (convergence, optimality, complexity) exist for backward induction in deterministic MDPs using BFS over transition graphs, and how does RBQL’s use of α=1 and full replacement align with or deviate from established Bellman operator theory?**  
+*(Targets: Foundational MDP theory—e.g., contraction mapping, value iteration convergence—and confirms whether RBQL’s update rule is theoretically sound and novel in its implementation.)*
+
+4. **Are there prior algorithms that reconstruct inverse transition graphs (s' → s, a) to enable backward value propagation in reinforcement learning, and if so, how do they handle state reuse, cycle detection, or partial observability?**  
+*(Targets: Novelty check—identifies if RBQL’s backward graph construction is a known technique or an original contribution in RL context.)*
+
+5. **How does RBQL’s reliance on a persistent transition model and full-state replay differ technically from experience replay in DQN or memory-augmented RL, particularly in terms of update timing (episodic backward pass vs. stochastic minibatch updates)?**  
+*(Targets: Differentiation from memory-based methods; clarifies RBQL’s deterministic, episode-bound propagation as a structural innovation.)*
+
+6. **In what ways does RBQL’s BFS-based backward induction fundamentally reduce sample complexity compared to standard Q-learning in long-horizon deterministic tasks, and what formal analysis (e.g., step-to-convergence bounds) exists for such backward propagation schemes?**  
+*(Targets: Quantitative differentiation—establishes RBQL’s theoretical and empirical novelty in convergence speed claims.)*
+
+7. **What are the standard evaluation metrics for sample efficiency and convergence speed in deterministic episodic MDPs, and how do prior works (e.g., value iteration, policy iteration, or model-based RL) measure and report these?**  
+*(Targets: Contextualizes RBQL’s experimental claims—ensures metrics (episode count, wall-clock time) are standard and comparable.)*
+
+8. **How does RBQL’s requirement for deterministic transitions constrain its applicability compared to general MDP solvers, and what prior work has explicitly exploited determinism to enable exact or non-iterative value updates?**  
+*(Targets: Domain-specific context—identifies if leveraging determinism for exact backward induction is a recognized strategy or an underexplored niche.)*
+
+9. **What are the computational complexity and memory overhead trade-offs of maintaining a persistent transition model in RBQL versus iterative Q-learning or tabular value iteration, particularly as state space grows?**  
+*(Targets: Practical differentiation—establishes whether RBQL’s memory usage or scalability is a novel trade-off.)*
+
+10. **What terminology and formalisms are used in literature to describe “backward induction via BFS over transition graphs” in RL, and how does RBQL’s use of topological reverse ordering align with or diverge from dynamic programming in acyclic MDPs?**  
+*(Targets: Terminology and taxonomy—ensures RBQL is framed using standard academic language to position it correctly in the field.)*
+
+
 
 # Important Code Snippets
 
 ## File: recursive_backwards_q_learning.py
 
-**Summary:** RBQL is a variant of Q-learning that maintains a persistent model of all observed transitions and performs backward value propagation via BFS from terminal states, updating Q-values for all visited states in one episode. This eliminates the need for repeated sampling and enables exact convergence on deterministic problems by leveraging full state-space knowledge.
+**Summary:** RBQL is a deterministic Q-learning variant that maintains a persistent model of all visited transitions and performs backward value propagation via BFS from terminal states, ensuring immediate credit assignment to all preceding states in a single update. This eliminates the need for iterative updates over multiple episodes, leading to faster convergence on deterministic environments.
 
-**Keywords:** Q-learning, backward induction, BFS, persistent model, deterministic MDP
+**Keywords:** Q-learning, backward induction, BFS, deterministic MDP, persistent model
 
-**Method:** Uses BFS over a persistent transition graph to update all known state-action values in reverse order from terminal states using the Bellman equation with α=1
+**Method:** Uses a persistent transition model to store all state-action-next_state-reward tuples; after reaching a terminal state, performs BFS backwards from the terminal to update all known states with Q(s,a) = R(s,a) + γ * max(Q(s')) using α=1.
 
-**Contribution:** Core learning algorithm enabling global value propagation in deterministic environments
+**Contribution:** Core learning algorithm that enables rapid value function convergence by performing backward BFS updates across a persistent transition model after each episode.
 
 **Code Snippets (2):**
 
@@ -45,62 +78,28 @@ def build_backward_graph(self):
         return backward
 ```
 
-### Backward Propagation with Bellman Update
+### Backward Propagation with BFS
 ```python
-def propagate_reward_rbql(terminal_state):
-    global q_values, gamma
+def propagate_reward(self, terminal_state):
+        backward = self.model.build_backward_graph()
 
-    backward = model.build_backward_graph()
+        visited_states = set([terminal_state])
+        queue = deque([terminal_state])
+        state_order = []
 
-    visited_states = set([terminal_state])
-    queue = deque([terminal_state])
-    state_order = []
+        while queue:
+            current_state = queue.popleft()
 
-    while queue:
-        current_state = queue.popleft()
+            for state, action_index, reward in backward[current_state]:
+                state_order.append((state, action_index, current_state, reward))
 
-        for state, action_index, reward in backward[current_state]:
-            state_order.append((state, action_index, current_state, reward))
+                if state not in visited_states:
+                    visited_states.add(state)
+                    queue.append(state)
 
-            if state not in visited_states:
-                visited_states.add(state)
-                queue.append(state)
-
-    for state, action_index, next_state, reward in state_order:
-        next_q = np.max(q_values[next_state])
-        q_values[state][action_index] = reward + gamma * next_q
+        for state, action_index, next_state, reward in state_order:
+            next_q = np.max(self.q_values[next_state])
+            self.q_values[state][action_index] = reward + self.gamma * next_q
 ```
 
 ---
-
-# Open Questions
-
-1. **What existing model-based Q-learning variants (e.g., Dyna-Q, MBQL, R-MAX) in deterministic episodic MDPs perform global value updates, and how do their transition model usage, update scheduling, or backup strategies differ from RBQL’s single-pass backward BFS with α=1?**  
-*(Targets: Prior art in model-based Q-learning; establishes novelty by contrasting update mechanics)*
-
-2. **How do Monte Carlo methods (e.g., episodic MC control) and dynamic programming approaches (e.g., value iteration) in deterministic environments handle backward reward propagation, and why do they still require multiple episodes or full state-space knowledge—unlike RBQL’s on-the-fly BFS propagation from terminal states?**  
-*(Targets: Baseline comparison against non-incremental methods; clarifies RBQL’s unique blend of model-based efficiency and online applicability)*
-
-3. **What theoretical guarantees exist for convergence in deterministic MDPs under Bellman updates with α=1 applied in non-chronological or partial state-space orders, and how does RBQL’s BFS-induced topological ordering ensure optimality without full environment mapping?**  
-*(Targets: Foundational theory; justifies correctness of backward propagation under partial exploration)*
-
-4. **In deterministic episodic MDPs, what prior work has used backward induction via BFS over an inferred transition graph to update Q-values in reverse order, and what are the known limitations of such approaches in terms of memory, scalability, or partial observability?**  
-*(Targets: Direct prior art search; isolates RBQL’s specific innovation in using BFS for Q-update sequencing)*
-
-5. **How does RBQL’s use of α=1 (full replacement) and deterministic backward induction differ technically from TD(0), Dyna-Q, or Q-learning with experience replay in terms of bias-variance tradeoff and sample efficiency under determinism?**  
-*(Targets: Technical differentiation; quantifies advantage over incremental methods)*
-
-6. **What is the standard taxonomy of model-based RL algorithms in deterministic settings, and where does RBQL fit within categories such as “planning after learning,” “real-time dynamic programming,” or “episodic value propagation”?**  
-*(Targets: Positioning within field taxonomy; clarifies conceptual novelty)*
-
-7. **What are the canonical definitions of “deterministic episodic MDP,” “backward induction,” and “topological ordering” in reinforcement learning literature, and how do they constrain or enable the design of RBQL’s update mechanism?**  
-*(Targets: Foundational terminology; ensures precise framing of assumptions and contributions)*
-
-8. **Has any prior work combined persistent transition modeling with BFS-based backward propagation in Q-learning for deterministic environments, and if so, what were the reasons it was not adopted or failed to outperform incremental methods?**  
-*(Targets: Gap analysis; identifies why RBQL’s approach is novel or overlooked)*
-
-9. **How do state-space coverage and transition graph completeness affect the convergence speed of RBQL compared to standard Q-learning, and what are the theoretical bounds on the number of episodes required for full optimality under deterministic dynamics?**  
-*(Targets: Novelty justification via convergence analysis; links algorithm structure to performance claims)*
-
-10. **What empirical benchmarks (e.g., GridWorld, Chain MDPs) are standard for evaluating convergence speed in deterministic episodic Q-learning, and how do existing methods (Dyna-Q, MC, value iteration) perform on them relative to RBQL’s one-pass update?**  
-*(Targets: Contextual benchmarking; prepares for experimental validation and comparison)*

@@ -303,4 +303,4 @@ class ExperimentPlanScreen(BaseFrame):
         # Re-apply theme colors
         self.controller.apply_theme_colors(self)
         
-        self.after(200, lambda: messagebox.showinfo("Success", "Experiment plan successfully regenerated."))
+        self.after(200, lambda: messagebox.showinfo("Success", "Experiment plan was successfully regenerated!"))

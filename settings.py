@@ -26,7 +26,7 @@ class Settings:
     
     # Context Analysis Phase
     CODE_ANALYSIS_MODEL = "qwen/qwen3-next-80b"  
-    PAPER_CONCEPTION_MODEL = "qwen/qwen3-next-80b"  
+    CONTEXT_GENERATOR_MODEL = "qwen/qwen3-next-80b"  
     
     # Paper Search Phase
     LITERATURE_SEARCH_MODEL = "qwen/qwen3-next-80b"  
@@ -85,7 +85,7 @@ class Settings:
             # Settings to save with their current values
             settings_to_save = {
                 "CODE_ANALYSIS_MODEL": cls.CODE_ANALYSIS_MODEL,
-                "PAPER_CONCEPTION_MODEL": cls.PAPER_CONCEPTION_MODEL,
+                "CONTEXT_GENERATOR_MODEL": cls.CONTEXT_GENERATOR_MODEL,
                 "LITERATURE_SEARCH_MODEL": cls.LITERATURE_SEARCH_MODEL,
                 "PAPER_RANKING_EMBEDDING_MODEL": cls.PAPER_RANKING_EMBEDDING_MODEL,
                 "HYPOTHESIS_BUILDER_MODEL": cls.HYPOTHESIS_BUILDER_MODEL,

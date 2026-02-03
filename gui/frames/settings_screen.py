@@ -213,19 +213,19 @@ class SettingsScreen(BaseFrame):
         frame = self.create_card_frame(self.scrollable_frame, "Model Selection")
 
         models = [
-            ("CODE_ANALYSIS_MODEL", "Code Analysis Model", self.llm_models),
-            ("research_context_generator_MODEL", "Research Contextion Model", self.llm_models),
-            ("LITERATURE_SEARCH_MODEL", "Literature Search Model", self.llm_models),
+            ("CODE_ANALYSIS_MODEL", "Code Analyzer", self.llm_models),
+            ("CONTEXT_GENERATOR_MODEL", "Research Context Generator", self.llm_models),
+            ("LITERATURE_SEARCH_MODEL", "Literature Searcher", self.llm_models),
             ("PAPER_RANKING_EMBEDDING_MODEL", "Paper Ranking Embedding Model", self.embedding_models),
-            ("HYPOTHESIS_BUILDER_MODEL", "Hypothesis Generation Model", self.llm_models),
-            ("EXPERIMENT_PLAN_MODEL", "Experiment Planning Model", self.llm_models),
-            ("EXPERIMENT_CODE_WRITE_MODEL", "Experiment Coding Model", self.llm_models),
-            ("EXPERIMENT_VALIDATION_MODEL", "Experiment Validation Model", self.llm_models),
-            ("EXPERIMENT_PLOT_CAPTION_MODEL", "Experiment Plot Caption Model", self.vision_models),
-            ("EXPERIMENT_VERDICT_MODEL", "Experiment Verdict Model", self.llm_models),
+            ("HYPOTHESIS_BUILDER_MODEL", "Hypothesis Generator", self.llm_models),
+            ("EXPERIMENT_PLAN_MODEL", "Experiment Planner", self.llm_models),
+            ("EXPERIMENT_CODE_WRITE_MODEL", "Experiment Coder", self.llm_models),
+            ("EXPERIMENT_VALIDATION_MODEL", "Experiment Validator", self.llm_models),
+            ("EXPERIMENT_PLOT_CAPTION_MODEL", "Plot Caption Generator (Vision)", self.vision_models),
+            ("EXPERIMENT_VERDICT_MODEL", "Experiment Verdict Generator", self.llm_models),
             ("PAPER_INDEXING_EMBEDDING_MODEL", "Paper Indexing Embedding Model", self.embedding_models),
-            ("PAPER_WRITING_MODEL", "Paper Writing Model", self.llm_models),
-            ("LATEX_GENERATION_MODEL", "LaTeX Generation Model", self.llm_models),
+            ("PAPER_WRITING_MODEL", "Paper Writer", self.llm_models),
+            ("LATEX_GENERATION_MODEL", "LaTeX Generator", self.llm_models),
         ]
 
         for key, label_text, options in models:
@@ -431,7 +431,7 @@ class SettingsScreen(BaseFrame):
         # Model settings that require selection
         model_settings = {
             "CODE_ANALYSIS_MODEL": "Code Analysis Model",
-            "research_context_generator_MODEL": "Research Contextion Model",
+            "CONTEXT_GENERATOR_MODEL": "Research Context Model",
             "LITERATURE_SEARCH_MODEL": "Literature Search Model",
             "PAPER_RANKING_EMBEDDING_MODEL": "Paper Ranking Embedding Model",
             "HYPOTHESIS_BUILDER_MODEL": "Hypothesis Generation Model",

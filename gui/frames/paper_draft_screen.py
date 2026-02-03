@@ -293,5 +293,5 @@ class PaperDraftScreen(BaseFrame):
         popup.close()
         # Load the newly generated draft
         self._load_draft()
-        self.after(200, lambda: tk.messagebox.showinfo("Success", "Paper draft successfully regenerated."))
+        self.after(200, lambda: tk.messagebox.showinfo("Success", "Paper draft was successfully regenerated!"))
 
