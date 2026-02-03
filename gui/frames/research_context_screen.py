@@ -210,4 +210,4 @@ class ResearchContextScreen(BaseFrame):
         # Re-apply theme colors to newly created widgets
         self.controller.apply_theme_colors(self)
         
-        self.after(200, lambda: messagebox.showinfo("Success", "Research Context was successfully regenerated!"))
+        self.after(200, lambda: messagebox.showinfo("Success", "Research Context was regenerated successfully!"))

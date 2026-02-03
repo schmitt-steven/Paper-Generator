@@ -263,7 +263,7 @@ class ExperimentPlanScreen(BaseFrame):
     def on_regenerate(self):
         """Regenerate the experiment plan from scratch."""
         if not tk.messagebox.askyesno("Confirm Regeneration", 
-                                      "This will create a completely new experiment plan based on your hypothesis and code, overwriting the current one.\n\nDo you want to continue?"):
+                                      "This will create a completely new experiment plan, overwriting the current one.\n\nDo you want to continue?"):
             return
 
         popup = ProgressPopup(self.controller, "Regenerating Experiment Plan")
@@ -303,4 +303,4 @@ class ExperimentPlanScreen(BaseFrame):
         # Re-apply theme colors
         self.controller.apply_theme_colors(self)
         
-        self.after(200, lambda: messagebox.showinfo("Success", "Experiment plan was successfully regenerated!"))
+        self.after(200, lambda: messagebox.showinfo("Success", "Experiment plan was regenerated successfully!"))

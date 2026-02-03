@@ -228,7 +228,7 @@ class HypothesisScreen(BaseFrame):
     def on_regenerate(self):
         """Regenerate the hypothesis from scratch."""
         if not tk.messagebox.askyesno("Confirm Regeneration", 
-                                      "This will completely overwrite the current hypothesis based on your research context and requirements.\n\nDo you want to continue?"):
+                                      "This will completely overwrite the current hypothesis.\n\nDo you want to continue?"):
             return
 
         popup = ProgressPopup(self.controller, "Regenerating Hypothesis")
@@ -264,4 +264,4 @@ class HypothesisScreen(BaseFrame):
         
         self.controller.apply_theme_colors(self)
         
-        self.after(200, lambda: messagebox.showinfo("Success", "Hypothesis was successfully regenerated!"))
+        self.after(200, lambda: messagebox.showinfo("Success", "Hypothesis was regenerated successfully!"))
