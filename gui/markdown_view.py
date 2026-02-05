@@ -57,6 +57,12 @@ class MarkdownView(HtmlFrame):
             # Re-render content with new font sizes
             self.set_markdown(self._current_markdown)
 
+    def destroy(self):
+        """Cleanup before destruction."""
+        if self.font_manager:
+            self.font_manager.remove_callback(self._update_font)
+        super().destroy()
+
     def _on_theme_changed(self, event=None):
         """Handle theme change event."""
         self.theme_mode = sv_ttk.get_theme()

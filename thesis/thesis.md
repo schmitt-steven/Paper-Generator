@@ -23,7 +23,6 @@ CycleResearcher, Agent Laboratory, AI-Researcher, The AI-Scientist, Meow, DORA A
 | NFR1 | Non-Functional | Privacy | The system shall process all inference data locally. |
 | NFR2 | Non-Functional | Free Execution | The system shall perform all functions free of charge. |
 | C1 | Constraint | Technology Stack | The system shall be implemented using Python (language), Tkinter (GUI), and LM Studio (inference engine). |
-| C2 | Constraint | Hardware Baseline | The system shall be fully functional on a hardware baseline of 16GB System RAM and 4GB VRAM. |
 
 ### 4.2 Overview
 - Activity diagram or Chevron Diagram of the entire workflow (the 6 phases), something like:
@@ -36,6 +35,7 @@ CycleResearcher, Agent Laboratory, AI-Researcher, The AI-Scientist, Meow, DORA A
 - Activity Diagram for each phase
 
 #### 4.3.1 Context Analysis
+![Context Analysis Diagram](context_analysis.svg)
 
 #### 4.3.2 Literature Search
 

@@ -115,9 +115,8 @@ class ExperimentRunner:
             user_code_section = ""
             code_instructions = ""
             if user_code:
-                # Use signatures only for coding phase to encourage importing
-                user_code_section = f"\n{self._format_user_code_files(user_code, use_signatures_only=True)}"
-                code_instructions = "\n[CRITICAL: EXISTING CODE PROVIDED]\nYou have access to the local modules listed above. Review them to see if they fit your experiment plan. If they do, IMPORT them (e.g., `from my_algo import run_algo`). If they do not fit or if you need different logic, you may implement your own solution, but prefer reusing existing robust code where possible.\n\n[WARNING: GLOBAL STATE]\nCheck if the user code relies on global variables (e.g., `model = PersistentModel()` defined at module level). If so, you MUST import and use that global variable directly. Do NOT create a new local instance if the functions rely on the global one (e.g., if `propagate_reward` uses the global `model`).\n\n[WARNING: CONSTANTS]\nDo NOT hardcode state/action dimensions (e.g. `num_of_states = 5760`). Instead, READ them from the imported user code/agent if available (e.g. `agent.num_of_states`). Mismatched dimensions cause IndexErrors."
+                user_code_section = f"\n{self._format_user_code_files(user_code, use_signatures_only=False)}"
+                code_instructions = "\n[CRITICAL: EXISTING CODE PROVIDED]\nYou have access to the local modules listed above. Review them to see if they fit your experiment plan. If they do, IMPORT them (e.g., `from my_algo import run_algo`). If they do not fit or if you need different logic, you may implement your own solution, but prefer reusing existing robust code where possible.\n\n[CRITICAL: SAFE IMPORTS & SIDE EFFECTS]\nBefore importing from user files, analyze them for global scope execution (e.g. `model = load_model()` or `env = make_env()` at the top level). \n- If strict global side effects exist (printing, model loading, infinite loops), ensure your import does not trigger unwanted behavior.\n- If a global instance exists (e.g., `model`), IMPORT IT directly instead of creating a new one (e.g., `from user_file import model`).\n- Ensure that importing a file does not accidentally reset or overwrite shared state unless intended.\n\n[WARNING: CONSTANTS]\nDo NOT hardcode state/action dimensions (e.g. `num_of_states = 5760`). Instead, READ them from the imported user code/agent if available (e.g. `agent.num_of_states`). Mismatched dimensions cause IndexErrors."
             else:
                 user_code_section = "\n[USER CODE FILES]\nNo user code files provided - generate new code from scratch."
             
@@ -437,7 +436,7 @@ class ExperimentRunner:
             # Add user code context if valid
             user_code_section = ""
             if user_code:
-                user_code_section = f"\n[AVAILABLE USER CODE]\n{self._format_user_code_files(user_code, use_signatures_only=True)}\n"
+                user_code_section = f"\n[AVAILABLE USER CODE]\n{self._format_user_code_files(user_code, use_signatures_only=False)}\n"
             
             user_message = textwrap.dedent(f"""\
                 [TASK]
@@ -458,8 +457,9 @@ class ExperimentRunner:
                 STDERR: {stderr_preview}
 
                 [INSTRUCTIONS]
-                Analyze the error carefully and fix all faulty parts of the code.
+                analyze the error carefully and fix all faulty parts of the code.
                 [WARNING: GLOBAL STATE] If user code has global variables (like `model = ...`), IMPORT and USE them. Do not shadow them with local instances.
+                [CRITICAL: SAFE IMPORTS] Check if imports trigger unintended side effects (e.g., infinite loops, model reloading). If so, fix by mocking or importing safely.
                 [WARNING: CONSTANTS] Do NOT hardcode state dimensions. Use `agent.num_of_states` or similar from user code.
                 
                 [OUTPUT_REQUIREMENT]
@@ -551,7 +551,7 @@ class ExperimentRunner:
             [HYPOTHESIS]
             {hypothesis.description}
 
-            {f"\n[AVAILABLE USER CODE]\n{self._format_user_code_files(user_code, use_signatures_only=True)}\n" if user_code else ""}
+            {f"\n[AVAILABLE USER CODE]\n{self._format_user_code_files(user_code, use_signatures_only=False)}\n" if user_code else ""}
             
             Success Criteria: {hypothesis.success_criteria}
 
@@ -662,7 +662,7 @@ class ExperimentRunner:
                 CRITICAL: Run HEADLESS - no UI windows, no pygame display, no matplotlib.show(). Use 'Agg' backend.
                 These packages are available but not required - use them only if they help test the hypothesis.
 
-                {f"\n[AVAILABLE USER CODE]\n{self._format_user_code_files(user_code, use_signatures_only=True)}\n" if user_code else ""}
+                {f"\n[AVAILABLE USER CODE]\n{self._format_user_code_files(user_code, use_signatures_only=False)}\n" if user_code else ""}
 
                 [HYPOTHESIS]
                 Description: {hypothesis.description}
@@ -862,7 +862,7 @@ Do NOT do this:
         # Build instructions based on whether user code exists
         code_instructions = ""
         if user_code:
-            code_instructions = "\n[IMPORTANT: USER CODE PROVIDED]\nBuild upon and adapt the existing user code files provided below. Do not start from scratch - extend and modify the existing code to test the hypothesis. Identify what needs to be added, modified, or adapted in the existing code."
+            code_instructions = "\n[IMPORTANT: USER CODE PROVIDED]\nBuild upon and adapt the existing user code files provided below. Do not start from scratch - extend and modify the existing code to test the hypothesis. Identify what needs to be added, modified, or adapted in the existing code.\n\n[CRITICAL: IMPORT SAFETY ANALYSIS]\nIdentify any global state or side effects in the user code (e.g. `model = ...` at top level) that implementation needs to be aware of. Plan to handle these safely (e.g. by importing the instance directly)."
 
         # Paper title if provided by user
         title_section = ""

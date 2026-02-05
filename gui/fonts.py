@@ -33,6 +33,11 @@ class FontManager:
         """Add a callback to be invoked when font size changes."""
         self.callbacks.append(callback)
 
+    def remove_callback(self, callback):
+        """Remove a callback if it exists."""
+        if callback in self.callbacks:
+            self.callbacks.remove(callback)
+
     def _init_fonts(self):
         """Initialize NamedFonts."""
         # We hold the references to NamedFonts so they dont get garbage collected,
