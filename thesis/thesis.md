@@ -1,6 +1,8 @@
 # A Human-in-the-Loop System for Research Paper Generation Using Local Large Language Models
 
 ## 1. Introduction
+- Simple diagram of the entire workflow (the 6 phases), something like:
+![Chevron Diagram](Phase_Diagram.svg)
 
 ## 2. Foundations
 Important concepts: Language Models, Embedding Models, RAG, (Local) Inference, Prompt Engineering...
@@ -25,8 +27,7 @@ CycleResearcher, Agent Laboratory, AI-Researcher, The AI-Scientist, Meow, DORA A
 | C1 | Constraint | Technology Stack | The system shall be implemented using Python (language), Tkinter (GUI), and LM Studio (inference engine). |
 
 ### 4.2 Overview
-- Activity diagram or Chevron Diagram of the entire workflow (the 6 phases), something like:
-![Chevron Diagram](Phase_Diagram.svg)
+- Diagram from Human in the Loop Pattern (how does user interact with system)
 
 - Component or Block Diagram of the system architecture, something like:
 ![Architecture Diagram](architecture.svg)
@@ -38,8 +39,10 @@ CycleResearcher, Agent Laboratory, AI-Researcher, The AI-Scientist, Meow, DORA A
 ![Context Analysis Diagram](context_analysis.svg)
 
 #### 4.3.2 Literature Search
+![Lit Search](lit_search.svg)
 
 #### 4.3.3 Hypothesis Generation
+![Hyp Gen](hyp_gen.svg)
 
 #### 4.3.4 Experimentation
 
