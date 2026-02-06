@@ -1,5 +1,5 @@
 import lmstudio as lms
-from typing import List, Dict
+from typing import List, Dict, Any
 import numpy as np
 from datetime import datetime
 from phases.paper_search.paper import Paper, RankingScores
@@ -155,7 +155,7 @@ class PaperRanker(LazyEmbeddingMixin):
         
         return np.clip(score, 0.0, 1.0)
     
-    def _parse_date(self, published: Any) -> datetime:
+    def _parse_date(self, published: any) -> datetime:
         """Parse date string in various formats (ISO, year-only, year-month)."""
         if not published:
             return datetime.now()  # Fallback for missing dates

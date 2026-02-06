@@ -498,6 +498,12 @@ class ExperimentRunner:
                 chat or lms.Chat("")
             )
     
+        
+    def _format_user_code_section(self, user_code: Optional[list[UserCode]]) -> str:
+        if not user_code:
+            return ""
+        return f"\n[AVAILABLE USER CODE]\n{self._format_user_code_files(user_code, use_signatures_only=False)}\n"
+
     def _validate_experiment_results(
         self,
         execution_result: ExecutionResult,
@@ -520,7 +526,7 @@ class ExperimentRunner:
         plot_count = len(execution_result.plot_files)
         result_file_count = len(execution_result.result_files)
         
-        system_prompt = textwrap.dedent(f"""\
+        system_prompt = textwrap.dedent("""\
             [ROLE]
             You are an expert at debugging scientific experiment code and validating results.
 
@@ -539,11 +545,13 @@ class ExperimentRunner:
             - Don't guess or hallucinate issues that aren't in the code"""
         )
                     
+        plot_files_summary = ', '.join([os.path.basename(p) for p in execution_result.plot_files]) if execution_result.plot_files else 'none'
+
         validation_prompt = textwrap.dedent(f"""\
             [HYPOTHESIS]
             {hypothesis.description}
 
-            {f"\n[AVAILABLE USER CODE]\n{self._format_user_code_files(user_code, use_signatures_only=False)}\n" if user_code else ""}
+            {self._format_user_code_section(user_code)}
             
             Success Criteria: {hypothesis.success_criteria}
 
@@ -552,7 +560,7 @@ class ExperimentRunner:
 
             [EXECUTION SUMMARY]
             - Return Code: {execution_result.return_code}
-            - Plots Generated: {plot_count} ({', '.join([os.path.basename(p) for p in execution_result.plot_files]) if execution_result.plot_files else 'none'})
+            - Plots Generated: {plot_count} ({plot_files_summary})
             - JSON Results: {result_file_count} file(s)
 
             [STDOUT]
@@ -626,6 +634,11 @@ class ExperimentRunner:
             if validation_result.issues:
                 feedback_text += f"\n\nIssues identified:\n{validation_result.issues}"
             
+            # Format user code section for the prompt
+            user_code_section = ""
+            if user_code:
+                user_code_section = f"\n[AVAILABLE USER CODE]\n{self._format_user_code_files(user_code, use_signatures_only=False)}\n"
+
             prompt = textwrap.dedent(f"""\
                 [ROLE]
                 You are an expert at improving scientific experiment code.
@@ -654,7 +667,7 @@ class ExperimentRunner:
                 CRITICAL: Run HEADLESS - no UI windows, no pygame display, no matplotlib.show(). Use 'Agg' backend.
                 These packages are available but not required - use them only if they help test the hypothesis.
 
-                {f"\n[AVAILABLE USER CODE]\n{self._format_user_code_files(user_code, use_signatures_only=False)}\n" if user_code else ""}
+                {user_code_section}
 
                 [HYPOTHESIS]
                 Description: {hypothesis.description}
