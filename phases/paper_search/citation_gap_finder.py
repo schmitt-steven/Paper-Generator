@@ -125,7 +125,7 @@ Return your suggestions in the structured format."""
         
         found_papers = []
         
-        print(f"\nSearching for {len(suggestions)} suggested foundational papers...")
+        print(f"\nSearching for {len(suggestions)} foundational papers")
         
         for suggestion in suggestions:
             try:

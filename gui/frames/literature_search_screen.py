@@ -14,16 +14,14 @@ from ..theme_colors import CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER
 from phases.paper_search.paper import Paper
 from phases.paper_search.user_paper_loader import UserPaperLoader
 from phases.paper_search.literature_search import LiteratureSearch
-from phases.paper_search.paper_ranking import PaperRanker
-from phases.paper_search.paper_filter import PaperFilter
+
 from phases.context_analysis.research_context_generator import ResearchContextGenerator, ResearchContext
 from phases.context_analysis.paper_specification import PaperSpecification
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from utils.pdf_downloader import PDFDownloader
 from utils.pdf_converter import PDFConverter
 from settings import Settings
-from phases.paper_search.citation_gap_finder import CitationGapFinder
-from utils.open_access_finder import find_open_access_pdfs
+
 
 
 HYPOTHESES_FILE = Path("output/hypothesis.md")
@@ -434,82 +432,21 @@ class LiteratureSearchScreen(BaseFrame):
         
         def task():
             try:
-                # Step 1: Search
-                self.after(0, lambda: popup.update_status("Building search queries"))
+                # New Logic: Delegate to LiteratureSearch class
+                self.after(0, lambda: popup.update_status("Loading research context"))
                 research_context: ResearchContext = ResearchContextGenerator.load_research_context("output/research_context.md")
                 
                 literature_search = LiteratureSearch(model_name=Settings.LITERATURE_SEARCH_MODEL)
-                search_queries = literature_search.build_search_queries(research_context)
                 
-                self.after(0, lambda: popup.update_status(f"Searching related papers with {len(search_queries)} queries"))
-                papers = literature_search.search_papers(search_queries, max_results_per_query=15)
-                
-                # Filter out papers already in user papers
-                user_paper_ids = {p.id for p in self.user_papers}
-                searched_papers = [p for p in papers if p.id not in user_paper_ids]
-                
-                if not searched_papers:
-                    self.after(0, lambda: self._on_search_complete([], popup))
-                    return
-                
-                # Step 2: Rank papers
-                self.after(0, lambda: popup.update_status("Ranking papers for relevance"))
-                ranker = PaperRanker(embedding_model_name=Settings.PAPER_RANKING_EMBEDDING_MODEL)
-                ranking_context = research_context.description
-                ranked_papers = ranker.rank_papers(
-                    papers=searched_papers,
-                    context=ranking_context,
-                    weights={'relevance': 0.8, 'citations': 0.1, 'recency': 0.1}
-                )
-                
-                # Save unfiltered papers
-                #LiteratureSearch.save_papers(ranked_papers, filename="papers_unfiltered.json", output_dir="output")
-                
-                # Step 3: Filter papers
-                self.after(0, lambda: popup.update_status("Filtering found papers"))
-                research_context = f"{research_context.description}\n\nOpen Research Questions:\n{research_context.open_questions}"
-                filtered_papers = PaperFilter.filter_papers(
-                    papers=ranked_papers,
+                # Callback to update UI popup from thread
+                def status_callback(msg: str):
+                    self.after(0, lambda: popup.update_status(msg))
+
+                filtered_papers = literature_search.run_automated_search(
                     research_context=research_context,
-                    model_name=Settings.LITERATURE_SEARCH_MODEL,
-                    target_count=50,
-                    min_relevance=0.5
+                    user_papers=self.user_papers,
+                    progress_callback=status_callback
                 )
-                
-                # Step 4: Citation Gap Analysis - find missing foundational papers
-                self.after(0, lambda: popup.update_status("Analyzing for missing foundational papers"))
-                gap_finder = CitationGapFinder()
-                research_context = f"{research_context.description}\n\nOpen Research Questions:\n{research_context.open_questions}"
-                suggestions = gap_finder.identify_missing_papers(
-                    papers=filtered_papers,
-                    research_context=research_context,
-                    model_name=Settings.LITERATURE_SEARCH_MODEL
-                )
-                
-                if suggestions:
-                    self.after(0, lambda n=len(suggestions): popup.update_status(f"Searching for {n} suggested foundational papers"))
-                    existing_ids = {p.id for p in filtered_papers} | {p.id for p in self.user_papers}
-                    foundational_papers = gap_finder.search_suggested_papers(suggestions, existing_ids)
-                    if foundational_papers:
-                        self.after(0, lambda: popup.update_status("Ranking foundational papers"))
-                        foundational_papers = ranker.rank_papers(
-                            papers=foundational_papers,
-                            context=ranking_context,
-                        )
-                        filtered_papers.extend(foundational_papers)
-                        print(f"Added {len(foundational_papers)} foundational papers to the collection")
-                        
-                        # Re-sort collection by relevance score
-                        filtered_papers.sort(
-                            key=lambda p: p.ranking.relevance_score if p.ranking else 0,
-                            reverse=True
-                        )
-                
-                # Step 5: Check for open access PDFs for papers without URLs
-                papers_without_urls = [p for p in filtered_papers if not p.pdf_url]
-                if papers_without_urls:
-                    self.after(0, lambda n=len(papers_without_urls): popup.update_status(f"Finding open access PDFs for {n} papers"))
-                    find_open_access_pdfs(papers_without_urls)  # Updates papers in-place
                 
                 # Step 6: Show results
                 self.after(0, lambda: self._on_search_complete(filtered_papers, popup))

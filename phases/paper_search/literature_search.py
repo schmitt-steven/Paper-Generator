@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Callable
 from dateutil import parser
 import textwrap
 import json
@@ -12,6 +12,9 @@ from difflib import SequenceMatcher
 
 from phases.paper_search.paper import Paper, RankingScores
 from phases.paper_search.semantic_scholar_api import SemanticScholarAPI
+from phases.paper_search.paper_ranking import PaperRanker
+from phases.paper_search.paper_filter import PaperFilter
+from phases.paper_search.citation_gap_finder import CitationGapFinder
 from utils.pdf_downloader import PDFDownloader
 from utils.open_access_finder import find_open_access_pdfs
 from utils.lazy_model_loader import LazyModelMixin
@@ -81,8 +84,7 @@ class LiteratureSearch(LazyModelMixin):
             AVOID THESE GENERIC TERMS (they match too many unrelated papers):
             - deterministic, stochastic, optimal, efficient, robust
             - one-pass, single-pass, forward, backward (unless part of specific algorithm name)
-            - convergence, analysis, optimization, learning (alone)
-            - graph, network, model (alone)
+            - analysis, optimization, learning (alone)
 
             Output format:
             {{"queries": [{{"query": "specific algorithm name", "year": null}}, {{"query": "method survey", "year": null}}]}}
@@ -442,4 +444,107 @@ class LiteratureSearch(LazyModelMixin):
 
         print(f"Loaded {len(papers)} papers from {filepath}")
         return papers
+
+
+    def run_automated_search(
+        self,
+        research_context: ResearchContext,
+        user_papers: List[Paper],
+        progress_callback: Optional[Callable[[str], None]] = None
+    ) -> List[Paper]:
+        """
+        Execute the full automated literature search pipeline.
+        
+        Steps:
+        1. Generate search queries from research context
+        2. Execute search on Semantic Scholar
+        3. Rank papers by relevance, citations, and recency
+        4. Filter papers using LLM verification
+        5. Analyze citation gaps and find missing foundational papers
+        6. Check for open access PDFs
+        
+        Args:
+            research_context: Domain context for search and ranking
+            user_papers: Existing papers to avoid duplicates
+            progress_callback: Optional callback for status updates
+            
+        Returns:
+            List of filtered and ranked Paper objects
+        """
+        def update_status(msg):
+            if progress_callback:
+                progress_callback(msg)
+                
+        # Step 1: Search
+        update_status("Building search queries")
+        search_queries = self.build_search_queries(research_context)
+        
+        update_status(f"Searching related papers with {len(search_queries)} queries")
+        papers = self.search_papers(search_queries, max_results_per_query=20)
+        
+        # Filter out papers already in user papers to avoid processing duplicates
+        user_paper_ids = {p.id for p in user_papers}
+        searched_papers = [p for p in papers if p.id not in user_paper_ids]
+        
+        if not searched_papers:
+            return []
+        
+        # Step 2: Rank papers
+        update_status("Ranking papers for relevance")
+        ranker = PaperRanker(embedding_model_name=Settings.PAPER_RANKING_EMBEDDING_MODEL)
+        ranking_context = research_context.description
+        ranked_papers = ranker.rank_papers(
+            papers=searched_papers,
+            context=ranking_context,
+            weights={'relevance': 0.8, 'citations': 0.1, 'recency': 0.1}
+        )
+        
+        # Step 3: Filter papers
+        update_status("Filtering found papers")
+        # Enhance context with open questions for better filtering
+        enhanced_context = f"{research_context.description}\n\nOpen Research Questions:\n{research_context.open_questions}"
+        filtered_papers = PaperFilter.filter_papers(
+            papers=ranked_papers,
+            research_context=enhanced_context,
+            model_name=self.model_name,
+            target_count=50,
+            min_relevance=0.5
+        )
+        
+        # Step 4: Citation Gap Analysis
+        update_status("Analyzing for missing foundational papers")
+        gap_finder = CitationGapFinder()
+        suggestions = gap_finder.identify_missing_papers(
+            papers=filtered_papers,
+            research_context=enhanced_context,
+            model_name=self.model_name
+        )
+        
+        if suggestions:
+            update_status(f"Searching for {len(suggestions)} suggested foundational papers")
+            existing_ids = {p.id for p in filtered_papers} | {p.id for p in user_papers}
+            foundational_papers = gap_finder.search_suggested_papers(suggestions, existing_ids)
+            
+            if foundational_papers:
+                update_status("Ranking foundational papers")
+                foundational_papers = ranker.rank_papers(
+                    papers=foundational_papers,
+                    context=ranking_context,
+                )
+                filtered_papers.extend(foundational_papers)
+                print(f"Added {len(foundational_papers)} foundational papers to the collection")
+                
+                # Re-sort collection by relevance score
+                filtered_papers.sort(
+                    key=lambda p: p.ranking.relevance_score if p.ranking else 0,
+                    reverse=True
+                )
+        
+        # Step 5: Check for open access PDFs
+        papers_without_urls = [p for p in filtered_papers if not p.pdf_url]
+        if papers_without_urls:
+            update_status(f"Finding open access PDFs for {len(papers_without_urls)} papers")
+            find_open_access_pdfs(papers_without_urls)  # Updates papers in-place
+            
+        return filtered_papers
 

@@ -530,14 +530,6 @@ class ExperimentRunner:
             [VALIDATION_APPROACH]
             1. Check OUTPUTS first: Did the experiment produce the expected files and metrics?
             2. Check RESULTS: Are the values plausible? (e.g., NaN, all zeros, identical values across conditions = red flag)
-            3. Check CODE only if results look wrong: Trace the specific bug causing the invalid output.
-            
-            [COMMON BUGS TO LOOK FOR]
-            - Global vs local variable confusion (function modifies wrong variable)
-            - Off-by-one errors in convergence checks
-            - Metrics that can never reach threshold (e.g., cumulative avg that's dragged down by early failures)
-            - Missing resets between runs (state pollution across trials)
-            - Major logic errors (e.g. infinite loops, zero updates). 
             
             [IMPORTANT]
             - Do NOT nitpick algorithm implementation details if the results look plausible!
