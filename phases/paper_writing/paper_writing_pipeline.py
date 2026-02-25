@@ -274,7 +274,7 @@ class PaperWritingPipeline:
 
         # Generate acknowledgements if enabled
         acknowledgements = None
-        if Settings.GENERATE_ACKNOWLEDGEMENTS and paper_specification and paper_specification.acknowledgements:
+        if Settings.GENERATE_ACKNOWLEDGEMENTS and paper_specification and paper_specification.acknowledgements and paper_specification.acknowledgements.strip():
             print("\nWriting Acknowledgements section...")
             acknowledgements = self.writer.generate_acknowledgements(paper_specification.acknowledgements)
 

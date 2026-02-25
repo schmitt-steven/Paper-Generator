@@ -1,6 +1,6 @@
-# Paper Writing Phase
+# Section Writing Phase
 
-RAG-based system for generating academic paper sections with indirect citations. Inspired by [PaperQA](https://github.com/Future-House/paper-qa).
+System for generating academic paper sections with indirect citations. Inspired by [PaperQA](https://github.com/Future-House/paper-qa).
 
 ## Components
 

@@ -1,4 +1,4 @@
-"""Lazy model loading to conserve RAM and work with LM Studio's single-model mode."""
+"""Lazy model loading to conserve RAM and work with LM Studio's single-model mode ("Only Keep Last JIT Loaded Model")."""
 
 import lmstudio as lms
 from typing import Optional
@@ -9,7 +9,7 @@ class LazyModelMixin:
     Mixin class for lazy loading of LLM models.
     
     Models are only loaded when first accessed, not during __init__.
-    This works well with LM Studio's "Only Keep Last JIT Loaded Model" server setting, which conserves RAM.
+    This works well with LM Studio's "Only Keep Last JIT Loaded Model" setting, which conserves RAM.
     """
     
     @property

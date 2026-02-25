@@ -141,8 +141,8 @@ class ResearchContextScreen(BaseFrame):
         # Create collapsible sections
         sections = [
             ("Description", self.context.description),
-            ("Important Code Snippets", self.context.code_snippets),
-            ("Questions for Literature Search", self.context.open_questions),
+            ("Code Analysis", self.context.code_snippets),
+            ("Open Questions", self.context.open_questions),
         ]
         
         self.context_cards = []
@@ -156,8 +156,6 @@ class ResearchContextScreen(BaseFrame):
             )
             card.pack(fill="x", pady=10)
             self.context_cards.append(card)
-
-
 
     def on_next(self):
         """Proceed to next screen (no saving needed - content is read-only)."""

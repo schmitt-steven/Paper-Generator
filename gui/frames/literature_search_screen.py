@@ -569,14 +569,32 @@ class LiteratureSearchScreen(BaseFrame):
     def on_next(self):
         """Process new papers if any, then proceed or generate hypotheses."""
         all_papers = self.user_papers + self.searched_papers
-        
-        # Handle empty case
+
+        # If the list of papers is empty
         if not all_papers:
-            if PAPERS_FILE.exists():
-                PAPERS_FILE.unlink()
-                print("[Papers] All papers removed, deleted papers.json")
-            super().on_next()
-            return
+            if not HYPOTHESES_FILE.exists():
+                # No hypothesis yet — must add papers first
+                messagebox.showwarning(
+                    "No Papers Added",
+                    "Please add at least one paper before continuing.\n\n"
+                    "The generator requires papers for the writing phase."
+                )
+                return
+            else:
+                # Hypothesis already exists — warn but allow skipping
+                proceed = messagebox.askyesno(
+                    "No Papers Added",
+                    "You haven't added any papers yet.\n\n"
+                    "Do you still want to continue to the next screen?",
+                    icon="warning"
+                )
+                if not proceed:
+                    return
+                if PAPERS_FILE.exists():
+                    PAPERS_FILE.unlink()
+                    print("[Papers] All papers removed, deleted papers.json")
+                super().on_next()
+                return
         
         # Find papers that need processing (download and/or conversion)
         papers_needing_download, papers_needing_conversion = self._find_papers_needing_processing(all_papers)

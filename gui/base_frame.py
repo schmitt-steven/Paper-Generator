@@ -362,6 +362,9 @@ class BaseFrame(ttk.Frame):
         # Header
         header_frame = ttk.Frame(self, style="NavBar.TFrame", padding=(10, 12))
         header_frame.grid(row=0, column=0, sticky="ew")
+        header_frame.columnconfigure(0, weight=1, uniform="header_edges")
+        header_frame.columnconfigure(1, weight=0)
+        header_frame.columnconfigure(2, weight=1, uniform="header_edges")
         
         # Info button on right side
         if self.info_content:
@@ -373,11 +376,11 @@ class BaseFrame(ttk.Frame):
                 scale=1.75,
                 hover_color=HoverColor.BLUE
             )
-            info_btn.pack(side="right", padx=(10, 15))
+            info_btn.grid(row=0, column=2, sticky="e", padx=(10, 15))
         
         # Shared container for Title + Buttons to center them together
         center_container = ttk.Frame(header_frame, style="NavBar.TFrame")
-        center_container.pack(expand=True)
+        center_container.grid(row=0, column=1)
         
         # Title
         navbar_bg = getattr(self.controller, '_navbar_bg', NAVBAR_BG_DARK)

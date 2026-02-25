@@ -1,0 +1,449 @@
+\chapter{System Design}
+
+This chapter explains the design and architecture of the automated research paper generator.
+Based on the foundations and related work discussed in the previous chapters, the system is built to solve specific problems 
+with current AI tools: hallucinations, data privacy concerns and lack of user control [CITE].
+
+The core design philosophy centers around two principles: keeping the process local and keeping the user in charge.
+Instead of relying on cloud APIs where data leaves the machine and usage fees might apply, the system is designed to run entirely on local hardware.
+Furthermore, rather than trying to fully automate the writing process which lacks transparency, the system uses a Human-in-the-Loop (HITL) approach.
+This means the AI acts as a drafter, while the user remains the editor and verifier at each phase of the process.
+
+This chapter focuses on the concepts and logic of the system, while the specific code implementation is explained in Chapter 5.
+
+The design is broken down into four parts:
+\begin{enumerate}
+    \item \textbf{Requirements}: The specific features and constraints the system must satisfy.
+    \item \textbf{System Architecture}: The high-level structure of the system.
+    \item \textbf{Human-in-the-Loop Strategy}: The interaction pattern enabling the user to verify and correct the AI's output.
+    \item \textbf{Generation Process}: The step-by-step workflow, explaining the logic from initial context analysis to the final PDF compilation.
+\end{enumerate}
+
+\section{Requirements}
+
+Defining the system's requirements is essential for two reasons: 
+they establish the functional boundaries of the system and provide the specific criteria for 
+the evaluation in Chapter 6. While specialized metrics for automated text quality assessment exist [CITE], 
+their implementation is outside the scope of this work. Instead, the requirements defined below serve as the primary 
+baseline for verifying the system's core functions.
+
+\paragraph{The Approach} 
+For this work, the requirements are based on standard frameworks like the Volere Template [1] and IEEE 830 [2]. 
+However, strictly following these standards would create excessive documentation for a single-developer project with a limited timeline. 
+Therefore, only the elements necessary for verification were selected: unique identifiers, categorization, titles, and deterministic "shall" statements. 
+This ensures the requirements are precise and testable, yet avoid unnecessary overhead.
+
+\paragraph{Scope: System vs. Model} 
+A fundamental challenge in developing AI tools is distinguishing the contribution of the software from the capabilities of 
+the used AI models [CITE]. This distinction is important for this work: the semantic quality of a generated research paper depends largely on the 
+intelligence of the specific LLMs used, rather than just the system architecture. 
+Therefore, the requirements are intentionally scoped to deterministic system behaviors. 
+For example, FR4 (Experimentation) requires the system to "generate code, execute it, and save artifacts." 
+It does not require the system to "produce a scientifically valid experiment." 
+This distinction allows the system's engineering quality to be verified objectively through programmatic 
+tests, rather than relying on subjective and time-consuming qualitative user studies, which are out of scope for this work.
+
+\paragraph{The Specification}
+
+\begin{table}[htbp]
+    \centering
+    \caption{System Requirements}
+    \label{tab:requirements}
+    \begin{tabularx}{\textwidth}{l p{2cm} p{3cm} X}
+        \toprule
+        \textbf{ID} & \textbf{Category} & \textbf{Title} & \textbf{Description} \\
+        \midrule
+        FR1 & Functional & Context Analysis & The system shall process user data as input to produce a structured research topic definition. \\
+        FR2 & Functional & Literature Search & The system shall query external databases to retrieve and store metadata and full-text documents of research papers. \\
+        FR3 & Functional & Hypothesis \newline Generation & The system shall derive a formal hypothesis from the provided context. \\
+        FR4 & Functional & Experimentation & The system shall generate code, execute it, and save the execution artifacts (logs, plots, data). \\
+        FR5 & Functional & Paper Writing & The system shall generate text sections that include citations referenced from the retrieved literature. \\
+        FR6 & Functional & Document \newline Compilation & The system shall compile the generated content into a PDF document. \\
+        FR7 & Functional & Human-in-the-Loop & The system shall allow the user to view generated artifacts and optionally edit them. \\
+        FR8 & Functional & Model Selection & The system shall allow the assignment of LLMs to specific tasks (e.g., Coding vs. Writing). \\
+        NFR1 & Non-\newline Functional & Privacy & The system shall process all inference data locally. \\
+        NFR2 & Non-\newline Functional & Free Execution & The system shall perform all functions free of charge. \\
+        C1 & Constraint & Technology Stack & The system shall be implemented using Python (language), Tkinter (GUI), and LM Studio (inference engine). \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+The requirements, derived from the research objectives in Chapter 1 and the challenges indentified in Chapter 2 and 3, 
+are listed in Table \ref{tab:requirements}. They are categorized into three groups: functional requirements, non-functional requirements and constraints.
+
+Functional Requirements (FR) define what the system must actually do [CITE]. 
+The requirements FR1-FR6 mirror the standard scientfic method [CITE]:
+\begin{description}
+    \item \textbf{Observation \& Question:} The process begins with FR1 (Context Analysis) to define the research problem.
+    \item \textbf{Background Research:} The system then performs FR2 (Literature Search) to gather existing knowledge.
+    \item \textbf{Hypothesis:} Based on this data, the system performs FR3 (Hypothesis Generation).
+    \item \textbf{Test:} The core of the scientific work is handled by FR4 (Experimentation), where code is generated and executed.
+    \item \textbf{Conclusion:} Finally, the results are translated into a document via FR5 (Paper Writing) and FR6 (Document Compilation).
+\end{description}
+To ensure the quality of this process, FR7 (Human-in-the-Loop) allows the user to verify the output at every single one of these stages, 
+while FR8 (Model Selection) allows switching between specialized LLMs for different tasks to improve the quality of the output.
+
+\medskip
+Non-Functional Requirements (NFR) define the quality attributes of the system, rather than specific behaviors [CITE]. 
+In this work, the focus is on data privacy and cost efficiency. The goal is to demonstrate that effective research tools do not require reliance on 
+paid cloud services. Therefore, NFR1 states that all inference data must be processed locally. This ensures that sensitive user inputs and generated 
+drafts are never sent to third-party AI providers, even while the system queries external databases for literature. NFR2 guarantees the system 
+operates without usage fees by integrating open-weights models and free APIs only.
+
+\medskip
+Constraints (C) define the technical boundaries of the project [1]. 
+C1 restricts the implementation to the specific technology stack chosen for this thesis: Python, Tkinter, and LM Studio. 
+This constraint ensures the implementation remains feasible within the project scope and guarantees compatibility with consumer-grade hardware.
+
+
+\section{System Architecture}
+The system architecture is designed to demonstrate that automated research is feasible using entirely local resources. 
+The goal is to prove that open-weights models are capable of handling complex scientific workflows if the system 
+is designed correctly.
+
+To achieve this, the architecture avoids a "black box" approach and instead uses a modular pipeline that breaks the research process 
+into smaller, manageable tasks that local LLMs can handle.
+
+As shown in Figure \ref{fig:system_architecture}, the system is divided into four logical blocks: 
+the Frontend, the Backend, Project Data, and External Services.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{bilder/system_architecture}
+\caption{High-Level System Architecture. The User interacts with the Frontend to trigger Backend modules. 
+The Backend processes Project Data and uses External Services for inference and retrieval.}
+\label{fig:system_architecture}
+\end{figure}
+
+\paragraph{1. Frontend}
+The Frontend is the interface of the application and is built with Tkinter [1]. It is designed to guide the user through the research workflow. 
+Instead of a single chat window, the interface is split into separate screens (e.g., \textit{Research Context}, \textit{Experiment Plan}).
+This structured design is critical for working with local LLMs:
+\begin{itemize}
+\item \textbf{Verification:} Since local LLMs may have lower accuracy than state-of-the-art cloud models, the interface displays the output of every phase. 
+This allows the user to verify the work of the AI before moving to the next step.
+\item \textbf{Navigation:} The user can move back and forth between screens. If the model struggles with a specific task 
+(e.g., writing the code for an experiment), the user can edit the LLM's output or return to previous steps and refine the context.
+\end{itemize}
+
+\paragraph{2. Backend}
+The Backend contains the application logic. It is organized into separate Python modules for each of the six phases: \textit{Context Analysis}, 
+\textit{Literature Search}, \textit{Hypothesis Generation}, \textit{Experimentation}, \textit{Paper Writing}, and \textit{Compilation}.
+The Backend is stateless, meaning it reads the current files from "Project Data", executes a specific task (e.g. generating a hypothesis), and saves the result to a new file. 
+This design is critical because the user's hardware and model choice are unknown. 
+By breaking the workflow into small, isolated steps, the system reduces the cognitive load and context requirements for the AI. 
+This increases the probability that even smaller models (e.g., 8B parameters) or machines with limited memory can successfully complete 
+all phases of the paper generation process.
+
+\paragraph{3. Project Data}
+Rather than using a database, the system stores project data as human-readable files organized into two directories:
+\begin{itemize}
+    \item \textbf{User Files:} Inputs provided by the user (e.g., specifications, seed code).
+    \item \textbf{Artifacts:} Outputs generated by the system (Markdown, JSON, Python scripts).
+\end{itemize}
+This design decouples the data from the application logic. Since the project state is made up of standard files, the user can inspect, 
+or edit any part of the project using their preferred editor, without being locked into the tool's interface. 
+If the LLM produced an incorrect or incomplete output, the user can intervene directly by editing the relevant file, 
+rather than having to work around the application to fix it.
+
+\paragraph{4. External Services}
+The system connects to two types of external resources.
+First, local inference is handled entirely by LM Studio [2] via a localhost server, ensuring that no prompts or data leave the 
+machine (satisfying NFR1).
+Second, literature search relies on public APIs: the backend uses Semantic Scholar [3] for metadata discovery, Unpaywall [5] for retrieving 
+legal open-access PDFs, and arXiv [4] as a fallback for pre-prints. This split architecture enables access to global scientific knowledge while 
+keeping the reasoning and content generation strictly local.
+
+\section{Human-in-the-Loop Strategy}
+This system uses a HITL approach to address the problems of using local LLMs and to keep the user in charge of the research process. 
+Instead of trying to generate a complete paper in one go, the workflow is broken down into distinct phases. 
+The system pauses after each phase, giving the user a chance to review the output, such as the hypothesis or experiment results, 
+and correct any problems.
+
+\paragraph{Motivation}
+The HITL strategy is motivated by the issues of running LLMs locally on consumer hardware.
+
+The most powerful LLMs, such as Gemini 3.1 or Opus 4.6, are proprietary models that run exclusively on large-scale cloud infrastructure. 
+Even the largest open-weights models still perform worse than their proprietary counterparts on benchmarks \cite{Dettmers2022, Zhang2023}, 
+meaning that local inference generally provides lower quality results.
+Running an LLM locally requires enough graphics memory (VRAM) to hold the model weights and system memory (RAM) to manage the inference context. 
+The most capable open-weights models with over 200 billion parameters (e.g., DeepSeek, Qwen) 
+at full precision require far more RAM and VRAM than typical consumer hardware provides. 
+In practice, users are limited to smaller or quantized variants that fit their hardware. 
+To fit larger models into available memory, a technique called quantization can be used, which compresses the model weights at the cost of accuracy. 
+While quantization at moderate levels (e.g., 4-bit) preserves most of a model's performance, 
+it is a tradeoff that can increase the probability of errors \cite{Dettmers2022}.
+
+A further risk is error propagation. In a multi-stage research workflow, 
+the output of each phase serves as the input for the next. If the model introduces a factual error or ``hallucination'' 
+at an early stage, this mistake is carried forward as assumed fact into all subsequent phases. 
+This creates what Shinn et al.\ describe as a failure cascade, where a single early error can compromise the 
+entire final output \cite{Shinn2023}. Local models, given their reduced capacity, are less likely to detect 
+and self-correct such errors within their context window.
+
+An alternative approach would be a fully agentic pipeline, where the LLM autonomously plans and executes all phases 
+without user intervention, as demonstrated by systems like AutoGPT \cite{Yang2023}. However, this design introduces 
+additional requirements and potential for failure. Agentic workflows depend on the model's ability to perform 
+tool calling---selecting the correct function, at the correct time, with the correct parameters. 
+Not all local models support tool calling, and even those that do offer no guarantee of correct invocation, 
+making each autonomous step an additional source of error. Combined with the reduced reasoning capacity of local 
+models and the compounding risk described above, a fully autonomous agent operating over many sequential steps 
+becomes unreliable for a task that demands scientific rigor.
+
+Besides mitigating these risks via a HITL approach, splitting the workflow into distinct phases also improves the quality of each individual step. 
+Research on Chain-of-Thought prompting and task decomposition has shown that LLMs produce more accurate results 
+when focused on a single, well-defined sub-task rather than a broad, open-ended objective \cite{Wei2022}. 
+By splitting the research process into isolated phases---context analysis, literature search, hypothesis generation, 
+experimentation, writing and document compilation---the system reduces the complexity of each individual prompt.
+This phased structure keeps each prompt shorter and focused, which helps improve the model's output quality. 
+
+However, the phased structure alone does not guarantee correctness. Because local models cannot reliably 
+self-correct, a human reviewer takes over that role. The user can verify the output of each phase before it is passed 
+to the next, which helps prevent errors from propagating into the next steps. 
+The result is a division of labor: the system generates the initial content, while the user checks its correctness.
+
+\paragraph{Interaction Flow}
+Figure \ref{fig:hitl} depicts the division of labor between the user and the system. 
+In this flow the system never advances autonomously. 
+Every progression through the workflow depends on the user's approval.
+
+When a user navigates to a specific phase, they either review an already existing artifact or trigger the system to generate a new one. 
+In both cases, the process pauses at the review stage. Here, the user evaluates the text or code produced by the LLM. 
+If the output satisfies the user's requirements, the user can proceed to the next phase in the research process.
+
+If the output contains errors, the user has two options to fix them. 
+For minor issues, such as a hallucination or a formatting error, the user can edit the artifact manually. 
+Alternatively, the user can trigger a complete regeneration of the output, which prompts the system to re-execute the phase. 
+
+Both correction paths lead back to the review stage. 
+This creates a continuous loop: the user cannot proceed until the artifact is explicitly approved by the user.
+
+\begin{figure}[ht]
+\centering
+\makebox[\textwidth][c]{\includegraphics[width=1.2\linewidth, max height=\textheight, keepaspectratio]{bilder/hitl}}
+\caption{HITL Interaction Flow. The UML activity diagram is divided into \texttt{User} and \texttt{System} swimlanes. 
+The initial action depends on whether the artifact already exists (\texttt{[artifact already generated]}). 
+If missing, the user initiates the process (\texttt{Trigger phase}) and the system runs the generation (\texttt{Execute phase}). 
+Both paths merge at the review stage. 
+If the user is not satisfied with the artifact, the flow splits. Requesting a completely new output (\texttt{Trigger regeneration}) loops back to the review stage. Alternatively, the user can fix the artifact themselves (\texttt{Edit manually}). 
+Once satisfied with the result, the user can either continue (\texttt{Proceed to next or previous screen}) or stop the process.}\label{fig:hitl}
+\end{figure}
+
+\paragraph{Design Decisions}
+The system's HITL implementation is based on four main design choices: step-by-step reviews, file-based artifacts, flexible navigation and traceability.
+
+First, the step-by-step reviews force the user to check the output after each phase, rather than just at the very end. 
+Because this loop applies to every phase, errors can be caught early before they ruin the following tasks. 
+Since the output of one phase becomes the input for the next, the model only ever works with verified data. 
+This prevents it from building on past mistakes.
+
+Second, the system uses file-based artifacts as the main interface between the user and the AI. 
+Rather than interacting through a chat window, the user inspects, edits, and approves standard text files (Markdown or JSON). 
+This separates the research data from the application logic. The files act as the single source of truth. 
+The user can pause their work, edit the files in an external text editor, and resume the process at any time without losing context.
+
+Third, it allows flexible navigation.
+There is no guarantee that research is linear since new findings might require rethinking earlier ideas.
+The user can navigate to an earlier step---for instance, to update the experiment plan---and trigger a regeneration of the following steps to cascade the changes. 
+This flexibility can match how real research works and avoids the need to manually delete old results.
+
+Lastly, this setup provides traceability. 
+In a fully autonomous system, the origin of an error might be hidden behind multiple layers of internal logic. 
+If the final result contains errors, it could be difficult to determine which tool call introduced which error. 
+By saving the output of every phase as a separate file, any generated content can be traced back to the exact step where it was created.
+
+\paragraph{Implications}
+This design treats the LLM as a fast drafting assistant rather than an autonomous agent. 
+The system does not rely on a single, highly capable model. 
+Because the user can manually correct errors at every step, even smaller models running on limited hardware can be used. 
+The AI primarily provides raw writing and coding speed. 
+Therefore, the final quality of the generated paper depends heavily on the user: 
+if the user refines the output of each step, the research will be more reliable, helping to overcome the limits of local LLMs.
+
+\section{Generation Process}
+The generation process is the central part of the application. 
+It turns an initial research idea into a finished PDF document through a six-phase workflow. 
+Although the steps logically follow each other, the process is flexible. 
+The user can return to any previous phase at any time to update the context or fix mistakes.
+
+This workflow implements the Functional Requirements defined in Section 4.1. 
+Each phase handles one specific requirement (FR1 to FR6). 
+Throughout the process, the system makes sure that all data stays local (NFR1) and enables the user to verify the results (FR7).
+
+During each phase, the system reads the current project files. 
+It limits the amount of text sent to the AI to avoid memory issues, and then asks the LLM or an external service to create the next piece of content. 
+The following subsections explain how each phase works, including its inputs, outputs and design choices.
+
+\subsection{Context Analysis}
+
+\paragraph{Goal and Rationale}
+The goal of the context analysis phase is to turn the user's initial ideas into a well-structured research context. 
+This step satisfies FR1 (Context Analysis). 
+Before the system can search for literature, experiment, or write a paper, it requires a comprehensive understanding of the user's topic and focus.
+
+The rationale behind generating a separate context document is data standardization. Raw source code and unstructured ideas are difficult to use as direct search queries. 
+Instead, the system uses an LLM to digest the user's inputs and compress them into a factual, dense text description. 
+This dense format is essential for the next phase: it allows the system to compare the semantic similarity of the user's description and its embedding against the embeddings of found paper abstracts.
+
+The code analysis step also serves a dual purpose. First, it helps the system gain a deeper understanding of the user's technical ideas, which is later reused as crucial context during the Experimentation phase. 
+Second, the system identifies explicit open questions that guide the upcoming Literature Search. When the system creates search queries, it targets these exact gaps in knowledge, ensuring the retrieved papers are highly relevant to what is actually missing.
+
+An alternative approach would be skipping this phase entirely and asking the user to manually write search queries and provide a structured abstract. 
+However, this contradicts the goal of an automated research assistant. 
+It places the burden of keyword engineering on the user and ignores the fact that LLMs are excellent at reading code to identify underlying theoretical concepts that the user might not know how to search for.
+
+\paragraph{The Starting Point: User Inputs}
+The process begins at the application's start screen. Here, the user can open settings, provide their code, and define the paper's specification and style guidelines.
+
+[SCREENSHOT]
+
+The system relies on two main input channels. 
+The first is the paper specification. This is a structured Markdown file the user fills out to define the general topic, an initial hypothesis, and section-specific instructions (such as ``the abstract should emphasize the dataset''). 
+Markdown is used because it is human-readable, easy to edit, and requires no special tooling. Breaking the instructions into structured sections is crucial. It gives the LLM clear, tightly scoped instructions later during the paper writing phase, which works much better than a single, vague prompt.
+
+The second, optional input channel is the user's source code. 
+The user can add one or more code files directly via the GUI or by placing them into the project's \texttt{user\_files/} directory. 
+In computer science, many research papers are built around a novel implementation. By providing the actual source code, the LLM can ground its analysis in real artifacts, rather than just relying on the user's text description.
+
+\paragraph{Code Analysis}
+If code files are provided, the system iterates over each file individually. 
+For each file, the system performs two tasks. First, it runs a semantic analysis on the code to generate a short technical summary and identify the underlying methodology, its specific contribution, and key algorithms or design patterns. 
+Second, it extracts the most important code snippets that implement this core logic. 
+
+The system analyzes the files one by one instead of sending the entire codebase at once. 
+This keeps the context size manageable, ensuring the workload fits within the limits of smaller local models. 
+After all files are analyzed, the system merges the individual results, including the technical summaries and the extracted snippets, into a single dataset.
+
+\paragraph{Generating the Research Context}
+Once the specification is parsed and the code is analyzed, the system combines both to generate the final research context. 
+
+From this combined data, the system generates three core components:
+\begin{itemize}
+    \item \textbf{Paper Description:} The system distills the user's data into a factual paper description, including a taxonomic classification, an abstract, a problem definition, and the technical approach.
+    \item \textbf{Code Snippets:} The unmodified code snippets extracted during the code analysis are formatted for later inclusion in the methods section.
+    \item \textbf{Open Questions:} The system generates a focused list of specific open questions. These questions target critical gaps in understanding the field, the related work, and how the user's approach differs from existing methods.
+\end{itemize}
+
+These open questions are important because they bridge the gap between what the user knows and what the literature can provide. 
+Instead of generic keyword searches, the system searches for answers to these concrete questions.
+
+\paragraph{Generation Flow}
+As shown in the activity diagram (Figure \ref{fig:context_analysis}), the workflow starts when the user triggers the context analysis. 
+The system parses the specification. If code files are found, it analyzes them and merges the extracted knowledge with the specification. 
+Then, the system sends this combined data to the LLM to generate the final research context.
+
+\begin{figure}[ht]
+	\centering
+	\makebox[\textwidth][c]{\includegraphics[max width=1\linewidth, max height=\textheight, keepaspectratio]{bilder/con_an}}
+	\caption{Context Analysis Process}
+	\label{fig:context_analysis}
+\end{figure}
+
+\paragraph{Output and Review}
+The result of this phase is saved as a single context document. 
+
+[SCREENSHOT]
+
+Following the Human-in-the-Loop strategy, the process pauses here. 
+The user can review the generated paper description, the unmodified code snippets, and the open questions directly in the GUI. 
+If the system misunderstood a concept or generated bad questions, the user can edit the file directly. 
+This review matters: if the open questions are wrong, the entire literature search will be off-target. 
+Fixing them here is cheap; fixing them later is expensive.
+
+
+
+\subsection{Literature Search}
+
+\begin{figure}[ht]
+	\centering
+		\makebox[\textwidth][c]{\includegraphics[width=1\linewidth, max height=\textheight, keepaspectratio]{bilder/lit_search}}
+	\caption{Literature Search}
+	\label{fig:lit_search}
+\end{figure}
+
+\subsection{Hypothesis Generation}
+
+\begin{figure}[ht]
+	\centering
+		\makebox[\textwidth][c]{\includegraphics[width=1\linewidth, max height=\textheight, keepaspectratio]{bilder/hyp_gen}}
+	\caption{Hypothesis Generation}
+	\label{fig:hyp_gen}
+\end{figure}
+
+\subsection{Experimentation}
+
+\begin{figure}[ht]
+	\centering
+		\makebox[\textwidth][c]{\includegraphics[width=1\linewidth, max height=\textheight, keepaspectratio]{bilder/exp}}
+	\caption{Experimentation}
+	\label{fig:exp}
+\end{figure}
+
+\subsection{Paper Writing}
+
+\begin{figure}[ht]
+	\centering
+		\makebox[\textwidth][c]{\includegraphics[width=1\linewidth, max height=\textheight, keepaspectratio]{bilder/writing}}
+	\caption{Paper Writing}
+	\label{fig:writing}
+\end{figure}
+
+\subsection{Document Compilation}
+
+\begin{figure}[ht]
+	\centering
+		\makebox[\textwidth][c]{\includegraphics[width=1\linewidth, max height=\textheight, keepaspectratio]{bilder/doc_com}}
+	\caption{Document Compilation}
+	\label{fig:doc_com}
+\end{figure}
+
+\section{Bewertung und Inhalt}
+bew:
+
+Die gewählte Lösung ist geeignet, um das beschriebene Problem zu lösen.
+Es sind ggf. Hypothesen gebildet worden; diese sind erläutert, und es sind
+Kriterien identifiziert worden, mit deren Hilfe man die Hypothesen falsifizieren
+kann
+
+Es werden Alternativen zur vorgeschlagenen Lösung diskutiert. Die eigene
+Lösung wird nicht als einzige mögliche dargestellt, sondern es werden auch
+andere mögliche Lösungen vorgestellt und bewertet.
+
+Alternativen und Kriterien für die Auswahl dieser Lösung werden dargestellt.
+
+Es wird dargestellt, wieso die entwickelt Lösung vorteilhafter ist als die
+bisherigen Ansätze. Diese Darstellung erfolgt auf Basis des Lösungsansatzes. Eine
+konkrete Validierung der Implementierung erfolgt ggf. in späteren Kapiteln.
+
+---
+
+Methodik/Lösung: Die gewählte Methodik bzw. Lösung ist für das Problem adäquat.
+ Anforderungen an die Lösung: Die von der Lösung zu erfüllenden Anforderungen werden
+dargestellt. Wo nötig wird dies auf Grundlage eines sauberen Requirements"=Engineerings
+durchgeführt.
+ Erläuterung des Lösungsansatzes: Der gewählte Lösungsansatz wird ausführlich erläutert und
+verständlich dargestellt.
+ Eignung zur Lösung der Aufgabe: Die gewählte Lösung ist geeignet, um das beschriebene
+Problem zu lösen.
+ Hypothesen: Es sind ggf. Hypothesen gebildet worden; diese sind erläutert, und es sind Kri-
+terien identifiziert worden, mit deren Hilfe man die Hypothesen falsifizieren kann.
+ Alternativen: Es werden Alternativen zur vorgeschlagenen Lösung diskutiert. Die eigene Lö-
+sung wird nicht als einzige mögliche dargestellt, sondern es werden auch andere mögliche
+Lösungen vorgestellt und bewertet.
+Begründung: Alternativen und Kriterien für die Auswahl dieser Lösung werden dargestellt.
+Vorteile der Lösung: Es wird dargestellt, wieso die entwickelte Lösung vorteilhafter ist als die
+bisherigen Ansätze. Diese Darstellung erfolgt auf Basis des Lösungsansatzes. Eine konkrete
+Validierung der Implementierung erfolgt ggf. in späteren Kapiteln.
+
+Problem und Losungsansatz: ¨ Falls das Einleitungskapitel
+fur die Problembeschreibung noch nicht ausgereicht hat, ¨
+kann hier das Problem noch einmal detailliert analysiert
+werden. Der formale Losungsansatz wird hier unabh ¨ angig ¨
+von seiner Implementierung beschrieben und begrundet ¨
+(z.B. Architektur etc.)
+
+Wenn das Problem, das Sie bearbeitet haben, umfangreich ist, und somit nicht vollstandig in der Einleitung beschrieben werden konnten, gehen ¨
+Sie noch einmal detailliert auf das Problem ein. Machen Sie Ihre Hypothesen explizit und
+beschreiben Sie, wie Sie das Problem, unabhangig von der konkreten Implementierung, ¨
+gelost haben. Erkl ¨ aren Sie die gefundene L ¨ osung, inklusive Anforderungen, Architektur ¨
+und Design

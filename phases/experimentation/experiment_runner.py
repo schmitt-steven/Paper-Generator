@@ -277,6 +277,7 @@ class ExperimentRunner:
                     - Create plots/ directory
                     - Generate comparison plots (use matplotlib Agg backend - NO plt.show())
                     - Save plots to plots/ as .pdf files
+                    - Publication Quality Add axis labels (xlabel, ylabel), a descriptive title, and legend (if multiple series)
                     - CRITICAL: For EVERY plot you generate, print a text summary to stdout that describes the exact data shown. 
                       Format: "[Plot Summary: <filename>] <summary text with numbers/stats>"
                       Example: "[Plot Summary: learning_curve.pdf] RBQL reached 0.9 reward at ep 450, Standard Q at ep 720."
@@ -288,8 +289,8 @@ class ExperimentRunner:
                     - All loops terminate properly
                     - Code will complete in under 10 minutes
 
-                    Output the COMPLETE, FINAL code (imports & data structures + algorithms + experiment + visualization).
-                """)
+                    Output the COMPLETE, FINAL code (imports & data structures + algorithms + experiment + visualization)."""
+                )
                 if user_code:
                     chunk_message += "\n\nIf user code files were provided above, ensure the final code integrates all existing functionality with the new experiment and visualization code."
                 chat.add_user_message(chunk_message)
@@ -504,6 +505,83 @@ class ExperimentRunner:
             return ""
         return f"\n[AVAILABLE USER CODE]\n{self._format_user_code_files(user_code, use_signatures_only=False)}\n"
 
+    def _check_plots_visually(self, plot_files: list[str]) -> str:
+        """Short visual quality check on plots using VLM. Returns issues summary or empty string."""
+        
+        if not plot_files:
+            return ""
+        
+        issues = []
+        
+        check_prompt = textwrap.dedent("""\
+            [ROLE]
+            You are a visual quality checker for scientific plots.
+
+            [TASK]
+            Check a plot image for obvious visual issues that would make it unpublishable.
+
+            [REQUIREMENTS]
+            Check ONLY for these issues:
+            - Missing axis labels (no xlabel or ylabel)
+            - Missing title
+            - Empty plot (no data/lines visible)
+            - Overlapping or unreadable text
+            - Missing legend (when multiple series are visible)
+
+            Do NOT describe what the plot shows. Only identify problems.
+
+            [OUTPUT]
+            Respond with EXACTLY ONE LINE:
+            - If no issues: "OK"
+            - If issues found: Brief description (e.g., "Missing y-axis label, no legend")"""
+        )
+        
+        for plot_file in plot_files:
+            filename = os.path.basename(plot_file)
+            
+            try:
+                image_path = plot_file
+                temp_image = None
+                
+                if plot_file.lower().endswith('.pdf'):
+                    try:
+                        doc = fitz.open(plot_file)
+                        if len(doc) > 0:
+                            page = doc[0]
+                            pix = page.get_pixmap(matrix=fitz.Matrix(1.5, 1.5))
+                            temp_image = plot_file.replace('.pdf', '_check.png')
+                            pix.save(temp_image)
+                            image_path = temp_image
+                        doc.close()
+                    except Exception:
+                        continue  # Skip if PDF conversion fails
+                
+                image_handle = lms.prepare_image(image_path)
+                
+                chat = lms.Chat(check_prompt)
+                chat.add_user_message(f"Check plot: {filename}", images=[image_handle])
+                model = lms.llm(self.settings.EXPERIMENT_PLOT_CAPTION_MODEL)
+                result = model.respond(chat, config={"temperature": 0.0, "timeout": 120})
+                response = remove_thinking_blocks(result.content).strip()
+                
+                # Clean up temp file
+                if temp_image and os.path.exists(temp_image):
+                    try:
+                        os.unlink(temp_image)
+                    except Exception:
+                        pass
+                
+                if response.upper() != "OK":
+                    issues.append(f"{filename}: {response}")
+                    
+            except Exception as e:
+                print(f"Warning: Visual check failed for {filename}: {e}")
+                continue
+        
+        if issues:
+            return "[VISUAL PLOT ISSUES]\n" + "\n".join(issues)
+        return ""
+
     def _validate_experiment_results(
         self,
         execution_result: ExecutionResult,
@@ -547,6 +625,9 @@ class ExperimentRunner:
                     
         plot_files_summary = ', '.join([os.path.basename(p) for p in execution_result.plot_files]) if execution_result.plot_files else 'none'
 
+        # Visual check on plots (if any)
+        visual_issues = self._check_plots_visually(execution_result.plot_files)
+
         validation_prompt = textwrap.dedent(f"""\
             [HYPOTHESIS]
             {hypothesis.description}
@@ -566,6 +647,8 @@ class ExperimentRunner:
             [STDOUT]
             {stdout_summary}
 
+            {visual_issues}
+
             [CODE]
             ```python
             {code_content}
@@ -578,7 +661,7 @@ class ExperimentRunner:
             
             Keep response concise. No fluff."""
         )
-        
+
         try:
             chat = lms.Chat(system_prompt)
             chat.add_user_message(validation_prompt)

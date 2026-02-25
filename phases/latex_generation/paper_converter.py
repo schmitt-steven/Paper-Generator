@@ -70,10 +70,10 @@ class PaperConverter(LazyModelMixin):
         
         self._inject_sections_into_tex(latex_dir, paper_draft, progress_callback)
         
-        self._generate_bibliography(latex_dir, paper_draft, indexed_papers)
-        
         if experiment_result:
             self._copy_plot_images(latex_dir, experiment_result)
+        
+        self._generate_bibliography(latex_dir, paper_draft, indexed_papers)
         
         print(f"[PaperConverter] LaTeX project generated at {latex_dir}")
         return latex_dir
