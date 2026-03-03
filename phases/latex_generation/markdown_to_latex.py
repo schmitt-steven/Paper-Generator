@@ -3,6 +3,7 @@
 import textwrap
 import lmstudio as lms
 from phases.paper_writing.data_models import Section
+from utils.llm_utils import remove_thinking_blocks
 
 
 class MarkdownToLaTeX:
@@ -18,7 +19,7 @@ class MarkdownToLaTeX:
             response = llm.respond(prompt, config={"temperature": 0.0})
             # Extract text from response
             if hasattr(response, "content"):
-                latex_text = response.content
+                latex_text = remove_thinking_blocks(response.content)
             elif isinstance(response, str):
                 latex_text = response
             else:

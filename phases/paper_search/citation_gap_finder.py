@@ -6,6 +6,7 @@ well-known/foundational papers that are commonly cited but missing from the coll
 It then searches for those papers and returns them for integration.
 """
 
+import json
 import lmstudio as lms
 import time
 from typing import List, Optional
@@ -15,6 +16,7 @@ from phases.paper_search.paper import Paper
 from phases.paper_search.semantic_scholar_api import SemanticScholarAPI
 from settings import Settings
 from utils.open_access_finder import find_open_access_pdfs
+from utils.llm_utils import remove_thinking_blocks
 
 
 
@@ -91,7 +93,8 @@ Return your suggestions in the structured format."""
                 config={"temperature": 0.0}
             )
             
-            result = response.parsed
+            content = remove_thinking_blocks(response.content)
+            result = json.loads(content)
             suggestions = result.get("missing_papers", [])
             
             # Convert dicts to SuggestedPaper objects

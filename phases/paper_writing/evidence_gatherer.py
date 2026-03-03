@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import heapq
 import textwrap
 from dataclasses import dataclass
@@ -108,7 +109,9 @@ class EvidenceGatherer:
                     config={"temperature": 0.2, "maxTokens": 1500},
                 )
                 
-                batch_results = response.parsed.get('results', [])
+                content = remove_thinking_blocks(response.content)
+                parsed = json.loads(content)
+                batch_results = parsed.get('results', [])
                 
                 # Map results
                 for j, (chunk, vector_score) in enumerate(batch):

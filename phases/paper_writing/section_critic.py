@@ -5,6 +5,7 @@ Uses structured LLM output to identify possible improvements and generate
 search queries for additional evidence.
 """
 
+import json
 import textwrap
 from typing import Optional, Sequence
 
@@ -45,7 +46,9 @@ class SectionCritic:
             config={"temperature": 0.2},
         )
         
-        critique = SectionCritique(**response.parsed)
+        content = remove_thinking_blocks(response.content)
+        parsed = json.loads(content)
+        critique = SectionCritique(**parsed)
         
         # --- VERIFY CITATIONS ---
         # Extract all citation keys used in the draft

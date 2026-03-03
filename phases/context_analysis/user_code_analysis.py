@@ -143,8 +143,9 @@ class CodeAnalyzer(LazyModelMixin):
             prompt, 
             response_format=UserCodeAnalysisResult
         )
-        # result.parsed is a dict, not the Pydantic model instance
-        parsed_dict = result.parsed
+        # Clean thinking blocks from content before parsing
+        content = remove_thinking_blocks(result.content)
+        parsed_dict = json.loads(content)
         parsed = UserCodeAnalysisResult(**parsed_dict)
         code_analysis.summary = parsed.summary
         code_analysis.keywords = parsed.keywords

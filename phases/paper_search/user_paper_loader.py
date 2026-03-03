@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import shutil
@@ -9,6 +10,7 @@ import pymupdf
 from textwrap import dedent
 
 from phases.paper_search.paper import Paper
+from utils.llm_utils import remove_thinking_blocks
 from phases.paper_search.semantic_scholar_api import SemanticScholarAPI
 from utils.lazy_model_loader import LazyModelMixin
 from phases.latex_generation.bibliography import generate_bibtex_entry
@@ -97,7 +99,9 @@ class UserPaperLoader(LazyModelMixin):
                 config={'temperature': 0.0}
             )
             
-            return result.parsed['title'].strip()
+            content = remove_thinking_blocks(result.content)
+            parsed = json.loads(content)
+            return parsed['title'].strip()
             
         except Exception as e:
             print(f"Error extracting title from {pdf_path}: {e}")

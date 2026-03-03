@@ -1,6 +1,8 @@
+import json
 import numpy as np
 from typing import List, Dict
 from phases.paper_search.paper import Paper
+from utils.llm_utils import remove_thinking_blocks
 
 class PaperFilter:
 
@@ -226,7 +228,8 @@ class PaperFilter:
                     response_format=VerificationResult,
                     config={"temperature": 0.0}
                 )
-                result = response.parsed
+                content = remove_thinking_blocks(response.content)
+                result = json.loads(content)
                 numbers_to_keep = set(result["keep"])
                 
                 # Filter the batch - keep what's selected

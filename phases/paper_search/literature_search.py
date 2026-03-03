@@ -13,6 +13,7 @@ from difflib import SequenceMatcher
 from phases.paper_search.paper import Paper, RankingScores
 from phases.paper_search.semantic_scholar_api import SemanticScholarAPI
 from phases.paper_search.paper_ranking import PaperRanker
+from utils.llm_utils import remove_thinking_blocks
 from phases.paper_search.paper_filter import PaperFilter
 from phases.paper_search.citation_gap_finder import CitationGapFinder
 from utils.pdf_downloader import PDFDownloader
@@ -99,13 +100,15 @@ class LiteratureSearch(LazyModelMixin):
         search_queries: list[SearchQuery] = []
         
         for attempt in range(max_attempts):
-            result = self.model.respond(
+            response = self.model.respond(
                 prompt,
                 response_format=SearchQueriesResult,
                 config={
                     'temperature': 0.2,
                 }
-            ).parsed
+            )
+            content = remove_thinking_blocks(response.content)
+            result = json.loads(content)
             
             # LM Studio returns dicts for structured responses
             queries_list = result.get('queries', [])

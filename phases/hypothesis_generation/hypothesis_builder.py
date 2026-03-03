@@ -1,4 +1,5 @@
 import json
+from utils.llm_utils import remove_thinking_blocks
 import textwrap
 import numpy as np
 from typing import List, Tuple
@@ -130,10 +131,11 @@ class HypothesisBuilder(LazyModelMixin):
             result = self.model.respond(
                 prompt,
                 response_format=Hypothesis,
-                config={"temperature": 0.2, "maxTokens": 1000}
+                config={"temperature": 0.2}
             )
             
-            response_data = result.parsed
+            content = remove_thinking_blocks(result.content)
+            response_data = json.loads(content)
             hypothesis = Hypothesis(
                 id="user_hypothesis",
                 description=response_data.get("description", user_hypothesis_text),
