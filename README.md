@@ -1,8 +1,6 @@
-# Paper Generator
+# Research Paper Generator
 
-Automated research paper generator using local language and embedding models via LM Studio.
-
-Work in progress, everything subject to change...
+An automated system that builds complete research papers locally and privately. No hidden (API) costs. A GUI app uses language and embedding models via LM Studio to search literature, formulate hypotheses, execute code for live experiments, draft text sections and compile the final LaTeX document.
 
 ## Generation Process
 
@@ -25,6 +23,8 @@ The entire process consists of 6 phases:
 
 ## Installation
 
+Install [LM Studio](https://lmstudio.ai/) first.
+
 ### macOS
 
 ```bash
@@ -36,16 +36,6 @@ xcode-select --install
 
 # LaTeX
 brew install --cask mactex
-
-# Python dependencies
-pip install -r requirements.txt
-```
-
-### Linux (Debian-based)
-
-```bash
-# Install LaTeX
-sudo apt install texlive-full
 
 # Python dependencies
 pip install -r requirements.txt

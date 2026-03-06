@@ -272,6 +272,11 @@ class PaperIndexer:
 
     @staticmethod
     def _estimate_tokens(text: str) -> int:
+        """
+        Estimate tokens via simple word count division. 
+        Note: While lms.embedding_model().tokenize() provides exact counts, this approximation is used because the chunking algo evaluates token counts thousands of times per paper. 
+        Exact tokenization over HTTP adds unnecessary overhead and precise chunk sizes dont matter enough anyways to justify the performance loss.
+        """
         return max(1, int(len(text.split()) / 0.75))
 
     @staticmethod
