@@ -31,7 +31,6 @@ from .frames import (
     ExperimentResultsScreen,
     PaperDraftScreen,
     ResultScreen,
-    SectionGuidelinesScreen,
     WritingPromptsScreen
 )
 from .fonts import FontManager
@@ -303,7 +302,7 @@ class PaperGeneratorApp(tk.Tk):
             frame.grid(row=0, column=0, sticky="nsew")
         
         # Init additional frames not in main navigation
-        extra_frames = [SettingsScreen, WritingPromptsScreen, SectionGuidelinesScreen]
+        extra_frames = [SettingsScreen, WritingPromptsScreen]
         for Frame in extra_frames:
             frame = Frame(parent=self.container, controller=self)
             self.frames[Frame] = frame

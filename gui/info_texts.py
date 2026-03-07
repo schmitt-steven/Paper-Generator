@@ -85,7 +85,7 @@ This can be helpful if you're trying to compare many different algorithms with e
 
 # Code Structure Best Practices
 
-To ensure the best results during the experimentation phase, follow these guidelines:
+For the best results during the experimentation phase, follow these guidelines:
 
 - **Avoid Global State**: Do not rely on global variables for critical logic (e.g., model instances, configuration parameters).
 - **Use Classes/Functions**: Encapsulate logic in classes or functions that accept dependencies as arguments.
@@ -150,25 +150,74 @@ The requirements file **must** have the following structure:
 ```
 """
 
-RESEARCH_CONTEXT_INFO = """research context"""
+RESEARCH_CONTEXT_INFO = """\
+The system extracts the research topic from your paper specification and provided code files.
+It compiles a paper description, isolates code snippets and lists open questions.
+The literature search phase uses these parts to find related papers.
 
-LITERATURE_SEARCH_INFO = """literature search"""
+Review the generated context to catch misunderstandings early.
+You can open the file in your preferred editor to make manual changes.
 
-HYPOTHESIS_INFO = """hypothesis"""
+Use the regenerate button if you changed the paper specification or code files to reflect the changes.
+"""
 
-EXPERIMENT_PLAN_INFO = """experiment plan"""
+LITERATURE_SEARCH_INFO = """\
+Upload any PDFs of relevant papers you already have here.
+If the file is named after arXiv or Semantic Scholar ID's, the system can extract their real metadata for properly generating their citations.
+If not, the system will try to extract the paper's title and search for it on Semantic Scholar.
 
-EXPERIMENT_RESULTS_INFO = """experiment results"""
+The system can also query the Semantic Scholar API to find literature matching your research context.
+It ranks papers by relevance (semantic similarity to research context description), citation count, and recency.
+The system checks if a free PDF is available for each paper or if its closed access.
+If its closed access, the respective entry in the list will provide a upload button to add the PDF manually.
 
-EVIDENCE_INFO = """evidence"""
+Delete any papers that you dislike or do not fit your topic suing the "X"-button.
 
-WRITING_PROMPTS_INFO = """writing prompts"""
+Once you continue to the next screen, the system will automatically detect any non-processed papers to download and convert them to Markdown."""
 
-PAPER_DRAFT_INFO = """paper draft"""
+HYPOTHESIS_INFO = """\
+The system translates your research context into a testable statement.
+It provides a logical justification and defines testable success criteria.
 
-RESULT_INFO = """result"""
+Review the hypothesis to confirm it matches your research idea.
+As always, you can edit the text directly or regenerate it.
+"""
 
-STYLE_GUIDELINES_EDITOR_INFO = """style guidelines"""
+EXPERIMENT_PLAN_INFO = """\
+The system outlines the objective, setup, metrics, and expected outputs for the following experiment.
+Review the plan to catch any design errors before the experiment code is generated.
+"""
+
+EXPERIMENT_RESULTS_INFO = """\
+The system writes the Python code, executes it and validates the results.
+It compares the output against the success criteria of the hypothesis to determine a final verdict.
+
+A vision-language model writes captions for any generated plots.
+
+If the execution fails or disproved your hypothesis, you can edit the code and re-run it manually.
+Alternatively, you can go back and tweak your hypothesis and/or experiment plan, and then come back to either re-run the code or entirely regnerate the experiment.
+"""
+
+WRITING_PROMPTS_INFO = """\
+The system writes the paper section by section.
+This screen shows exactly what data the system sends to the language model.
+
+You can use this screen to trace the origin of every generated section.
+"""
+
+PAPER_DRAFT_INFO = """\
+The system takes all generated sections and assembles them into a single Markdown document.
+The draft includes the title, abstract, all main sections, and optionally acknowledgements.
+"""
+
+RESULT_INFO = """\
+The system converts the Markdown draft into LaTeX code.
+It inserts the text into the selected LaTeX template and generates the bibliography entries.
+The system then runs a compiler to build the final PDF.
+
+Which LaTeX template is used, depends on what template you set on the Settings screen.
+Check the LaTeX templates section in the settings for instructions on how to add custom LaTeX templates.
+"""
 
 LATEX_TEMPLATE_INFO = """\
 ## Adding Custom LaTeX Templates
