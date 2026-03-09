@@ -5,6 +5,7 @@ Writing Prompts Screen - Display section writing prompts with collapsible cards 
 import tkinter as tk
 from tkinter import ttk
 import json
+import re
 from typing import Dict
 from pathlib import Path
 
@@ -14,6 +15,7 @@ from ..info_texts import WRITING_PROMPTS_INFO
 from ..markdown_view import MarkdownView
 from ..theme_colors import (
     CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT,
+    CANVAS_BG_DARK, CANVAS_BG_LIGHT,
     TEXT_BG_DARK_ALT, TEXT_BG_LIGHT_ALT, TEXT_FG_DARK, TEXT_FG_LIGHT,
     SECONDARY_TEXT_DARK, SECONDARY_TEXT_LIGHT,
     LINK_COLOR_DARK, LINK_COLOR_LIGHT,
@@ -21,6 +23,7 @@ from ..theme_colors import (
 
 
 PROMPTS_FILE = Path("output/section_writing_prompts.json")
+REWRITE_PROMPTS_FILE = Path("output/section_rewrite_prompts.json")
 
 
 class CollapsiblePromptCard(CardBorderFrame):
@@ -108,7 +111,7 @@ class CollapsiblePromptCard(CardBorderFrame):
             pady=10
         )
         self.text_widget.pack(side="left", fill="both", expand=True)
-        self.text_widget.set_markdown(self.prompt_content)
+        self.text_widget.set_markdown(self._preprocess_prompt(self.prompt_content))
     
     def toggle(self):
         """Toggle expansion state."""
@@ -130,6 +133,18 @@ class CollapsiblePromptCard(CardBorderFrame):
         if self.expanded:
             self.toggle()
     
+    @staticmethod
+    def _preprocess_prompt(text: str) -> str:
+        """Convert structured prompt text to markdown-compatible format.
+
+        Prompts are plain text where every newline should be a visible line break.
+        Markdown collapses single newlines, so we append two trailing spaces
+        to force <br> line breaks, while preserving paragraph breaks (blank lines).
+        """
+        # Add two trailing spaces before single newlines (markdown line break)
+        # but don't touch blank lines (paragraph breaks)
+        return re.sub(r'(?<!\n)\n(?!\n)', '  \n', text)
+
     def _copy_prompt(self):
         """Copy the prompt content to clipboard."""
         self.controller.clipboard_clear()
@@ -142,7 +157,7 @@ class WritingPromptsScreen(BaseFrame):
     
     def __init__(self, parent, controller):
         self.prompt_cards: Dict[str, CollapsiblePromptCard] = {}
-        self._loaded = False
+        self._loaded_files: set = set()
         
         super().__init__(
             parent=parent,
@@ -160,37 +175,69 @@ class WritingPromptsScreen(BaseFrame):
         pass
     
     def on_show(self):
-        """Load prompts when screen is shown."""
-        if self._loaded:
+        """Load prompts when screen is shown. Reloads if new prompt files appear."""
+        files_present = set()
+        if PROMPTS_FILE.exists():
+            files_present.add(str(PROMPTS_FILE))
+        if REWRITE_PROMPTS_FILE.exists():
+            files_present.add(str(REWRITE_PROMPTS_FILE))
+
+        if files_present == self._loaded_files:
             return
-        
-        self._load_prompts()
-        self._loaded = True
+
+        self._reload_prompts(files_present)
     
-    def _load_prompts(self):
-        """Load and parse the prompts file."""
+    def _reload_prompts(self, files_present: set):
+        """Clear and reload all prompt files."""
+        # Clear existing cards
+        for card in self.prompt_cards.values():
+            card.destroy()
+        self.prompt_cards.clear()
+
+        # Clear any header labels in the scrollable frame
+        for widget in self.scrollable_frame.winfo_children():
+            widget.destroy()
+
         if not PROMPTS_FILE.exists():
             self.show_error_message("Prompts file not found", str(PROMPTS_FILE))
             return
 
-        # Load JSON
         try:
-            content = PROMPTS_FILE.read_text(encoding="utf-8")
-            sections = json.loads(content)
-            
-            # Display sections
-            for i, (section_name, prompt_content) in enumerate(sections.items()):
-                card = CollapsiblePromptCard(
-                    self.scrollable_frame,
-                    section_name,
-                    prompt_content.strip(),
-                    self.controller
-                )
-                card.pack(fill="x", pady=(10 if i == 0 else 0, 8))
-                self.prompt_cards[section_name] = card
-                
+            self._load_prompt_group("Initial Writing Prompts", PROMPTS_FILE, is_first=True)
+            if REWRITE_PROMPTS_FILE.exists():
+                self._load_prompt_group("Improvement Prompts", REWRITE_PROMPTS_FILE, is_first=False)
+            self._loaded_files = files_present
         except Exception as e:
             self.show_error_message("Error loading prompts", str(e))
+
+    def _load_prompt_group(self, group_title: str, file_path: Path, is_first: bool = False):
+        """Load a group of prompts from a JSON file and display them with a header."""
+        content = file_path.read_text(encoding="utf-8")
+        sections = json.loads(content)
+
+        # Group header label
+        fg = TEXT_FG_DARK if self.controller.current_theme == "dark" else TEXT_FG_LIGHT
+        bg = CANVAS_BG_DARK if self.controller.current_theme == "dark" else CANVAS_BG_LIGHT
+        header_label = tk.Label(
+            self.scrollable_frame,
+            text=group_title,
+            font=self.controller.fonts.medium_header_font,
+            fg=fg,
+            bg=bg,
+            anchor="w",
+        )
+        header_label.pack(fill="x", pady=(10 if is_first else 20, 10), padx=0)
+
+        # Display section cards
+        for section_name, prompt_content in sections.items():
+            card = CollapsiblePromptCard(
+                self.scrollable_frame,
+                section_name,
+                prompt_content.strip(),
+                self.controller
+            )
+            card.pack(fill="x", pady=(0, 8))
+            self.prompt_cards[f"{group_title}::{section_name}"] = card
     
 
     

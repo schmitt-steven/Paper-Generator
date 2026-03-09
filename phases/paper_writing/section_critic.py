@@ -30,10 +30,12 @@ class SectionCritic:
         section_type: Section,
         draft_text: str,
         papers: Sequence[Paper],
-        max_queries: int = 5,
+        max_queries: Optional[int] = None,
         paper_specification: Optional[PaperSpecification] = None,
     ) -> SectionCritique:
         """Analyze a draft section and return structured critique."""
+        if max_queries is None:
+            max_queries = getattr(Settings, "CRITIC_MAX_SEARCH_QUERIES", 3)
 
         model = lms.llm(Settings.PAPER_WRITING_MODEL)
         prompt = self._build_critique_prompt(
@@ -92,10 +94,16 @@ class SectionCritic:
         """Build the prompt for section critique."""
         
         paper_catalog = self._format_paper_catalog(papers)
-        
+
         # Get style guidelines
         guidelines = SectionGuidelinesLoader.get_guidelines(section_type)
-        
+
+        # Build query limit hint for the prompt
+        if max_queries == 0:
+            query_limit_note = "The query limit of 0 is intentionally set by the user. Return an EMPTY list for search_queries."
+        else:
+            query_limit_note = "The query limit of {} is intentionally set by the user — respect it strictly.".format(max_queries)
+
         # Get section-specific paper specification
         paper_spec_block = ""
         if paper_specification:
@@ -151,7 +159,8 @@ CRITICAL: Check if the draft satisfies these paper specifications. If not, add s
             1. Check for guideline violations (e.g., citations in Abstract, word count limits)
             2. Verify all citation keys exist in [AVAILABLE PAPERS]; flag missing ones
             3. Suggest improvements: be concise, actionable, 1 sentence each
-            4. Generate focused search queries for missing evidence (max {max_queries})
+            4. Generate focused search queries for missing evidence (max {max_queries}).
+               {query_limit_note}
 
             [OUTPUT FORMAT]
             Return JSON with:
@@ -169,10 +178,13 @@ CRITICAL: Check if the draft satisfies these paper specifications. If not, add s
             citation_key = paper.citation_key or "unknown"
             abstract = paper.summary or "No abstract available."
             conclusion = paper.conclusion or "No conclusion extracted."
-            
-            items.append(f"""[{citation_key}]
-Title: {paper.title}
-Abstract: {abstract[:300]}{"..." if len(abstract) > 300 else ""}
-Conclusion: {conclusion[:500]}{"..." if len(conclusion) > 500 else ""}""")
-        
+
+            lines = [
+                f"[{citation_key}]",
+                f"Title: {paper.title}",
+                f"Abstract: {abstract[:300]}{'...' if len(abstract) > 300 else ''}",
+                f"Conclusion: {conclusion[:500]}{'...' if len(conclusion) > 500 else ''}",
+            ]
+            items.append("\n".join(lines))
+
         return "\n\n".join(items)

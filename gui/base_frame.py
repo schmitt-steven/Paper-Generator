@@ -86,6 +86,7 @@ class ProgressPopup(tk.Toplevel):
         super().__init__(parent)
         self.parent = parent
         self._is_error = False
+        self._running = True
         self._disabled_buttons = []
         
         # Disable all buttons in parent window
@@ -135,8 +136,8 @@ class ProgressPopup(tk.Toplevel):
         self.grab_set()
         self.focus_set()
         
-        # Handle window close (X button) to ensure buttons are reenabled
-        self.protocol("WM_DELETE_WINDOW", self.close)
+        # Ignore X button while running; allow close when done/error
+        self.protocol("WM_DELETE_WINDOW", self._on_user_close)
         
         self._animate_spinner()
     
@@ -186,11 +187,17 @@ class ProgressPopup(tk.Toplevel):
         if self.winfo_exists() and not self._is_error:
             self.status_label.config(text=status)
     
+    def _on_user_close(self):
+        """Handle user clicking X button. Only allow close when not running."""
+        if not self._running:
+            self.close()
+
     def show_error(self, error_message: str):
         """Show error with close button in a scrollable, copyable text widget."""
         if not self.winfo_exists():
             return
         self._is_error = True
+        self._running = False
         
         # Hide status and spinner labels
         self.status_label.pack_forget()
@@ -240,7 +247,7 @@ class ProgressPopup(tk.Toplevel):
     
     def close(self):
         """Close the popup and re-enable buttons."""
-        # Re-enable buttons first
+        self._running = False
         self._enable_parent_buttons()
         
         try:

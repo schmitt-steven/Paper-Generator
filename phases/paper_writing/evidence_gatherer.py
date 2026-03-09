@@ -284,7 +284,7 @@ class EvidenceGatherer:
         self,
         queries: list[str],
         section_type: Section,
-        chunks_per_query: int = 3,
+        chunks_per_query: int = 10,
         max_chunks_per_paper: int = 2,
     ) -> list[Evidence]:
         """

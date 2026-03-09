@@ -46,6 +46,7 @@ class Settings:
     PAPER_INDEXING_EMBEDDING_MODEL = "text-embedding-qwen3-embedding-4b@q5_0"  # Must be an embedding model!
     PAPER_WRITING_MODEL = "qwen/qwen3-next-80b"
     GENERATE_ACKNOWLEDGEMENTS = True
+    CRITIC_MAX_SEARCH_QUERIES = 0  # Max number of search queries the section critic suggests (0-5)
 
     # LaTeX Generation Phase
     LATEX_GENERATION_MODEL = "qwen/qwen3-next-80b"
@@ -104,6 +105,7 @@ class Settings:
                 "LATEX_TITLE": cls.LATEX_TITLE,
                 "LATEX_TEMPLATE": cls.LATEX_TEMPLATE,
                 "GENERATE_ACKNOWLEDGEMENTS": cls.GENERATE_ACKNOWLEDGEMENTS,
+                "CRITIC_MAX_SEARCH_QUERIES": cls.CRITIC_MAX_SEARCH_QUERIES,
             }
             
             # Update string values
@@ -111,23 +113,19 @@ class Settings:
                 if key == "FONT_SIZE":
                     # Handle FontSize enum: FONT_SIZE = FontSize.SMALL
                     pattern = rf'(\s+{key}\s*=\s*)FontSize\.\w+'
-                    replacement = rf'\1FontSize.{value}'
-                    content = re.sub(pattern, replacement, content)
+                    content = re.sub(pattern, lambda m: f"{m.group(1)}FontSize.{value}", content)
                 elif isinstance(value, str):
                     # Match: KEY = "value" or KEY = ""
                     pattern = rf'(\s+{key}\s*=\s*)"[^"]*"'
-                    replacement = rf'\1"{value}"'
-                    content = re.sub(pattern, replacement, content)
+                    content = re.sub(pattern, lambda m: f'{m.group(1)}"{value}"', content)
                 elif isinstance(value, bool):
                     # Match: KEY = True or KEY = False
                     pattern = rf'(\s+{key}\s*=\s*)(True|False)'
-                    replacement = rf'\1{value}'
-                    content = re.sub(pattern, replacement, content)
+                    content = re.sub(pattern, lambda m: f"{m.group(1)}{value}", content)
                 elif isinstance(value, int):
                     # Match: KEY = number
                     pattern = rf'(\s+{key}\s*=\s*)\d+'
-                    replacement = rf'\1{value}'
-                    content = re.sub(pattern, replacement, content)
+                    content = re.sub(pattern, lambda m: f"{m.group(1)}{value}", content)
             
             # Handle LATEX_AUTHORS (complex list of dicts)
             authors_str = _format_authors(cls.LATEX_AUTHORS)
@@ -188,4 +186,3 @@ def get_available_templates() -> list[str]:
                 templates.append(item.name)
     
     return templates
-

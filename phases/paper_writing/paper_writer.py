@@ -17,281 +17,6 @@ class PaperWriter:
     
     def __init__(self):
         pass
-    
-    def generate_paper_sections(
-        self,
-        context: ResearchContext,
-        experiment: ExperimentResult,
-        evidence_by_section: dict[Section, Sequence[Evidence]],
-
-        paper_specification: Optional[PaperSpecification] = None,
-        writing_prompts: Optional[dict[str, str]] = None,
-    ) -> tuple[PaperDraft, dict[str, str]]:
-        """Generate all paper sections using provided evidence. Returns (draft, prompts_by_section)."""
-
-        section_order = (
-            Section.METHODS, Section.RESULTS, Section.DISCUSSION,
-            Section.INTRODUCTION, Section.RELATED_WORK, Section.CONCLUSION, Section.ABSTRACT
-        )
-        
-        sections = {}
-        prompts_by_section = {}
-        for section_type in section_order:
-            print(f"Writing {section_type.value} section...")
-            prompt = self._build_section_prompt(
-                section_type=section_type,
-                context=context,
-                experiment=experiment,
-                evidence=evidence_by_section.get(section_type, []),
-                previous_sections=sections,
-                paper_specification=paper_specification,
-            )
-            
-            # Use existing prompt if available (override the built one if needed, or just use it)
-            # Actually, if we have a pre-loaded prompt, we should probably use THAT one for generation.
-            # But we also want to return it.
-            if writing_prompts and section_type.value in writing_prompts:
-                 prompt = writing_prompts[section_type.value]
-            
-            prompts_by_section[section_type.value] = prompt
-            sections[section_type] = self.generate_section(
-                section_type=section_type,
-                context=context,
-                experiment=experiment,
-                evidence=evidence_by_section.get(section_type, []),
-                previous_sections=sections,
-                paper_specification=paper_specification,
-                existing_prompt=prompt,
-            )
-
-        # Generate acknowledgements if enabled and user provided content
-        acknowledgements = None
-        if Settings.GENERATE_ACKNOWLEDGEMENTS and paper_specification and paper_specification.acknowledgements:
-            print("Writing Acknowledgements section...")
-            acknowledgements = self.generate_acknowledgements(paper_specification.acknowledgements)
-            prompts_by_section[Section.ACKNOWLEDGEMENTS.value] = self._build_acknowledgements_prompt(paper_specification.acknowledgements)
-
-        # Create draft (title will be set below)
-        draft = PaperDraft(
-            title="",
-            abstract=sections[Section.ABSTRACT],
-            introduction=sections[Section.INTRODUCTION],
-            related_work=sections[Section.RELATED_WORK],
-            methods=sections[Section.METHODS],
-            results=sections[Section.RESULTS],
-            discussion=sections[Section.DISCUSSION],
-            conclusion=sections[Section.CONCLUSION],
-            acknowledgements=acknowledgements,
-        )
-
-        # Use settings title if provided, otherwise generate one
-        if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
-            draft.title = Settings.LATEX_TITLE
-        else:
-            draft.title = self.generate_title(draft=draft, context=context)
-        return draft, prompts_by_section
-
-    def generate_section(
-        self,
-        section_type: Section,
-        context: ResearchContext,
-        experiment: Optional[ExperimentResult],
-        evidence: Sequence[Evidence],
-
-        previous_sections: Optional[dict[Section, str]] = None,
-        temperature: float = 0.2,
-        paper_specification: Optional[PaperSpecification] = None,
-        existing_prompt: Optional[str] = None,
-        next_section_type: Optional[Section] = None,
-    ) -> str:
-        """Generate a single section given context and evidence."""
-
-        model = lms.llm(Settings.PAPER_WRITING_MODEL)
-        if existing_prompt:
-             prompt = existing_prompt
-        else:
-             prompt = self._build_section_prompt(
-                 section_type, context, experiment, evidence, previous_sections, paper_specification, next_section_type
-             )
-        response = model.respond(
-            prompt,
-            config={
-                "temperature": temperature,
-            },
-        )
-        return remove_thinking_blocks(response.content)
-
-    def _build_section_prompt(
-        self,
-        section_type: Section,
-        context: ResearchContext,
-        experiment: Optional[ExperimentResult],
-        evidence: Sequence[Evidence],
-        previous_sections: Optional[dict[Section, str]] = None,
-        paper_specification: Optional[PaperSpecification] = None,
-        next_section_type: Optional[Section] = None,
-    ) -> str:
-        """Create the generation prompt for a specific section."""
-
-        guidelines = self.get_section_guidelines(section_type, experiment)
-        context_block = self._format_context(context, experiment)
-        evidence_block = self._format_evidence_for_prompt(evidence)
-        previous_sections_block = self._format_previous_sections(section_type, previous_sections or {})
-        
-        # Map Section enum to PaperSpecification field
-        section_to_requirement = {
-            Section.ABSTRACT: "abstract",
-            Section.INTRODUCTION: "introduction",
-            Section.RELATED_WORK: "related_work",
-            Section.METHODS: "methods",
-            Section.RESULTS: "results",
-            Section.DISCUSSION: "discussion",
-            Section.CONCLUSION: "conclusion",
-        }
-        
-        # Get section-specific paper specification if available
-        paper_spec_block = ""
-        if paper_specification:
-            requirement_field = section_to_requirement.get(section_type)
-            if requirement_field:
-                requirement_text = getattr(paper_specification, requirement_field, None)
-                if requirement_text and requirement_text.strip():
-                    paper_spec_block = f"""[PAPER SPECIFICATION]\n{requirement_text.strip()}"""
-        
-        # Add plots block for Results section
-        plots_block = ""
-        if section_type == Section.RESULTS and experiment and experiment.plots:
-            plots_block = f"""[FIGURES TO INCLUDE]
-                You MUST include ALL of the following figures in your Results section using markdown image syntax.
-
-                {self._format_plots_for_prompt(experiment.plots)}
-
-                FIGURE REQUIREMENTS:
-                - **INTERLEAVED PLACEMENT**: You MUST place the figure markdown immediately after the paragraph where it is discussed. DO NOT dump all figures at the end.
-                - **DYNAMIC NUMBERING**: You MUST assign Figure numbers (Figure 1, Figure 2...) sequentially based on the order you introduce them in the text.
-                - **START AT 1**: The first figure you discuss MUST be "Figure 1", the second "Figure 2", and so on.
-                - **ALL INCLUDED**: You MUST include ALL available plots listed above.
-                - **SYNTAX**: Use markdown: ![Brief description](experiments/plots/file_name.png)
-                - **CAPTION**: Add a caption line below each figure: *Figure N: Full caption text*"""
-        
-        # Paper title if provided by user
-        title_section = ""
-        if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
-            title_section = f"[PAPER TITLE]\n            {Settings.LATEX_TITLE}\n\n            "
-        
-        # Forward Look Instruction
-        forward_look_block = ""
-        if next_section_type:
-            forward_look_block = f"""
-            [FORWARD LOOK]
-            You are writing the {section_type.value} section.
-            The NEXT section will be: {next_section_type.value}.
-            INSTRUCTION: wrap up the current section appropriately, but STOP before you discuss the topics reserved for the {next_section_type.value} section.
-            Transitions are fine, but do not steal the content of the next section.
-            """
-        
-        # Special handling for abstract: No citations allowed
-        if section_type == Section.ABSTRACT:
-            prompt = f"""\
-            [ROLE]
-            You are an expert academic writer.
-
-            [TASK]
-            Write the complete Abstract section of the paper based on the provided context and previous sections.
-
-            [SECTION TYPE]
-            Abstract
-
-            {title_section}[RESEARCH CONTEXT]
-            {context_block}
-
-            [PREVIOUS SECTIONS]
-            {previous_sections_block if previous_sections_block else 'None'}
-
-            [STYLE GUIDELINES]
-            {guidelines}
-
-            {paper_spec_block}
-
-            [WRITING REQUIREMENTS — STRICT]
-            - Write a publication-quality abstract that summarizes the key contributions.
-            - CRITICAL: DO NOT INCLUDE ANY CITATIONS OR REFERENCES.
-            - DO NOT use square brackets [] anywhere in the text.
-            - DO NOT reference other papers or authors by name.
-            - The abstract must be self-contained without external references.
-            - Never fabricate evidence or results.
-            - Draw from the previous sections to write an accurate summary.
-            - MATHEMATICAL NOTATION: Use LaTeX-compatible notation for all formulas and symbols.
-            - Greek letters: Write as *\\alpha*, *\\beta*, *\\gamma*, etc. (NOT Unicode symbols like α, β, γ)
-            - Formulas: Wrap in single asterisks for inline math: *x = \\alpha + \\beta*
-            - Subscripts/superscripts: Use LaTeX syntax: *x_i*, *x^2*, *Q_{max}*
-
-            [GENERATION RULES — DO NOT VIOLATE]
-            - Do NOT include ANY citations like [AuthorYear], [1], or any bracketed references.
-            - Do NOT reference the guidelines or instructions.
-            - Do NOT include section headings (e.g., "## Abstract") in your output.
-            - Output ONLY the final abstract content without any markdown headings.
-
-            Your output must be a polished academic abstract with ZERO citations."""
-        else:
-            prompt = f"""\
-            [ROLE]
-            You are an expert academic writer.
-
-            [TASK]
-            Write the complete {section_type.value} section of the paper based on the provided context.
-
-            [SECTION TYPE]
-            {section_type.value}
-
-            {title_section}[RESEARCH CONTEXT]
-            {context_block}
-
-            [PREVIOUS SECTIONS]
-            {previous_sections_block if previous_sections_block else ''}
-
-            [EVIDENCE]
-            {evidence_block if evidence_block else 'No evidence available.'}
-
-            [STYLE GUIDELINES]
-            {guidelines}
-
-            {paper_spec_block}
-
-            {paper_spec_block}
-            {forward_look_block}
-            {plots_block}
-
-            [WRITING REQUIREMENTS]
-            - Produce a cohesive, original, publication-quality academic narrative.
-            - CITATION FORMAT: Use square brackets with the EXACT, COMPLETE citation keys provided in the <citation_key> tags in the evidence section.
-            - Copy the citation keys EXACTLY as they appear in <citation_key> tags. Do NOT shorten them, do NOT change them, do NOT generate simplified versions.
-            - NEVER use numeric citations like [1], [2], [30]. These are strictly forbidden.
-            - Do NOT invent citation keys. Do NOT generate "nameYear" format. Use ONLY the exact keys found in the <citation_key> tags.
-            - Example: If evidence shows <citation_key>Hoppe2019QgraphboundedQS</citation_key>, use [Hoppe2019QgraphboundedQS] exactly, NOT [Hoppe2019].
-            - Place citations immediately before final punctuation: "[exactKeyFromEvidence]."
-            - For multiple sources: "[exactKey1, exactKey2]."
-            - If a source in the evidence has "unknown" or "n.d." as a key, do NOT cite it.
-            - Cite external papers ONLY using the exact citation keys from the evidence in square brackets.
-            - Never fabricate evidence, results, or citations.
-            - Integrate and build upon previous sections to ensure full narrative coherence.
-            - Do NOT cite papers that are not in the [EVIDENCE] list, even if they are seminal works (e.g. by Sutton, Pearl, Bellman). If you must discuss them, do so without generating a citation key.
-            - Do NOT generate a bibliography or references section at the end.
-            - MATHEMATICAL NOTATION: Use LaTeX-compatible notation for all formulas and symbols.
-            - Greek letters: Write as *\\alpha*, *\\beta*, *\\gamma*, etc. (NOT Unicode symbols like α, β, γ)
-            - Formulas: Wrap in single asterisks for inline math: *x = \\alpha + \\beta*
-            - Subscripts/superscripts: Use LaTeX syntax: *x_i*, *x^2*, *Q_{max}*
-            - Common symbols: *\\leq*, *\\geq*, *\\neq*, *\\approx*, *\\infty*, *\\sum*, *\\prod*
-
-            [GENERATION RULES — DO NOT VIOLATE]
-            - Do NOT reference the guidelines or instructions.
-            - Do NOT comment on the evidence structure.
-            - Do NOT include section headings (e.g., "## Introduction", "# Abstract", etc.) in your output.
-            - Output ONLY the final written section content without any markdown headings.
-
-            Your output must strictly follow the requirements and produce a polished academic section.
-            """
-        return prompt
 
     @staticmethod
     def _format_evidence_for_prompt(evidence: Sequence[Evidence]) -> str:
@@ -390,7 +115,6 @@ class PaperWriter:
         
         sections = [
             format_if_present("Context description", context.description),
-            format_if_present("Open questions", context.open_questions),
         ]
         
         if experiment:
@@ -428,7 +152,7 @@ class PaperWriter:
     ) -> str:
         """Generate a paper title based on the complete paper draft."""
 
-        prompt = f"""\
+        prompt = textwrap.dedent(f"""\
             [ROLE]
             You are an expert academic writer.
 
@@ -443,19 +167,19 @@ class PaperWriter:
 
             [PAPER DRAFT]
             Abstract: {draft.abstract}
-            
+
             Introduction: {draft.introduction}
-            
+
             Methods: {draft.methods}
-            
+
             Results: {draft.results}
-            
+
             Discussion: {draft.discussion}
-            
+
             Conclusion: {draft.conclusion}
 
             Now generate only the title text.
-            """
+            """)
 
         model = lms.llm(Settings.PAPER_WRITING_MODEL)
         response = model.respond(
@@ -486,7 +210,7 @@ class PaperWriter:
         
         guidelines = self.get_section_guidelines(Section.ACKNOWLEDGEMENTS)
         
-        prompt = f"""\
+        prompt = textwrap.dedent(f"""\
             [ROLE]
             You are an expert academic writer.
 
@@ -510,7 +234,7 @@ class PaperWriter:
             [GENERATION RULES]
             - Do NOT reference the guidelines or instructions
             - Output ONLY the final acknowledgements content without any markdown headings
-            """
+            """)
         
         return prompt
 
@@ -608,60 +332,62 @@ class PaperWriter:
         forward_look_block = ""
         if next_section_type:
             forward_look_block = f"""
-            [FORWARD LOOK]
-            You are writing the {section_type.value} section.
-            The NEXT section will be: {next_section_type.value}.
-            INSTRUCTION: wrap up the current section appropriately, but STOP before you discuss the topics reserved for the {next_section_type.value} section.
-            Transitions are fine, but do not steal the content of the next section.
-            """
-        
-        return textwrap.dedent(f"""\
-            [ROLE]
-            You are an expert academic writer.
+[FORWARD LOOK]
+You are writing the {section_type.value} section.
+The NEXT section will be: {next_section_type.value}.
+INSTRUCTION: wrap up the current section appropriately, but STOP before you discuss the topics reserved for the {next_section_type.value} section.
+Transitions are fine, but do not steal the content of the next section.
+"""
 
-            [TASK]
-            Write the complete {section_type.value} section of the paper based on the provided context and available papers.
+        return f"""\
+[ROLE]
+You are an expert academic writer.
 
-            [SECTION TYPE]
-            {section_type.value}
+[TASK]
+Write the complete {section_type.value} section of the paper based on the provided context and available papers.
 
-            {title_section}[RESEARCH CONTEXT]
-            {context_block}
+[SECTION TYPE]
+{section_type.value}
 
-            [PREVIOUS SECTIONS]
-            {previous_sections_block if previous_sections_block else 'None yet.'}
+{paper_spec_block}
 
-            [AVAILABLE PAPERS]
-            The following papers are available for citation. Use their citation keys in square brackets (e.g. [HintonRL2016]).
-            {paper_catalog}
+{title_section}[RESEARCH CONTEXT]
+{context_block}
 
-            [STYLE GUIDELINES]
-            {guidelines}
+[PREVIOUS SECTIONS]
+{previous_sections_block if previous_sections_block else 'None yet.'}
 
-            {paper_spec_block}
-            {forward_look_block}
+[AVAILABLE PAPERS]
+The following papers are available for citation. Use their citation keys in square brackets (e.g. [HintonRL2016]).
 
-            [WRITING REQUIREMENTS — STRICT]
-            - Produce a cohesive, original, publication-quality academic narrative.
-            - CITATION FORMAT: Use square brackets with the EXACT citation keys provided (e.g., [AuthorYear]).
-            - CRITICAL: Copy citation keys EXACTLY. Do NOT shorten or modify them.
-            - CRITICAL: NEVER use numeric citations like [1], [2]. These are strictly forbidden.
-            - Place citations immediately before final punctuation: "[exactKey]."
-            - For multiple sources: "[key1, key2]."
-            - Never fabricate evidence, results, or citations.
-            - Integrate and build upon previous sections to ensure full narrative coherence.
-            - STRICTLY FORBIDDEN: Do NOT cite papers that are not in the [AVAILABLE PAPERS] list, even if they are seminal works.
-            - STRICTLY FORBIDDEN: Do NOT generate a bibliography or references section at the end.
-            - MATHEMATICAL NOTATION: Use LaTeX-compatible notation for all formulas and symbols.
-              - Greek letters: Write as *\\alpha*, *\\beta*, *\\gamma*, etc. (NOT Unicode symbols)
-              - Formulas: Wrap in single asterisks for inline math: *x = \\alpha + \\beta*
-              - Subscripts/superscripts: Use LaTeX syntax: *x_i*, *x^2*, *Q_{max}*
+{paper_catalog}
 
-            [GENERATION RULES — DO NOT VIOLATE]
-            - Do NOT reference the guidelines or instructions.
-            - Do NOT include section headings (e.g., "## Introduction") in your output.
-            - Output ONLY the final written section content.
-        """)
+[STYLE GUIDELINES]
+{guidelines}
+
+{forward_look_block}
+
+[WRITING REQUIREMENTS — STRICT]
+- Produce a cohesive, original, publication-quality academic narrative.
+- CITATION FORMAT: Use square brackets with the EXACT citation keys provided (e.g., [AuthorYear]).
+- CRITICAL: Copy citation keys EXACTLY. Do NOT shorten or modify them.
+- CRITICAL: NEVER use numeric citations like [1], [2]. These are strictly forbidden.
+- Place citations immediately before final punctuation: "[exactKey]."
+- For multiple sources: "[key1, key2]."
+- Never fabricate evidence, results, or citations.
+- Integrate and build upon previous sections to ensure full narrative coherence.
+- STRICTLY FORBIDDEN: Do NOT cite papers that are not in the [AVAILABLE PAPERS] list, even if they are seminal works.
+- STRICTLY FORBIDDEN: Do NOT generate a bibliography or references section at the end.
+- MATHEMATICAL NOTATION: Use LaTeX-compatible notation for all formulas and symbols.
+  - Greek letters: Write as *\\alpha*, *\\beta*, *\\gamma*, etc. (NOT Unicode symbols)
+  - Formulas: Wrap in single asterisks for inline math: *x = \\alpha + \\beta*
+  - Subscripts/superscripts: Use LaTeX syntax: *x_i*, *x^2*, *Q_{{max}}*
+
+[GENERATION RULES — DO NOT VIOLATE]
+- Do NOT reference the guidelines or instructions.
+- Do NOT include section headings (e.g., "## Introduction") in your output.
+- Output ONLY the final written section content.
+"""
 
     def _build_rewrite_prompt(
         self,
@@ -697,67 +423,68 @@ class PaperWriter:
         forward_look_block = ""
         if next_section_type:
             forward_look_block = f"""
-            [FORWARD LOOK]
-            You are writing the {section_type.value} section.
-            The NEXT section will be: {next_section_type.value}.
-            INSTRUCTION: wrap up the current section appropriately, but STOP before you discuss the topics reserved for the {next_section_type.value} section.
-            Transitions are fine, but do not steal the content of the next section.
-            """
-        
-        return textwrap.dedent(f"""\
-            [ROLE]
-            You are an expert academic writer revising a section based on feedback.
+[FORWARD LOOK]
+You are writing the {section_type.value} section.
+The NEXT section will be: {next_section_type.value}.
+INSTRUCTION: wrap up the current section appropriately, but STOP before you discuss the topics reserved for the {next_section_type.value} section.
+Transitions are fine, but do not steal the content of the next section.
+"""
 
-            [TASK]
-            Rewrite the {section_type.value} section, addressing the suggested improvements and incorporating new evidence.
+        return f"""\
+[ROLE]
+You are an expert academic writer revising a section based on feedback.
 
-            [SECTION TYPE]
-            {section_type.value}
+[TASK]
+Rewrite the {section_type.value} section, addressing the suggested improvements and incorporating new evidence.
 
-            [ORIGINAL SECTION]
-            {initial_section}
+[SECTION TYPE]
+{section_type.value}
 
-            [IMPROVEMENTS TO MAKE]
-            {improvements_text}
+{paper_spec_block}
 
-            [NEW EVIDENCE]
-            {evidence_block if evidence_block else 'No additional evidence retrieved.'}
+[ORIGINAL SECTION]
+{initial_section}
 
-            {title_section}[RESEARCH CONTEXT]
-            {context_block}
+[IMPROVEMENTS TO MAKE]
+{improvements_text}
 
-            [PREVIOUS SECTIONS]
-            {previous_sections_block if previous_sections_block else 'None available.'}
+[NEW EVIDENCE]
+{evidence_block if evidence_block else 'No additional evidence retrieved.'}
 
-            [AVAILABLE PAPERS]
-            {paper_catalog}
+{title_section}[RESEARCH CONTEXT]
+{context_block}
 
-            [STYLE GUIDELINES]
-            {guidelines}
+[PREVIOUS SECTIONS]
+{previous_sections_block if previous_sections_block else 'None available.'}
 
-            {paper_spec_block}
-            {forward_look_block}
+[AVAILABLE PAPERS]
+{paper_catalog}
 
-            [WRITING REQUIREMENTS — STRICT]
-            - Address ALL suggested improvements.
-            - Incorporate the new evidence naturally with proper citations.
-            - CITATION FORMAT: Use square brackets with the EXACT citation keys provided.
-            - CRITICAL: Copy citation keys EXACTLY. Do NOT shorten or modify them.
-            - CRITICAL: NEVER use numeric citations like [1], [2]. These are strictly forbidden.
-            - Maintain the strengths of the original draft.
-            - Produce a cohesive, publication-quality narrative.
-            - STRICTLY FORBIDDEN: Do NOT cite papers that are not in the [NEW EVIDENCE] or [AVAILABLE PAPERS] lists, even if they are seminal works.
-            - STRICTLY FORBIDDEN: Do NOT generate a bibliography or references section at the end.
-            - MATHEMATICAL NOTATION: Use LaTeX-compatible notation for all formulas and symbols.
-              - Greek letters: Write as *\\alpha*, *\\beta*, *\\gamma*, etc. (NOT Unicode symbols)
-              - Formulas: Wrap in single asterisks for inline math: *x = \\alpha + \\beta*
-              - Subscripts/superscripts: Use LaTeX syntax: *x_i*, *x^2*, *Q_{max}*
+[STYLE GUIDELINES]
+{guidelines}
 
-            [GENERATION RULES — DO NOT VIOLATE]
-            - Do NOT reference the critique or instructions.
-            - Do NOT include section headings in your output.
-            - Output ONLY the final rewritten section content.
-        """)
+{forward_look_block}
+
+[WRITING REQUIREMENTS — STRICT]
+- Address ALL suggested improvements.
+- Incorporate the new evidence naturally with proper citations.
+- CITATION FORMAT: Use square brackets with the EXACT citation keys provided.
+- CRITICAL: Copy citation keys EXACTLY. Do NOT shorten or modify them.
+- CRITICAL: NEVER use numeric citations like [1], [2]. These are strictly forbidden.
+- Maintain the strengths of the original draft.
+- Produce a cohesive, publication-quality narrative.
+- STRICTLY FORBIDDEN: Do NOT cite papers that are not in the [NEW EVIDENCE] or [AVAILABLE PAPERS] lists, even if they are seminal works.
+- STRICTLY FORBIDDEN: Do NOT generate a bibliography or references section at the end.
+- MATHEMATICAL NOTATION: Use LaTeX-compatible notation for all formulas and symbols.
+  - Greek letters: Write as *\\alpha*, *\\beta*, *\\gamma*, etc. (NOT Unicode symbols)
+  - Formulas: Wrap in single asterisks for inline math: *x = \\alpha + \\beta*
+  - Subscripts/superscripts: Use LaTeX syntax: *x_i*, *x^2*, *Q_{{max}}*
+
+[GENERATION RULES — DO NOT VIOLATE]
+- Do NOT reference the critique or instructions.
+- Do NOT include section headings in your output.
+- Output ONLY the final rewritten section content.
+"""
 
     @staticmethod
     def _format_paper_catalog(papers: Sequence[Paper]) -> str:
@@ -770,21 +497,22 @@ class PaperWriter:
             citation_key = paper.citation_key or "unknown"
             abstract = paper.summary or "No abstract available."
             conclusion = paper.conclusion or ""
-            
+
             # Truncate long abstracts
             abstract_truncated = abstract[:500] + "..." if len(abstract) > 500 else abstract
-            
-            entry = textwrap.dedent(f"""\
-                [{citation_key}]
-                Title: {paper.title}
-                Abstract: {abstract_truncated}""")
-            
+
+            lines = [
+                f"[{citation_key}]",
+                f"Title: {paper.title}",
+                f"Abstract: {abstract_truncated}",
+            ]
+
             if conclusion:
                 conclusion_truncated = conclusion[:500] + "..." if len(conclusion) > 500 else conclusion
-                entry += f"\nConclusion: {conclusion_truncated}"
-            
-            items.append(entry)
-        
+                lines.append(f"Conclusion: {conclusion_truncated}")
+
+            items.append("\n\n".join(lines))
+
         return "\n\n".join(items)
 
     def _get_paper_spec_block(

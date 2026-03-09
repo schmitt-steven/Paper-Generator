@@ -142,7 +142,7 @@ class PaperWritingPipeline:
         papers: Sequence[Paper],
         paper_specification: Optional[PaperSpecification] = None,
         status_callback: Optional[Callable[[str], None]] = None,
-        max_critique_queries: int = 5,  # Num of search suggestions/queries the critique generates
+        max_critique_queries: Optional[int] = None,  # Num of search suggestions/queries the critique generates
         chunks_per_query: int = 5,  # Num of kept chunks per query
         max_chunks_per_paper: int = 2,  # Max num of chunks from the same paper for a query
     ) -> PaperDraft:
@@ -155,8 +155,11 @@ class PaperWritingPipeline:
         3. Search: execute queries for additional evidence
         4. Rewrite: incorporate critique and new evidence
         """
-        # Index papers for critique-based evidence search
-        if not self._indexed_corpus:
+        if max_critique_queries is None:
+            max_critique_queries = getattr(Settings, "CRITIC_MAX_SEARCH_QUERIES", 3)
+
+        # Index papers for critique-based evidence search (skip if no critique queries)
+        if max_critique_queries > 0 and not self._indexed_corpus:
             if status_callback:
                 status_callback("Generating embeddings for papers")
             self.index_papers(papers)
@@ -176,6 +179,7 @@ class PaperWritingPipeline:
         sections: dict[Section, str] = {}
         evidence_by_section: dict[Section, Sequence[Evidence]] = {}
         prompts_by_section: dict[str, str] = {}
+        rewrite_prompts_by_section: dict[str, str] = {}
         
         with LMSJITSettings():
             for idx, section_type in enumerate(section_order):
@@ -256,6 +260,20 @@ class PaperWritingPipeline:
                     status_callback(f"Rewriting {section_type.value} section")
                 print(f"  [Step 4] Rewriting section with improvements and evidence...")
                 
+                rewrite_prompt = self.writer._build_rewrite_prompt(
+                    section_type=section_type,
+                    initial_section=section_draft_v1,
+                    critique=critique,
+                    new_evidence=new_evidence,
+                    papers=papers,
+                    context=research_context,
+                    experiment=experiment_result,
+                    previous_sections=sections,
+                    paper_specification=paper_specification,
+                    next_section_type=next_section_type,
+                )
+                rewrite_prompts_by_section[section_type.value] = rewrite_prompt
+
                 final_section = self.writer.rewrite_section(
                     section_type=section_type,
                     text_to_rewrite=section_draft_v1,
@@ -299,6 +317,7 @@ class PaperWritingPipeline:
         
         self._save_paper_draft(paper_draft=paper_draft)
         self._save_prompts(prompts_by_section)
+        self._save_prompts(rewrite_prompts_by_section, filename="section_rewrite_prompts.json")
         
         print(f"\n{'='*80}")
         print(f"PAPER WRITING COMPLETE")

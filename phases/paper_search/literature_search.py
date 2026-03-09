@@ -510,7 +510,7 @@ class LiteratureSearch(LazyModelMixin):
             papers=ranked_papers,
             research_context=enhanced_context,
             model_name=self.model_name,
-            target_count=50,
+            target_count=40,
             min_relevance=0.5
         )
         
@@ -550,4 +550,3 @@ class LiteratureSearch(LazyModelMixin):
             find_open_access_pdfs(papers_without_urls)  # Updates papers in-place
             
         return filtered_papers
-

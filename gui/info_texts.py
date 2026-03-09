@@ -74,6 +74,25 @@ SETTINGS_INFO = """\
 ## Appearance
 """
 
+GENERAL_SETTINGS_INFO = """\
+**Paper Title** — Title printed on the paper. If left empty, the LLM generates one automatically.
+
+**Include Acknowledgements** — Toggle whether an acknowledgements section is generated.
+
+**Semantic Scholar API Key** — Optional API key for higher rate limits when searching for literature.
+
+**Unpaywall Email** — Optional email address used to query the Unpaywall API to find free PDFs of papers.
+
+**Evidence Search Queries** — This setting influences the "Critique" step of the Draft-Critique-Retrive-Improve" writing pipeline. \
+It sets the maximum number of search queries the critic can suggest per section. \
+These search queries are then used in the "Retrieve" step to find relevant passages in the indexed papers. \
+Each query retrieves chunks from the indexed papers, which are then scored by an LLM and filtered down to the most relevant passages. \
+This is by far the most time-consuming step of the entire writing process. \
+Five queries per section can easily take anything upwards of 30 minutes depending on \
+your hardware. Lowering this value significantly speeds up the paper generation. Set to 0 to skip \
+evidence retrieval entirely (the critic still suggests improvements, but there won't be a search for supporting evidence).
+"""
+
 
 CODE_FILES_INFO = """\
 Upload your code files relevant to the topic of the paper here.

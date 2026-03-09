@@ -59,6 +59,14 @@ class FontManager:
             size=self._calc_size(6), 
             weight="bold"
         )
+
+        self.medium_header_font = tkfont.Font(
+            root=self.root, 
+            name="AppMediumHeaderFont", 
+            family=self.font_family, 
+            size=self._calc_size(4), 
+            weight="bold"
+        )
         
         # Sub Header Font (Section Headers)
         self.sub_header_font = tkfont.Font(
@@ -111,7 +119,7 @@ class FontManager:
         
     def _calc_size(self, relative_size):
         """Calculate actual font size based on base size, offset, and relative diff."""
-        # Ensure minimum size of 10 to remain readable
+        # Minimum size of 10 so text stays always readable
         return max(10, self.base_size + self.size_offset + relative_size)
 
     def update_base_size(self, new_size):
