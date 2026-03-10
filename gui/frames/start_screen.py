@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import ttk, filedialog, messagebox
 import shutil
 import subprocess
 import platform
@@ -9,10 +9,11 @@ from typing import List
 from dataclasses import dataclass
 
 from ..base_frame import BaseFrame, CardBorderFrame, InfoPopup, ProgressPopup
-from ..info_texts import START_PAGE_INFO, PAPER_SPECIFICATION_INFO, STYLE_GUIDELINES_INFO, CODE_FILES_INFO
+from ..info_texts import START_PAGE_INFO, PAPER_SPECIFICATION_INFO, STYLE_GUIDELINES_INFO, CODE_FILES_INFO, USER_EXPERIMENT_INFO
 from ..theme_colors import CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT, MUTED_TEXT
 from ..icons import HoverColor
 from phases.context_analysis.research_context_generator import ResearchContextGenerator
+from settings import Settings
 import threading
 
 
@@ -34,10 +35,11 @@ class CodeFile:
 
 class StartScreen(BaseFrame):
     """Start page with quick access to Settings, Paper Specification, Style Guidelines, and Code Files."""
-    
+
     def __init__(self, parent, controller):
         self.code_files: list[CodeFile] = []
         self.file_widgets: dict[str, ttk.Frame] = {}
+        self.experiment_file: str | None = Settings.USER_EXPERIMENT_FILE or None
         
         # File paths
         self.paper_specification_path = "user_files/paper_specification.md"
@@ -336,13 +338,13 @@ class StartScreen(BaseFrame):
         """Create a single file entry widget."""
         entry_frame = ttk.Frame(parent, style="CardRow.TFrame", padding="8")
         entry_frame.pack(fill="x")
-        
+
         content_row = ttk.Frame(entry_frame, style="CardRow.TFrame")
         content_row.pack(fill="x")
-        
+
         content_frame = ttk.Frame(content_row, style="CardRow.TFrame")
         content_frame.pack(side="left", fill="x", expand=True)
-        
+
         # Filename (clickable)
         filename_label = ttk.Label(
             content_frame,
@@ -352,18 +354,33 @@ class StartScreen(BaseFrame):
             cursor="hand2"
         )
         filename_label.pack(anchor="w")
-        filename_label.bind("<Button-1>", lambda e, p=code_file.path: self._open_in_editor(p))
-        
-        # Line count
+
+        # Line count + experiment badge row
+        info_frame = ttk.Frame(content_frame, style="CardRow.TFrame")
+        info_frame.pack(anchor="w", pady=(2, 0))
+
         line_text = f"{code_file.line_count:,} lines"
         ttk.Label(
-            content_frame,
+            info_frame,
             text=line_text,
             font=self.controller.fonts.text_area_font,
             foreground="gray",
             style="CardRow.TLabel"
-        ).pack(anchor="w", pady=(2, 0))
-        
+        ).pack(side="left")
+
+        # Show experiment badge if this file is the active experiment
+        is_experiment = self.experiment_file == code_file.filename
+        if is_experiment:
+            ttk.Label(
+                info_frame,
+                text="Experiment",
+                font=self.controller.fonts.text_area_font,
+                foreground="#2ecc71",
+                style="CardRow.TLabel"
+            ).pack(side="left", padx=(10, 0))
+
+        filename_label.bind("<Button-1>", lambda e, p=code_file.path: self._open_in_editor(p))
+
         # Remove button
         x_btn = self.controller.icons.create_icon_label(
             content_row,
@@ -371,7 +388,23 @@ class StartScreen(BaseFrame):
             command=lambda: self._remove_file(code_file.filename)
         )
         x_btn.pack(side="right", padx=(10, 0))
-        
+
+        # "Use as Experiment" / "Remove Experiment" button for .py files
+        if code_file.filename.endswith('.py'):
+            if is_experiment:
+                exp_btn = ttk.Button(
+                    content_row,
+                    text="Remove Experiment",
+                    command=lambda: self._deactivate_experiment()
+                )
+            else:
+                exp_btn = ttk.Button(
+                    content_row,
+                    text="Use as Experiment",
+                    command=lambda f=code_file: self._on_use_as_experiment_click(f)
+                )
+            exp_btn.pack(side="right", padx=(10, 0))
+
         return entry_frame
     
     def _load_existing_files(self):
@@ -476,12 +509,136 @@ class StartScreen(BaseFrame):
         removed = next((f for f in self.code_files if f.filename == filename), None)
         if removed:
             print(f"[StartScreen] Removed: {removed.filename}")
-            
+
             file_path = Path(removed.path)
             if file_path.exists():
                 file_path.unlink()
-        
+
+        # If the removed file was the experiment, deactivate it
+        if self.experiment_file == filename:
+            self._deactivate_experiment()
+
         self.code_files = [f for f in self.code_files if f.filename != filename]
+        self._refresh_files_list()
+
+    # ==================== User Experiment Methods ====================
+
+    def _on_use_as_experiment_click(self, code_file: CodeFile):
+        """Show confirmation popup before activating user experiment."""
+        confirmed = messagebox.askyesno(
+            "Use as Experiment",
+            f"Use '{code_file.filename}' as the experiment?\n\n"
+            "This will:\n"
+            "- Skip experiment plan generation\n"
+            "- Skip experiment code generation\n"
+            "- Run your file directly as the experiment\n\n"
+            "Requirements:\n"
+            "- The script must be runnable with Python\n"
+            "- Save plots to a 'plots/' subdirectory using PDF format\n"
+            "- Save results to 'results.json' in the working directory\n"
+            "- Use matplotlib with Agg backend (no GUI windows)\n"
+            "- Complete within the timeout (default 10 minutes)\n\n"
+            "The working directory will be 'output/experiments/'.\n"
+            "Your other uploaded code files will be copied there for imports.\n\n"
+            "Do you want to continue?"
+        )
+
+        if not confirmed:
+            return
+
+        # Run LLM check in background
+        self._run_experiment_code_check(code_file)
+
+    def _run_experiment_code_check(self, code_file: CodeFile):
+        """Run an LLM check on the user's code and show results before activation."""
+        popup = ProgressPopup(self.controller, "Checking experiment code")
+
+        def task():
+            try:
+                issues = self._llm_check_experiment_code(code_file)
+                self.after(0, lambda: self._on_code_check_complete(popup, code_file, issues))
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                # If LLM check fails, proceed anyway
+                self.after(0, lambda: self._on_code_check_complete(popup, code_file, None))
+
+        thread = threading.Thread(target=task, daemon=True)
+        thread.start()
+
+    def _llm_check_experiment_code(self, code_file: CodeFile) -> str | None:
+        """Use LLM to check if the code is suitable as an experiment. Returns issues string or None."""
+        import lmstudio as lms
+        from utils.llm_utils import remove_thinking_blocks
+
+        try:
+            with open(code_file.path, 'r', encoding='utf-8') as f:
+                code_content = f.read()
+        except Exception:
+            return None
+
+        system_prompt = (
+            "You check Python scripts for compatibility as automated scientific experiments.\n"
+            "The script will be executed headlessly via subprocess with cwd='output/experiments/'.\n\n"
+            "Check ONLY for these aspects:\n"
+            "1. Uses plt.show() or other GUI/display calls (should use Agg backend, no windows)\n"
+            "2. Saves files to absolute paths instead of relative paths\n"
+            "3. Missing 'plots/' directory usage or not saving figures as PDF format\n"
+            "4. Missing 'results.json' for saving metrics\n"
+            "5. Has interactive input (input(), sys.stdin, etc.)\n"
+            "6. Imports that are clearly unavailable in a standard Python environment (assume local imports from the working directory are available)\n\n"
+            "Respond with EXACTLY one of:\n"
+            "- 'OK' if nothing needs to be changed\n"
+            "- A SHORT bullet list of suggested improvements (max 5 lines). "
+            "Frame each point as an actionable suggestion, e.g. "
+            "'Add matplotlib.use(\"Agg\") before importing pyplot' instead of 'Uses plt.show()'"
+        )
+
+        try:
+            chat = lms.Chat(system_prompt)
+            chat.add_user_message(f"```python\n{code_content}\n```")
+            model = lms.llm(Settings.EXPERIMENT_VALIDATION_MODEL)
+            result = model.respond(chat, config={"temperature": 0.0, "timeout": 60})
+            response = remove_thinking_blocks(result.content).strip()
+            if response.upper() == "OK":
+                return None
+            return response
+        except Exception as e:
+            print(f"[StartScreen] LLM code check failed: {e}")
+            return None
+
+    def _on_code_check_complete(self, popup: ProgressPopup, code_file: CodeFile, issues: str | None):
+        """Handle LLM code check completion."""
+        popup.close()
+
+        if issues:
+            # Show suggestions and let user decide
+            proceed = messagebox.askyesno(
+                "Code Check Results",
+                f"Suggested improvements for '{code_file.filename}':\n\n"
+                f"{issues}\n\n"
+                "You can apply these changes before running the experiment.\n"
+                "Do you still want to use this file as the experiment?"
+            )
+            if not proceed:
+                return
+
+        self._activate_experiment(code_file)
+
+    def _activate_experiment(self, code_file: CodeFile):
+        """Set the given file as the user experiment."""
+        self.experiment_file = code_file.filename
+        Settings.USER_EXPERIMENT_FILE = code_file.filename
+        Settings.save_to_file()
+        print(f"[StartScreen] Activated user experiment: {code_file.filename}")
+        self._refresh_files_list()
+
+    def _deactivate_experiment(self):
+        """Remove the user experiment selection."""
+        self.experiment_file = None
+        Settings.USER_EXPERIMENT_FILE = ""
+        Settings.save_to_file()
+        print("[StartScreen] Deactivated user experiment")
         self._refresh_files_list()
 
     # ==================== Utility Methods ====================

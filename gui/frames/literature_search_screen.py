@@ -7,7 +7,7 @@ import re
 from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Callable, Any, Optional
-from ..base_frame import BaseFrame, ProgressPopup, create_gray_button
+from ..base_frame import BaseFrame, ProgressPopup
 from ..icons import HoverColor
 from ..info_texts import LITERATURE_SEARCH_INFO
 from ..theme_colors import CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT, MUTED_TEXT

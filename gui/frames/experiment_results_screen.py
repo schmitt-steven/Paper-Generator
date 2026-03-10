@@ -20,6 +20,7 @@ from phases.experimentation.experiment_runner import ExperimentRunner
 from phases.context_analysis.research_context_generator import ResearchContextGenerator
 from phases.context_analysis.paper_specification import PaperSpecification
 from phases.paper_writing.paper_writing_pipeline import PaperWritingPipeline
+from settings import Settings
 
 
 PAPER_DRAFT_FILE = Path("output/paper_draft.md")
@@ -433,6 +434,12 @@ class ExperimentResultsScreen(BaseFrame):
         self.cards = []
         self.current_code_path = None
 
+    def on_back(self):
+        """Override back navigation to skip ExperimentPlanScreen when user experiment is active."""
+        if Settings.USER_EXPERIMENT_FILE:
+            self.controller.current_screen_index -= 1  # skip plan screen
+        super().on_back()
+
     def create_content(self):
         self.results_container = ttk.Frame(self.scrollable_frame, style="Scrollable.TFrame")
         self.results_container.pack(fill="x", expand=True)
@@ -707,14 +714,45 @@ class ExperimentResultsScreen(BaseFrame):
         self.controller.apply_theme_colors(self)
 
     def on_show(self):
+        # If user experiment is active and no results exist yet, auto-run it
+        experiment_result_file = Path("output/experiments/experiment_result.json")
+        if Settings.USER_EXPERIMENT_FILE and not experiment_result_file.exists():
+            self._run_user_experiment()
+            return
+
         if not hasattr(self, '_results_loaded') or not self._results_loaded:
             self._load_and_display_results()
             self._results_loaded = True
-            
+
         # Update next button text based on paper draft existence
         paper_draft_file = Path("output/paper_draft.md")
         next_text = "Continue" if paper_draft_file.exists() else "Write Paper"
         self.set_next_text(next_text)
+
+    def _run_user_experiment(self):
+        """Run the user-provided experiment file."""
+        popup = ProgressPopup(self.controller, "Running User Experiment")
+
+        def task():
+            try:
+                def status_callback(status: str):
+                    self.after(0, lambda s=status: popup.update_status(s))
+
+                ExperimentRunner.run_user_experiment(status_callback=status_callback)
+                self.after(0, lambda: self._on_user_experiment_success(popup))
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                self.after(0, lambda err=str(e): popup.show_error(err))
+
+        threading.Thread(target=task, daemon=True).start()
+
+    def _on_user_experiment_success(self, popup):
+        """Handle successful user experiment completion."""
+        popup.close()
+        self._results_loaded = False
+        self._load_and_display_results()
+        self.controller.apply_theme_colors(self)
             
     def on_next(self):
         from pathlib import Path
@@ -748,23 +786,32 @@ class ExperimentResultsScreen(BaseFrame):
         self.controller.next_screen()
 
     def on_regenerate(self):
-        if not tk.messagebox.askyesno("Regenerate", "Re-run the experiment from scratch?\nThis will generate and execute new code based on the current experiment plan."):
+        is_user_experiment = bool(Settings.USER_EXPERIMENT_FILE)
+        confirm_msg = (
+            "Re-run your experiment file?\nThis will execute your code again."
+            if is_user_experiment else
+            "Re-run the experiment from scratch?\nThis will generate and execute new code based on the current experiment plan."
+        )
+        if not tk.messagebox.askyesno("Regenerate", confirm_msg):
             return
-        
-        popup = ProgressPopup(self.controller, "Regenerating Experiment")
-        
+
+        popup = ProgressPopup(self.controller, "Running Experiment" if is_user_experiment else "Regenerating Experiment")
+
         def task():
             try:
                 def status_callback(status: str):
                     self.after(0, lambda s=status: popup.update_status(s))
-                
-                ExperimentRunner.run_new_experiment(status_callback=status_callback)
+
+                if is_user_experiment:
+                    ExperimentRunner.run_user_experiment(status_callback=status_callback)
+                else:
+                    ExperimentRunner.run_new_experiment(status_callback=status_callback)
                 self.after(0, lambda: self._on_rerun_success(popup))
             except Exception as e:
                 import traceback
                 traceback.print_exc()
                 self.after(0, lambda err=str(e): popup.show_error(err))
-        
+
         threading.Thread(target=task, daemon=True).start()
 
     def _on_rerun_success(self, popup):

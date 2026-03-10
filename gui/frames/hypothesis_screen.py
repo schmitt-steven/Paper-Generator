@@ -187,7 +187,14 @@ class HypothesisScreen(BaseFrame):
         if self.current_hypothesis is None:
             super().on_next()
             return
-        
+
+        # If user experiment is active, skip plan generation and plan screen entirely
+        if Settings.USER_EXPERIMENT_FILE:
+            # Skip ExperimentPlanScreen -> go directly to ExperimentResultsScreen
+            self.controller.current_screen_index += 1  # skip plan screen
+            super().on_next()
+            return
+
         # Check if output exists
         if EXPERIMENT_PLAN_FILE.exists():
             super().on_next()

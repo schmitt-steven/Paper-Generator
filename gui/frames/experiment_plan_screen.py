@@ -18,6 +18,7 @@ from phases.context_analysis.research_context_generator import ResearchContextGe
 from phases.experimentation.experiment_runner import ExperimentRunner
 from phases.context_analysis.paper_specification import PaperSpecification
 from phases.context_analysis.user_code_analysis import CodeAnalyzer
+from .experiment_results_screen import ExperimentResultsScreen
 from settings import Settings
 
 
@@ -250,11 +251,17 @@ class ExperimentPlanScreen(BaseFrame):
     
     def on_show(self):
         """Called when screen is shown - load plan if not already loaded."""
+        # If user experiment is active, skip this screen entirely
+        if Settings.USER_EXPERIMENT_FILE:
+            self.controller.current_screen_index += 1
+            self.controller.show_frame(ExperimentResultsScreen)
+            return
+
         if not self.cards: # Reload if no cards shown
             plan_path = Path(EXPERIMENTS_DIR) / EXPERIMENT_PLAN_FILE
             if plan_path.exists():
                 self._load_plan()
-        
+                
         # Update next button text based on result existence
         experiment_result_file = Path("output/experiments/experiment_result.json")
         next_text = "Continue" if experiment_result_file.exists() else "Run Experiment"

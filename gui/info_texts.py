@@ -111,6 +111,35 @@ For the best results during the experimentation phase, follow these guidelines:
 - **Importability**: Ensure your code can be imported without executing immediate side effects (use `if __name__ == "__main__":` for scripts).
 """
 
+USER_EXPERIMENT_INFO = """\
+## Bring Your Own Experiment
+
+You can use one of your uploaded Python files as the experiment, \
+skipping both experiment plan generation and experiment code generation.
+
+Your script will be executed directly via Python subprocess.
+
+### Requirements
+
+- **Python only**: The file must be a `.py` file.
+- **Headless execution**: Avoid GUI windows, `plt.show()` or similar. Use `matplotlib.use('Agg')` before importing pyplot.
+- **Save plots** to a `plots/` subdirectory (relative path). Use **PDF** as the file format.
+- **Save results** to `results.json` in the working directory.
+- **Use relative paths**: The working directory is `output/experiments/`. All file I/O should use relative paths.
+- **No interactive input**: No `input()`, `sys.stdin`, or similar.
+- **Finish within 10 minutes**: The execution has a default 600-second timeout. You can change this in the code.
+- **Importable files**: Your other uploaded code files will be copied to the working directory, so the script can import from them.
+
+### What Gets Skipped
+
+When a user experiment is active:
+1. Experiment plan generation is skipped.
+2. Experiment code generation is skipped.
+3. Your code files are copied to `output/experiments/` and the experiment script executed directly.
+
+The validation, plot captioning and verdict generation steps still run normally.
+"""
+
 PAPER_SPECIFICATION_INFO = """\
 Specify the topic of your paper and requirements for the sections of the paper here.
 

@@ -130,9 +130,6 @@ class ResultScreen(BaseFrame):
         """Called when the screen is shown."""
         self.show_preview()
 
-    def show_preview(self):
-        """Render PDF pages as images in the preview container."""
-        # Clear existing
     def _update_preview_scrollregion(self, event=None):
         self.preview_scroll_canvas.configure(scrollregion=self.preview_scroll_canvas.bbox("all"))
 
@@ -174,6 +171,10 @@ class ResultScreen(BaseFrame):
 
     def show_preview(self):
         """Render PDF pages as images in the preview container."""
+        # Guard against destroyed widget (e.g. after reload_content rebuilt the frame)
+        if not self.preview_inner_frame.winfo_exists():
+            return
+
         # Clear existing
         for widget in self.preview_inner_frame.winfo_children():
             widget.destroy()

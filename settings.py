@@ -51,6 +51,9 @@ class Settings:
     # LaTeX Generation Phase
     LATEX_GENERATION_MODEL = "qwen/qwen3-next-80b"
 
+    # User Experiment
+    USER_EXPERIMENT_FILE = ""  # Path to user-provided experiment file (bypasses plan + code generation)
+
     # UI Settings
     FONT_SIZE = FontSize.SMALL
     DARK_MODE = False
@@ -106,6 +109,7 @@ class Settings:
                 "LATEX_TEMPLATE": cls.LATEX_TEMPLATE,
                 "GENERATE_ACKNOWLEDGEMENTS": cls.GENERATE_ACKNOWLEDGEMENTS,
                 "CRITIC_MAX_SEARCH_QUERIES": cls.CRITIC_MAX_SEARCH_QUERIES,
+                "USER_EXPERIMENT_FILE": cls.USER_EXPERIMENT_FILE,
             }
             
             # Update string values

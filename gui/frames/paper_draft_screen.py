@@ -3,7 +3,7 @@ from tkinter import ttk
 import threading
 from pathlib import Path
 
-from ..base_frame import BaseFrame, ProgressPopup, create_scrollable_text_area, CardBorderFrame
+from ..base_frame import BaseFrame, ProgressPopup, CardBorderFrame
 from ..markdown_view import MarkdownView
 from ..info_texts import PAPER_DRAFT_INFO
 from ..theme_colors import (
