@@ -5,7 +5,7 @@ import re
 import shutil
 import subprocess
 from dataclasses import dataclass
-from typing import Optional, Any, List, Set, Callable
+from typing import Optional, Any, List, Callable
 from pathlib import Path
 from settings import Settings
 from phases.paper_search.paper import Paper

@@ -1,6 +1,6 @@
 import re
 import textwrap
-from typing import Set, List, Dict
+from typing import List, Dict
 from phases.paper_search.paper import Paper
 from phases.paper_writing.data_models import PaperDraft
 

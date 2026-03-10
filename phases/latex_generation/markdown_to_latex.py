@@ -1,5 +1,6 @@
 """LLM-based markdown to LaTeX conversion."""
 
+import re
 import textwrap
 import lmstudio as lms
 from phases.paper_writing.data_models import Section
@@ -220,7 +221,10 @@ class MarkdownToLaTeX:
         
         # Convert Unicode characters to LaTeX equivalents
         latex_text = MarkdownToLaTeX._convert_unicode_to_latex(latex_text)
-        
+
+        # Escape special characters that the LLM missed
+        latex_text = MarkdownToLaTeX._escape_special_chars_outside_math(latex_text)
+
         return latex_text
 
     @staticmethod
@@ -228,6 +232,76 @@ class MarkdownToLaTeX:
         """Convert Unicode Greek letters and math symbols to LaTeX equivalents."""
         for unicode_char, latex_equiv in MarkdownToLaTeX.UNICODE_TO_LATEX.items():
             text = text.replace(unicode_char, latex_equiv)
+        return text
+
+    # Characters that must be escaped in LaTeX text mode (not in math/commands).
+    # Maps bare char -> escaped form. Order matters: backslash is not included
+    # since escaping bare backslashes in LLM output is too risky (likely already a command).
+    _SPECIAL_CHARS = {
+        '_': r'\_',
+        '&': r'\&',
+        '%': r'\%',
+        '#': r'\#',
+    }
+
+    @staticmethod
+    def _escape_special_chars_outside_math(text: str) -> str:
+        """Escape LaTeX special characters that appear in text mode.
+
+        Splits the input into protected regions (math mode, LaTeX commands
+        with braced arguments, and verbatim/lstlisting environments) vs.
+        plain text regions.  Only plain text regions are checked for
+        unescaped special characters.
+        """
+        # Pattern to identify regions where special chars are valid and should be left alone:
+        #  - $$ ... $$  (display math)
+        #  - $ ... $    (inline math)
+        #  - \command{...} (commands with braced args — one level of braces)
+        #  - \begin{lstlisting}...\end{lstlisting}
+        #  - \begin{verbatim}...\end{verbatim}
+        #  - \url{...}  (already caught by command pattern but listed for clarity)
+        protected_pattern = re.compile(
+            r'\\begin\{(?:lstlisting|verbatim)\}.*?\\end\{(?:lstlisting|verbatim)\}'  # verbatim envs
+            r'|'
+            r'\$\$.*?\$\$'          # display math
+            r'|'
+            r'\$[^$]+?\$'           # inline math
+            r'|'
+            r'\\[a-zA-Z]+\*?\{[^}]*\}'  # \command{...} (single-level braces)
+            r'|'
+            r'\\[a-zA-Z]+'          # bare commands like \textbf (no braces)
+            r'|'
+            r'\\.',                 # escaped char like \_ \& \% \#
+            re.DOTALL
+        )
+
+        parts = []
+        last_end = 0
+
+        for match in protected_pattern.finditer(text):
+            start, end = match.span()
+            # Process the unprotected text before this match
+            if start > last_end:
+                parts.append(
+                    MarkdownToLaTeX._escape_text_region(text[last_end:start])
+                )
+            # Keep the protected region as-is
+            parts.append(match.group())
+            last_end = end
+
+        # Process any remaining unprotected text after the last match
+        if last_end < len(text):
+            parts.append(
+                MarkdownToLaTeX._escape_text_region(text[last_end:])
+            )
+
+        return ''.join(parts)
+
+    @staticmethod
+    def _escape_text_region(text: str) -> str:
+        """Escape special characters in a plain-text region."""
+        for char, escaped in MarkdownToLaTeX._SPECIAL_CHARS.items():
+            text = text.replace(char, escaped)
         return text
 
 

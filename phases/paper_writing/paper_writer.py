@@ -249,6 +249,7 @@ class PaperWriter:
         paper_specification: Optional[PaperSpecification] = None,
         temperature: float = 0.2,
         next_section_type: Optional[Section] = None,
+        section_order: Optional[Sequence[Section]] = None,
     ) -> str:
         """Generate initial section draft using paper catalog (not chunked evidence)."""
         model = lms.llm(Settings.PAPER_WRITING_MODEL)
@@ -260,6 +261,7 @@ class PaperWriter:
             previous_sections,
             paper_specification,
             next_section_type,
+            section_order,
         )
 
         response = model.respond(
@@ -281,6 +283,7 @@ class PaperWriter:
         paper_specification: Optional[PaperSpecification] = None,
         temperature: float = 0.2,
         next_section_type: Optional[Section] = None,
+        section_order: Optional[Sequence[Section]] = None,
     ) -> str:
         """Rewrite a section using the critique feedback and new evidence."""
         model = lms.llm(Settings.PAPER_WRITING_MODEL)
@@ -296,6 +299,7 @@ class PaperWriter:
             paper_specification,
             temperature,
             next_section_type,
+            section_order,
         )
         response = model.respond(
             prompt,
@@ -312,32 +316,43 @@ class PaperWriter:
         previous_sections: Optional[dict[Section, str]] = None,
         paper_specification: Optional[PaperSpecification] = None,
         next_section_type: Optional[Section] = None,
+        section_order: Optional[Sequence[Section]] = None,
     ) -> str:
         """Build prompt for initial section draft using paper catalog."""
-        
+
         guidelines = self.get_section_guidelines(section_type, experiment)
         context_block = self._format_context(context, experiment)
         paper_catalog = self._format_paper_catalog(papers)
         previous_sections_block = self._format_previous_sections(section_type, previous_sections or {})
-        
+        paper_structure_block = self._format_paper_structure(section_type, section_order)
+
         # Get section-specific paper specification if available
         paper_spec_block = self._get_paper_spec_block(section_type, paper_specification)
-        
+
         # Paper title if provided by user
         title_section = ""
         if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
             title_section = f"[PAPER TITLE]\n{Settings.LATEX_TITLE}\n\n"
-        
-        # Forward Look Instruction
-        forward_look_block = ""
-        if next_section_type:
-            forward_look_block = f"""
-[FORWARD LOOK]
-You are writing the {section_type.value} section.
-The NEXT section will be: {next_section_type.value}.
-INSTRUCTION: wrap up the current section appropriately, but STOP before you discuss the topics reserved for the {next_section_type.value} section.
-Transitions are fine, but do not steal the content of the next section.
-"""
+
+        # Paper structure and forward look
+        structure_block = ""
+        if paper_structure_block:
+            structure_block = f"[PAPER STRUCTURE]\n{paper_structure_block}\n"
+            if next_section_type:
+                structure_block += (
+                    f"\nYou are writing the {section_type.value} section. "
+                    f"The NEXT section will be: {next_section_type.value}. "
+                    f"Wrap up the current section appropriately, but STOP before you discuss topics reserved for the {next_section_type.value} section. "
+                    "Transitions are fine, but do not steal the content of the next section.\n"
+                )
+        elif next_section_type:
+            structure_block = (
+                f"[FORWARD LOOK]\n"
+                f"You are writing the {section_type.value} section. "
+                f"The NEXT section will be: {next_section_type.value}. "
+                f"Wrap up the current section appropriately, but STOP before you discuss topics reserved for the {next_section_type.value} section. "
+                "Transitions are fine, but do not steal the content of the next section.\n"
+            )
 
         return f"""\
 [ROLE]
@@ -365,7 +380,7 @@ The following papers are available for citation. Use their citation keys in squa
 [STYLE GUIDELINES]
 {guidelines}
 
-{forward_look_block}
+{structure_block}
 
 [WRITING REQUIREMENTS — STRICT]
 - Produce a cohesive, original, publication-quality academic narrative.
@@ -402,33 +417,44 @@ The following papers are available for citation. Use their citation keys in squa
         paper_specification: Optional[PaperSpecification] = None,
         temperature: float = 0.2,
         next_section_type: Optional[Section] = None,
+        section_order: Optional[Sequence[Section]] = None,
     ) -> str:
         """Build prompt for rewriting a section with critique and new evidence."""
-        
+
         guidelines = self.get_section_guidelines(section_type, experiment)
         context_block = self._format_context(context, experiment)
         paper_catalog = self._format_paper_catalog(papers)
         evidence_block = self._format_evidence_for_prompt(new_evidence)
         previous_sections_block = self._format_previous_sections(section_type, previous_sections or {})
         paper_spec_block = self._get_paper_spec_block(section_type, paper_specification)
-        
+        paper_structure_block = self._format_paper_structure(section_type, section_order)
+
         improvements_text = critique.improvements
-        
+
         # Paper title if provided by user
         title_section = ""
         if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
             title_section = f"[PAPER TITLE]\n{Settings.LATEX_TITLE}\n\n"
-        
-        # Forward Look Instruction
-        forward_look_block = ""
-        if next_section_type:
-            forward_look_block = f"""
-[FORWARD LOOK]
-You are writing the {section_type.value} section.
-The NEXT section will be: {next_section_type.value}.
-INSTRUCTION: wrap up the current section appropriately, but STOP before you discuss the topics reserved for the {next_section_type.value} section.
-Transitions are fine, but do not steal the content of the next section.
-"""
+
+        # Paper structure and forward look
+        structure_block = ""
+        if paper_structure_block:
+            structure_block = f"[PAPER STRUCTURE]\n{paper_structure_block}\n"
+            if next_section_type:
+                structure_block += (
+                    f"\nYou are writing the {section_type.value} section. "
+                    f"The NEXT section will be: {next_section_type.value}. "
+                    f"Wrap up the current section appropriately, but STOP before you discuss topics reserved for the {next_section_type.value} section. "
+                    "Transitions are fine, but do not steal the content of the next section.\n"
+                )
+        elif next_section_type:
+            structure_block = (
+                f"[FORWARD LOOK]\n"
+                f"You are writing the {section_type.value} section. "
+                f"The NEXT section will be: {next_section_type.value}. "
+                f"Wrap up the current section appropriately, but STOP before you discuss topics reserved for the {next_section_type.value} section. "
+                "Transitions are fine, but do not steal the content of the next section.\n"
+            )
 
         return f"""\
 [ROLE]
@@ -449,7 +475,7 @@ Rewrite the {section_type.value} section, addressing the suggested improvements 
 {improvements_text}
 
 [NEW EVIDENCE]
-{evidence_block if evidence_block else 'No additional evidence retrieved.'}
+{self._format_new_evidence_block(evidence_block)}
 
 {title_section}[RESEARCH CONTEXT]
 {context_block}
@@ -463,7 +489,7 @@ Rewrite the {section_type.value} section, addressing the suggested improvements 
 [STYLE GUIDELINES]
 {guidelines}
 
-{forward_look_block}
+{structure_block}
 
 [WRITING REQUIREMENTS — STRICT]
 - Address ALL suggested improvements.
@@ -487,16 +513,56 @@ Rewrite the {section_type.value} section, addressing the suggested improvements 
 """
 
     @staticmethod
+    def _format_paper_structure(
+        current_section: Section,
+        section_order: Optional[Sequence[Section]] = None,
+    ) -> str:
+        """Format the full paper structure, marking the current section."""
+        if not section_order:
+            return ""
+
+        lines = []
+        for section in section_order:
+            if section == current_section:
+                lines.append(f"  → {section.value}  ← (CURRENT)")
+            else:
+                lines.append(f"  - {section.value}")
+        return "\n".join(lines)
+
+    @staticmethod
+    def _format_new_evidence_block(evidence_block: str) -> str:
+        """Format the new evidence block for the rewrite prompt."""
+        if not evidence_block:
+            return "No additional evidence retrieved."
+        return (
+            "The following evidence was retrieved based on the critic's analysis of your initial draft. "
+            "The critic identified gaps or areas that could benefit from additional supporting material, "
+            "and these passages were found in response to those needs. "
+            "Incorporate them where they strengthen the narrative.\n\n"
+            + evidence_block
+        )
+
+    @staticmethod
+    def _normalize_text(text: str) -> str:
+        """Remove PDF extraction artifacts like mid-sentence line breaks."""
+        import re
+        # Replace single newlines (not paragraph breaks) with spaces
+        text = re.sub(r'(?<!\n)\n(?!\n)', ' ', text)
+        # Collapse multiple spaces
+        text = re.sub(r' {2,}', ' ', text)
+        return text.strip()
+
+    @staticmethod
     def _format_paper_catalog(papers: Sequence[Paper]) -> str:
         """Format papers as a catalog for prompts."""
         if not papers:
             return "No papers available."
-        
+
         items = []
         for paper in papers:
             citation_key = paper.citation_key or "unknown"
-            abstract = paper.summary or "No abstract available."
-            conclusion = paper.conclusion or ""
+            abstract = PaperWriter._normalize_text(paper.summary or "No abstract available.")
+            conclusion = PaperWriter._normalize_text(paper.conclusion or "")
 
             # Truncate long abstracts
             abstract_truncated = abstract[:500] + "..." if len(abstract) > 500 else abstract
@@ -511,7 +577,7 @@ Rewrite the {section_type.value} section, addressing the suggested improvements 
                 conclusion_truncated = conclusion[:500] + "..." if len(conclusion) > 500 else conclusion
                 lines.append(f"Conclusion: {conclusion_truncated}")
 
-            items.append("\n\n".join(lines))
+            items.append("\n".join(lines))
 
         return "\n\n".join(items)
 

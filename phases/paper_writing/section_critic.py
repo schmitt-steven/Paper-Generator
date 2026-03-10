@@ -32,6 +32,8 @@ class SectionCritic:
         papers: Sequence[Paper],
         max_queries: Optional[int] = None,
         paper_specification: Optional[PaperSpecification] = None,
+        previous_sections: Optional[dict[Section, str]] = None,
+        section_order: Optional[Sequence[Section]] = None,
     ) -> SectionCritique:
         """Analyze a draft section and return structured critique."""
         if max_queries is None:
@@ -39,7 +41,8 @@ class SectionCritic:
 
         model = lms.llm(Settings.PAPER_WRITING_MODEL)
         prompt = self._build_critique_prompt(
-            section_type, draft_text, papers, max_queries, paper_specification
+            section_type, draft_text, papers, max_queries, paper_specification,
+            previous_sections or {}, section_order,
         )
         
         response = model.respond(
@@ -90,10 +93,14 @@ class SectionCritic:
         papers: Sequence[Paper],
         max_queries: int,
         paper_specification: Optional[PaperSpecification] = None,
+        previous_sections: Optional[dict[Section, str]] = None,
+        section_order: Optional[Sequence[Section]] = None,
     ) -> str:
         """Build the prompt for section critique."""
         
         paper_catalog = self._format_paper_catalog(papers)
+        paper_structure_block = self._format_paper_structure(section_type, section_order)
+        previous_sections_block = self._format_previous_sections(previous_sections or {})
 
         # Get style guidelines
         guidelines = SectionGuidelinesLoader.get_guidelines(section_type)
@@ -137,10 +144,17 @@ CRITICAL: Check if the draft satisfies these paper specifications. If not, add s
             Analyze the draft {section_type.value} section and identify:
             1. Violations of style guidelines (HIGHEST PRIORITY)
             2. Areas that need improvement (use positive framing - what to add/change, not what's wrong)
-            3. Search queries to find additional supporting evidence (max {max_queries} queries)
+            3. Cross-section issues: redundancy, coherence, consistency with previously written sections
+            4. Search queries to find additional supporting evidence (max {max_queries} queries)
 
             [SECTION TYPE]
             {section_type.value}
+
+            [PAPER STRUCTURE]
+            {paper_structure_block}
+
+            [PREVIOUSLY WRITTEN SECTIONS]
+            {previous_sections_block}
 
             [STYLE GUIDELINES]
             These are the official guidelines for this section. Check for violations:
@@ -158,26 +172,67 @@ CRITICAL: Check if the draft satisfies these paper specifications. If not, add s
             [INSTRUCTIONS]
             1. Check for guideline violations (e.g., citations in Abstract, word count limits)
             2. Verify all citation keys exist in [AVAILABLE PAPERS]; flag missing ones
-            3. Suggest improvements: be concise, actionable, 1 sentence each
-            4. Generate focused search queries for missing evidence (max {max_queries}).
+            3. Check for duplicate explanations: compare the draft against [PREVIOUSLY WRITTEN SECTIONS] and identify any concept, mechanism, or process that is explained in both. A concept should be explained in detail ONCE (typically in Methods), and other sections should reference it briefly without re-explaining. Quote the duplicate passages from each section.
+            4. Check cross-section coherence: flag inconsistent terminology (e.g., same thing called different names across sections), contradictory claims, or mismatched framing between sections
+            5. Consider the full paper structure: ensure this section fulfills its role without overlapping with upcoming sections
+            6. Suggest improvements: be concise, actionable, 1 sentence each
+            7. Generate focused search queries for missing evidence (max {max_queries}).
                {query_limit_note}
 
             [OUTPUT FORMAT]
             Return JSON with:
-            - improvements: concise text with all suggestions (guideline violations first)
+            - improvements: concise text with all suggestions (guideline violations first, then duplicate/cross-section issues with quoted passages, then other improvements)
             - search_queries: list of query strings (max {max_queries})""")
+
+    @staticmethod
+    def _format_paper_structure(
+        current_section: Section,
+        section_order: Optional[Sequence[Section]] = None,
+    ) -> str:
+        """Format the full paper structure, marking the current section and written/upcoming status."""
+        if not section_order:
+            return "Not available."
+
+        lines = []
+        for section in section_order:
+            if section == current_section:
+                lines.append(f"  → {section.value}  ← (CURRENT - under review)")
+            else:
+                lines.append(f"  - {section.value}")
+        return "\n".join(lines)
+
+    @staticmethod
+    def _format_previous_sections(previous_sections: dict[Section, str]) -> str:
+        """Format previously written sections for cross-section review."""
+        if not previous_sections:
+            return "No sections written yet."
+
+        parts = []
+        for section, text in previous_sections.items():
+            parts.append(f"--- {section.value} ---\n{text}")
+        return "\n\n".join(parts)
+
+    @staticmethod
+    def _normalize_text(text: str) -> str:
+        """Remove PDF extraction artifacts like mid-sentence line breaks."""
+        import re
+        # Replace single newlines (not paragraph breaks) with spaces
+        text = re.sub(r'(?<!\n)\n(?!\n)', ' ', text)
+        # Collapse multiple spaces
+        text = re.sub(r' {2,}', ' ', text)
+        return text.strip()
 
     @staticmethod
     def _format_paper_catalog(papers: Sequence[Paper]) -> str:
         """Format papers as a catalog for the critique prompt."""
         if not papers:
             return "No papers available."
-        
+
         items = []
         for paper in papers:
             citation_key = paper.citation_key or "unknown"
-            abstract = paper.summary or "No abstract available."
-            conclusion = paper.conclusion or "No conclusion extracted."
+            abstract = SectionCritic._normalize_text(paper.summary or "No abstract available.")
+            conclusion = SectionCritic._normalize_text(paper.conclusion or "No conclusion extracted.")
 
             lines = [
                 f"[{citation_key}]",

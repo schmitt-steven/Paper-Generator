@@ -204,6 +204,7 @@ class PaperWritingPipeline:
                     previous_sections=sections,
                     paper_specification=paper_specification,
                     next_section_type=next_section_type,
+                    section_order=section_order,
                 )
                 prompts_by_section[section_type.value] = prompt
                 
@@ -215,6 +216,7 @@ class PaperWritingPipeline:
                     previous_sections=sections,
                     paper_specification=paper_specification,
                     next_section_type=next_section_type,
+                    section_order=section_order,
                 )
                 print(f"    Draft complete ({len(section_draft_v1)} chars)")
                 
@@ -229,6 +231,8 @@ class PaperWritingPipeline:
                     papers=papers,
                     max_queries=max_critique_queries,
                     paper_specification=paper_specification,
+                    previous_sections=sections,
+                    section_order=section_order,
                 )
                 print(f"    Critique: {len(critique.improvements)} chars, {len(critique.search_queries)} queries")
                 
@@ -271,6 +275,7 @@ class PaperWritingPipeline:
                     previous_sections=sections,
                     paper_specification=paper_specification,
                     next_section_type=next_section_type,
+                    section_order=section_order,
                 )
                 rewrite_prompts_by_section[section_type.value] = rewrite_prompt
 
@@ -285,6 +290,7 @@ class PaperWritingPipeline:
                     previous_sections=sections,
                     paper_specification=paper_specification,
                     next_section_type=next_section_type,
+                    section_order=section_order,
                 )
                 
                 sections[section_type] = final_section

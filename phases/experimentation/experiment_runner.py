@@ -1721,6 +1721,217 @@ Do NOT do this:
         return experiment_plan
 
     @staticmethod
+    def run_user_experiment(status_callback: callable = None) -> "ExperimentResult":
+        """
+        Run a user-provided experiment file, skipping plan and code generation.
+
+        This handles:
+        1. Loading hypothesis
+        2. Copying user experiment file to output/experiments/experiment.py
+        3. Copying other user code files for imports
+        4. Executing the experiment
+        5. Running validation, plot captioning, and verdict determination
+        6. Saving the result
+
+        Args:
+            status_callback: Optional callback function(str) for progress updates.
+
+        Returns:
+            The ExperimentResult object.
+        """
+        import shutil
+
+        if status_callback:
+            status_callback("Loading hypothesis")
+        hypothesis = HypothesisBuilder.load_hypothesis("output/hypothesis.md")
+        if hypothesis is None:
+            raise ValueError("No hypothesis found")
+
+        user_experiment_file = Settings.USER_EXPERIMENT_FILE
+        if not user_experiment_file:
+            raise ValueError("No user experiment file configured")
+
+        src_path = Path("user_files") / user_experiment_file
+        if not src_path.exists():
+            raise FileNotFoundError(f"User experiment file not found: {src_path}")
+
+        runner = ExperimentRunner()
+        output_dir = runner.base_output_dir
+
+        # Ensure output directory and plots dir exist
+        os.makedirs(output_dir, exist_ok=True)
+        plots_dir = os.path.join(output_dir, "plots")
+        if os.path.exists(plots_dir):
+            for file in os.listdir(plots_dir):
+                file_path_to_del = os.path.join(plots_dir, file)
+                try:
+                    if os.path.isfile(file_path_to_del):
+                        os.unlink(file_path_to_del)
+                except Exception as e:
+                    print(f"Warning: Failed to delete {file_path_to_del}: {e}")
+        else:
+            os.makedirs(plots_dir, exist_ok=True)
+
+        # Copy user code files to experiment directory for imports
+        if status_callback:
+            status_callback("Copying code files")
+        user_code = None
+        try:
+            code_analyzer = CodeAnalyzer(model_name=Settings.CODE_ANALYSIS_MODEL)
+            user_code = code_analyzer.load_code_files("user_files")
+            if user_code:
+                # Clean old user code files
+                for existing_file in os.listdir(output_dir):
+                    if existing_file.endswith('.py') and existing_file != 'experiment.py':
+                        try:
+                            os.unlink(os.path.join(output_dir, existing_file))
+                        except Exception:
+                            pass
+                # Copy all user code files
+                for code_file in user_code:
+                    dest = os.path.join(output_dir, code_file.file_name)
+                    try:
+                        shutil.copy2(code_file.file_path, dest)
+                    except Exception as e:
+                        print(f"Error copying {code_file.file_name}: {e}")
+        except Exception as e:
+            print(f"Warning: Failed to load user code files: {e}")
+
+        # Copy the experiment file as experiment.py
+        if status_callback:
+            status_callback("Preparing experiment")
+        code_file_path = os.path.join(output_dir, "experiment.py")
+        code_file_path = os.path.abspath(code_file_path)
+        shutil.copy2(str(src_path), code_file_path)
+        print(f"[UserExperiment] Copied {src_path} -> {code_file_path}")
+
+        # Create a simple experiment plan marker
+        experiment_plan = f"User-provided experiment: {user_experiment_file}\n\nThis experiment was provided by the user and executed directly without plan or code generation."
+        runner.save_experiment_plan(experiment_plan)
+
+        # Execute
+        if status_callback:
+            status_callback("Executing experiment")
+        execution_result = runner.executor.execute_file(code_file_path, output_dir=output_dir)
+
+        # Fix loop if execution failed
+        total_fix_attempts = 0
+        max_fix_attempts = 5
+        fix_attempt = 0
+        fix_chat = None
+        while execution_result.return_code != 0 and fix_attempt < max_fix_attempts:
+            fix_attempt += 1
+            total_fix_attempts += 1
+            if status_callback:
+                status_callback(f"Fixing code errors (attempt {fix_attempt}/{max_fix_attempts})")
+            error_message = execution_result.stderr or "Unknown error"
+            fix_result, fix_chat = runner._fix_experiment_code(
+                code_file_path,
+                error_message,
+                execution_result.stdout,
+                execution_result.stderr,
+                hypothesis,
+                output_dir,
+                user_code=user_code,
+                chat=fix_chat,
+                fix_attempt=fix_attempt,
+                max_attempts=max_fix_attempts
+            )
+            execution_result = fix_result
+
+        # Validation, plot captions, verdict (reuse existing logic)
+        verdict = "inconclusive"
+        reasoning = ""
+        plot_captions = []
+        validation_result = None
+        total_validation_attempts = 0
+
+        if execution_result.return_code == 0:
+            # Validate
+            if status_callback:
+                status_callback("Validating experiment results")
+            max_validation_attempts = 3
+            validation_attempt = 0
+            validation_passed = False
+            while not validation_passed and validation_attempt < max_validation_attempts:
+                validation_attempt += 1
+                total_validation_attempts += 1
+                validation_result = runner._validate_experiment_results(
+                    execution_result, experiment_plan, hypothesis, code_file_path, user_code=user_code
+                )
+                if validation_result.is_valid:
+                    validation_passed = True
+                else:
+                    if validation_attempt < max_validation_attempts:
+                        if status_callback:
+                            status_callback("Improving code based on feedback")
+                        improvement_result = runner._improve_experiment_code(
+                            code_file_path, validation_result, hypothesis, output_dir, user_code=user_code
+                        )
+                        execution_result = improvement_result
+                        if execution_result.return_code != 0:
+                            break
+
+            if execution_result.return_code == 0:
+                # Plot captions
+                if execution_result.plot_files:
+                    if status_callback:
+                        status_callback("Generating plot captions")
+                    plot_captions = runner._generate_plot_captions(
+                        execution_result.plot_files, hypothesis, experiment_plan, execution_result.stdout
+                    )
+                # Verdict
+                if status_callback:
+                    status_callback("Determining verdict")
+                stdout_summary = execution_result.stdout
+                if len(stdout_summary) > 2000:
+                    stdout_summary = stdout_summary[:500] + "\n...[truncated]...\n" + stdout_summary[-1500:]
+                validation_warning = ""
+                if validation_result and validation_result.issues:
+                    validation_warning = validation_result.issues
+                verdict, reasoning = runner._determine_verdict(
+                    hypothesis, stdout_summary, plot_captions, validation_warning
+                )
+            else:
+                reasoning = f"Experiment code failed after fix attempts. Last error: {execution_result.stderr or 'Unknown'}"
+        else:
+            reasoning = f"Experiment code failed after {max_fix_attempts} fix attempts. Last error: {execution_result.stderr or 'Unknown'}"
+
+        if validation_result is None:
+            validation_result = ValidationResult(is_valid=False, reasoning="Validation was not performed", issues="Execution did not succeed")
+
+        # Read final code
+        try:
+            with open(code_file_path, 'r', encoding='utf-8') as f:
+                experiment_code = f.read()
+        except Exception:
+            experiment_code = ""
+
+        evaluation = HypothesisEvaluation(hypothesis_id=hypothesis.id, verdict=verdict, reasoning=reasoning)
+        runner.save_hypothesis_evaluation(evaluation)
+
+        experiment_result = ExperimentResult(
+            hypothesis=hypothesis,
+            experiment_plan=experiment_plan,
+            experiment_code=experiment_code,
+            execution_result=execution_result,
+            validation_result=validation_result,
+            hypothesis_evaluation=evaluation,
+            plots=plot_captions,
+            fix_attempts=total_fix_attempts,
+            validation_attempts=total_validation_attempts,
+            execution_time=None
+        )
+
+        try:
+            saved_path = runner.save_experiment_result(experiment_result)
+            print(f"Saved user experiment result to {saved_path}")
+        except Exception as e:
+            print(f"ERROR: Failed to save experiment result: {e}")
+
+        return experiment_result
+
+    @staticmethod
     def run_new_experiment(status_callback: callable = None) -> "ExperimentResult":
         """
         Run experiment and save results.

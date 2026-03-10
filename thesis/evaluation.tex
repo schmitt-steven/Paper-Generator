@@ -1,0 +1,308 @@
+\chapter{Evaluation}
+This chapter evaluates the implemented system.
+The evaluation is split into two parts.
+Section~\ref{sec:requirements_verification} tests each requirement defined in Chapter~4 individually.
+Section~\ref{sec:system_demonstration} runs the entire workflow from start to finish and analyzes the results.
+
+\section{Methodology}
+Chapter~4 defined eleven requirements (FR1--FR8, NFR1--NFR2, C1) that describe the intended behavior and constraints of the system.
+This section explains how these requirements are verified and how the system's capabilities are demonstrated.
+
+\paragraph{Evaluation Scope}
+As discussed in Section~4.1, the requirements are scoped to deterministic system behaviors, not the semantic quality of the generated output.
+Measuring text quality requires validated metrics \cite{Jourdan2025IdentifyingRE} or large-scale user studies across multiple research topics and models.
+Both exceed the scope of a three-month thesis project.
+Running multiple paper generation scenarios on varying topics requires powerful hardware to run the most capable local LLMs.
+Consumer hardware, which this work relies on, further restricts which models the system can run.
+This limits the value of doing text quality measurements.
+Furthermore, text quality measurements conflate the software's contribution with the underlying LLM's capabilities.
+A system that produces low quality output (i.e. hallucinations) with a smaller model might produce higher quality output with a larger one.
+This makes it impossible to only attribute the text quality to the software architecture.
+Therefore, the requirements verification tests only what the system does mechanically.
+
+% Rework this section, once we know how to do the demo. 
+
+\paragraph{Verification Method}
+Each requirement has a binary pass condition: the system either fulfills the requirement or it does not.
+Table~\ref{tab:verification} maps each requirement to its pass condition.
+Ten of the eleven requirements are verified automatically.
+Test scripts evaluate these requirements using three methods: inspecting source code and configuration, verifying generated artifacts after a phase executes, and intercepting prompts to probe the inference engine state.
+The only exception is NFR2 (Free Execution).
+It uses a qualitative proof to show the user that all features of the application are free to use.
+
+\section{Requirements Verification}
+\label{sec:requirements_verification}
+
+\subsection{Test Setup}
+All tests ran on an Apple M1 Ultra with 64\,GB of unified memory running macOS Tahoe 26.2.
+The Python runtime used version 3.14.0.
+LM Studio version 0.4.6+1 was used as the local inference engine.
+Table~\ref{tab:test_env} lists all used backend dependencies. 
+User interface libraries were excluded from the table, with the exception of \texttt{tkinter} (verified in C1), as they do not affect requirements verification.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Test Environment}
+    \label{tab:test_env}
+    \begin{tabular}{l l}
+        \toprule
+        \textbf{Component} & \textbf{Version} \\
+        \midrule
+        Python & 3.14.0 \\
+        LM Studio & 0.4.6+1 \\
+        \texttt{lmstudio} SDK & 1.5.0 \\
+        \texttt{tkinter} & 8.6 \\
+        \texttt{PyMuPDF} & 1.26.6 \\
+        \texttt{pymupdf4llm} & 0.2.0 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+With the exception of the model selection test (FR8), which requires loading different models for verification, all tests used the same base model: Qwen3.5-35B-A3B at 4-bit quantization.\footnote{\url{https://huggingface.co/Qwen/Qwen3.5-35B-A3B}}
+
+\subsection{Results}
+
+\begin{table}[htbp]
+    \centering
+    \caption{Requirements Verification}
+    \label{tab:verification}
+    \begin{tabularx}{\textwidth}{l p{2.6cm} X}
+        \toprule
+        \textbf{ID} & \textbf{Requirement} & \textbf{Pass Condition} \\
+        \midrule
+        FR1 & Context \newline Analysis & The output directory contains a \texttt{research\_context.md} file with the expected sections (taxonomic classification, problem definition, open questions). \\
+        FR2 & Literature \newline Search & The output directory contains a non-empty \texttt{papers.json} and at least one downloaded \texttt{.pdf} file. \\
+        FR3 & Hypothesis \newline Generation & The \texttt{hypothesis.md} file contains all three fields: description, rationale, and success criteria. \\
+        FR4 & Experimentation & The output directory contains a generated experiment script, the runner executes it without an unhandled exception, and at least one artifact is saved. \\
+        FR5 & Paper \newline Writing & The generated Markdown files contain citation keys, of which at least one key matches an entry in the retrieved \texttt{papers.json} database. \\
+        FR6 & Document \newline Compilation & The \LaTeX{} compiler returns Exit Code~0 and the output \texttt{.pdf} file has a size~>~0~KB. \\
+        FR7 & Human-in- \newline the-Loop & After a phase completes, its output is saved to disk. When the next phase executes, the exact contents of that file (including any manual edits) are successfully loaded into the prompt payload sent to the inference engine. \\
+        FR8 & Model \newline Selection & The system successfully sends model load requests to the LM Studio API and polls the server to confirm the assigned model is loaded into memory. \\
+        NFR1 & Privacy & All LLM inference endpoints in the source code point to \texttt{localhost}. External calls are limited to literature search APIs. \\
+        NFR2 & Free \newline Execution & A cost analysis confirms that all runtime components carry open-source licences, the inference engine is free for personal use, and all external API endpoints operate without a billing agreement. \\
+        C1 & Technology \newline Stack & The codebase contains \texttt{.py} source files. \texttt{tkinter} and the \texttt{lmstudio} package are imported. \texttt{requirements.txt} lists the LM Studio SDK as a dependency. \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\paragraph{FR1 — Context Analysis}
+FR1 requires the system to process user data and produce a structured research topic definition.
+The test runs the context analysis phase within an isolated, temporary workspace to prevent state contamination.
+It verifies that the generated \texttt{research\_context.md} file exists and contains three mandatory Markdown headings: Taxonomic Classification, Problem Definition, and Open Questions.
+Checking for structural headers separates the test from the LLM's non-deterministic text generation.
+This proves the pipeline correctly forces the model into the required format.
+FR1 passed.
+
+\paragraph{FR2 — Literature Search}
+FR2 requires the system to query external databases and store both metadata and full-text documents.
+The test runs the literature search phase and validates the output against the two success criteria.
+First, it checks for a non-empty \texttt{papers.json} file to confirm the system parsed the API metadata response.
+Second, it scans the directory for at least one downloaded \texttt{.pdf} file.
+This proves the system navigated the Unpaywall resolution endpoint and wrote binary data to disk.
+Testing these artifacts independently proves both network boundaries function correctly.
+FR2 passed.
+
+\paragraph{FR3 — Hypothesis Generation}
+FR3 requires the system to derive a formal hypothesis from the provided context.
+Similar to FR1, the test avoids subjective quality grading and verifies the architectural constraint.
+It inspects the \texttt{hypothesis.md} output file for the three fields that define a formal hypothesis in this system: description, rationale, and success criteria.
+If the pipeline transitions the context into this strict structural format, the mechanism works.
+FR3 passed.
+
+\paragraph{FR4 — Experimentation}
+FR4 requires the system to generate code, execute it, and save the resulting artifacts.
+The test captures all three mechanical steps.
+First, it verifies the existence of the generated \texttt{experiment.py} script.
+Second, it runs the script in a subprocess and asserts an exit code of 0.
+This proves the code execution sandbox captures and handles the runtime environment without crashing the orchestrator.
+Finally, it checks the output directory for at least one newly generated artifact.
+This proves the script mapped its I/O operations back to the host system.
+FR4 passed.
+
+\paragraph{FR5 — Paper Writing}
+FR5 requires the system to generate text sections that include citations from the retrieved literature.
+The test verifies this integration by asserting that the generated Markdown files contain citation-formatted keys.
+It then extracts all generated keys and verifies that at least one matches an entry in the backend's \texttt{papers.json} database.
+The test does not require a strict one-to-one match for every single generated key.
+Language models frequently hallucinate citation keys that are not present in the retrieved set.
+Failing the test for a single hallucination would conflate a model error with an architectural failure.
+By verifying that the system successfully injected at least one valid real citation into the output, the test proves the integration pathway works.
+FR5 passed.
+
+\paragraph{FR6 — Document Compilation}
+FR6 requires the system to compile the generated content into a final PDF.
+The test executes the compilation step using a Makefile subprocess and asserts a \LaTeX{} compiler exit code of 0.
+It then verifies that the output \texttt{.pdf} file size is strictly greater than zero bytes.
+This proves the system handed off the generated Markdown, navigated the Pandoc conversion toolchain, and assembled a valid binary document.
+FR6 passed.
+
+\paragraph{FR7 — Human-in-the-Loop}
+FR7 requires the system to persist each phase's output so the user can review and edit it between phases.
+The system must read that edited file back in as the input for the next phase.
+The test verifies this using an input interception method, which isolates the system's backend logic entirely from the LLM's non-deterministic output.
+The test injects a unique, mathematically un-hallucinatable token (a UUID) into a generated artifact file on disk.
+This simulates a human editor's manual changes.
+It then triggers the next pipeline phase and aggressively intercepts the prompt payload immediately before the orchestrator dispatches it over the network to the LM Studio SDK.
+The presence of the UUID inside the intercepted prompt payload proves unequivocally that the system reloaded the manually edited file from disk and injected it into the execution pipeline.
+This completely bypasses any chance of the model guessing the answer.
+FR7 passed.
+
+\paragraph{FR8 — Model Selection}
+FR8 requires the system to assign different language models to different execution tasks.
+The test verifies this by simulating phase transitions dynamically.
+It sends a sequence of model-load requests directly to the local LM Studio API.
+These requests simulate the execution of the Context Analysis and Hypothesis Generation phases using their differing configured models.
+Loading large language models from disk into VRAM is heavily asynchronous, so the test script runs a polling loop against the API's list of currently loaded models.
+Once the newly assigned model appears in the active array, it proves the system executed a dynamic model switch at runtime.
+FR8 passed.
+
+\paragraph{NFR1 — Privacy}
+NFR1 requires all inference data to be processed locally without external leakage.
+The test traces every model load function in the entire production source code using Python's static analysis tools.
+It verifies that every invocation of \texttt{lms.llm()} or \texttt{lms.embedding\_model()} — the only two entry points for loading a model — is explicitly imported from the local \texttt{lmstudio} package.
+The LM Studio SDK connects exclusively to LM Studio's local inference server, which binds to \texttt{localhost} by design.
+Therefore, no code path exists through which sensitive user inference data can leave the local machine.
+External network calls strictly point to the hardcoded literature search APIs, which query public academic databases using generic keywords and carry no user research data.
+NFR1 passed.
+
+\paragraph{NFR2 — Free Execution}
+NFR2 requires the system to perform all functions free of charge.
+This requirement is verified through a cost analysis of every runtime software component and API, excluding the user's hardware and internet infrastructure.
+Table~\ref{tab:cost_analysis} provides the Complete Bill of Materials (BOM).
+The Python dependencies' licenses were identified by parsing the official metadata classifiers bundled inside the local Python wheels via \texttt{pip show}.
+The licensing and pricing for Python\footnote{\url{https://docs.python.org/3/license.html}}, LM Studio\footnote{\url{https://lmstudio.ai/terms}} and the three literature search APIs (Semantic Scholar\footnote{\url{https://www.semanticscholar.org/product/api}}, Unpaywall\footnote{\url{https://unpaywall.org/products/api}}, and arXiv\footnote{\url{https://info.arxiv.org/help/api/index.html}}) were verified via their official documentation and published terms of service.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Runtime Cost Analysis (NFR2)}
+    \label{tab:cost_analysis}
+    \begin{tabularx}{\textwidth}{l X l}
+        \toprule
+        \textbf{Component Category} & \textbf{Specific Elements} & \textbf{License / Cost} \\
+        \midrule
+        Runtime Environment & Python 3.14 & PSF License (Free) \\
+        \addlinespace
+        Local Inference Engine & LM Studio (v0.4.6+1) & Free for personal use \\
+        Python Dependencies & \texttt{lmstudio, pydantic, sv-ttk, markdown, tkinterweb} & MIT License (Free) \\
+        & \texttt{requests} & Apache 2.0 (Free) \\
+        & \texttt{pandas, numpy, scipy, seaborn} & BSD-3-Clause (Free) \\
+        & \texttt{matplotlib} & PSF License (Free) \\
+        & \texttt{pillow} & HPND License (Free) \\
+        & \texttt{PyMuPDF, pymupdf4llm} & AGPL-3.0 (Free) \\
+        \addlinespace
+        External Network APIs & Semantic Scholar API & Free\\
+        & Unpaywall API & Free\\
+        & arXiv API & Free\\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+As Table~\ref{tab:cost_analysis} shows, the application is free to run.
+NFR2 passed.
+
+\paragraph{C1 — Technology Stack}
+C1 requires the system to be built using Python for the backend, Tkinter for the graphical interface and the official LM Studio for local inference.
+The test scans the project directories to confirm it only contains \texttt{.py} source files, parses the imports for the \texttt{tkinter} module and inspects the dependency list (\texttt{requirements.txt}) to prove the \texttt{lmstudio} SDK is explicitly linked.
+C1 passed.
+
+All eleven requirements passed.
+
+
+- We need setting for evidence search iterations, including GUI update
+- we push all non-thesis related stuff
+- we create extra branch for thesis, upload the test stuff
+- then we think of how to test it, just the raw backend code, or via GUI tester - even possible?
+
+
+- some ideas for the test:
+- do use the gui
+- save the entire log of the run, include metadata stuff like time it took for a phase
+- Introspection baby!
+
+\section{System Demonstration}
+\label{sec:system_demonstration}
+
+The requirements verification in Section~\ref{sec:requirements_verification} confirmed that each
+component functions correctly in isolation. This section evaluates the system as a whole by executing
+the complete six-phase pipeline on a single research topic without human intervention. The goal is
+not to measure general text quality — which, as discussed in Section~X.X, requires validated metrics
+or large-scale user studies — but to determine whether the system can produce a structurally complete,
+factually verifiable research document end-to-end.
+
+\subsection{Demonstration Setup}
+
+% Topic choice and justification
+% - What topic was selected
+% - Why: ground truth is well-established, literature exists on S2/arXiv, 
+%   experiment is feasible on consumer hardware
+% - What model was used and why (same Qwen3.5-35B-A3B or different?)
+% - Any relevant configuration (temperature, token limits, etc.)
+
+\subsection{Phase Output Analysis}
+
+% Walk through each phase's intermediate output chronologically.
+% For each phase, show what the system produced and whether it's reasonable.
+
+\paragraph{Phase 1 — Context Analysis}
+% What did the system identify as the research domain, problem, and open questions?
+% Was the taxonomic classification correct?
+% Brief excerpt or summary of research_context.md
+
+\paragraph{Phase 2 — Literature Search}
+% How many papers were retrieved? How many were downloaded?
+% Were the top-ranked papers actually relevant to the topic?
+% Any notable misses or irrelevant results?
+
+\paragraph{Phase 3 — Hypothesis Generation}
+% What hypothesis was formulated?
+% Is it testable? Does it logically follow from the context?
+
+\paragraph{Phase 4 — Experimentation}
+% What experiment was generated?
+% Did it execute successfully?
+% What artifacts were produced (plots, data, tables)?
+% Do the results align with known ground truth?
+
+\paragraph{Phase 5 — Section Writing}
+% Structural check: did the draft contain all expected sections?
+% Citation check: are citations used, and do they reference real retrieved papers?
+% Factual spot-check: pick N specific claims and verify against ground truth
+% Notable issues: hallucinations, incoherent passages, etc.
+
+\paragraph{Phase 6 — Document Compilation}
+% Did it compile? Page count, structure of final PDF.
+% Brief description of the final document's appearance.
+
+\subsection{Analysis of the Final Document}
+
+% This is where you zoom out and assess the PDF as a whole.
+
+\paragraph{Factual Correctness}
+% Select concrete claims from the generated paper.
+% Verify each against established knowledge or the experiment's own data.
+% Present as a table: Claim | Verdict (Correct / Incorrect / Unverifiable) | Source
+
+\paragraph{Citation Quality}
+% How many citations were used? How many are real vs. hallucinated?
+% For real citations, do they actually support the claims they're attached to?
+% Table or summary statistics.
+
+\paragraph{Structural Coherence}
+% Does the document follow a logical structure?
+% Do sections reference each other appropriately?
+% Is there an abstract, introduction, methodology, results, conclusion?
+
+\subsection{Discussion}
+
+% What worked well, what didn't.
+% Be honest about limitations:
+% - Single run on a single topic — no generalizability claim
+% - One model at one quantization level — results are model-dependent
+% - No human baseline comparison
+% - Consumer hardware constraints
+% - Any phases that produced notably weak output
+%
+% End with what this demonstration does show:
+% The system can produce a complete, compilable document that contains
+% verifiable correct content, functioning citations, and a coherent structure,
+% without any human intervention or cloud API costs.

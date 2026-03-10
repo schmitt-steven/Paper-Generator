@@ -5,7 +5,6 @@ import ast
 import textwrap
 from pathlib import Path
 from dataclasses import dataclass
-from typing import cast
 from pydantic import BaseModel
 from settings import Settings
 from utils.lazy_model_loader import LazyModelMixin
