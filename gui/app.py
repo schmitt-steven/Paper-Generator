@@ -203,7 +203,32 @@ class PaperGeneratorApp(tk.Tk):
         style.configure("CardRow.TLabel", background=self._card_content_bg)
         style.configure("CardRow.TCheckbutton", background=self._card_content_bg)
         style.configure("CardRow.Switch.TCheckbutton", background=self._card_content_bg)
-        
+
+        # Custom Scale: image-based thin trough + sv_ttk slider knob
+        trough_color = "#555555" if self.current_theme == "dark" else "#bbbbbb"
+        suffix = "_dark" if self.current_theme == "dark" else "_light"
+
+        trough_img = tk.PhotoImage(f"scale_trough_img{suffix}", width=1, height=2, master=self)
+        trough_img.put(trough_color, to=(0, 0, 1, 2))
+        self._scale_trough_img = trough_img
+
+        try:
+            style.element_create(f"Custom.Scale.trough{suffix}", "image", trough_img,
+                                 sticky="ew", border=0, padding=0)
+        except tk.TclError:
+            pass  # already exists on theme toggle
+
+        style.layout("Horizontal.TScale", [
+            ("Scale.focus", {"sticky": "nswe", "children": [
+                ("Scale.padding", {"sticky": "nswe", "children": [
+                    (f"Custom.Scale.trough{suffix}", {"sticky": "ew", "children": [
+                        ("Horizontal.Scale.slider", {"side": "left", "sticky": ""})
+                    ]})
+                ]})
+            ]})
+        ])
+        style.configure("Horizontal.TScale", background=self._card_content_bg)
+
         # Canvas/scrollable area background
         if self.current_theme == "dark":
             self._canvas_bg = CANVAS_BG_DARK

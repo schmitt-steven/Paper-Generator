@@ -83,7 +83,7 @@ GENERAL_SETTINGS_INFO = """\
 
 **Unpaywall Email** — Optional email address used to query the Unpaywall API to find free PDFs of papers.
 
-**Evidence Search Queries** — This setting influences the "Critique" step of the Draft-Critique-Retrive-Improve" writing pipeline. \
+**Evidence Search Queries** — This setting influences the "Critique" step of the Draft-Critique-Retrieve-Improve" writing pipeline. \
 It sets the maximum number of search queries the critic can suggest per section. \
 These search queries are then used in the "Retrieve" step to find relevant passages in the indexed papers. \
 Each query retrieves chunks from the indexed papers, which are then scored by an LLM and filtered down to the most relevant passages. \

@@ -587,6 +587,8 @@ class StartScreen(BaseFrame):
             "4. Missing 'results.json' for saving metrics\n"
             "5. Has interactive input (input(), sys.stdin, etc.)\n"
             "6. Imports that are clearly unavailable in a standard Python environment (assume local imports from the working directory are available)\n\n"
+            "Important Rules:\n"
+            "- Do NOT tell the user to create the 'plots/' directory. It is already created for them.\n\n"
             "Respond with EXACTLY one of:\n"
             "- 'OK' if nothing needs to be changed\n"
             "- A SHORT bullet list of suggested improvements (max 5 lines). "
