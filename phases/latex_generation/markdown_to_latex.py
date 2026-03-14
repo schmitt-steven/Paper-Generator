@@ -56,14 +56,9 @@ class MarkdownToLaTeX:
             \\centering
             \\includegraphics[width=\\textwidth]{{images/filename.png}}
             \\caption{{Caption text}}
-            \\Description{{alt text}}
             \\label{{fig:filename}}
             \\end{{figure*}}
             - CRITICAL: Always use figure* (with asterisk) to span full page width!
-            - CRITICAL: Always include \\Description{{}} command for accessibility (required by JAIR/ACM templates)
-              - Use the alt text from the markdown image as the description
-              - If alt text is generic (e.g., "figure", "image"), write a brief description of what the figure shows based on context
-              - Description should be plain text, under 2000 characters, describing what someone who cannot see the image needs to know
             - Use width=\\textwidth to ensure images fit within page boundaries
             - For images: Extract the ACTUAL filename from the markdown path and use it EXACTLY.
               - If markdown has: ![text](experiments/plots/convergence_comparison.png)
@@ -77,6 +72,11 @@ class MarkdownToLaTeX:
               - Do NOT add figures based on text references like "Figure 1" or "as shown in Figure X"
               - Do NOT create figure environments unless there is an actual ![alt](path) image markdown in the text
               - Text references to figures (e.g., "Figure 1 shows...") should remain as text, NOT converted to figure environments
+            - CRITICAL: Cross-references — NEVER hardcode numbers like "Figure 1", "Table 2", "Section 3" in text.
+              Always use \\ref{{label}} to reference figures, tables, and sections. The label must match the \\label{{}} defined in the corresponding environment.
+              - "Figure 1 shows..." -> "Figure~\\ref{{fig:filename}} shows..."
+              - "Table 2 summarizes..." -> "Table~\\ref{{tab:descriptive_name}} summarizes..."
+              - Use ~ (non-breaking space) before \\ref to prevent line breaks between "Figure" and the number.
             - Example: ![Alt](experiments/plots/my_plot.png) -> \\includegraphics{{images/my_plot.png}} (NOT images/figure1.png)
 
             - Tables: Convert markdown tables to LaTeX using booktabs style:
@@ -103,10 +103,23 @@ class MarkdownToLaTeX:
               - Place \\caption ABOVE the tabular (required by many journals)
               - For wide tables, use table* environment to span full page width
 
-            - Code blocks: Convert ```python ... ``` to \\begin{{lstlisting}}[language=Python]...\\end{{lstlisting}}
+            - Code blocks: Convert ```python ... ``` to \\begin{{lstlisting}}[language=Python]...\\end{{lstlisting}}. 
+              - If the language is not a standard programming language (e.g., text, json, csv, or missing), omit the language parameter and use \\begin{{lstlisting}}. 
+              - CRITICAL for Algorithms/Pseudocode: If a code block contains an algorithm or pseudocode (even if labeled as text or not labeled), you MUST convert it to a proper LaTeX algorithm floating block:
+                \\begin{{algorithm}}[t]
+                \\caption{{Name of Algorithm (infer from context)}}
+                \\begin{{algorithmic}}[1]
+                \\Require ...
+                \\Ensure ...
+                ... proper \\State, \\If, \\For, \\While commands ...
+                \\end{{algorithmic}}
+                \\end{{algorithm}}
+                DO NOT use verbatim or lstlisting for algorithms. Transform the plain text pseudocode into proper algorithmic commands!
             - Inline code: Convert `code` to \\texttt{{code}} (ensure special chars inside are escaped)
             - Math: Preserve $...$ for inline math and $$...$$ for display math (or convert to \\[...\\])
             - Headers: Convert # Title to \\subsection{{Title}}, ## Subtitle to \\subsubsection{{Subtitle}} (Note: Main sections use \\section and are added by the generator)
+            - CRITICAL: If the markdown text begins or ends with a top-level section header containing the section name itself (e.g. "# Abstract", "3 Methods", "4 Results", or just "Introduction"), YOU MUST REMOVE IT COMPLETELY from the LaTeX output. The main structural headers are already handled by the LaTeX template.
+            - CRITICAL: If you encounter single, orphaned subsections (e.g. only one `\\subsection` or `\\subsubsection` in the entire text without a second one to balance it), YOU MUST REMOVE the subsection header format entirely and transform it back into bold text or a regular paragraph, instead of a formal LaTeX sectioning command.
             - Bold/italic: Convert **text** to \\textbf{{text}}, *text* to \\textit{{text}}
             - Lists: Convert markdown lists to LaTeX \\begin{{itemize}}...\\end{{itemize}} or \\begin{{enumerate}}...\\end{{enumerate}}
             - Paragraphs: Preserve paragraph breaks (double newlines)
@@ -166,7 +179,8 @@ class MarkdownToLaTeX:
             4. Use \\subsection{{}} and \\subsubsection{{}} for any subsections if needed
             5. Ensure all citations are properly formatted as \\cite{{key}} with EXACT citation keys preserved (e.g., \\cite{{Diekhoff2024RecursiveBQ}}, not \\cite{{diekhoff2024}})
             6. Ensure all figures have proper \\begin{{figure}} environments with \\caption and \\label
-            7. Check and escape ALL special characters (e.g., underscores in filenames or variable names that are not in code/math mode).
+            7. NEVER hardcode figure/table/section numbers in text — always use \\ref{{label}} with a ~ before it (e.g., Figure~\\ref{{fig:foo}}, Table~\\ref{{tab:bar}})
+            8. Check and escape ALL special characters (e.g., underscores in filenames or variable names that are not in code/math mode).
 
             Convert the markdown to LaTeX now:""")
 
@@ -239,7 +253,6 @@ class MarkdownToLaTeX:
     # since escaping bare backslashes in LLM output is too risky (likely already a command).
     _SPECIAL_CHARS = {
         '_': r'\_',
-        '&': r'\&',
         '%': r'\%',
         '#': r'\#',
     }
@@ -256,12 +269,15 @@ class MarkdownToLaTeX:
         # Pattern to identify regions where special chars are valid and should be left alone:
         #  - $$ ... $$  (display math)
         #  - $ ... $    (inline math)
+        #  - \begin{equation} ... \end{equation} (and other math envs)
         #  - \command{...} (commands with braced args — one level of braces)
         #  - \begin{lstlisting}...\end{lstlisting}
         #  - \begin{verbatim}...\end{verbatim}
         #  - \url{...}  (already caught by command pattern but listed for clarity)
         protected_pattern = re.compile(
             r'\\begin\{(?:lstlisting|verbatim)\}.*?\\end\{(?:lstlisting|verbatim)\}'  # verbatim envs
+            r'|'
+            r'\\begin\{(?:equation|align|eqnarray|gather|multline|math|displaymath)\*?\}.*?\\end\{(?:equation|align|eqnarray|gather|multline|math|displaymath)\*?\}'  # math envs
             r'|'
             r'\$\$.*?\$\$'          # display math
             r'|'

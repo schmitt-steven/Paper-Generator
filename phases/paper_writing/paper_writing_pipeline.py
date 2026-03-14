@@ -76,17 +76,24 @@ class PaperWritingPipeline:
     ) -> None:
         """Save the paper draft as a markdown file."""
 
+        def _strip_leading_header(text: str) -> str:
+            """Remove a leading markdown heading line if the LLM included one despite instructions."""
+            lines = text.lstrip("\n").splitlines()
+            if lines and lines[0].startswith("#"):
+                text = "\n".join(lines[1:]).lstrip("\n")
+            return text
+
         markdown_content = f"# {paper_draft.title}\n\n"
-        markdown_content += f"## Abstract\n\n{paper_draft.abstract}\n\n"
-        markdown_content += f"## Introduction\n\n{paper_draft.introduction}\n\n"
-        markdown_content += f"## Related Work\n\n{paper_draft.related_work}\n\n"
-        markdown_content += f"## Methods\n\n{paper_draft.methods}\n\n"
-        markdown_content += f"## Results\n\n{paper_draft.results}\n\n"
-        markdown_content += f"## Discussion\n\n{paper_draft.discussion}\n\n"
-        markdown_content += f"## Conclusion\n\n{paper_draft.conclusion}\n"
-        
+        markdown_content += f"## Abstract\n\n{_strip_leading_header(paper_draft.abstract)}\n\n"
+        markdown_content += f"## Introduction\n\n{_strip_leading_header(paper_draft.introduction)}\n\n"
+        markdown_content += f"## Related Work\n\n{_strip_leading_header(paper_draft.related_work)}\n\n"
+        markdown_content += f"## Methods\n\n{_strip_leading_header(paper_draft.methods)}\n\n"
+        markdown_content += f"## Results\n\n{_strip_leading_header(paper_draft.results)}\n\n"
+        markdown_content += f"## Discussion\n\n{_strip_leading_header(paper_draft.discussion)}\n\n"
+        markdown_content += f"## Conclusion\n\n{_strip_leading_header(paper_draft.conclusion)}\n"
+
         if paper_draft.acknowledgements:
-            markdown_content += f"\n## Acknowledgements\n\n{paper_draft.acknowledgements}\n"
+            markdown_content += f"\n## Acknowledgements\n\n{_strip_leading_header(paper_draft.acknowledgements)}\n"
 
         output_path = save_markdown(markdown_content, filename, output_dir)
 
@@ -111,11 +118,14 @@ class PaperWritingPipeline:
         title = title_match.group(1).strip()
 
         # Extract sections using regex
-        # Pattern matches: ## Section Name followed by content until next ## or end
-        section_pattern = r'##\s+(\w+(?:\s+\w+)*)\s*\n\n(.*?)(?=\n##\s+|$)'
+        # Pattern matches exactly the expected top-level section headers
+        expected_sections = ['Abstract', 'Introduction', 'Related Work', 'Methods', 'Results', 'Discussion', 'Conclusion', 'Acknowledgements']
+        # Join with | and make it case insensitive if needed, but they are exact matches
+        sections_str = '|'.join(expected_sections)
+        section_pattern = rf'^##\s+({sections_str})\s*\n(.*?)(?=\n^##\s+(?:{sections_str})\s*\n|\Z)'
         sections = {}
 
-        for match in re.finditer(section_pattern, content, re.DOTALL):
+        for match in re.finditer(section_pattern, content, flags=re.MULTILINE | re.DOTALL):
             section_name = match.group(1).strip()
             section_content = match.group(2).strip()
             sections[section_name.lower().replace(' ', '_')] = section_content
@@ -173,7 +183,7 @@ class PaperWritingPipeline:
         
         section_order = (
             Section.METHODS, Section.RESULTS, Section.DISCUSSION,
-            Section.INTRODUCTION, Section.RELATED_WORK, Section.CONCLUSION, Section.ABSTRACT
+            Section.RELATED_WORK, Section.INTRODUCTION, Section.CONCLUSION, Section.ABSTRACT
         )
         
         sections: dict[Section, str] = {}
@@ -258,7 +268,9 @@ class PaperWritingPipeline:
                     print(f"  [Step 3] Skipping search ({reason})")
                 
                 evidence_by_section[section_type] = new_evidence
-                
+                if status_callback:
+                    status_callback(f"Evidence chunks for {section_type.value}: {len(new_evidence)}")
+
                 # Step 4: Rewrite with critique and new evidence
                 if status_callback:
                     status_callback(f"Rewriting {section_type.value} section")
@@ -295,6 +307,8 @@ class PaperWritingPipeline:
                 
                 sections[section_type] = final_section
                 print(f"    Section complete ({len(final_section)} chars)")
+                if status_callback:
+                    status_callback(f"Section rewrite delta for {section_type.value}: {len(section_draft_v1)} -> {len(final_section)}")
 
         # Generate acknowledgements if enabled
         acknowledgements = None

@@ -21,7 +21,8 @@ def extract_citation_keys_from_markdown(md_text: str) -> set[str]:
     """
     # Pattern to match [key1] or [key1, key2] or [key1; key2]
     # Handles both comma and semicolon separators
-    pattern = r'\[([a-zA-Z0-9]+(?:\s*[,;]\s*[a-zA-Z0-9]+)*)\]'
+    # Uses negative lookahead `(?![a-zA-Z]\b)` to ignore single-letter bracketed text like `[d]`
+    pattern = r'\[((?:(?![a-zA-Z]\b)[a-zA-Z0-9]+)(?:\s*[,;]\s*(?:(?![a-zA-Z]\b)[a-zA-Z0-9]+))*)\]'
     matches = re.findall(pattern, md_text)
     
     citation_keys = set()
@@ -109,6 +110,17 @@ def generate_bibtex_entry(paper: Paper) -> str:
         BibTeX entry as string
     """
     if paper.bibtex:
+        # Replace the BibTeX entry key with paper.citation_key to ensure
+        # the key in the .bib file matches \cite{} commands in the LaTeX.
+        # The raw bibtex may have a different key (e.g., with Unicode accents
+        # like "Petráš2025..." vs the normalized citation_key "Petras2025...").
+        if paper.citation_key:
+            return re.sub(
+                r'(@\w+\{)[^,]+',
+                lambda m: m.group(1) + paper.citation_key,
+                paper.bibtex,
+                count=1,
+            )
         return paper.bibtex
     
     # Generate minimal BibTeX entry

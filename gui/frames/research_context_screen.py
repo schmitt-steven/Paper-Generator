@@ -138,21 +138,22 @@ class ResearchContextScreen(BaseFrame):
             self.show_error_message("Error", f"Error loading research context: {e}")
             return
         
-        # Create collapsible sections
+        # Create collapsible sections: (title, content, expand_by_default)
         sections = [
-            ("Description", self.context.description),
-            ("Code Analysis", self.context.code_snippets),
-            ("Open Questions", self.context.open_questions),
+            ("Description", self.context.description, True),
+            ("Code Analysis", self.context.code_snippets or "No code files provided.", bool(self.context.code_snippets)),
+            ("Dataset Descriptions", self.context.dataset_descriptions or "No datasets provided.", bool(self.context.dataset_descriptions)),
+            ("Open Questions", self.context.open_questions, True),
         ]
-        
+
         self.context_cards = []
-        for i, (title, content) in enumerate(sections):
+        for i, (title, content, expanded) in enumerate(sections):
             card = CollapsibleContextCard(
                 self.scrollable_frame,
                 title,
                 content,
                 self.controller,
-                start_expanded=True
+                start_expanded=expanded
             )
             card.pack(fill="x", pady=10)
             self.context_cards.append(card)

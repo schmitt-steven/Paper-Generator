@@ -15,7 +15,7 @@ from phases.context_analysis.research_context_generator import ResearchContextGe
 from phases.context_analysis.research_context_generator import ResearchContext
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.context_analysis.paper_specification import PaperSpecification
-from phases.context_analysis.user_code_analysis import CodeAnalyzer, UserCode
+from phases.context_analysis.user_code_analysis import CodeAnalyzer, UserCode, DatasetAnalyzer, UserDataset
 from phases.hypothesis_generation.hypothesis_builder import Hypothesis
 from phases.experimentation.experiment_state import (
     HypothesisEvaluation, ExecutionResult, CodeGenerationResult,
@@ -84,6 +84,39 @@ class ExperimentRunner:
             
             return "\n".join(sections)
     
+    @staticmethod
+    def _format_datasets_section(datasets: list[UserDataset]) -> str:
+        """Format dataset metadata for inclusion in experiment prompts."""
+        if not datasets:
+            return ""
+        report = DatasetAnalyzer.get_dataset_report(datasets)
+        return (
+            "[DATASETS]\n"
+            "CRITICAL: All dataset files are located in the `datasets/` subdirectory.\n"
+            "You MUST load them using the path `datasets/<filename>` (e.g. `pd.read_csv('datasets/my_data.csv')`).\n"
+            "Do NOT use just the filename alone — the file will NOT be found without the `datasets/` prefix.\n\n"
+            f"{report}"
+        )
+
+    @staticmethod
+    def _copy_datasets_to_experiment_dir(output_dir: str):
+        """Copy dataset files to output/experiments/datasets/ for experiment access."""
+        import shutil
+        datasets_src = Path("user_files/datasets")
+        if not datasets_src.exists():
+            return
+
+        datasets_dest = Path(output_dir) / "datasets"
+        # Clean existing datasets
+        if datasets_dest.exists():
+            shutil.rmtree(datasets_dest)
+        datasets_dest.mkdir(parents=True, exist_ok=True)
+
+        for f in datasets_src.iterdir():
+            if f.is_file():
+                shutil.copy2(str(f), str(datasets_dest / f.name))
+                print(f"Copied dataset: {f.name}")
+
     def _write_experiment_code(
         self,
         experiment_plan: str,
@@ -92,6 +125,7 @@ class ExperimentRunner:
         output_dir: str,
         paper_specification: Optional[PaperSpecification] = None,
         user_code: Optional[list[UserCode]] = None,
+        datasets: Optional[list[UserDataset]] = None,
         status_callback: callable = None
     ) -> CodeGenerationResult:
         """Generate experiment code in chunks, save to file, execute, and return results."""
@@ -119,7 +153,12 @@ class ExperimentRunner:
                 code_instructions = "\n[CRITICAL: EXISTING CODE PROVIDED]\nYou have access to the local modules listed above. Review them to see if they fit your experiment plan. If they do, IMPORT them (e.g., `from my_algo import run_algo`). If they do not fit or if you need different logic, you may implement your own solution, but prefer reusing existing robust code where possible.\n\n[CRITICAL: SAFE IMPORTS & SIDE EFFECTS]\nBefore importing from user files, analyze them for global scope execution (e.g. `model = load_model()` or `env = make_env()` at the top level). \n- If strict global side effects exist (printing, model loading, infinite loops), ensure your import does not trigger unwanted behavior.\n- If a global instance exists (e.g., `model`), IMPORT IT directly instead of creating a new one (e.g., `from user_file import model`).\n- Ensure that importing a file does not accidentally reset or overwrite shared state unless intended.\n\n[WARNING: CONSTANTS]\nDo NOT hardcode state/action dimensions (e.g. `num_of_states = 5760`). Instead, READ them from the imported user code/agent if available (e.g. `agent.num_of_states`). Mismatched dimensions cause IndexErrors."
             else:
                 user_code_section = "\n[USER CODE FILES]\nNo user code files provided - generate new code from scratch."
-            
+
+            # Format datasets section
+            datasets_section = ""
+            if datasets:
+                datasets_section = f"\n{self._format_datasets_section(datasets)}"
+
             # System prompt for all chunks
             system_prompt = textwrap.dedent(f"""\
                 [ROLE]
@@ -169,6 +208,7 @@ class ExperimentRunner:
                 {paper_spec_section}
                 {user_code_section}
                 {code_instructions}
+                {datasets_section}
 
                 [EXPERIMENT_PLAN]
                 {experiment_plan}"""
@@ -243,7 +283,7 @@ class ExperimentRunner:
                     - Experiment setup and execution (as described in the experiment plan)
                     - Running the proposed method and baseline/comparison method
                     - Metric collection and measurement
-                    - Save results to JSON file in current directory
+                    - Save results to JSON file in the current directory using a bare filename (e.g. RESULTS_FILE = 'results.json'). Do NOT call os.makedirs for the results file — the current directory always exists.
                     - Concise stdout output with key metrics
                     
                     CRITICAL: Before responding, verify:
@@ -277,7 +317,9 @@ class ExperimentRunner:
                     - Create plots/ directory
                     - Generate comparison plots (use matplotlib Agg backend - NO plt.show())
                     - Save plots to plots/ as .pdf files
-                    - Publication Quality Add axis labels (xlabel, ylabel), a descriptive title, and legend (if multiple series)
+                    - Publication Quality: Add axis labels (xlabel, ylabel), a descriptive title, and legend (if multiple series)
+                    - Aesthetics: Use professional styling (e.g., sns.set_theme(style="whitegrid") or attractive matplotlib style). Plots must look clean, modern, and publication-ready.
+                    - Ensure colors are easily distinguishable and colorblind-friendly (e.g., use seaborn's "colorblind" palette).
                     - CRITICAL: For EVERY plot you generate, print a text summary to stdout that describes the exact data shown. 
                       Format: "[Plot Summary: <filename>] <summary text with numbers/stats>"
                       Example: "[Plot Summary: learning_curve.pdf] RBQL reached 0.9 reward at ep 450, Standard Q at ep 720."
@@ -330,8 +372,7 @@ class ExperimentRunner:
                     stdout="",
                     stderr=str(e),
                     return_code=-1,
-                    plot_files=[],
-                    result_files=[]
+                    plot_files=[]
                 )
             )
     
@@ -360,8 +401,7 @@ class ExperimentRunner:
                     stdout="",
                     stderr=f"Error: Code file not found at {code_file_path}",
                     return_code=-1,
-                    plot_files=[],
-                    result_files=[]
+                    plot_files=[]
                 ),
                 chat or lms.Chat("")
             )
@@ -458,10 +498,15 @@ class ExperimentRunner:
                 STDERR: {stderr_preview}
 
                 [INSTRUCTIONS]
-                analyze the error carefully and fix all faulty parts of the code.
-                [WARNING: GLOBAL STATE] If user code has global variables (like `model = ...`), IMPORT and USE them. Do not shadow them with local instances.
-                [CRITICAL: SAFE IMPORTS] Check if imports trigger unintended side effects (e.g., infinite loops, model reloading). If so, fix by mocking or importing safely.
-                [WARNING: CONSTANTS] Do NOT hardcode state dimensions. Use `agent.num_of_states` or similar from user code.
+                Analyze the error carefully and fix all faulty parts of the code.
+                [DATASET FILE PATHS]
+                If the code loads dataset/data files, they are located in the `datasets/` subdirectory. Use `datasets/<filename>` (e.g. `pd.read_csv('datasets/my_data.csv')`). Do NOT use just the filename without the `datasets/` prefix.
+                [WARNING: GLOBAL STATE]
+                If user code has global variables (like `model = ...`), IMPORT and USE them. Do not shadow them with local instances.
+                [SAFE IMPORTS]
+                Check if imports trigger unintended side effects (e.g., infinite loops, model reloading). If so, fix by mocking or importing safely.
+                [WARNING: CONSTANTS] 
+                Do NOT hardcode state dimensions. Use `agent.num_of_states` or similar from user code.
                 
                 [OUTPUT_REQUIREMENT]
                 IMPORTANT: Output the COMPLETE fixed Python code file from start to finish. Do not truncate or omit any parts.
@@ -493,8 +538,7 @@ class ExperimentRunner:
                     stdout="",
                     stderr=str(e),
                     return_code=-1,
-                    plot_files=[],
-                    result_files=[]
+                    plot_files=[]
                 ),
                 chat or lms.Chat("")
             )
@@ -602,7 +646,6 @@ class ExperimentRunner:
         # Prepare result summary
         stdout_summary = execution_result.stdout
         plot_count = len(execution_result.plot_files)
-        result_file_count = len(execution_result.result_files)
         
         system_prompt = textwrap.dedent("""\
             [ROLE]
@@ -642,7 +685,6 @@ class ExperimentRunner:
             [EXECUTION SUMMARY]
             - Return Code: {execution_result.return_code}
             - Plots Generated: {plot_count} ({plot_files_summary})
-            - JSON Results: {result_file_count} file(s)
 
             [STDOUT]
             {stdout_summary}
@@ -703,8 +745,7 @@ class ExperimentRunner:
                 stdout="",
                 stderr=f"Error: Code file not found at {code_file_path}",
                 return_code=-1,
-                plot_files=[],
-                result_files=[]
+                plot_files=[]
             )
         
         try:
@@ -733,13 +774,14 @@ class ExperimentRunner:
                 1. Address all issues identified in the validation feedback as well as possible.
                 2. Ensure the code actually tests the hypothesis as described in the experiment plan
                 3. Ensure plots are saved to "plots/" directory as .pdf files (relative to execution directory) - create this directory if needed using os.makedirs("plots", exist_ok=True)
-                4. Save detailed results/metrics to JSON file in the current directory (do NOT create an "output" directory - the code already runs from the output directory)
-                5. Ensure stdout output is concise and meaningful - key metrics, conclusions and results only, avoid loop spam
-                6. Make sure the experiment is complete and meaningful (e.g., not too short, collects proper metrics, etc.)
-                7. Preserve any working, valid parts of the code
-                8. [WARNING: GLOBAL STATE] If user code has global variables (like `model = ...`), IMPORT and USE them. Do not shadow them with local instances.
-                9. [WARNING: CONSTANTS] Do NOT hardcode state dimensions. Use `agent.num_of_states` or similar from user code.
-                10. DRY Principle: Reuse simulation functions (e.g. `run_episode`) for plotting/metrics. Do not re-write loops inline.
+                4. Ensure plots have professional aesthetics (clean, modern, publication-ready, e.g., using seaborn styles)
+                5. CRITICAL: Ensure colors are easily distinguishable and colorblind-friendly (e.g., use seaborn's "colorblind" palette).
+                6. Ensure stdout output is concise and meaningful - key metrics, conclusions and results only, avoid loop spam
+                7. Make sure the experiment is complete and meaningful (e.g., not too short, collects proper metrics, etc.)
+                8. Preserve any working, valid parts of the code
+                9. [WARNING: GLOBAL STATE] If user code has global variables (like `model = ...`), IMPORT and USE them. Do not shadow them with local instances.
+                10. [WARNING: CONSTANTS] Do NOT hardcode state dimensions. Use `agent.num_of_states` or similar from user code.
+                11. DRY Principle: Reuse simulation functions (e.g. `run_episode`) for plotting/metrics. Do not re-write loops inline.
 
                 [AVAILABLE_PACKAGES]
                 The following Python packages are available (optional - use if helpful):
@@ -793,8 +835,7 @@ class ExperimentRunner:
                 stdout="",
                 stderr=str(e),
                 return_code=-1,
-                plot_files=[],
-                result_files=[]
+                plot_files=[]
             )
     
     def _generate_plot_captions(
@@ -922,7 +963,8 @@ Do NOT do this:
         hypothesis: Hypothesis,
         research_context: ResearchContext,
         paper_specification: Optional[PaperSpecification] = None,
-        user_code: Optional[list[UserCode]] = None
+        user_code: Optional[list[UserCode]] = None,
+        datasets: Optional[list[UserDataset]] = None
     ) -> str:
         """Generate a detailed experiment plan for testing a hypothesis."""
 
@@ -930,6 +972,8 @@ Do NOT do this:
         paper_spec_section = ""
         requirements_parts = []
         if paper_specification:
+            if paper_specification.topic and paper_specification.topic.strip():
+                requirements_parts.append(f"Topic & Definitions: {paper_specification.topic}")
             if paper_specification.methods and paper_specification.methods.strip():
                 requirements_parts.append(f"Methods: {paper_specification.methods}")
             if paper_specification.results and paper_specification.results.strip():
@@ -946,6 +990,9 @@ Do NOT do this:
             user_code_section = self._format_user_code_files(user_code)
         else:
             user_code_section = "[USER CODE FILES]\nNo user code files provided"
+
+        # Format datasets section
+        datasets_section = self._format_datasets_section(datasets) if datasets else ""
 
         # Build instructions based on whether user code exists
         code_instructions = ""
@@ -972,7 +1019,6 @@ Do NOT do this:
             - Metrics to measure
             - Implementation approach
             - Output requirements: 
-              * Detailed results/metrics stored in JSON file
               * Concise, meaningful output to stdout (key metrics, conclusions)
               * Plot(s) for visualization (saved as .pdf)
             - Experiment MUST complete in under 5 minutes. Use reasonable parameter ranges and reduce iterations/computations/parameter combinations if needed.
@@ -996,7 +1042,9 @@ Do NOT do this:
             {paper_spec_section}
 
             {user_code_section}
-            {code_instructions}"""
+            {code_instructions}
+
+            {datasets_section}"""
         )
 
         try:
@@ -1222,6 +1270,11 @@ Do NOT do this:
             Provide:
             1. Your verdict: 'proven', 'disproven', or 'inconclusive'
             2. Brief reasoning based on the success criteria and observed results
+
+            [OUTPUT STYLE]
+            Your reasoning MUST be a concise final summary.
+            Do NOT include your deliberation process, internal debate, or step-by-step analysis.
+            State the conclusion directly: which criteria were met, which were not, and why you chose the verdict.
         """)
         
         try:
@@ -1230,8 +1283,8 @@ Do NOT do this:
             parsed_dict = result.parsed
             
             verdict_result = VerdictResult(**parsed_dict)
-            verdict = verdict_result.verdict.strip().lower()
-            reasoning = verdict_result.reasoning
+            verdict = remove_thinking_blocks(verdict_result.verdict).strip().lower()
+            reasoning = remove_thinking_blocks(verdict_result.reasoning)
             
             # Validate verdict
             if verdict not in ["proven", "disproven", "inconclusive"]:
@@ -1261,18 +1314,32 @@ Do NOT do this:
         # Ensure output directory exists
         os.makedirs(self.base_output_dir, exist_ok=True)
         
-        # Clear plots directory if it exists to prevent mixing results
+        # Cleanup of old experiment files
+        if status_callback:
+            status_callback("Cleaning up previous experiment files")
+            
+        import shutil
+        files_to_keep = set()
+        if load_existing_plan:
+            files_to_keep.add(EXPERIMENT_PLAN_FILE)
+        if load_existing_code:
+            files_to_keep.add("experiment.py")
+            
+        for item in os.listdir(self.base_output_dir):
+            if item in files_to_keep:
+                continue
+            item_path = os.path.join(self.base_output_dir, item)
+            try:
+                if os.path.isfile(item_path):
+                    os.unlink(item_path)
+                elif os.path.isdir(item_path):
+                    shutil.rmtree(item_path)
+            except Exception as e:
+                print(f"Warning: Failed to delete {item_path}: {e}")
+                
+        # Recreate plots directory
         plots_dir = os.path.join(self.base_output_dir, "plots")
-        if os.path.exists(plots_dir):
-            for file in os.listdir(plots_dir):
-                file_path = os.path.join(plots_dir, file)
-                try:
-                    if os.path.isfile(file_path):
-                        os.unlink(file_path)
-                except Exception as e:
-                    print(f"Warning: Failed to delete {file_path}: {e}")
-        else:
-             os.makedirs(plots_dir, exist_ok=True)
+        os.makedirs(plots_dir, exist_ok=True)
         
         # Load paper specification and user code
         if status_callback:
@@ -1288,20 +1355,10 @@ Do NOT do this:
         
         try:
             code_analyzer = CodeAnalyzer(model_name=self.settings.CODE_ANALYSIS_MODEL)
-            user_code = code_analyzer.load_code_files("user_files")
+            user_code = code_analyzer.load_code_files("user_files/code")
             # Analyze semantic content and extract signatures
             if user_code:
                 user_code = code_analyzer.analyze_all_files(user_code)
-                
-                # Clean old user code files before copying new ones (prevent stale imports)
-                import shutil
-                for existing_file in os.listdir(self.base_output_dir):
-                    if existing_file.endswith('.py') and existing_file != 'experiment.py':
-                        try:
-                            os.unlink(os.path.join(self.base_output_dir, existing_file))
-                            print(f"Removed old user file: {existing_file}")
-                        except Exception as e:
-                            print(f"Warning: Failed to delete old file {existing_file}: {e}")
                 
                 # Copy user code files to experiment directory so they can be imported
                 print(f"Copying {len(user_code)} user file(s) to experiment directory...")
@@ -1316,7 +1373,17 @@ Do NOT do this:
         except Exception as e:
             print(f"Warning: Failed to load user code files: {e}")
             user_code = None
-        
+
+        # Load and copy datasets
+        datasets = []
+        try:
+            datasets = DatasetAnalyzer.load_datasets("user_files/datasets")
+            if datasets:
+                datasets = DatasetAnalyzer.analyze_all_datasets(datasets)
+                self._copy_datasets_to_experiment_dir(self.base_output_dir)
+        except Exception as e:
+            print(f"Warning: Failed to load datasets: {e}")
+
         # Generate or load experiment plan
         try:
             plan_file_path = os.path.join(self.base_output_dir, EXPERIMENT_PLAN_FILE)
@@ -1333,10 +1400,11 @@ Do NOT do this:
                         status_callback("Generating experiment plan")
                     print(f"Generating new experiment plan...")
                 experiment_plan = self._generate_experiment_plan(
-                    hypothesis, 
+                    hypothesis,
                     research_context,
                     paper_specification=paper_specification,
-                    user_code=user_code
+                    user_code=user_code,
+                    datasets=datasets
                 )
                 self.save_experiment_plan(experiment_plan)
         except Exception as e:
@@ -1360,14 +1428,12 @@ Do NOT do this:
                 print(f"STDERR: {execution_result.stderr[:500] if execution_result.stderr else 'None'}")
                 print(f"STDOUT: {execution_result.stdout[:500] if execution_result.stdout else 'None'}")
             else:
-                print(f"Code executed successfully. Generated {len(execution_result.plot_files)} plot(s) and {len(execution_result.result_files)} result file(s)")
-                if len(execution_result.plot_files) == 0 and len(execution_result.result_files) == 0:
+                print(f"Code executed successfully. Generated {len(execution_result.plot_files)} plot(s)")
+                if len(execution_result.plot_files) == 0:
                     # Check if files exist but weren't detected as new
                     plots_dir = os.path.join(self.base_output_dir, "plots")
-                    results_file = os.path.join(self.base_output_dir, "results.json")
                     existing_plots = [f for f in os.listdir(plots_dir) if f.endswith(('.png', '.pdf'))] if os.path.exists(plots_dir) else []
-                    existing_results = os.path.exists(results_file)
-                    print(f"  Note: Found {len(existing_plots)} existing plot(s) and {'1' if existing_results else '0'} existing result file(s) (may have been created in previous run)")
+                    print(f"  Note: Found {len(existing_plots)} existing plot(s) (may have been created in previous run)")
             write_result = CodeGenerationResult(
                 code_file_path=code_file_path,
                 execution_result=execution_result
@@ -1385,6 +1451,7 @@ Do NOT do this:
                 self.base_output_dir,
                 paper_specification=paper_specification,
                 user_code=user_code,
+                datasets=datasets,
                 status_callback=status_callback
             )
         
@@ -1704,18 +1771,27 @@ Do NOT do this:
         user_code = None
         try:
             code_analyzer = CodeAnalyzer(model_name=Settings.CODE_ANALYSIS_MODEL)
-            user_code = code_analyzer.load_code_files("user_files")
+            user_code = code_analyzer.load_code_files("user_files/code")
         except Exception:
             pass
-        
+
+        datasets = []
+        try:
+            datasets = DatasetAnalyzer.load_datasets("user_files/datasets")
+            if datasets:
+                datasets = DatasetAnalyzer.analyze_all_datasets(datasets)
+        except Exception:
+            pass
+
         if status_callback:
             status_callback("Generating experiment plan")
         runner = ExperimentRunner()
         experiment_plan = runner._generate_experiment_plan(
-            hypothesis, 
+            hypothesis,
             research_context,
             paper_specification=paper_specification,
-            user_code=user_code
+            user_code=user_code,
+            datasets=datasets
         )
         runner.save_experiment_plan(experiment_plan)
         return experiment_plan
@@ -1751,9 +1827,12 @@ Do NOT do this:
         if not user_experiment_file:
             raise ValueError("No user experiment file configured")
 
-        src_path = Path("user_files") / user_experiment_file
+        src_path = Path("user_files/code") / user_experiment_file
         if not src_path.exists():
-            raise FileNotFoundError(f"User experiment file not found: {src_path}")
+            # Fallback to flat structure for backward compatibility
+            src_path = Path("user_files") / user_experiment_file
+            if not src_path.exists():
+                raise FileNotFoundError(f"User experiment file not found: {src_path}")
 
         runner = ExperimentRunner()
         output_dir = runner.base_output_dir
@@ -1778,7 +1857,7 @@ Do NOT do this:
         user_code = None
         try:
             code_analyzer = CodeAnalyzer(model_name=Settings.CODE_ANALYSIS_MODEL)
-            user_code = code_analyzer.load_code_files("user_files")
+            user_code = code_analyzer.load_code_files("user_files/code")
             if user_code:
                 # Clean old user code files
                 for existing_file in os.listdir(output_dir):
@@ -1796,6 +1875,12 @@ Do NOT do this:
                         print(f"Error copying {code_file.file_name}: {e}")
         except Exception as e:
             print(f"Warning: Failed to load user code files: {e}")
+
+        # Copy datasets to experiment directory
+        try:
+            ExperimentRunner._copy_datasets_to_experiment_dir(output_dir)
+        except Exception as e:
+            print(f"Warning: Failed to copy datasets: {e}")
 
         # Copy the experiment file as experiment.py
         if status_callback:

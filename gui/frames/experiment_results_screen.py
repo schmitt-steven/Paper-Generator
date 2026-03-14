@@ -729,6 +729,14 @@ class ExperimentResultsScreen(BaseFrame):
         next_text = "Continue" if paper_draft_file.exists() else "Write Paper"
         self.set_next_text(next_text)
 
+        # Disable regenerate button if user provided their own experiment file
+        if hasattr(self, 'regenerate_btn'):
+            if Settings.USER_EXPERIMENT_FILE:
+                self.regenerate_btn.config(state="disabled")
+                # Add a tooltip or just rely on state
+            else:
+                self.regenerate_btn.config(state="normal")
+
     def _run_user_experiment(self):
         """Run the user-provided experiment file."""
         popup = ProgressPopup(self.controller, "Running User Experiment")
@@ -787,15 +795,16 @@ class ExperimentResultsScreen(BaseFrame):
 
     def on_regenerate(self):
         is_user_experiment = bool(Settings.USER_EXPERIMENT_FILE)
-        confirm_msg = (
-            "Re-run your experiment file?\nThis will execute your code again."
-            if is_user_experiment else
-            "Re-run the experiment from scratch?\nThis will generate and execute new code based on the current experiment plan."
-        )
+        if is_user_experiment:
+            # Should be disabled in UI, but just in case
+            return
+
+        confirm_msg = "Re-run the experiment from scratch?\nThis will clear the output directory and generate/execute new code based on the current experiment plan."
+        
         if not tk.messagebox.askyesno("Regenerate", confirm_msg):
             return
 
-        popup = ProgressPopup(self.controller, "Running Experiment" if is_user_experiment else "Regenerating Experiment")
+        popup = ProgressPopup(self.controller, "Regenerating Experiment")
 
         def task():
             try:

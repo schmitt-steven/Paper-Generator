@@ -1,96 +1,98 @@
-**Experiment Plan: Testing RBQL vs Standard Q-Learning in Deterministic Episodic Environments**
+# Experiment Plan: Benford's Law Conformity Analysis for German Municipal Census Data (Zensus 2022)
 
----
+## 1. Objective and Success Criteria
+**Objective:** To validate the efficacy of Benford's Law as an anomaly detection tool for official statistics by analyzing first-digit frequencies in German municipal census data. The experiment aims to demonstrate that natural variables (Population, Area) conform to the logarithmic distribution, while derived ratios (Density) and synthetic fabricated datasets deviate significantly, thereby establishing a robust forensic framework using Mean Absolute Deviation (MAD).
 
-**Objective and Success Criteria:**  
-The objective is to empirically validate that Recursive Backwards Q-Learning (RBQL) converges to optimal policies faster than standard Q-learning in deterministic, episodic environments. Success is defined as RBQL achieving an average cumulative reward ≥ 0.9 over a rolling window of 10 episodes in significantly fewer episodes and less wall-clock time than standard Q-learning, with statistical significance (p < 0.05) confirmed via Welch’s t-test.
+**Success Criteria:**
+1.  **Conformity of Natural Data:** Population counts and Area measurements must yield MAD values below the "acceptable" threshold (< 0.015), indicating strong adherence to Benford's Law.
+2.  **Deviation of Derived Ratios:** Population Density (a derived ratio) must exhibit a significantly higher MAD value, confirming that mathematical constraints disrupt scale invariance.
+3.  **Detection of Fabrication:** Synthetic Uniform and Biased datasets must show the highest MAD values, clearly distinguishable from real data, validating the method's sensitivity to non-natural patterns.
+4.  **Statistical Robustness:** The experiment must successfully mitigate "excess statistical power" issues in large samples ($N \approx 10,800$) by prioritizing proportion-based MAD over raw Chi-square p-values for classification.
 
----
+## 2. Mathematical Formulas and Technical Details
+*   **Benford's Expected Probability:** $P(d) = \log_{10}(1 + \frac{1}{d})$ for $d \in \{1, ..., 9\}$.
+    *   Values: $d=1 (30.1\%), d=2 (17.6\%), d=3 (12.5\%), d=4 (9.7\%), d=5 (7.9\%), d=6 (6.7\%), d=7 (5.8\%), d=8 (5.1\%), d=9 (4.6\%)$.
+*   **Mean Absolute Deviation (MAD):** $MAD = \frac{1}{9} \sum_{d=1}^{9} |P_{observed}(d) - P_{expected}(d)|$.
+    *   *Note:* Calculations must use proportions ($count / N$), not raw counts.
+*   **Chi-Square Statistic:** $\chi^2 = \sum_{d=1}^{9} \frac{(O_d - E_d)^2}{E_d}$, where $O_d$ is observed count and $E_d$ is expected count ($N \times P(d)$).
+    *   *Usage:* Computed for completeness but interpreted with caution due to large $N$.
+*   **Classification Thresholds (Tibshirani):**
+    *   MAD < 0.015: Good conformity.
+    *   0.015 ≤ MAD < 0.025: Acceptable conformity.
+    *   MAD ≥ 0.025: Suspect/Non-conforming.
 
-**Required Mathematical Formulas/Technical Details:**  
-- **Bellman Optimality Update (RBQL):**  
-  Upon reaching a terminal state, update all known Q-values in reverse topological order via BFS:  
-  `Q(s,a) = R(s,a) + γ * max(Q(s'))` with α=1 (no incremental averaging).  
-- **Standard Q-Learning Update:**  
-  `Q(s,a) ← (1−α) * Q(s,a) + α * [R(s,a) + γ * max(Q(s'))]` with α=0.1 (fixed).  
-- **Convergence Criterion:**  
-  First episode where rolling average of last 10 rewards ≥ 0.9.  
-- **Confidence Intervals:**  
-  95% CI for mean episodes and wall-clock time computed as: `mean ± t*(s/√n)` where t is critical value from t-distribution (df = n−1).  
-- **Welch’s t-test:**  
-  Used to compare means between RBQL and standard Q-learning (unequal variances, unequal sample sizes).  
+## 3. Experiment Setup
+*   **Environment:** Python script running in headless mode (no GUI, no interactive plots).
+*   **Data Loading:** Load `datasets/1000A-0001_de_flat.csv` using pandas with semicolon delimiter.
+*   **Filtering Logic:**
+    *   Parse the `value_q` column (quality flag).
+    *   Retain only rows where `value_q == 'e'` (exact values).
+    *   Exclude rows with `()` or `.` flags to ensure data integrity.
+*   **Variable Extraction:**
+    *   Filter for specific variables: `PRS018` (Population), `FLC001` (Area), `PRS017` (Density).
+    *   Extract the numeric value from the `value` column, handling potential formatting issues (e.g., commas in German numbers like "1.234,56" or spaces). Convert to float.
+    *   Filter out non-positive values ($\le 0$) as Benford's Law applies to positive integers/decimals.
+*   **Synthetic Data Generation:**
+    *   Generate a Uniform distribution (random digits 1-9 with equal probability).
+    *   Generate a Biased distribution (simulate human fabrication, e.g., over-representing digit '5' or '0').
 
----
+## 4. Metrics to Measure
+*   **MAD Score:** Primary metric for conformity assessment.
+*   **Chi-Square Statistic & P-value:** Secondary metric for statistical significance (to demonstrate the "excess power" issue).
+*   **First-Digit Frequencies:** Observed proportions for each digit 1-9 per dataset.
+*   **Conformity Classification:** Categorical label based on MAD thresholds ("Good", "Acceptable", "Suspect").
 
-**Experiment Setup:**  
-- **Environment:** Deterministic Breakout-like game (as in provided code) with discrete state space (`num_of_states = 13*12*2*2*12`), 2 actions (left/right).  
-- **Algorithms Compared:**  
-  - RBQL: Uses persistent transition model, backward BFS update on terminal state with α=1.  
-  - Standard Q-learning: Same state/action space, fixed α=0.1, no model storage or backward propagation.  
-- **Runs:** 30 independent runs per algorithm (seeds 0–29).  
-- **Episode Limit:** Max 500 episodes per run.  
-- **Termination Condition:** Convergence when rolling average of last 10 rewards ≥ 0.9 (or episode limit reached).  
-- **Exploration:** Epsilon-greedy with decay: `epsilon = max(0, 1.0 - episode/400)` (same for both).  
-- **Hardware:** Single-threaded CPU execution; no GPU used. Wall-clock time measured via `time.time()`.  
-- **Randomization:** Each run uses a unique seed for action selection and environment initialization.  
+## 5. Implementation Approach
+1.  **Initialization:** Set environment variables `SDL_VIDEODRIVER` and `SDL_AUDIODRIVER` to 'dummy' (safety measure). Import necessary libraries (`pandas`, `numpy`, `matplotlib`).
+2.  **Data Ingestion & Cleaning:**
+    *   Read CSV from `datasets/1000A-0001_de_flat.csv`.
+    *   Clean numeric columns: Remove commas/spaces, convert to float.
+    *   Filter rows where `value_q == 'e'` and variable code matches the target list.
+3.  **First-Digit Extraction:**
+    *   For each valid positive number $x$, compute $d = \lfloor x / 10^{\lfloor \log_{10}(x) \rfloor} \rfloor$.
+    *   Aggregate counts for digits 1-9.
+4.  **Synthetic Data Creation:**
+    *   Create two synthetic datasets of comparable size ($N$) with uniform and biased digit distributions.
+5.  **Statistical Computation:**
+    *   Calculate observed proportions $P_{obs}(d)$ for all 5 datasets (3 real, 2 synthetic).
+    *   Compute MAD using the formula above.
+    *   Compute Chi-square statistics.
+6.  **Visualization Generation:**
+    *   **Plot 1 (Bar Chart):** Grouped bar chart comparing Observed vs. Expected Benford frequencies for all datasets.
+    *   **Plot 2 (Conformity Comparison):** Bar chart of MAD scores with horizontal threshold lines at 0.015 and 0.025.
+    *   **Plot 3 (Heatmap):** Matrix showing deviation magnitude ($|P_{obs} - P_{exp}|$) for digits 1-9 across datasets.
+7.  **Output:** Save plots as `.pdf` files in the current directory. Print a summary table of statistics and conclusions to stdout.
 
----
+## 6. Output Requirements
+*   **Console Output:** A concise text report containing:
+    *   Sample sizes after filtering.
+    *   MAD scores for all variables.
+    *   Chi-square p-values (with a note on their interpretation).
+    *   Final classification (Conforming/Suspect) for each variable.
+*   **Files Generated:**
+    *   `benford_first_digit_distribution.pdf`
+    *   `benford_mad_comparison.pdf`
+    *   `benford_deviation_heatmap.pdf`
 
-**Metrics to Measure:**  
-1. **Episodes to Convergence:** Number of episodes until rolling average reward ≥ 0.9.  
-2. **Wall-clock Time to Convergence:** Total seconds elapsed until convergence (rendering MUST be disabled).  
-3. **Final Average Reward:** Mean reward over last 10 episodes (for robustness check).  
-4. **Statistical Significance:** Welch’s t-test p-value for both metrics.  
-5. **95% Confidence Intervals:** For mean episodes and time across 30 runs.  
+## 7. Pseudocode Algorithm
+```text
+1. Initialize environment for headless execution (SDL dummy drivers).
+2. Load dataset from 'datasets/1000A-0001_de_flat.csv'.
+3. Filter rows: Keep only where value_q == 'e' AND variable in [Population, Area, Density].
+4. Clean numeric values: Remove non-numeric chars, convert to float, discard <= 0.
+5. Define Benford Expected Probs P_exp = log10(1 + 1/d) for d=1..9.
+6. For each variable (Pop, Area, Density):
+    a. Extract leading digit d for every value.
+    b. Compute observed proportions P_obs(d).
+    c. Calculate MAD = mean(|P_obs - P_exp|).
+    d. Calculate Chi-square statistic.
+7. Generate Synthetic Uniform and Biased datasets; repeat step 6.
+8. Classify results using MAD thresholds (<0.015 Good, <0.025 Acceptable, else Suspect).
+9. Generate three plots: (a) Observed vs Expected Bars, (b) MAD Comparison with thresholds, (c) Deviation Heatmap.
+10. Save plots as .pdf files and print summary table to stdout.
+```
 
----
-
-**Implementation Approach:**  
-1. **Modify Existing Code to Support Comparison:**  
-   - Refactor `recursive_backwards_q_learning.py` into a reusable function that accepts an algorithm flag (`"RBQL"` or `"StandardQ"`).  
-   - Remove PyGame rendering to reduce overhead (keep only for debugging if needed; disable during runs).  
-   - Replace `file.write()` with structured logging of episode rewards.
-   - Crucial: The program must run in "Headless Mode" (no window, no drawing) to keep the execution time low.
-2. **Standard Q-Learning Implementation:** 
-   - Remove `PersistentModel` and `propagate_reward_rbql`.  
-   - Replace backward update with standard Q-update: `q_values[state][action_index] += 0.1 * (reward + gamma * np.max(q_values[next_state]) - q_values[state][action_index])`.  
-3. **Run Controller:**  
-   - Loop over 60 total runs (30 per algorithm), each with unique seed.  
-   - For each run:  
-     - Initialize Q-table (same random initialization per seed).  
-     - Simulate episodes until convergence or 500 episodes.  
-     - Record: episode count at convergence, wall-clock time, final 10-episode avg reward.  
-4. **Data Collection:**  
-   - Store results in JSON: `{"RBQL": [{"episodes": x, "time": y, "final_avg_reward": z}, ...], "StandardQ": [...]}`.  
-5. **Analysis & Visualization:**  
-   - Compute means, 95% CIs, and Welch’s t-test p-values.  
-   - Generate three plots:  
-     a) **Learning Curve:** Episode vs. mean reward (shaded 95% CI for each algorithm).  
-     b) **Efficiency Frontier:** Scatter plot of wall-clock time (x) vs. episodes to converge (y), with 60 points (30 per algorithm).  
-     c) **Significance Bar Chart:** Mean episodes to converge with 95% CI error bars and annotated p-value.  
-   - Save all plots as `.pdf`.  
-6. **Output:**  
-   - Print to stdout: concise summary of mean episodes, time, p-values, and conclusion.  
-   - Ensure total runtime < 5 minutes (disable rendering, reduce max episodes if needed).  
-
----
-
-**Output Requirements:**  
-- **JSON File (`results.json`):** Structured with keys `"RBQL"` and `"StandardQ"`, each containing list of dicts: `{"episodes": int, "time": float, "final_avg_reward": float}`.  
-- **Stdout Output:** One-line summary: e.g., “RBQL converged in 82.3±5.1 episodes vs StandardQ’s 247.6±18.9 (p=0.001). Time: 4.2s vs 12.8s.”  
-- **Plots (saved as .pdf):**  
-  - `learning_curve.pdf`  
-  - `efficiency_frontier.pdf`  
-  - `significance_bar_chart.pdf`  
-
----
-
-**Constraints & Optimization for Speed:**  
-- Disable PyGame rendering (`pyg.display.set_mode()` skipped) to reduce per-episode overhead.  
-- Use `np.random.seed(seed)` at start of each run for reproducibility.  
-- Limit max episodes to 500 (sufficient for convergence in deterministic setting).  
-- Use vectorized operations where possible; avoid dictionary lookups in inner loops.  
-- Precompute state indices via `getState()` without object creation overhead.  
-- Run all 60 experiments sequentially in a single process (no multiprocessing).  
-
----
+## 8. Execution Constraints
+*   **Time Limit:** Must complete within 5 minutes. The dataset size (~32k rows) is small enough for direct pandas operations; no sampling required, but ensure vectorized operations are used.
+*   **Headless Mode:** No `plt.show()` calls. All figures must be saved via `fig.savefig()`.
+*   **Pathing:** Strictly use `datasets/` prefix for file loading.

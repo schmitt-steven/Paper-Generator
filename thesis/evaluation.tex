@@ -9,6 +9,7 @@ Chapter~4 defined eleven requirements (FR1--FR8, NFR1--NFR2, C1) that describe t
 This section explains how these requirements are verified and how the system's capabilities are demonstrated.
 
 \paragraph{Evaluation Scope}
+\label{sec:evaluation_scope}
 As discussed in Section~4.1, the requirements are scoped to deterministic system behaviors, not the semantic quality of the generated output.
 Measuring text quality requires validated metrics \cite{Jourdan2025IdentifyingRE} or large-scale user studies across multiple research topics and models.
 Both exceed the scope of a three-month thesis project.
@@ -207,102 +208,145 @@ C1 passed.
 
 All eleven requirements passed.
 
-
-- We need setting for evidence search iterations, including GUI update
-- we push all non-thesis related stuff
-- we create extra branch for thesis, upload the test stuff
-- then we think of how to test it, just the raw backend code, or via GUI tester - even possible?
-
-
-- some ideas for the test:
-- do use the gui
-- save the entire log of the run, include metadata stuff like time it took for a phase
-- Introspection baby!
-
 \section{System Demonstration}
 \label{sec:system_demonstration}
 
 The requirements verification in Section~\ref{sec:requirements_verification} confirmed that each
-component functions correctly in isolation. This section evaluates the system as a whole by executing
-the complete six-phase pipeline on a single research topic without human intervention. The goal is
-not to measure general text quality — which, as discussed in Section~X.X, requires validated metrics
-or large-scale user studies — but to determine whether the system can produce a structurally complete,
+component functions correctly in isolation.
+This section evaluates the system as a whole by executing
+the complete six-phase pipeline on a single research topic without human intervention.
+The goal is not to measure general text quality---which, as discussed in Section~\ref{sec:evaluation_scope}, requires validated metrics
+or large-scale user studies---but to determine whether the system can produce a structurally complete,
 factually verifiable research document end-to-end.
+
+\subsection{Topic Selection}
+
+Choosing the right demonstration topic is critical.
+The topic must satisfy constraints that make evaluation possible within the scope of this thesis.
+Table~\ref{tab:topic_criteria} lists the five criteria that guided the selection.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Topic Selection Criteria}
+    \label{tab:topic_criteria}
+    \begin{tabularx}{\textwidth}{l X}
+        \toprule
+        \textbf{Criterion} & \textbf{Rationale} \\
+        \midrule
+        Factual Ground Truth & The topic must have well-established, independently verifiable facts. Without ground truth, it is impossible to check whether the generated text is correct or hallucinated. \\
+        \addlinespace
+        Rich Literature & The Semantic Scholar and arXiv databases must contain sufficient papers on the topic. A topic with sparse coverage would cause the literature search phase to fail regardless of system quality. \\
+        \addlinespace
+        Consumer Hardware & The experiment must run on the test machine (Table~\ref{tab:test_env}) within a reasonable time. Topics requiring GPU clusters or large-scale data processing are excluded. \\
+        \addlinespace
+        No Paid APIs & The experiment code must not depend on external paid services. This preserves the system's free execution guarantee (NFR2). \\
+        \addlinespace
+        Non-Trivial Complexity & The topic must require genuine reasoning, not just mechanical computation. A sorting algorithm benchmark, for example, produces correct results through simple timing loops with no analytical depth. The chosen topic should require the model to synthesize information across sources and produce interpretive analysis. \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\paragraph{Chosen Topic: Benford's Law and Global Demographics}
+Benford's Law is a statistical phenomenon: in many naturally occurring datasets, the leading digit is not uniformly distributed.
+Instead of each digit from 1 to 9 appearing with equal probability ($\approx$11.1\%), the digit~1 appears as the leading digit roughly 30\% of the time, with frequencies decreasing logarithmically such that 9 appears first less than 5\% of the time.
+The expected frequency of leading digit $d$ is given by $P(d) = \log_{10}(1 + 1/d)$.
+
+This topic satisfies all five criteria.
+The expected digit distribution is mathematically defined, providing exact ground truth for every claim the system might generate.
+Benford's Law is well studied in statistics, forensic accounting, and data science, with substantial coverage on Semantic Scholar.
+The experiment requires only basic numerical computation on small, publicly available demographic datasets---feasible on any machine.
+No external APIs are needed.
+Finally, the topic is non-trivial: applying Benford's Law to demographic data requires understanding which datasets are expected to conform (and why), interpreting goodness-of-fit statistics, and contextualizing results against prior empirical studies.
 
 \subsection{Demonstration Setup}
 
-% Topic choice and justification
-% - What topic was selected
-% - Why: ground truth is well-established, literature exists on S2/arXiv, 
-%   experiment is feasible on consumer hardware
-% - What model was used and why (same Qwen3.5-35B-A3B or different?)
-% - Any relevant configuration (temperature, token limits, etc.)
+The demonstration used the same test environment as the requirements verification (Table~\ref{tab:test_env}).
+% TODO: confirm model is same or note if different
+The same base model was used: Qwen3.5-35B-A3B at 4-bit quantization.
+The paper generator was run via a headless script that invokes the same backend methods as the GUI.
+The script captures logs including duration of a phase, status messages, output file metadata and the complete standard output transcript.
+All logs were written to a single JSON file after each phase for crash safety.
+Table~\ref{tab:demo_params} lists the pipeline parameters that shaped the demonstration output.
+
+% TODO: fill in actual values from demo_log.json after run
+\begin{table}[htbp]
+    \centering
+    \caption{Parameters}
+    \label{tab:demo_params}
+    \begin{tabularx}{\textwidth}{l l X}
+        \toprule
+        \textbf{Parameter} & \textbf{Value} & \textbf{Description} \\
+        \midrule
+        Search queries & 15 & Number of Semantic Scholar search queries generated \\
+        Results per query & 20 & Maximum papers returned per query \\
+        Filter target & 40 & Target number of papers after relevance filtering \\
+        Ranking weights & 0.8 / 0.1 / 0.1 & Relevance / citations / recency \\
+        \addlinespace
+        Max fix attempts & 5 & Maximum code repair iterations per experiment \\
+        Max validation attempts & 3 & Maximum result validation iterations \\
+        \addlinespace
+        Critic search queries & 2 & Evidence search queries per section critique \\
+        Chunks per query & 5 & Evidence chunks retrieved per search query \\
+        Max chunks per paper & 2 & Maximum chunks from one paper per query \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+% TODO: Add paper_specification.md content or summary here
+% TODO: Add style_guidelines.md summary if relevant
 
 \subsection{Phase Output Analysis}
 
-% Walk through each phase's intermediate output chronologically.
-% For each phase, show what the system produced and whether it's reasonable.
+This section walks through each phase's output chronologically.
+For each phase, the expected output is stated, followed by what the system actually produced.
 
-\paragraph{Phase 1 — Context Analysis}
-% What did the system identify as the research domain, problem, and open questions?
-% Was the taxonomic classification correct?
-% Brief excerpt or summary of research_context.md
+\paragraph{Phase 1 --- Context Analysis}
+% Expected: research_context.md with taxonomic classification, abstract/core contribution,
+%           problem definition, technical approach, and open questions
+% TODO: fill in after demo run
+% - What did the system identify as the research domain?
+% - Was the taxonomic classification correct? (e.g., Statistics / Digit Distribution Analysis)
+% - How many open questions were generated?
+% - Brief excerpt or summary
 
-\paragraph{Phase 2 — Literature Search}
-% How many papers were retrieved? How many were downloaded?
-% Were the top-ranked papers actually relevant to the topic?
-% Any notable misses or irrelevant results?
+\paragraph{Phase 2 --- Literature Search}
+% Expected: papers.json with ranked papers, downloaded PDFs in output/literature/
+% TODO: fill in after demo run
+% - How many search queries were generated?
+% - Total papers found vs. unique after deduplication?
+% - How many passed relevance filtering?
+% - How many were open access / downloaded?
+% - Spot-check: are the top 3-5 papers actually about Benford's Law?
 
-\paragraph{Phase 3 — Hypothesis Generation}
-% What hypothesis was formulated?
-% Is it testable? Does it logically follow from the context?
+\paragraph{Phase 3 --- Hypothesis Generation}
+% Expected: hypothesis.md with description, rationale, success criteria
+% TODO: fill in after demo run
+% - What hypothesis was formulated?
+% - Is it testable with the available data?
+% - Does it logically follow from the research context?
 
-\paragraph{Phase 4 — Experimentation}
-% What experiment was generated?
-% Did it execute successfully?
-% What artifacts were produced (plots, data, tables)?
-% Do the results align with known ground truth?
+\paragraph{Phase 4 --- Experimentation}
+% Expected: experiment_plan.md, experiment.py, experiment_result.json, plots/
+% TODO: fill in after demo run
+% - What experiment was planned?
+% - Did the generated code execute successfully (exit code 0)?
+% - How many fix/validation attempts were needed?
+% - What artifacts were produced (plots, tables)?
+% - Do the numerical results match the known Benford distribution?
 
-\paragraph{Phase 5 — Section Writing}
-% Structural check: did the draft contain all expected sections?
-% Citation check: are citations used, and do they reference real retrieved papers?
-% Factual spot-check: pick N specific claims and verify against ground truth
-% Notable issues: hallucinations, incoherent passages, etc.
+\paragraph{Phase 5 --- Paper Writing}
+% Expected: paper_draft.md with all sections, section_writing_prompts.json,
+%           section_rewrite_prompts.json
+% TODO: fill in after demo run
+% - Did the draft contain all expected sections?
+% - Section lengths (chars) from the log
+% - Citation check: how many citation keys appear? How many match papers.json?
+% - Factual spot-check: pick 3-5 specific claims and verify against ground truth
+% - Notable issues: hallucinations, incorrect statistics, incoherent passages
 
-\paragraph{Phase 6 — Document Compilation}
-% Did it compile? Page count, structure of final PDF.
-% Brief description of the final document's appearance.
-
-\subsection{Analysis of the Final Document}
-
-% This is where you zoom out and assess the PDF as a whole.
-
-\paragraph{Factual Correctness}
-% Select concrete claims from the generated paper.
-% Verify each against established knowledge or the experiment's own data.
-% Present as a table: Claim | Verdict (Correct / Incorrect / Unverifiable) | Source
-
-\paragraph{Citation Quality}
-% How many citations were used? How many are real vs. hallucinated?
-% For real citations, do they actually support the claims they're attached to?
-% Table or summary statistics.
-
-\paragraph{Structural Coherence}
-% Does the document follow a logical structure?
-% Do sections reference each other appropriately?
-% Is there an abstract, introduction, methodology, results, conclusion?
-
-\subsection{Discussion}
-
-% What worked well, what didn't.
-% Be honest about limitations:
-% - Single run on a single topic — no generalizability claim
-% - One model at one quantization level — results are model-dependent
-% - No human baseline comparison
-% - Consumer hardware constraints
-% - Any phases that produced notably weak output
-%
-% End with what this demonstration does show:
-% The system can produce a complete, compilable document that contains
-% verifiable correct content, functioning citations, and a coherent structure,
-% without any human intervention or cloud API costs.
+\paragraph{Phase 6 --- Document Compilation}
+% Expected: paper.tex, bibliography.bib, paper.pdf
+% TODO: fill in after demo run
+% - Did LaTeX compilation succeed (exit code 0)?
+% - PDF file size and page count
+% - Does the document contain all sections, bibliography, and figures?

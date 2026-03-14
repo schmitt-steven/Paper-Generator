@@ -104,7 +104,7 @@ class LiteratureSearch(LazyModelMixin):
                 prompt,
                 response_format=SearchQueriesResult,
                 config={
-                    'temperature': 0.2,
+                    'temperature': 0.0,
                 }
             )
             content = remove_thinking_blocks(response.content)

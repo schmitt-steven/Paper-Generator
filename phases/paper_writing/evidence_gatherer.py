@@ -335,10 +335,10 @@ class EvidenceGatherer:
             
             all_evidence.extend(evidence)
             seen_chunk_ids.update(ev.chunk.chunk_id for ev in evidence)
-            print(f"      Found {len(evidence)} evidence chunks")
+            print(f"      Selected {len(evidence)} evidence chunks")
         
         # Deduplicate and sort by score
         deduplicated = self._deduplicate_evidence(all_evidence)
-        print(f"  [Batch Search] Total: {len(deduplicated)} unique evidence chunks")
+        print(f"  [Batch Search] Selected {len(deduplicated)} unique evidence chunks")
         
         return deduplicated

@@ -1,10 +1,11 @@
-# Research Hypothesis
+            # Research Hypothesis
 
-## Description
-RBQL converges to optimal policies faster than standard Q-learning in deterministic, episodic environments by leveraging a persistent world model and backward reward propagation, eliminating the need for repeated visits to update Q-values.
+            ## Description
+            Validating Benford's Law conformity for German municipal census variables by comparing observed first-digit frequencies against theoretical logarithmic distributions using Mean Absolute Deviation (MAD) and Chi-square statistics, while contrasting real population counts and area measurements with derived density ratios and synthetic control datasets.
 
-## Rationale
-Standard Q-learning suffers from extreme sample inefficiency in deterministic, episodic environments because each transition update relies on incremental TD updates (α < 1) and requires multiple visits to the same state-action pair to propagate reward signals from terminal states. RBQL addresses this by leveraging deterministic environment dynamics to propagate terminal rewards backward through a persistent state-transition model that accumulates across episodes, updating all known states in a single pass upon reaching a terminal state. This approach directly exploits the deterministic structure of the environment, which is systematically underutilized in standard Q-learning.
+            ## Rationale
+            Standard conformity tests like Chi-square exhibit excess statistical power in large samples ($N 
+eq 10,800$), where trivial deviations yield significant p-values regardless of practical relevance. Proportion-based metrics such as Mean Absolute Deviation (MAD) provide scale-invariant thresholds that distinguish between natural scale-invariant data and structurally anomalous entries. Derived ratios like population density are expected to violate the logarithmic distribution due to mathematical constraints, while synthetic uniform or biased distributions serve as known non-conforming baselines for calibrating anomaly detection sensitivity.
 
-## Success Criteria
-RBQL demonstrates faster convergence to optimal policies compared to standard Q-learning in deterministic, episodic environments as evidenced by a learning curve showing higher cumulative reward per episode and fewer episodes required to reach optimal performance.
+            ## Success Criteria
+            Real variables (population counts and area measurements) exhibit first-digit frequency patterns closely aligned with the theoretical Benford distribution. Derived ratios (population density) and synthetic control datasets demonstrate distinct deviations from the expected logarithmic profile, confirming the method's ability to differentiate between naturally occurring data and structurally anomalous or fabricated entries.

@@ -1,0 +1,37 @@
+{
+  "Population": {
+    "n_samples": 10786,
+    "mad_score": 0.002676,
+    "chi2_statistic": 10.5986,
+    "p_value": 0.2254975179,
+    "classification": "Good Conformity"
+  },
+  "Area": {
+    "n_samples": 10786,
+    "mad_score": 0.006267,
+    "chi2_statistic": 44.8132,
+    "p_value": 3.992e-07,
+    "classification": "Good Conformity"
+  },
+  "Density": {
+    "n_samples": 10786,
+    "mad_score": 0.008224,
+    "chi2_statistic": 89.1238,
+    "p_value": 0.0,
+    "classification": "Good Conformity"
+  },
+  "Synthetic-Uniform": {
+    "n_samples": 10786,
+    "mad_score": 0.059724,
+    "chi2_statistic": 4261.4318,
+    "p_value": 0.0,
+    "classification": "Suspect / Non-Conforming"
+  },
+  "Synthetic-Biased": {
+    "n_samples": 10786,
+    "mad_score": 0.091334,
+    "chi2_statistic": 9525.6146,
+    "p_value": 0.0,
+    "classification": "Suspect / Non-Conforming"
+  }
+}

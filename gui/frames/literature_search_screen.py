@@ -426,6 +426,23 @@ class LiteratureSearchScreen(BaseFrame):
                 "This will replace any existing found papers with new search results.\n\nDo you want to continue?"
             ):
                 return
+            
+            self.searched_papers.clear()
+            self._save_papers()
+            self._refresh_searched_papers_list()
+
+        # Remove ALL old folders from disk (both searched and orphaned user papers)
+        user_safe_ids = {"".join([c for c in p.id if c.isalnum() or c in ('-', '_', '.')]) for p in self.user_papers}
+        lit_dir = Path("output/literature")
+        if lit_dir.exists():
+            for item in lit_dir.iterdir():
+                if item.is_dir() and item.name not in user_safe_ids:
+                    try:
+                        shutil.rmtree(item)
+                        print(f"[Papers] Removed old/orphaned folder: {item.name}")
+                    except Exception as e:
+                        print(f"[Papers] Failed to remove {item}: {e}")
+        
         
         self._set_search_loading(True)
         popup = ProgressPopup(self.controller, "Searching Papers")
@@ -539,7 +556,8 @@ class LiteratureSearchScreen(BaseFrame):
         removed = next((p for p in papers if p.id == paper_id), None)
         if removed:
             print(f"[Papers] Removed: {removed.title[:60]}")
-            output_folder = Path("output/literature") / paper_id
+            safe_id = "".join([c for c in paper_id if c.isalnum() or c in ('-', '_', '.')])
+            output_folder = Path("output/literature") / safe_id
             if output_folder.exists():
                 shutil.rmtree(output_folder)
         
@@ -631,7 +649,7 @@ class LiteratureSearchScreen(BaseFrame):
         
         for paper in all_papers:
             # Check if paper has markdown_text
-            has_markdown = getattr(paper, "markdown_text", None) and isinstance(paper.markdown_text, str) and paper.markdown_text.strip()
+            has_markdown = getattr(paper, "markdown_text", None) is not None
             if has_markdown:
                 continue  # Paper is fully processed
             

@@ -120,7 +120,7 @@ class PaperConverter(LazyModelMixin):
                 capture_output=True,
                 text=True,
                 check=True,
-                timeout=60  # 1 minute timeout
+                timeout=300  # 5 minute timeout
             )
             pdf_path = latex_dir / "result" / "paper.pdf"
             if pdf_path.exists():
@@ -130,7 +130,7 @@ class PaperConverter(LazyModelMixin):
                 print(f"[PaperConverter] Compilation succeeded but PDF not found at {pdf_path}")
                 return False
         except subprocess.TimeoutExpired:
-            print(f"[PaperConverter] LaTeX compilation timed out after 60 seconds")
+            print(f"[PaperConverter] LaTeX compilation timed out after 300 seconds")
             return False
         except subprocess.CalledProcessError as e:
             print(f"[PaperConverter] LaTeX compilation failed with exit code {e.returncode}")

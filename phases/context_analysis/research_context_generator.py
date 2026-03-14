@@ -6,6 +6,8 @@ from phases.context_analysis.user_code_analysis import (
     CodeAnalyzer,
     CodeSnippet,
     UserCode,
+    DatasetAnalyzer,
+    UserDataset,
 )
 from phases.context_analysis.paper_specification import PaperSpecification
 from settings import Settings
@@ -20,6 +22,7 @@ class ResearchContext():
     description: str = ""
     code_snippets: str = ""  # Markdown-formatted code snippets section (as text)
     open_questions: str = ""
+    dataset_descriptions: str = ""  # Markdown-formatted dataset metadata section
 
 class ResearchContextGenerator(LazyModelMixin):
 
@@ -41,29 +44,39 @@ class ResearchContextGenerator(LazyModelMixin):
         # 2. Analyze Code
         if progress_callback:
             progress_callback("Analyzing code files")
-            
+
         code_analyzer = CodeAnalyzer(model_name=Settings.CODE_ANALYSIS_MODEL)
-        code_files = code_analyzer.load_code_files("user_files") 
+        code_files = code_analyzer.load_code_files("user_files/code")
         analyzed_code = code_analyzer.analyze_all_files(code_files, extract_signatures=False)
-        
-        # 3. Generate Research Context
+
+        # 3. Analyze Datasets
+        if progress_callback:
+            progress_callback("Analyzing datasets")
+
+        datasets = DatasetAnalyzer.load_datasets("user_files/datasets")
+        analyzed_datasets = DatasetAnalyzer.analyze_all_datasets(datasets)
+        dataset_report = DatasetAnalyzer.get_dataset_report(analyzed_datasets)
+
+        # 4. Generate Research Context
         if progress_callback:
             progress_callback("Generating research context")
-            
+
         research_context_generator = ResearchContextGenerator(
             model_name=Settings.CONTEXT_GENERATOR_MODEL,
             user_code=analyzed_code,
-            paper_specification=paper_specification
+            paper_specification=paper_specification,
+            dataset_report=dataset_report
         )
-        
+
         # This automatically saves to file
         return research_context_generator.build_research_context()
 
-    def __init__(self, model_name, user_code: list[UserCode], paper_specification: PaperSpecification):
+    def __init__(self, model_name, user_code: list[UserCode], paper_specification: PaperSpecification, dataset_report: str = ""):
         self.model_name = model_name
         self._model = None  # Lazy-loaded via LazyModelMixin
         self.user_code = user_code
         self.paper_specification = paper_specification
+        self.dataset_report = dataset_report
 
     def _format_paper_specification_section(self) -> str:
         """Format paper specification into a readable section for the LLM prompt."""
@@ -123,45 +136,56 @@ class ResearchContextGenerator(LazyModelMixin):
             3. Code Snippets (Source of algorithmic logic)
 
             [STRICT WRITING RULES]
-            1. **No Meta-Commentary:** Do NOT write "The user wants," "The code shows," or "I will generate."
-            2. **Fact-Based Tone:** Write as if the research already exists. (e.g., "This method leverages X to solve Y.")
+            1. **No Meta-Commentary:** Do NOT write "The user wants," "The code shows," or "I will generate." Do NOT reproduce template instructions, structure hints, or italicized guidance from this prompt in your output.
+            2. **Exploratory Tone:** Use hedged, investigative language. Write "this work investigates," "the approach aims to," "preliminary analysis suggests," "the method is designed to" — NOT definitive claims like "this method solves" or "results confirm."
             3. **Semantic Density:** Use specific field terminology found in the code (e.g., "Cross-Entropy Loss," "Monte Carlo Tree Search") rather than generic terms (e.g., "Standard Loss," "Search Algorithm").
             4. **Inference:** If the notes are vague, strictly infer the methodology from the logic present in the **Code Snippets**.
 
-            [OUTPUT FORMAT]
-            ## 1. Taxonomic Classification
-            *Keywords that define the search space.*
+            [OUTPUT FORMAT INSTRUCTIONS]
+            Generate ONLY the section headers and filled-in content below. Do NOT include any italicized instructions, structure hints, or requirement notes — those are for your guidance only.
+
+            ## 1. Keywords
+            Fill in three keyword bullets:
             - **Primary Domain:** (e.g., Natural Language Processing)
             - **Specific Task:** (e.g., Low-Resource Machine Translation)
             - **Methodological Class:** (e.g., Transformer-based Sequence-to-Sequence learning)
 
-            ## 2. Abstract & Core Contribution
-            *A dense, 4-5 sentence summary. This is the primary vector for embeddings.*
-            - **Structure:** [Current Challenge in SOTA] -> [Proposed Method] -> [Mechanism of Action] -> [Expected Outcome].
-            - **Requirement:** Mention specific algorithms or architectures identified in the code snippets.
+            ## 2. Research Direction & Scope
+            Write a dense 4-5 sentence summary. Follow this structure: [Current Challenge in SOTA] -> [Proposed Method] -> [Mechanism of Action] -> [Expected Outcome]. Mention specific algorithms or architectures identified in the code snippets. Use exploratory language — this is a working summary, not a final abstract.
+            Output only a single **Summary:** bullet with the text.
 
             ## 3. Problem Definition
-            *The specific gap this paper fills.*
-            - **The Bottleneck:** What specific limitation prevents current methods from succeeding in this context? (e.g., "Vanishing gradients in deep networks," "High computational cost of attention mechanisms").
+            Fill in two bullets:
+            - **The Bottleneck:** What specific limitation prevents current methods from succeeding in this context?
             - **The Constraint:** Under what conditions does the problem exist?
 
             ## 4. Technical Approach
-            *The "How" - strictly derived from code/notes.*
+            Fill in two bullets:
             - **Architecture:** Define the structural logic (e.g., "A dual-encoder framework...").
-            - **Key differentiator:** How does this implementation differ from the standard approach? (e.g., "Replaces standard Softmax with Sparsemax to...").
+            - **Key differentiator:** How does this implementation differ from the standard approach?
             
             [PAPER SPECIFICATION]
             {self._format_paper_specification_section()}
 
             {title_section}[CODE ANALYSIS]
-            {code_analysis_report}"""
+            {code_analysis_report}
+
+            [DATASETS]
+            {self.dataset_report if self.dataset_report else "No datasets provided."}"""
         )
 
-        result = self.model.respond(prompt)
-        
+        result = self.model.respond(
+            prompt,
+            config={"temperature": 0.0}
+        )
+
         description_text = remove_thinking_blocks(result.content)
-        
-        return ResearchContext(description=description_text, code_snippets=code_analysis_report)
+
+        return ResearchContext(
+            description=description_text,
+            code_snippets=code_analysis_report,
+            dataset_descriptions=self.dataset_report
+        )
 
     def identify_open_questions(self, context: ResearchContext) -> ResearchContext:
         """
@@ -180,27 +204,27 @@ class ResearchContextGenerator(LazyModelMixin):
 
             [TASK]
             Generate a FOCUSED list of literature search questions to understand the research landscape and strengthen differentiation.
-            Prioritize questions that address critical gaps in understanding the field and prior work.
+            Focus on questions that address critical gaps in understanding the field and prior work.
 
             [ANALYSIS APPROACH]
             1. Identify the MOST CRITICAL gaps in understanding the field and related work
             2. Focus on: (a) existing methods/prior art, (b) how this work differs, (c) key contexts to understand
             3. Questions should guide literature search to establish novelty and context
 
-            [QUESTION PRIORITIES]
-            **Priority 1: Related Work & Prior Art**
+            [QUESTION TOPICS]
+            **Related Work & Prior Art**
             - What existing methods in this field address similar problems?
             - What are the standard/state-of-the-art approaches?
             - What are their key strengths and limitations?
             Focus: 4-6 questions to map the research landscape
 
-            **Priority 2: Differentiation & Positioning**
+            **Differentiation & Positioning**
             - How does this approach differ technically from each major baseline?
             - What are the specific advantages/disadvantages vs. existing methods?
             - Where does this fit in the taxonomy of approaches?
             Focus: 2-4 questions to establish clear differentiation
 
-            **Priority 3: Key Concepts & Background**
+            **Key Concepts & Background**
             - What theoretical frameworks or mathematical tools are relevant?
             - What domain-specific knowledge is needed to understand the approach?
             - What terminology and definitions are standard in this field?
@@ -208,7 +232,7 @@ class ResearchContextGenerator(LazyModelMixin):
 
             [CRITICAL INSTRUCTIONS]
             - Maximum 10 questions total - quality over quantity
-            - Group questions by priority (label each group)
+            - Group questions by topic (label each group)
             - Be SPECIFIC (e.g., "How does Method X differ from Method Y in aspect Z?" not "What is Method Y?")
             - Focus on what's needed to establish novelty and write a strong related work section
             - Every question should have clear literature search targets
@@ -226,7 +250,10 @@ class ResearchContextGenerator(LazyModelMixin):
             ...
         """)
 
-        result = self.model.respond(prompt)
+        result = self.model.respond(
+            prompt,
+            config={"temperature": 0.0}
+        )
         
         questions_text = remove_thinking_blocks(result.content)
         context.open_questions = questions_text
@@ -264,6 +291,13 @@ class ResearchContextGenerator(LazyModelMixin):
                 context.open_questions
             ])
         
+        if context.dataset_descriptions:
+            content_parts.extend([
+                "\n\n",
+                "# Dataset Descriptions\n",
+                context.dataset_descriptions
+            ])
+
         if context.code_snippets:
             content_parts.extend([
                 "\n\n",
@@ -300,35 +334,42 @@ class ResearchContextGenerator(LazyModelMixin):
         description = ""
         open_questions = ""
         code_snippets_section = ""
-        
+        dataset_descriptions = ""
+
         # Split by main section headers (# at start of line)
         sections = content.split('\n# ')
-        
+
         for section in sections:
             section = section.lstrip('# ')
-            
+
             if section.startswith('Research Context'):
                 desc_content = section.split('\n', 1)[1] if '\n' in section else ""
                 description = desc_content.strip()
-                
+
             elif section.startswith('Open Questions'):
                 questions_content = section.split('\n', 1)[1] if '\n' in section else ""
                 open_questions = questions_content.strip()
-                
+
+            elif section.startswith('Dataset Descriptions'):
+                ds_content = section.split('\n', 1)[1] if '\n' in section else ""
+                dataset_descriptions = ds_content.strip()
+
             elif section.startswith('Important Code Snippets'):
                 snippets_content = section.split('\n', 1)[1] if '\n' in section else ""
                 code_snippets_section = snippets_content.strip()
-        
-        # Clean up description - remove the "Important Code Snippets" section if it got included
-        if '# Important Code Snippets' in description:
-            description = description.split('# Important Code Snippets')[0].strip()
-        
+
+        # Clean up description - remove subsequent sections if they got included
+        for header in ('# Important Code Snippets', '# Dataset Descriptions'):
+            if header in description:
+                description = description.split(header)[0].strip()
+
         print(f"Loaded research context from: {file_path}")
-        
+
         return ResearchContext(
             description=description,
             open_questions=open_questions,
-            code_snippets=code_snippets_section
+            code_snippets=code_snippets_section,
+            dataset_descriptions=dataset_descriptions
         )
     
     @staticmethod

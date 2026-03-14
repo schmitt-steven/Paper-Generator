@@ -1,105 +1,53 @@
 # Research Context
 
-## 1. Taxonomic Classification  
-- **Primary Domain:** Reinforcement Learning  
-- **Specific Task:** Model-Based Policy Optimization in Deterministic Episodic MDPs  
-- **Methodological Class:** Backward Induction via BFS over Persistent Transition Models  
+## 1. Keywords
+- **Primary Domain:** Statistical Data Validation and Forensic Analytics
+- **Specific Task:** Benford's Law Conformity Testing for Official Census Records
+- **Methodological Class:** First-Digit Frequency Analysis with Mean Absolute Deviation (MAD) and Chi-Square Goodness-of-Fit
 
-## 2. Abstract & Core Contribution  
-Standard Q-learning suffers from slow convergence in deterministic episodic environments due to the need for repeated state-action visits to propagate reward signals. Recursive Backwards Q-Learning (RBQL) overcomes this by maintaining a persistent transition model that records all observed state-action-next_state-reward tuples during exploration. Upon reaching a terminal state, RBQL constructs a backward graph and performs a breadth-first search (BFS) from the terminal to propagate updated Q-values in a single sweep using full credit assignment (α=1) via the Bellman optimality equation: Q(s,a) = R(s,a) + γ·max(Q(s')). This backward induction mechanism eliminates iterative value updates across episodes, enabling immediate and complete credit assignment to all predecessor states. Experiments demonstrate that RBQL achieves statistically significant acceleration in convergence speed compared to standard Q-learning, with reduced episode count and wall-clock time under deterministic dynamics.
+## 2. Research Direction & Scope
+**Summary:** While established statistical frameworks often rely on p-values to validate data integrity, current approaches face a critical challenge in large-scale datasets where high statistical power renders trivial deviations significant, potentially obscuring meaningful anomalies; this work investigates the efficacy of Benford's Law as a robust anomaly detection mechanism for German municipal census data (Zensus 2022) by shifting focus from raw count comparisons to proportion-based Mean Absolute Deviation (MAD) metrics. The proposed methodology employs a dual-test framework combining MAD with Chi-square statistics, explicitly designed to mitigate the sensitivity issues inherent in large sample sizes ($N \approx 10,800$), while incorporating synthetic control datasets to simulate uniform distributions and human fabrication biases. By rigorously filtering quality flags (e.g., excluding non-exact values marked by cell-key alterations) and extracting leading digits from population counts, area measurements, and derived density ratios, the approach aims to distinguish between naturally occurring scale-invariant data and structurally anomalous or fabricated entries. Preliminary analysis suggests that while primary variables like population and area are expected to conform to the logarithmic distribution $P(d) = \log_{10}(1 + 1/d)$, derived ratios such as population density may exhibit significant deviations, thereby validating Benford's Law as a discriminative tool for integrity assessment in official statistics.
 
-## 3. Problem Definition  
-- **The Bottleneck:** Standard Q-learning relies on incremental, episode-by-episode updates to propagate rewards backward through the state space, resulting in exponential delays in value convergence for long-horizon deterministic tasks due to sparse reward signals and sequential dependency.  
-- **The Constraint:** The method is constrained to deterministic, episodic Markov Decision Processes (MDPs) where state transitions and rewards are fully observable and reproducible; it is inapplicable to stochastic environments without modification.  
+## 3. Problem Definition
+- **The Bottleneck:** Standard conformity tests (e.g., Chi-square) suffer from excess statistical power in large samples ($N > 10,000$), where even scientifically irrelevant deviations yield significant p-values, making it difficult to distinguish between random noise and genuine data anomalies without a normalized metric like MAD.
+- **The Constraint:** The analysis is constrained by the heterogeneous quality of raw census records, requiring strict filtering of non-exact values (e.g., those suppressed or altered via cell-key methods) before digit extraction can be performed reliably on the remaining population counts and area measurements.
 
-## 4. Technical Approach  
-- **Architecture:** A dual-component framework comprising an online epsilon-greedy exploration policy and a persistent transition model that stores all encountered (s, a, s', r) tuples. Upon episode termination, the system triggers a backward propagation phase via BFS over the inverse transition graph.  
-- **Key differentiator:** Replaces iterative Q-value updates with a single, deterministic backward induction pass using BFS to propagate optimal Q-values from terminal states to all reachable prior states in topological reverse order, enforcing α=1 (full replacement) and eliminating the need for repeated sampling. The backward graph is constructed by inverting transitions: each (s, a) → s' pair becomes an edge from s' to (s, a), enabling reverse traversal.
+## 4. Technical Approach
+- **Architecture:** A multi-stage forensic pipeline that ingests semicolon-delimited CSV data, applies quality flag filtering to isolate exact observations, extracts leading digits from variables (Population, Area, Density), and computes conformity via both Mean Absolute Deviation (MAD) and Chi-square statistics against the theoretical Benford distribution.
+- **Key differentiator:** Unlike standard audits that rely on a single significance threshold or raw count comparisons, this implementation prioritizes proportion-based deviation metrics to ensure scale invariance and explicitly integrates synthetic control datasets (uniform and biased distributions) to calibrate anomaly detection thresholds against known non-conforming baselines.
 
 
 
 # Open Questions for Literature Search
 
-1. **What existing model-based or value-propagation methods in deterministic episodic MDPs use backward induction or reverse traversal to propagate rewards, and how do their transition representations (e.g., dynamic programming, value iteration with reverse indexing) compare to RBQL’s persistent transition graph and BFS-based update?**  
-*(Targets: Prior art in backward induction for deterministic MDPs—e.g., classic dynamic programming, tree-based MCTS with backpropagation, or reverse value iteration—and identifies whether RBQL’s persistent graph + BFS is novel or a reimplementation.)*
+### Related Work & Prior Art
+1. How do existing forensic applications of Benford's Law in official statistics (e.g., tax audits, election forensics) specifically address the "large sample size" problem where standard Chi-square tests yield significant p-values for trivial deviations?
+2. What is the comparative performance and theoretical justification for using Mean Absolute Deviation (MAD) versus raw frequency counts or standardized residuals as the primary anomaly metric in large-scale census datasets ($N > 10,000$)?
+3. Which prior studies have successfully implemented a dual-test framework combining MAD with Chi-square statistics to calibrate significance thresholds against synthetic control distributions (uniform vs. biased) for data integrity verification?
 
-2. **How do state-of-the-art sample-efficient Q-learning variants (e.g., R-max, MBPO, Dyna-Q) handle credit assignment in deterministic environments, and what are their key limitations in convergence speed or memory use that RBQL explicitly addresses?**  
-*(Targets: Comparison with model-based and model-free baselines; establishes RBQL’s advantage in eliminating iterative updates via single-pass BFS.)*
+### Differentiation & Positioning
+4. How does the proposed proportion-based MAD approach technically differ from standard "cell-key" or suppression handling methods in existing literature regarding the preservation of scale-invariance when filtering non-exact census values?
+5. In what specific ways do current Benford's Law implementations for municipal data fail to account for the structural deviation expected in derived ratios (e.g., population density) compared to primary variables, and how does this work resolve that ambiguity?
 
-3. **What theoretical guarantees (convergence, optimality, complexity) exist for backward induction in deterministic MDPs using BFS over transition graphs, and how does RBQL’s use of α=1 and full replacement align with or deviate from established Bellman operator theory?**  
-*(Targets: Foundational MDP theory—e.g., contraction mapping, value iteration convergence—and confirms whether RBQL’s update rule is theoretically sound and novel in its implementation.)*
-
-4. **Are there prior algorithms that reconstruct inverse transition graphs (s' → s, a) to enable backward value propagation in reinforcement learning, and if so, how do they handle state reuse, cycle detection, or partial observability?**  
-*(Targets: Novelty check—identifies if RBQL’s backward graph construction is a known technique or an original contribution in RL context.)*
-
-5. **How does RBQL’s reliance on a persistent transition model and full-state replay differ technically from experience replay in DQN or memory-augmented RL, particularly in terms of update timing (episodic backward pass vs. stochastic minibatch updates)?**  
-*(Targets: Differentiation from memory-based methods; clarifies RBQL’s deterministic, episode-bound propagation as a structural innovation.)*
-
-6. **In what ways does RBQL’s BFS-based backward induction fundamentally reduce sample complexity compared to standard Q-learning in long-horizon deterministic tasks, and what formal analysis (e.g., step-to-convergence bounds) exists for such backward propagation schemes?**  
-*(Targets: Quantitative differentiation—establishes RBQL’s theoretical and empirical novelty in convergence speed claims.)*
-
-7. **What are the standard evaluation metrics for sample efficiency and convergence speed in deterministic episodic MDPs, and how do prior works (e.g., value iteration, policy iteration, or model-based RL) measure and report these?**  
-*(Targets: Contextualizes RBQL’s experimental claims—ensures metrics (episode count, wall-clock time) are standard and comparable.)*
-
-8. **How does RBQL’s requirement for deterministic transitions constrain its applicability compared to general MDP solvers, and what prior work has explicitly exploited determinism to enable exact or non-iterative value updates?**  
-*(Targets: Domain-specific context—identifies if leveraging determinism for exact backward induction is a recognized strategy or an underexplored niche.)*
-
-9. **What are the computational complexity and memory overhead trade-offs of maintaining a persistent transition model in RBQL versus iterative Q-learning or tabular value iteration, particularly as state space grows?**  
-*(Targets: Practical differentiation—establishes whether RBQL’s memory usage or scalability is a novel trade-off.)*
-
-10. **What terminology and formalisms are used in literature to describe “backward induction via BFS over transition graphs” in RL, and how does RBQL’s use of topological reverse ordering align with or diverge from dynamic programming in acyclic MDPs?**  
-*(Targets: Terminology and taxonomy—ensures RBQL is framed using standard academic language to position it correctly in the field.)*
+### Key Concepts & Background
+6. What are the established mathematical bounds and critical values for MAD under the null hypothesis of Benford's Law specifically for datasets with heterogeneous quality flags or partial suppression, as opposed to idealized clean data?
+7. Which theoretical frameworks regarding "scale invariance" and "digit bias" best explain why derived variables like population density might naturally deviate from Benford's distribution even when underlying primary counts are authentic?
 
 
 
-# Important Code Snippets
+# Dataset Descriptions
 
-## File: recursive_backwards_q_learning.py
+## 1000A-0001_de_flat.csv
+**Size:** 5.6 MB | **Rows:** 32,358 | **Columns:** 14
 
-**Summary:** RBQL is a deterministic Q-learning variant that maintains a persistent model of all visited transitions and performs backward value propagation via BFS from terminal states, ensuring immediate credit assignment to all preceding states in a single update. This eliminates the need for iterative updates over multiple episodes, leading to faster convergence on deterministic environments.
+**Column types:** statistics_code (object), statistics_label (object), time_code (object), time_label (object), time (object), 1_variable_code (object), 1_variable_label (object), 1_variable_attribute_code (int64), 1_variable_attribute_label (object), value (object), value_unit (object), value_variable_code (object), value_variable_label (object), value_q (object)
 
-**Keywords:** Q-learning, backward induction, BFS, deterministic MDP, persistent model
-
-**Method:** Uses a persistent transition model to store all state-action-next_state-reward tuples; after reaching a terminal state, performs BFS backwards from the terminal to update all known states with Q(s,a) = R(s,a) + γ * max(Q(s')) using α=1.
-
-**Contribution:** Core learning algorithm that enables rapid value function convergence by performing backward BFS updates across a persistent transition model after each episode.
-
-**Code Snippets (2):**
-
-### Build Backward Graph
-```python
-def build_backward_graph(self):
-        backward = defaultdict(list)
-        for state, next_states in self.explored_map.items():
-            for action_index, next_state in enumerate(next_states):
-                if next_state is not None:
-                    reward = self.get_reward(state, action_index)
-                    backward[next_state].append((state, action_index, reward))
-        return backward
+**Raw preview:**
 ```
-
-### Backward Propagation with BFS
-```python
-def propagate_reward(self, terminal_state):
-        backward = self.model.build_backward_graph()
-
-        visited_states = set([terminal_state])
-        queue = deque([terminal_state])
-        state_order = []
-
-        while queue:
-            current_state = queue.popleft()
-
-            for state, action_index, reward in backward[current_state]:
-                state_order.append((state, action_index, current_state, reward))
-
-                if state not in visited_states:
-                    visited_states.add(state)
-                    queue.append(state)
-
-        for state, action_index, next_state, reward in state_order:
-            next_q = np.max(self.q_values[next_state])
-            self.q_values[state][action_index] = reward + self.gamma * next_q
+statistics_code;statistics_label;time_code;time_label;time;1_variable_code;1_variable_label;1_variable_attribute_code;1_variable_attribute_label;value;value_unit;value_variable_code;value_variable_label;value_q
+1000A;Bevölkerung kompakt (Gebietsstand 15.05.2022);STAG;Stichtag;2022-05-15;GEOGM4;Gemeinden (Gebietsstand 15.05.2022);092760130130;Lindberg;108,84;qkm;FLC001;Fläche;e
+1000A;Bevölkerung kompakt (Gebietsstand 15.05.2022);STAG;Stichtag;2022-05-15;GEOGM4;Gemeinden (Gebietsstand 15.05.2022);092760130130;Lindberg;2294;Anzahl;PRS018;Personen;e
+1000A;Bevölkerung kompakt (Gebietsstand 15.05.2022);STAG;Stichtag;2022-05-15;GEOGM4;Gemeinden (Gebietsstand 15.05.2022);092760130130;Lindberg;21;Ew/qkm;PRS017;Bevölkerungsdichte;e
 ```
 
 ---

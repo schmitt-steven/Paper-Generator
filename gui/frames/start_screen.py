@@ -17,27 +17,46 @@ from settings import Settings
 import threading
 
 
-ALLOWED_EXTENSIONS = {
+CODE_EXTENSIONS = {
     '.py', '.js', '.ts', '.jsx', '.tsx',
     '.java', '.cpp', '.c', '.h', '.go',
     '.rs', '.rb', '.cs', '.swift', '.kt',
     '.scala', '.r', '.jl'
 }
 
+DATASET_EXTENSIONS = {
+    '.csv', '.tsv', '.json', '.jsonl',
+    '.xlsx', '.xls', '.parquet'
+}
+
+ALL_EXTENSIONS = CODE_EXTENSIONS | DATASET_EXTENSIONS
+
 
 @dataclass
-class CodeFile:
-    """Represents an uploaded code file."""
+class UserFile:
+    """Represents an uploaded user file (code or dataset)."""
     filename: str
     path: str
-    line_count: int
+    file_type: str  # "code" or "dataset"
+    line_count: int = 0  # for code files
+    file_size: int = 0   # for dataset files (bytes)
+
+    @property
+    def file_size_display(self) -> str:
+        """Human-readable file size."""
+        if self.file_size < 1024:
+            return f"{self.file_size} B"
+        elif self.file_size < 1024 * 1024:
+            return f"{self.file_size / 1024:.1f} KB"
+        else:
+            return f"{self.file_size / (1024 * 1024):.1f} MB"
 
 
 class StartScreen(BaseFrame):
     """Start page with quick access to Settings, Paper Specification, Style Guidelines, and Code Files."""
 
     def __init__(self, parent, controller):
-        self.code_files: list[CodeFile] = []
+        self.user_files: list[UserFile] = []
         self.file_widgets: dict[str, ttk.Frame] = {}
         self.experiment_file: str | None = Settings.USER_EXPERIMENT_FILE or None
         
@@ -266,62 +285,62 @@ class StartScreen(BaseFrame):
         """Open the style guidelines file directly in the default editor."""
         self._open_in_editor(self.style_guidelines_path)
 
-    # ==================== Code Files Section ====================
-    
+    # ==================== Code & Data Section ====================
+
     def _create_code_files_section(self):
-        """Create the Code Files card with upload and file list."""
+        """Create the Code & Data card with upload and file list."""
         card = CardBorderFrame(self.scrollable_frame, padx=1, pady=1)
         card.pack(fill="x", pady=10)
-        
+
         # Header
         header = ttk.Frame(card, style="CardHeader.TFrame", padding=(10, 6))
         header.pack(fill="x")
-        
+
         left_header = ttk.Frame(header, style="CardHeader.TFrame")
         left_header.pack(side="left")
-        
+
         header_bg = getattr(self.controller, '_card_header_bg', CARD_HEADER_BG_DARK)
         header_fg = CARD_HEADER_FG_DARK if self.controller.current_theme == "dark" else CARD_HEADER_FG_LIGHT
-        
+
         tk.Label(
-            left_header, 
-            text="Code Files", 
+            left_header,
+            text="Code & Data",
             font=self.controller.fonts.sub_header_font,
             bg=header_bg,
             fg=header_fg
         ).pack(side="left")
-        
+
         self.count_label = tk.Label(
-            left_header, 
-            text="0", 
-            font=self.controller.fonts.sub_header_font, 
+            left_header,
+            text="0",
+            font=self.controller.fonts.sub_header_font,
             fg=MUTED_TEXT,
             bg=header_bg
         )
         self.count_label.pack(side="left", padx=(10, 0))
-        
+
         # Right side: Upload, Info
         info_btn = self.controller.icons.create_icon_label(
             header,
             icon_name="info",
-            command=lambda: InfoPopup(self.controller, "Code Files", CODE_FILES_INFO),
+            command=lambda: InfoPopup(self.controller, "Code & Data", CODE_FILES_INFO),
             scale=1.5,
             hover_color=HoverColor.BLUE
         )
         info_btn.pack(side="right", padx=(5, 0))
-        
+
         ttk.Button(
-            header, 
-            text="Upload", 
+            header,
+            text="Upload",
             command=self._on_upload_click
         ).pack(side="right", padx=(5, 5))
-        
+
         ttk.Separator(card, orient="horizontal").pack(fill="x")
-        
+
         # Files list container
         self.files_list = ttk.Frame(card, style="CardContent.TFrame", padding=10)
         self.files_list.pack(fill="x")
-        
+
         # Show empty state initially
         self._show_empty_state()
     
@@ -329,12 +348,20 @@ class StartScreen(BaseFrame):
         """Show empty state message."""
         ttk.Label(
             self.files_list,
-            text="No code files uploaded yet",
+            text="No files uploaded yet",
             font=self.controller.fonts.default_font,
             foreground="gray"
         ).pack(pady=20)
-    
-    def _create_file_entry(self, parent: ttk.Frame, code_file: CodeFile) -> ttk.Frame:
+
+    @staticmethod
+    def _classify_file(filename: str) -> str:
+        """Classify a file as 'code' or 'dataset' based on extension."""
+        suffix = Path(filename).suffix.lower()
+        if suffix in DATASET_EXTENSIONS:
+            return "dataset"
+        return "code"
+
+    def _create_file_entry(self, parent: ttk.Frame, user_file: UserFile) -> ttk.Frame:
         """Create a single file entry widget."""
         entry_frame = ttk.Frame(parent, style="CardRow.TFrame", padding="8")
         entry_frame.pack(fill="x")
@@ -348,49 +375,63 @@ class StartScreen(BaseFrame):
         # Filename (clickable)
         filename_label = ttk.Label(
             content_frame,
-            text=code_file.filename,
+            text=user_file.filename,
             font=self.controller.fonts.default_font,
             style="CardRow.TLabel",
             cursor="hand2"
         )
         filename_label.pack(anchor="w")
 
-        # Line count + experiment badge row
+        # Info row: metric + tag
         info_frame = ttk.Frame(content_frame, style="CardRow.TFrame")
         info_frame.pack(anchor="w", pady=(2, 0))
 
-        line_text = f"{code_file.line_count:,} lines"
+        # Tag: "Experiment" (green), "Code" (blue), or "Dataset" (orange)
+        is_experiment = (user_file.file_type == "code" and self.experiment_file == user_file.filename)
+        if is_experiment:
+            tag_text, tag_color = "Experiment", "#2ecc71"
+        elif user_file.file_type == "dataset":
+            tag_text, tag_color = "Dataset", "#e67e22"
+        else:
+            tag_text, tag_color = "Code", "#3498db"
+
         ttk.Label(
             info_frame,
-            text=line_text,
+            text=tag_text,
+            font=self.controller.fonts.text_area_font,
+            foreground=tag_color,
+            style="CardRow.TLabel"
+        ).pack(side="left")
+
+        filename_label.bind("<Button-1>", lambda e, p=user_file.path: self._open_in_editor(p))
+
+        # Separator
+        ttk.Label(info_frame, text="  \u00B7  ", font=self.controller.fonts.text_area_font, foreground="gray", style="CardRow.TLabel").pack(side="left")
+
+        # Metric: line count for code, file size for datasets
+        if user_file.file_type == "dataset":
+            metric_text = user_file.file_size_display
+        else:
+            metric_text = f"{user_file.line_count:,} lines"
+
+        ttk.Label(
+            info_frame,
+            text=metric_text,
             font=self.controller.fonts.text_area_font,
             foreground="gray",
             style="CardRow.TLabel"
         ).pack(side="left")
-
-        # Show experiment badge if this file is the active experiment
-        is_experiment = self.experiment_file == code_file.filename
-        if is_experiment:
-            ttk.Label(
-                info_frame,
-                text="Experiment",
-                font=self.controller.fonts.text_area_font,
-                foreground="#2ecc71",
-                style="CardRow.TLabel"
-            ).pack(side="left", padx=(10, 0))
-
-        filename_label.bind("<Button-1>", lambda e, p=code_file.path: self._open_in_editor(p))
-
+        
         # Remove button
         x_btn = self.controller.icons.create_icon_label(
             content_row,
             icon_name="x",
-            command=lambda: self._remove_file(code_file.filename)
+            command=lambda: self._remove_file(user_file.filename)
         )
         x_btn.pack(side="right", padx=(10, 0))
 
-        # "Use as Experiment" / "Remove Experiment" button for .py files
-        if code_file.filename.endswith('.py'):
+        # "Use as Experiment" / "Remove Experiment" button for .py code files
+        if user_file.file_type == "code" and user_file.filename.endswith('.py'):
             if is_experiment:
                 exp_btn = ttk.Button(
                     content_row,
@@ -401,112 +442,178 @@ class StartScreen(BaseFrame):
                 exp_btn = ttk.Button(
                     content_row,
                     text="Use as Experiment",
-                    command=lambda f=code_file: self._on_use_as_experiment_click(f)
+                    command=lambda f=user_file: self._on_use_as_experiment_click(f)
                 )
             exp_btn.pack(side="right", padx=(10, 0))
 
         return entry_frame
-    
-    def _load_existing_files(self):
-        """Load existing code files from user_files/ directory."""
-        # Skip if already loaded
-        if self.code_files:
-            return
-        
+
+    @staticmethod
+    def _migrate_flat_files():
+        """Migrate files from flat user_files/ to subfolders (backward compatibility)."""
         user_files_dir = Path("user_files")
         if not user_files_dir.exists():
             return
-        
-        # Find all code files in user_files/
-        code_file_paths = []
-        for file_path in user_files_dir.iterdir():
-            if file_path.is_file() and file_path.suffix.lower() in ALLOWED_EXTENSIONS:
-                code_file_paths.append(str(file_path))
-        
-        if code_file_paths:
-            self._process_files(tuple(code_file_paths))
-    
+
+        code_dir = user_files_dir / "code"
+        datasets_dir = user_files_dir / "datasets"
+
+        for file_path in list(user_files_dir.iterdir()):
+            if not file_path.is_file():
+                continue
+            suffix = file_path.suffix.lower()
+            if suffix in CODE_EXTENSIONS:
+                code_dir.mkdir(exist_ok=True)
+                dest = code_dir / file_path.name
+                if not dest.exists():
+                    shutil.move(str(file_path), str(dest))
+                    print(f"[Migration] Moved {file_path.name} -> code/")
+            elif suffix in DATASET_EXTENSIONS:
+                datasets_dir.mkdir(exist_ok=True)
+                dest = datasets_dir / file_path.name
+                if not dest.exists():
+                    shutil.move(str(file_path), str(dest))
+                    print(f"[Migration] Moved {file_path.name} -> datasets/")
+
+    def _load_existing_files(self):
+        """Load existing files from user_files/code/ and user_files/datasets/ directories."""
+        # Skip if already loaded
+        if self.user_files:
+            return
+
+        # Migrate flat structure if needed
+        self._migrate_flat_files()
+
+        user_files_dir = Path("user_files")
+        if not user_files_dir.exists():
+            return
+
+        file_paths = []
+
+        # Load code files
+        code_dir = user_files_dir / "code"
+        if code_dir.exists():
+            for file_path in code_dir.iterdir():
+                if file_path.is_file() and file_path.suffix.lower() in CODE_EXTENSIONS:
+                    file_paths.append(str(file_path))
+
+        # Load dataset files
+        datasets_dir = user_files_dir / "datasets"
+        if datasets_dir.exists():
+            for file_path in datasets_dir.iterdir():
+                if file_path.is_file() and file_path.suffix.lower() in DATASET_EXTENSIONS:
+                    file_paths.append(str(file_path))
+
+        if file_paths:
+            self._process_files(tuple(file_paths))
+
     def _on_upload_click(self):
         """Handle Upload button click."""
-        ext_pattern = " ".join(f"*{ext}" for ext in sorted(ALLOWED_EXTENSIONS))
-        
+        code_pattern = " ".join(f"*{ext}" for ext in sorted(CODE_EXTENSIONS))
+        dataset_pattern = " ".join(f"*{ext}" for ext in sorted(DATASET_EXTENSIONS))
+        all_pattern = " ".join(f"*{ext}" for ext in sorted(ALL_EXTENSIONS))
+
         file_paths = filedialog.askopenfilenames(
-            title="Select Code Files",
+            title="Select Code or Data Files",
             filetypes=[
-                ("Code files", ext_pattern),
+                ("All supported files", all_pattern),
+                ("Code files", code_pattern),
+                ("Dataset files", dataset_pattern),
                 ("All files", "*.*")
             ]
         )
-        
+
         if not file_paths:
             return
-        
+
         self._process_files(file_paths)
-    
+
     def _process_files(self, file_paths: tuple):
-        """Process and add code files."""
-        existing_filenames = {f.filename for f in self.code_files}
+        """Process and add code/dataset files to appropriate subfolders."""
+        existing_filenames = {f.filename for f in self.user_files}
         user_files_dir = Path("user_files")
-        user_files_dir.mkdir(exist_ok=True)
-        
+        code_dir = user_files_dir / "code"
+        datasets_dir = user_files_dir / "datasets"
+
         for file_path in file_paths:
             src_path = Path(file_path)
-            
-            if src_path.suffix.lower() not in ALLOWED_EXTENSIONS:
+            suffix = src_path.suffix.lower()
+
+            if suffix not in ALL_EXTENSIONS:
                 print(f"[StartScreen] Skipping unsupported file type: {src_path.name}")
                 continue
-            
+
             if src_path.name in existing_filenames:
                 print(f"[StartScreen] Skipping duplicate: {src_path.name}")
                 continue
-            
-            dest_path = user_files_dir / src_path.name
-            
-            if src_path.parent.resolve() != user_files_dir.resolve():
+
+            # Determine type and destination subfolder
+            file_type = self._classify_file(src_path.name)
+            if file_type == "dataset":
+                dest_dir = datasets_dir
+            else:
+                dest_dir = code_dir
+            dest_dir.mkdir(parents=True, exist_ok=True)
+            dest_path = dest_dir / src_path.name
+
+            # Copy if not already in the target directory
+            if src_path.parent.resolve() != dest_dir.resolve():
                 shutil.copy2(src_path, dest_path)
-            
-            try:
-                with open(dest_path, 'r', encoding='utf-8', errors='ignore') as f:
-                    line_count = sum(1 for _ in f)
-            except Exception:
-                line_count = 0
-            
-            code_file = CodeFile(
+
+            # Compute metrics
+            line_count = 0
+            file_size = 0
+            if file_type == "dataset":
+                file_size = dest_path.stat().st_size
+            else:
+                try:
+                    with open(dest_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        line_count = sum(1 for _ in f)
+                except Exception:
+                    line_count = 0
+
+            user_file = UserFile(
                 filename=src_path.name,
                 path=str(dest_path),
-                line_count=line_count
+                file_type=file_type,
+                line_count=line_count,
+                file_size=file_size
             )
-            
-            self.code_files.append(code_file)
+
+            self.user_files.append(user_file)
             existing_filenames.add(src_path.name)
-            print(f"[StartScreen] Added: {src_path.name} ({line_count} lines)")
-        
+
+            if file_type == "dataset":
+                print(f"[StartScreen] Added dataset: {src_path.name} ({user_file.file_size_display})")
+            else:
+                print(f"[StartScreen] Added code: {src_path.name} ({line_count} lines)")
+
         self._refresh_files_list()
-    
+
     def _refresh_files_list(self):
         """Refresh the files list display."""
         for widget in self.files_list.winfo_children():
             widget.destroy()
         self.file_widgets.clear()
-        
-        if not self.code_files:
+
+        if not self.user_files:
             self._show_empty_state()
         else:
-            for i, code_file in enumerate(self.code_files):
+            for i, user_file in enumerate(self.user_files):
                 if i > 0:
                     ttk.Separator(self.files_list, orient="horizontal").pack(fill="x", padx=5)
-                entry = self._create_file_entry(self.files_list, code_file)
-                self.file_widgets[code_file.filename] = entry
-        
+                entry = self._create_file_entry(self.files_list, user_file)
+                self.file_widgets[user_file.filename] = entry
+
         self._update_count()
-    
+
     def _update_count(self):
         """Update the file count label."""
-        self.count_label.config(text=str(len(self.code_files)))
-    
+        self.count_label.config(text=str(len(self.user_files)))
+
     def _remove_file(self, filename: str):
-        """Remove a code file."""
-        removed = next((f for f in self.code_files if f.filename == filename), None)
+        """Remove a user file."""
+        removed = next((f for f in self.user_files if f.filename == filename), None)
         if removed:
             print(f"[StartScreen] Removed: {removed.filename}")
 
@@ -518,12 +625,12 @@ class StartScreen(BaseFrame):
         if self.experiment_file == filename:
             self._deactivate_experiment()
 
-        self.code_files = [f for f in self.code_files if f.filename != filename]
+        self.user_files = [f for f in self.user_files if f.filename != filename]
         self._refresh_files_list()
 
     # ==================== User Experiment Methods ====================
 
-    def _on_use_as_experiment_click(self, code_file: CodeFile):
+    def _on_use_as_experiment_click(self, code_file: UserFile):
         """Show confirmation popup before activating user experiment."""
         confirmed = messagebox.askyesno(
             "Use as Experiment",
@@ -549,7 +656,7 @@ class StartScreen(BaseFrame):
         # Run LLM check in background
         self._run_experiment_code_check(code_file)
 
-    def _run_experiment_code_check(self, code_file: CodeFile):
+    def _run_experiment_code_check(self, code_file: UserFile):
         """Run an LLM check on the user's code and show results before activation."""
         popup = ProgressPopup(self.controller, "Checking experiment code")
 
@@ -566,7 +673,7 @@ class StartScreen(BaseFrame):
         thread = threading.Thread(target=task, daemon=True)
         thread.start()
 
-    def _llm_check_experiment_code(self, code_file: CodeFile) -> str | None:
+    def _llm_check_experiment_code(self, code_file: UserFile) -> str | None:
         """Use LLM to check if the code is suitable as an experiment. Returns issues string or None."""
         import lmstudio as lms
         from utils.llm_utils import remove_thinking_blocks
@@ -609,7 +716,7 @@ class StartScreen(BaseFrame):
             print(f"[StartScreen] LLM code check failed: {e}")
             return None
 
-    def _on_code_check_complete(self, popup: ProgressPopup, code_file: CodeFile, issues: str | None):
+    def _on_code_check_complete(self, popup: ProgressPopup, code_file: UserFile, issues: str | None):
         """Handle LLM code check completion."""
         popup.close()
 
@@ -627,7 +734,7 @@ class StartScreen(BaseFrame):
 
         self._activate_experiment(code_file)
 
-    def _activate_experiment(self, code_file: CodeFile):
+    def _activate_experiment(self, code_file: UserFile):
         """Set the given file as the user experiment."""
         self.experiment_file = code_file.filename
         Settings.USER_EXPERIMENT_FILE = code_file.filename

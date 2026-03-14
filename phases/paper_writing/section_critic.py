@@ -48,12 +48,16 @@ class SectionCritic:
         response = model.respond(
             prompt,
             response_format=SectionCritique,
-            config={"temperature": 0.2},
+            config={"temperature": 0.2, "maxPredictedTokens": 4096},
         )
         
         content = remove_thinking_blocks(response.content)
-        parsed = json.loads(content)
-        critique = SectionCritique(**parsed)
+        try:
+            parsed = json.loads(content)
+            critique = SectionCritique(**parsed)
+        except (json.JSONDecodeError, KeyError, TypeError) as e:
+            print(f"[SectionCritic] WARNING: Failed to parse critique response ({e}). Using empty critique.")
+            critique = SectionCritique(improvements="", search_queries=[])
         
         # --- VERIFY CITATIONS ---
         # Extract all citation keys used in the draft

@@ -102,11 +102,15 @@ class HypothesisBuilder(LazyModelMixin):
             5. CRITICAL for success_criteria: Do NOT include specific numbers, percentages, multipliers, or quantitative targets (e.g., "10x faster", "50% improvement", "reduces error by 20%"). 
                These are impossible to know before running experiments and are pure speculation. 
                Instead, use qualitative, observable criteria (e.g., "shows improved convergence", "demonstrates better sample efficiency", "exhibits reduced memory usage", "achieves stable performance")
+            6. ZERO BS POLICY / NO AI META-COMMENTARY: Write directly in the third person about the scientific subject.
+               NEVER use phrases like "The user wants me to structure...", "This hypothesis addresses...", "Based on the provided context...".
+               Start the description directly with the scientific phenomenon (e.g. "Validating official statistics integrity using Benford's Law...").
+               Eliminate entirely AI filler words ("robust", "seamless", "comprehensive", "leverage", "vital").
             
             For the structured hypothesis, provide:
             - id: unique identifier (e.g., "user_hypothesis_01")
-            - description: Clear, testable statement extracted from the user's input
-            - rationale: Why this hypothesis is relevant (reference the research context if available)
+            - description: Clear, testable scientific statement extracted from the user's input (NO meta-commentary)
+            - rationale: The scientific justification for this hypothesis (NO meta-commentary about the user or prompt)
             - success_criteria: Clear, measurable criterion or criteria for determining if the hypothesis is validated.
               CRITICAL: Do NOT include specific numbers, percentages, multipliers, or quantitative targets.
               Use qualitative, observable criteria instead.

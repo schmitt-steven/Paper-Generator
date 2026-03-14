@@ -1,10 +1,8 @@
 # Style Guidelines
 ## Abstract
 150-300 words MAX.
-Default structure: (1) Problem/Gap, (2) Approach, (3) Key Results (with specific metrics), (4) Main Implication.
 Be specific and verifiable.
 CITATIONS ARE STRICTLY FORBIDDEN. Do NOT include ANY citations in the Abstract.
-Do NOT use generic phrases like "In this paper, we propose...". Jump straight into the problem or approach.
 
 **Intuitive and Accessible Vocabulary:**
     Write in a clear, straightforward, and professional style. Prioritize clarity for non-native speakers. Replace robotic, overly academic, or technical jargon with simple, intuitive everyday terms. 
@@ -19,11 +17,6 @@ Do NOT use generic phrases like "In this paper, we propose...". Jump straight in
     - **DO:** "The process begins by loading the user's data. Once loaded, the system processes it to extract metadata. Finally, the results are saved to the disk."
 
 ## Introduction
-Open with the problem and its concrete impact.
-Identify what's missing in current solutions using evidence.
-State your contribution as specific, falsifiable claims.
-End with brief paper roadmap.
-Justify claims with evidence, don't just assert.
 
 Scientific Writing & Tone Guidelines
 1. **Logical Derivation Over Empirical Claims:** 
@@ -49,11 +42,6 @@ Scientific Writing & Tone Guidelines
    - **DO:** "The process begins by loading the user's data. Once loaded, the system processes it to extract metadata. Finally, the results are saved to the disk."
 
 ## Related Work
-Group by approach/theme, not chronologically. For each group:
-- What they did (method + reported results)
-- Limitations relative to this work
-- Direct comparison where applicable
-Avoid generic praise. Be precise about differences. Cite liberally.
 
 Scientific Writing & Tone Guidelines
 1. **Logical Derivation Over Empirical Claims:** 
@@ -79,12 +67,6 @@ Scientific Writing & Tone Guidelines
    - **DO:** "The process begins by loading the user's data. Once loaded, the system processes it to extract metadata. Finally, the results are saved to the disk."
 
 ## Methods
-Reproducibility is the goal. If possible and relevant, include:
-- Architecture/algorithm with justification for key choices
-- Hyperparameters, dataset details, compute resources
-- Baseline comparisons (what and why)
-- Evaluation metrics with rationale
-Use present tense. Avoid implementation details unless critical.
 
 Scientific Writing & Tone Guidelines
 1. **Logical Derivation Over Empirical Claims:** 
@@ -138,11 +120,6 @@ Scientific Writing & Tone Guidelines
    - **DO:** "The process begins by loading the user's data. Once loaded, the system processes it to extract metadata. Finally, the results are saved to the disk."
 
 ## Discussion
-Open by restating main finding in context of hypothesis.
-Explain why it worked/failed using specific evidence and results. Acknowledge limitations honestly.
-Compare to related work quantitatively where possible.
-Speculation allowed but label it clearly.
-End with concrete future directions, not vague "explore further.
 
 Scientific Writing & Tone Guidelines
 1. **Logical Derivation Over Empirical Claims:** 
@@ -168,8 +145,6 @@ Scientific Writing & Tone Guidelines
    - **DO:** "The process begins by loading the user's data. Once loaded, the system processes it to extract metadata. Finally, the results are saved to the disk."
 
 ## Conclusion
-Summarize: what you did, what you found (with key metrics), broader implications (realistic, not grandiose), actionable next step(s).
-NO new information. Few or no citations.
 
 Scientific Writing & Tone Guidelines
 1. **Logical Derivation Over Empirical Claims:** 

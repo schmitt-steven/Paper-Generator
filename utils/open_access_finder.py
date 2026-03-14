@@ -56,17 +56,17 @@ def find_open_access_pdfs(papers: List[Paper], delay: float = 0.3) -> List[Paper
         pdf_url = None
         source = None
         
-        # Try Unpaywall first if DOI exists
-        if paper.doi:
-            pdf_url = _check_unpaywall(paper.doi)
-            if pdf_url:
-                source = "Unpaywall"
-        
-        # Fallback to arXiv title search
-        if not pdf_url:
+        # Try arXiv title search first
+        if paper.title:
             pdf_url = _search_arxiv_by_title(paper.title)
             if pdf_url:
                 source = "arXiv"
+        
+        # Fallback to Unpaywall if DOI exists
+        if not pdf_url and paper.doi:
+            pdf_url = _check_unpaywall(paper.doi)
+            if pdf_url:
+                source = "Unpaywall"
         
         if pdf_url:
             paper.is_open_access = True
@@ -104,8 +104,6 @@ def _check_unpaywall(doi: str) -> Optional[str]:
             pdf_url = best_oa.get("url_for_pdf")
             if pdf_url:
                 return pdf_url
-            # Fallback to landing page URL if no direct PDF
-            return best_oa.get("url")
         
         # Check all OA locations
         for location in data.get("oa_locations", []):

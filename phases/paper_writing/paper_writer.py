@@ -160,9 +160,11 @@ class PaperWriter:
             Create a concise, informative paper title based on the complete paper draft.
 
             [REQUIREMENTS]
-            - Be clear, concise and descriptive
+            - Be punchy, clear, and highly concise
+            - Focus on the core methodologies and the specific data or problem
             - Use standard academic title formatting (title case)
-            - Avoid unnecessary words like 'A Study of' or 'An Investigation into'
+            - Avoid unnecessary words like 'A Study of', 'An Investigation into', or 'Approach'
+            - Create an engaging title that highlights the specific techniques used (e.g., 'Method A, Method B, and Concept C in Data D')
             - ONLY output the title text, without quotes, additional text or formatting
 
             [PAPER DRAFT]
@@ -400,7 +402,11 @@ The following papers are available for citation. Use their citation keys in squa
 
 [GENERATION RULES — DO NOT VIOLATE]
 - Do NOT reference the guidelines or instructions.
-- Do NOT include section headings (e.g., "## Introduction") in your output.
+- STRICTLY FORBIDDEN: Do NOT start your text with ANY section heading — not "# Methods", not "## Results", not "# Introduction", nothing. Your first output character must be prose content, not a "#" symbol. The heading already exists above your output.
+- STRICTLY FORBIDDEN: Do NOT attempt to start or write the next section after finishing this one. Stop writing immediately upon completing the current section.
+- You MAY use markdown subsection headings (### and ####) to organize longer sections where sub-topics benefit from labeling.
+- SUBSECTION RULES: If you use subsections, you MUST use at least two of the same level. NEVER use just a single subsection.
+- SUBSECTION RULES: All subsections MUST be consistently numbered (e.g., "### 1. First Topic", "### 2. Second Topic"). Do NOT mix numbered and non-numbered subsections.
 - Output ONLY the final written section content.
 """
 
@@ -508,7 +514,12 @@ Rewrite the {section_type.value} section, addressing the suggested improvements 
 
 [GENERATION RULES — DO NOT VIOLATE]
 - Do NOT reference the critique or instructions.
-- Do NOT include section headings in your output.
+- You MUST output the ENTIRE rewritten section from start to finish, not just the parts you changed.
+- STRICTLY FORBIDDEN: Do NOT start your text with ANY section heading — not "# Methods", not "## Results", not "# Introduction", nothing. Your first output character must be prose content, not a "#" symbol. The heading already exists above your output.
+- STRICTLY FORBIDDEN: Do NOT attempt to start or write the next section after finishing this one. Stop writing immediately upon completing the current section.
+- You MAY use markdown subsection headings (### and ####) to organize longer sections where sub-topics benefit from labeling.
+- SUBSECTION RULES: If you use subsections, you MUST use at least two of the same level. NEVER use just a single subsection.
+- SUBSECTION RULES: All subsections MUST be consistently numbered (e.g., "### 1. First Topic", "### 2. Second Topic"). Do NOT mix numbered and non-numbered subsections.
 - Output ONLY the final rewritten section content.
 """
 

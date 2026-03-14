@@ -95,20 +95,26 @@ evidence retrieval entirely (the critic still suggests improvements, but there w
 
 
 CODE_FILES_INFO = """\
-Upload your code files relevant to the topic of the paper here.
+Upload your code files and datasets relevant to the topic of the paper here. Files are automatically categorized based on their format.
 
-It's not required to upload code files, but it can help the LLM to better understand your algorithm and generate more accurate results.
+# Code Files
 
-The code files will also be used as context for the experimentation phase. The LLM even has the option to import methods or classes from the provided code.
-This can be helpful if you're trying to compare many different algorithms with each other, so the LLM doesn't have to "reinvent the wheel". 
+Code files help the LLM understand your algorithm and generate more accurate results. During experimentation, the LLM can import methods or classes from your code.
 
-# Code Structure Best Practices
+**Supported formats**: .py, .js, .ts, .jsx, .tsx, .java, .cpp, .c, .h, .go, .rs, .rb, .cs, .swift, .kt, .scala, .r, .jl
 
-For the best results during the experimentation phase, follow these guidelines:
+**Best practices:**
+- Avoid global state for critical logic
+- Encapsulate logic in classes/functions
+- Ensure importability (use `if __name__ == "__main__":`)
 
-- **Avoid Global State**: Do not rely on global variables for critical logic (e.g., model instances, configuration parameters).
-- **Use Classes/Functions**: Encapsulate logic in classes or functions that accept dependencies as arguments.
-- **Importability**: Ensure your code can be imported without executing immediate side effects (use `if __name__ == "__main__":` for scripts).
+# Datasets
+
+Datasets are analyzed for metadata (columns, types, row count, sample rows) without loading the full content. The LLM uses this metadata to write correct data loading code during experiments.
+
+**Supported formats**: .csv, .tsv, .json, .jsonl, .xlsx, .xls, .parquet
+
+Datasets are copied to the experiment working directory under a `datasets/` subfolder and can be loaded with pandas.
 """
 
 USER_EXPERIMENT_INFO = """\
