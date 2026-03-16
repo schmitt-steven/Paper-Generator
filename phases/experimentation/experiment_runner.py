@@ -95,6 +95,11 @@ class ExperimentRunner:
             "CRITICAL: All dataset files are located in the `datasets/` subdirectory.\n"
             "You MUST load them using the path `datasets/<filename>` (e.g. `pd.read_csv('datasets/my_data.csv')`).\n"
             "Do NOT use just the filename alone — the file will NOT be found without the `datasets/` prefix.\n\n"
+            "IMPORTANT: Raw dataset column names (e.g. 'flac0123', 'val_q', 'feat_03') are internal identifiers irrelevant to readers.\n"
+            "NEVER use raw column names, field names, or dataset-internal identifiers in plot labels, axis titles, legends, printed output, or any text visible to the reader.\n"
+            "Instead, map them to descriptive, human-readable labels based on what the variable REPRESENTS (e.g. 'Measurement Value', 'Sample Index', 'Group A').\n"
+            "CRITICAL: ALL text in plots and printed output MUST be in English — axis labels, titles, legends, tick labels, annotations, and any printed strings.\n"
+            "If the dataset contains non-English field names or values (e.g. German: 'Fläche', 'Bevölkerung'), translate them to English in all output. NEVER display non-English text to the reader.\n\n"
             f"{report}"
         )
 
@@ -150,7 +155,22 @@ class ExperimentRunner:
             code_instructions = ""
             if user_code:
                 user_code_section = f"\n{self._format_user_code_files(user_code, use_signatures_only=False)}"
-                code_instructions = "\n[CRITICAL: EXISTING CODE PROVIDED]\nYou have access to the local modules listed above. Review them to see if they fit your experiment plan. If they do, IMPORT them (e.g., `from my_algo import run_algo`). If they do not fit or if you need different logic, you may implement your own solution, but prefer reusing existing robust code where possible.\n\n[CRITICAL: SAFE IMPORTS & SIDE EFFECTS]\nBefore importing from user files, analyze them for global scope execution (e.g. `model = load_model()` or `env = make_env()` at the top level). \n- If strict global side effects exist (printing, model loading, infinite loops), ensure your import does not trigger unwanted behavior.\n- If a global instance exists (e.g., `model`), IMPORT IT directly instead of creating a new one (e.g., `from user_file import model`).\n- Ensure that importing a file does not accidentally reset or overwrite shared state unless intended.\n\n[WARNING: CONSTANTS]\nDo NOT hardcode state/action dimensions (e.g. `num_of_states = 5760`). Instead, READ them from the imported user code/agent if available (e.g. `agent.num_of_states`). Mismatched dimensions cause IndexErrors."
+                code_instructions = textwrap.dedent("""\
+                    [CRITICAL: EXISTING CODE PROVIDED]
+                    You have access to the local modules listed above. Review them to see if they fit your experiment plan.
+                    If they do, IMPORT them (e.g., `from my_algo import run_algo`).
+                    If they do not fit or if you need different logic, you may implement your own solution, but prefer reusing existing robust code where possible.
+
+                    [SAFE IMPORTS & SIDE EFFECTS]
+                    Before importing from user files, analyze them for global scope execution (e.g. `model = load_model()` or `env = make_env()` at the top level).
+                    - If strict global side effects exist (printing, model loading, infinite loops), ensure your import does not trigger unwanted behavior.
+                    - If a global instance exists (e.g., `model`), IMPORT IT directly instead of creating a new one (e.g., `from user_file import model`).
+                    - Ensure that importing a file does not accidentally reset or overwrite shared state unless intended.
+
+                    [CONSTANTS]
+                    Do NOT hardcode state/action dimensions (e.g. `num_of_states = 5760`).
+                    Instead, READ them from the imported user code/agent if available (e.g. `agent.num_of_states`).
+                    Mismatched dimensions cause IndexErrors.""")
             else:
                 user_code_section = "\n[USER CODE FILES]\nNo user code files provided - generate new code from scratch."
 
@@ -169,15 +189,15 @@ class ExperimentRunner:
 
                 [REQUIREMENTS]
                 - Write clean, concise Python code
-                - Save plots to plots/ directory as .pdf files (create with os.makedirs if needed)
+                - Save plots to `plots/` directory as `.pdf` files
                 - Save results to JSON in current directory
-                - Print concise, meaningful output (~100-200 lines max)
+                - Print concise, meaningful output (~50-100 lines max)
                 - Output ONLY Python code, NO markdown formatting
-                - Code MUST complete in under 5 minutes. Reduce iterations, computations, or parameter combinations if needed. Optimize loops and maintain scientific validity.
-                - CRITICAL: Run HEADLESS - no UI windows, no matplotlib interactive mode.
+                - Code MUST complete in under 10 minutes. Reduce iterations, computations, or parameter combinations if needed. Optimize loops and maintain scientific validity.
+                - Run HEADLESS - no UI windows, no matplotlib interactive mode.
                 - DRY Principle: Reuse existing functions for simulation/execution logic. Do not duplicate complex loops (like game loops or training steps) for visualization - call the original functions to ensure consistency and prevent infinite loops/logic errors.
                 
-                [PYGAME HEADLESS MODE - MANDATORY IF USING PYGAME]
+                [PYGAME HEADLESS MODE - Mandatory if using pygame]
                 If using pygame for game logic, you MUST initialize it in headless mode:
                 ```
                 import os
@@ -188,13 +208,12 @@ class ExperimentRunner:
                 # Do NOT call pygame.display.set_mode() with real dimensions
                 # Instead: screen = pygame.display.set_mode((1, 1))  # minimal dummy surface
                 ```
-                NEVER use: pygame.display.set_mode((800, 600)) or similar real window sizes.
-                NEVER use: pygame.display.flip(), pygame.event.get() in a render loop.
                 Just compute game states and actions programmatically without rendering.
 
                 [AVAILABLE PACKAGES]
                 The following Python packages are available (optional - use if helpful):
                 - numpy: Numerical computing, arrays, mathematical operations
+                - pandas: Data manipulation and analysis
                 - matplotlib: Plotting and visualization (use 'Agg' backend, save to file only, NO plt.show())
                 - seaborn: Statistical data visualization (built on matplotlib)
                 - pygame: Game LOGIC only with headless mode as shown above
@@ -217,51 +236,27 @@ class ExperimentRunner:
             chat = lms.Chat(system_prompt)
             current_code = ""
             
-            # Step 1/4: Imports and structures
+            # Step 1/3: Imports, structures, and algorithms
             try:
-                print(f"Generating imports and data structures...")
-                chunk_message = """Generate ONLY imports and data structure definitions.
+                print(f"Generating imports, data structures, and algorithms...")
+                chunk_message = """Generate imports, data structure definitions, and algorithm implementations.
 
                 Include:
                 - All necessary imports (if using matplotlib, use matplotlib.use('Agg') BEFORE importing pyplot)
                 - Any classes or data structures needed
                 - Global constants
-
-                Do NOT include algorithm implementations, experiment logic, or visualization yet.
-                
-                CRITICAL: Before writing code, mentally verify there are no syntax errors or obvious bugs."""
-                if user_code:
-                    chunk_message += "\n\nIf user code files were provided above, add their imports (e.g. `from my_file import my_func`)."
-                chat.add_user_message(chunk_message)
-
-                model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
-                response = model.respond(chat, config={"temperature": 0.0})
-                current_code = self._remove_markdown_formatting(remove_thinking_blocks(response.content))
-            except Exception as e:
-                error_msg = f"ERROR generating imports chunk: {e}"
-                print(error_msg)
-                traceback.print_exc()
-                raise
-            
-            # Step 2/4: Algorithms
-            try:
-                print(f"Generating algorithm implementations...")
-                chunk_message = """Implement the code for the algorithm(s) being tested and merge it with the previous response.
-
-                Include everything from the previous response, then add:
                 - The proposed method/algorithm being tested (as described in the experiment plan)
                 - The baseline/comparison method (as described in the experiment plan)
                 - Any helper functions needed for the algorithms
-                The most important part is to implement the algorithms as described in the experiment plan.
-                
+
+                Do NOT include experiment execution logic or visualization yet.
+
                 CRITICAL: Before responding, verify:
                 - No infinite loops (all loops have proper termination conditions)
                 - No blocking calls (no input(), no UI windows, no pygame.display)
-                - All variable names and function signatures are consistent
-
-                Output the COMPLETE code so far (imports and data structures + algorithms)."""
+                - All variable names and function signatures are consistent"""
                 if user_code:
-                    chunk_message += "\n\nIf relevant, use the imported functions from the user code files to implement the logic."
+                    chunk_message += "\n\nIf user code files were provided above, add their imports (e.g. `from my_file import my_func`) and use the imported functions to implement the logic where relevant."
                 chat.add_user_message(chunk_message)
 
                 model = lms.llm(self.settings.EXPERIMENT_CODE_WRITE_MODEL)
@@ -273,7 +268,7 @@ class ExperimentRunner:
                 traceback.print_exc()
                 raise
             
-            # Step 3/4: Experiment setup and execution
+            # Step 2/3: Experiment setup and execution
             try:
                 print(f"Generating experiment execution logic...")
                 chunk_message = textwrap.dedent("""\
@@ -285,13 +280,21 @@ class ExperimentRunner:
                     - Metric collection and measurement
                     - Save results to JSON file in the current directory using a bare filename (e.g. RESULTS_FILE = 'results.json'). Do NOT call os.makedirs for the results file — the current directory always exists.
                     - Concise stdout output with key metrics
-                    
+
+                    [CRITICAL: DATA EXPLORATION BEFORE FILTERING]
+                    If loading a dataset and filtering rows by a column's values (e.g. by variable name, label, category, or quality flag):
+                    1. ALWAYS print the column's unique values BEFORE applying any filter, e.g.:
+                         print("Available labels:", df['label_col'].unique())
+                    2. NEVER hardcode a filter value (e.g. 'Fläche', 'value_q == e') without first checking it exists.
+                    3. Use case-insensitive or fuzzy matching (str.contains / str.lower) as the primary approach, not exact equality.
+                    4. If a filter returns an empty DataFrame, print a detailed warning including the column name and a sample of what IS in the column, then skip gracefully.
+
                     CRITICAL: Before responding, verify:
                     - Experiment will complete in under 5 minutes (reduce iterations if needed)
                     - No infinite loops, no UI/display calls
                     - All loops have reasonable bounds and termination conditions
 
-                    Output the COMPLETE code so far (imports and data structures + algorithms + experiment).
+                    Output the COMPLETE code so far (imports, data structures, algorithms + experiment).
                     Do NOT include visualization yet.
                 """)
                 if user_code:
@@ -307,7 +310,7 @@ class ExperimentRunner:
                 traceback.print_exc()
                 raise
             
-            # Step 4/4: Visualization/Plotting
+            # Step 3/3: Visualization/Plotting
             try:
                 print(f"Generating visualization code...")
                 chunk_message = textwrap.dedent("""\
@@ -320,18 +323,28 @@ class ExperimentRunner:
                     - Publication Quality: Add axis labels (xlabel, ylabel), a descriptive title, and legend (if multiple series)
                     - Aesthetics: Use professional styling (e.g., sns.set_theme(style="whitegrid") or attractive matplotlib style). Plots must look clean, modern, and publication-ready.
                     - Ensure colors are easily distinguishable and colorblind-friendly (e.g., use seaborn's "colorblind" palette).
-                    - CRITICAL: For EVERY plot you generate, print a text summary to stdout that describes the exact data shown. 
+                    - CRITICAL: For EVERY plot you generate, print a text summary to stdout that describes the exact data shown.
                       Format: "[Plot Summary: <filename>] <summary text with numbers/stats>"
                       Example: "[Plot Summary: learning_curve.pdf] RBQL reached 0.9 reward at ep 450, Standard Q at ep 720."
                     - Print concise summary of the results (NEVER guess the results, only print the actual results)
-                    
+
+                    [PLOT QUALITY CHECKLIST - verify each before saving]
+                    - Labels: Use descriptive axis labels and titles in English, NEVER raw variable names or dataset column names (e.g. "Population Count" not "val_col", "Sample Size" not "n", "Group A / Group B" not "flac0123 / flac0124"). Raw field names are internal identifiers — always replace them with what the variable represents.
+                    - Language: ALL text must be in English — titles, axis labels, tick labels, legends, annotations, printed output. If the dataset has non-English names or values (e.g. German: "Fläche", "Bevölkerung"), translate them. NEVER display non-English text anywhere.
+                    - Legend: Always include a legend when plotting multiple series
+                    - Data visible: Ensure the plot is not empty — assert that data arrays are non-empty before plotting
+                    - No NaN/inf: Check for and drop NaN/inf values before plotting; log a warning if any are dropped
+                    - Variation: If data appears flat/constant (all values equal), print a warning — this usually indicates a data loading or filtering bug
+                    - Text overlap: Use tight_layout() and rotate tick labels if needed to prevent overlapping text
+                    - Single point: If a series has only 1 data point, print a warning — the experiment may have failed to collect enough data
+
                     FINAL CHECK before responding:
                     - No plt.show() calls (headless execution)
                     - No pygame.display or UI windows
                     - All loops terminate properly
                     - Code will complete in under 10 minutes
 
-                    Output the COMPLETE, FINAL code (imports & data structures + algorithms + experiment + visualization)."""
+                    Output the COMPLETE, FINAL code (imports, data structures, algorithms + experiment + visualization)."""
                 )
                 if user_code:
                     chunk_message += "\n\nIf user code files were provided above, ensure the final code integrates all existing functionality with the new experiment and visualization code."
@@ -571,6 +584,12 @@ class ExperimentRunner:
             - Empty plot (no data/lines visible)
             - Overlapping or unreadable text
             - Missing legend (when multiple series are visible)
+            - Generic or placeholder labels (e.g., "value_clean", "col_0", "feature_1", "var_1", raw Python variable names instead of meaningful descriptions)
+            - Non-English text anywhere in the plot (e.g. German words like "Fläche", "Bevölkerung" — all text must be in English)
+            - All series look identical (multiple lines/bars at exactly the same values, suggesting a logic bug)
+            - Flat/constant data (a line or bars with zero variation across the x-axis)
+            - Only a single data point per series (suggests the experiment barely ran)
+            - Axis values showing NaN, inf, or extreme scientific notation (e.g., 1e+308) indicating numerical overflow
 
             Do NOT describe what the plot shows. Only identify problems.
 
@@ -605,7 +624,7 @@ class ExperimentRunner:
                 chat = lms.Chat(check_prompt)
                 chat.add_user_message(f"Check plot: {filename}", images=[image_handle])
                 model = lms.llm(self.settings.EXPERIMENT_PLOT_CAPTION_MODEL)
-                result = model.respond(chat, config={"temperature": 0.0, "timeout": 120})
+                result = model.respond(chat, config={"temperature": 0.2, "timeout": 120})
                 response = remove_thinking_blocks(result.content).strip()
                 
                 # Clean up temp file
@@ -730,7 +749,8 @@ class ExperimentRunner:
         validation_result: ValidationResult,
         hypothesis: Hypothesis,
         output_dir: str,
-        user_code: Optional[list[UserCode]] = None
+        user_code: Optional[list[UserCode]] = None,
+        execution_stdout: str = ""
     ) -> ExecutionResult:
         """
         Improve experiment code based on validation feedback.
@@ -757,6 +777,14 @@ class ExperimentRunner:
             feedback_text = f"Reasoning: {validation_result.reasoning}"
             if validation_result.issues:
                 feedback_text += f"\n\nIssues identified:\n{validation_result.issues}"
+
+            # Include stdout from failed execution (truncated if too long)
+            stdout_section = ""
+            if execution_stdout:
+                stdout_text = execution_stdout
+                if len(stdout_text) > 3000:
+                    stdout_text = stdout_text[:1500] + "\n...[truncated]...\n" + stdout_text[-1500:]
+                stdout_section = f"\n[EXECUTION_OUTPUT FROM FAILED RUN]\nThis is the actual stdout when the code ran. Use it to diagnose issues (e.g., what columns/codes actually exist in the data):\n{stdout_text}\n"
             
             # Format user code section for the prompt
             user_code_section = ""
@@ -777,6 +805,7 @@ class ExperimentRunner:
                 4. Ensure plots have professional aesthetics (clean, modern, publication-ready, e.g., using seaborn styles)
                 5. CRITICAL: Ensure colors are easily distinguishable and colorblind-friendly (e.g., use seaborn's "colorblind" palette).
                 6. Ensure stdout output is concise and meaningful - key metrics, conclusions and results only, avoid loop spam
+                7. [PLOT QUALITY] Use descriptive axis labels/titles (not raw variable names), include legends for multiple series, drop NaN/inf before plotting, use tight_layout() to prevent text overlap, and assert data is non-empty before plotting. ALL text must be in English — if the dataset has non-English field names or values (e.g. German), translate them. Never display non-English text in plots or output.
                 7. Make sure the experiment is complete and meaningful (e.g., not too short, collects proper metrics, etc.)
                 8. Preserve any working, valid parts of the code
                 9. [WARNING: GLOBAL STATE] If user code has global variables (like `model = ...`), IMPORT and USE them. Do not shadow them with local instances.
@@ -803,7 +832,7 @@ class ExperimentRunner:
                 ```python
                 {current_code}
                 ```
-
+                {stdout_section}
                 [VALIDATION_FEEDBACK]
                 {feedback_text}
 
@@ -1049,7 +1078,7 @@ Do NOT do this:
 
         try:
             model = lms.llm(self.settings.EXPERIMENT_PLAN_MODEL)
-            result = model.respond(prompt, config={"temperature": 0.0})
+            result = model.respond(prompt, config={"temperature": 0.3})
             return remove_thinking_blocks(result.content)
         except Exception as e:
             print(f"ERROR: Failed to generate experiment plan: {e}")
@@ -1518,9 +1547,9 @@ Do NOT do this:
             validation_attempt = 0
             validation_passed = False
             
-            print("Validating experiment results...")
-            if status_callback:
-                status_callback("Validating experiment results")
+            # print("Validating experiment results...")
+            #if status_callback:
+            #    status_callback("Validating experiment results")
             while not validation_passed and validation_attempt < max_validation_attempts:
                 validation_attempt += 1
                 total_validation_attempts += 1
@@ -1553,10 +1582,11 @@ Do NOT do this:
                             validation_result,
                             hypothesis,
                             self.base_output_dir,
-                            user_code=user_code
+                            user_code=user_code,
+                            execution_stdout=execution_result.stdout
                         )
                         execution_result = improvement_result
-                        
+
                         # If improvement broke the code, go back to fix loop
                         if execution_result.return_code != 0:
                             print("Improvement introduced errors. Entering fix loop...")
@@ -1951,7 +1981,8 @@ Do NOT do this:
                         if status_callback:
                             status_callback("Improving code based on feedback")
                         improvement_result = runner._improve_experiment_code(
-                            code_file_path, validation_result, hypothesis, output_dir, user_code=user_code
+                            code_file_path, validation_result, hypothesis, output_dir, user_code=user_code,
+                            execution_stdout=execution_result.stdout
                         )
                         execution_result = improvement_result
                         if execution_result.return_code != 0:

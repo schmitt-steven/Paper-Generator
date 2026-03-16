@@ -106,7 +106,7 @@ class EvidenceGatherer:
                 response = llm_model.respond(
                     prompt,
                     response_format=BatchResult,
-                    config={"temperature": 0.2, "maxTokens": 1500},
+                    config={"temperature": 0.2, "maxTokens": 2048},
                 )
                 
                 content = remove_thinking_blocks(response.content)

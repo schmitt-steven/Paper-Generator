@@ -252,7 +252,7 @@ class ResearchContextGenerator(LazyModelMixin):
 
         result = self.model.respond(
             prompt,
-            config={"temperature": 0.0}
+            config={"temperature": 0.2}
         )
         
         questions_text = remove_thinking_blocks(result.content)

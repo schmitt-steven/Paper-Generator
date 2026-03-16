@@ -90,7 +90,7 @@ Return your suggestions in the structured format."""
             response = model.respond(
                 prompt,
                 response_format=CitationGapResult,
-                config={"temperature": 0.0}
+                config={"temperature": 0.1}
             )
             
             content = remove_thinking_blocks(response.content)

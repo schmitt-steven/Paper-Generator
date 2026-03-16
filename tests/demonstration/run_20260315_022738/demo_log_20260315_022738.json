@@ -1,0 +1,634 @@
+{
+  "run_id": "20260315_022738",
+  "start_time": "2026-03-15T02:27:38.955246",
+  "end_time": "2026-03-15T03:25:22.267156",
+  "total_duration_seconds": 3463.31,
+  "settings_snapshot": {
+    "CODE_ANALYSIS_MODEL": "qwen/qwen3.5-35b-a3b",
+    "CONTEXT_GENERATOR_MODEL": "qwen/qwen3.5-35b-a3b",
+    "CRITIC_MAX_SEARCH_QUERIES": 2,
+    "DARK_MODE": false,
+    "EXPERIMENT_CODE_WRITE_MODEL": "qwen/qwen3.5-35b-a3b",
+    "EXPERIMENT_PLAN_MODEL": "qwen/qwen3.5-35b-a3b",
+    "EXPERIMENT_PLOT_CAPTION_MODEL": "qwen/qwen3.5-35b-a3b",
+    "EXPERIMENT_VALIDATION_MODEL": "qwen/qwen3.5-35b-a3b",
+    "EXPERIMENT_VERDICT_MODEL": "qwen/qwen3.5-35b-a3b",
+    "FONT_SIZE": 18,
+    "GENERATE_ACKNOWLEDGEMENTS": false,
+    "HYPOTHESIS_BUILDER_MODEL": "qwen/qwen3.5-35b-a3b",
+    "LATEX_AUTHORS": [
+      {
+        "name": "Max Mustermann",
+        "affiliation": "University of Test",
+        "department": "Department of Computer Science",
+        "city": "Mannheim",
+        "country": "Germany",
+        "address": "Schleifenweg 8",
+        "email": "mustermann@samplemail.com"
+      }
+    ],
+    "LATEX_GENERATION_MODEL": "qwen/qwen3.5-35b-a3b",
+    "LATEX_TEMPLATE": "minimalistic",
+    "LATEX_TITLE": "",
+    "LITERATURE_SEARCH_MODEL": "qwen/qwen3.5-35b-a3b",
+    "PAPER_INDEXING_EMBEDDING_MODEL": "text-embedding-qwen3-embedding-4b@q5_0",
+    "PAPER_RANKING_EMBEDDING_MODEL": "text-embedding-qwen3-embedding-4b@q5_0",
+    "PAPER_WRITING_MODEL": "qwen/qwen3.5-35b-a3b",
+    "SEMANTIC_SCHOLAR_API_KEY": "",
+    "UNPAYWALL_EMAIL": "",
+    "USER_EXPERIMENT_FILE": ""
+  },
+  "pipeline_params": {
+    "search_query_count": 15,
+    "max_results_per_query": 20,
+    "fields_of_study": "Computer Science",
+    "ranking_weights": {
+      "relevance": 0.8,
+      "citations": 0.1,
+      "recency": 0.1
+    },
+    "filter_target_count": 40,
+    "filter_min_relevance": 0.5,
+    "experiment_max_fix_attempts": 5,
+    "experiment_max_validation_attempts": 3,
+    "chunks_per_query": 5,
+    "max_chunks_per_paper": 2
+  },
+  "phases": [
+    {
+      "phase_name": "Context Analysis",
+      "phase_number": 1,
+      "status": "passed",
+      "start_time": "2026-03-15T02:27:38.958342",
+      "end_time": "2026-03-15T02:28:10.614065",
+      "duration_seconds": 31.66,
+      "status_messages": [
+        "Loading paper specification",
+        "Analyzing code files",
+        "Analyzing datasets",
+        "Generating research context"
+      ],
+      "error": "",
+      "error_traceback": "",
+      "output_files": [
+        {
+          "path": "output/research_context.md",
+          "size_bytes": 7294,
+          "sha256": "15365142337d20b3740ec947214a8ff7ed2814371e6644313ba93273816ad2b0"
+        }
+      ],
+      "extra": {
+        "description_length": 2963,
+        "open_questions_length": 1807,
+        "code_snippets_length": 0
+      }
+    },
+    {
+      "phase_name": "Literature Search",
+      "phase_number": 2,
+      "status": "passed",
+      "start_time": "2026-03-15T02:28:10.614525",
+      "end_time": "2026-03-15T02:45:52.096019",
+      "duration_seconds": 1061.48,
+      "status_messages": [
+        "Building search queries",
+        "Searching with 15 queries",
+        "Ranking papers",
+        "Filtering papers",
+        "Analyzing citation gaps",
+        "Searching for 10 foundational papers",
+        "Ranking foundational papers",
+        "Finding open access PDFs for 21 papers",
+        "Downloading open-access PDFs",
+        "Converting PDFs to markdown",
+        "Saving papers"
+      ],
+      "error": "",
+      "error_traceback": "",
+      "output_files": [
+        {
+          "path": "output/papers.json",
+          "size_bytes": 547010,
+          "sha256": "dfc7ded28c1ae590c4c513d8c2ba975dc22407a79ff0165970a623ff292bb8ab"
+        }
+      ],
+      "extra": {
+        "search_queries_generated": 15,
+        "papers_raw_total": 203,
+        "papers_after_ranking": 203,
+        "papers_after_filter": 32,
+        "gap_suggestions": 10,
+        "foundational_papers_added": 1,
+        "papers_final": 33,
+        "open_access_count": 20,
+        "pdfs_downloaded": 12,
+        "pdfs_failed": 8
+      }
+    },
+    {
+      "phase_name": "Hypothesis Generation",
+      "phase_number": 3,
+      "status": "passed",
+      "start_time": "2026-03-15T02:45:52.097288",
+      "end_time": "2026-03-15T02:46:03.800937",
+      "duration_seconds": 11.7,
+      "status_messages": [
+        "Loading research context",
+        "Loading paper specification",
+        "Generating hypothesis"
+      ],
+      "error": "",
+      "error_traceback": "",
+      "output_files": [
+        {
+          "path": "output/hypothesis.md",
+          "size_bytes": 1024,
+          "sha256": "b995893ddf9e7d63e7483162891b81f7d0601dfe7d7b9cb84c7296fe9204b9ae"
+        }
+      ],
+      "extra": {
+        "description": "Validating Benford's Law conformity in German Zensus 2022 municipal data by comparing first-digit frequencies of population counts and area measurements against derived population density and synthetic control datasets.",
+        "rationale": "Naturally occurring large-scale demographic aggregates typically exhibit logarithmic leading digit distributions, whereas derived ratios and human-fabricated data often display uniform or biased patterns. Standard Chi-square tests lack specificity for large sample sizes due to excessive sensitivity to trivial deviations; therefore, Mean Absolute Deviation (MAD) on proportions provides a scale-invariant metric to distinguish natural variation from systematic anomalies.",
+        "success_criteria": "Population counts and area measurements exhibit low MAD values consistent with Benford's expected distribution. Derived population density and synthetic datasets demonstrate significantly higher MAD values indicating deviation from the logarithmic baseline."
+      }
+    },
+    {
+      "phase_name": "Experimentation",
+      "phase_number": 4,
+      "status": "passed",
+      "start_time": "2026-03-15T02:46:03.801436",
+      "end_time": "2026-03-15T02:58:49.530081",
+      "duration_seconds": 765.73,
+      "status_messages": [
+        "Generating experiment plan",
+        "Loading research context",
+        "Loading paper specification",
+        "Loading code files",
+        "Generating experiment plan",
+        "Running experiment",
+        "Loading hypothesis",
+        "Loading research context",
+        "Running experiment",
+        "Cleaning up previous experiment files",
+        "Loading paper specification and code",
+        "Loading existing experiment plan",
+        "Generating experiment code",
+        "Executing experiment code",
+        "Validating results (attempt 1/3)",
+        "Improving code based on feedback",
+        "Validating results (attempt 2/3)",
+        "Improving code based on feedback",
+        "Validating results (attempt 3/3)",
+        "Generating plot captions",
+        "Determining verdict"
+      ],
+      "error": "",
+      "error_traceback": "",
+      "output_files": [
+        {
+          "path": "output/experiments/experiment_plan.md",
+          "size_bytes": 6333,
+          "sha256": "d9d1d22cfb2d095745ad4507f79e9091ef5566d311c8caa6bdf5073bd65661e4"
+        },
+        {
+          "path": "output/experiments/experiment_result.json",
+          "size_bytes": 41254,
+          "sha256": "6970e4d04f1ac72bb0973d95629c98028e6391bb5eb9caa77c311316293528d9"
+        },
+        {
+          "path": "output/experiments/plots/conformity_comparison.pdf",
+          "size_bytes": 17447,
+          "sha256": "2c3e5fb8e7f15ac12305bd625e84573ca7421faf15217f45fe49aec3c71cd522"
+        },
+        {
+          "path": "output/experiments/plots/deviation_heatmap_preview.png",
+          "size_bytes": 80188,
+          "sha256": "117c6e930933a828f25fcf414acdc61b25d12399dc4ab7b23ad94a9765e298aa"
+        },
+        {
+          "path": "output/experiments/plots/benford_digit_distribution.pdf",
+          "size_bytes": 20233,
+          "sha256": "79e6184ce40c23a05a6d690d847d2819e60540701ddb7fd95a55195398463bbf"
+        },
+        {
+          "path": "output/experiments/plots/deviation_heatmap.pdf",
+          "size_bytes": 20676,
+          "sha256": "795097e6cc270d52fc8dcd4529df6ac4d8f3c481fa0b8721258980bc41d303de"
+        },
+        {
+          "path": "output/experiments/plots/conformity_comparison_preview.png",
+          "size_bytes": 54028,
+          "sha256": "7a65e6a028b7043919f789ab7ff3d0abf57bb6a9fb54f1b80743e0c114f5bf44"
+        },
+        {
+          "path": "output/experiments/plots/benford_digit_distribution_preview.png",
+          "size_bytes": 53921,
+          "sha256": "07719ceb2e8d72221b88a60487783e0cca816213c9193526facc161402ef5588"
+        }
+      ],
+      "extra": {
+        "plot_count": 6,
+        "experiment_executed": true,
+        "fix_attempts": 0,
+        "validation_attempts": 3,
+        "execution_time": null,
+        "verdict": "inconclusive",
+        "verdict_reasoning": "Code executed successfully but results validation failed. Last validation reasoning: The experiment produced valid plots and correct metrics for the real data (Population, Area, Density), but failed to generate meaningful results for the synthetic control datasets.\nIssues: 1. **Synthetic Data Generation Logic Bug**: In `generate_synthetic_uniform` and `generate_synthetic_biased`, the code generates random digits (1-9) but then constructs numbers by multiplying them by $10^k$ (e.g., `d * 10^3`). While this ensures the leading digit is correct, it creates a dataset where every number starts with the generated digit followed by zeros. \n2. **Critical Failure in Synthetic Metrics**: The synthetic data generation logic results in a MAD of exactly 0.111111 for both Uniform and Biased datasets. This value corresponds to the deviation between a *perfectly uniform distribution* (1/9 \u2248 0.111) and Benford's Law, **not** the actual generated sample frequencies.\n   - The `generate_synthetic_uniform` function creates a sequence where digits are uniformly distributed (by design). If $N$ is large enough, the observed frequency of each digit should be $\frac{1}{9}$. \n   - However, the code calculates MAD based on `observed_counts`. For Uniform data, if we generate 1000 numbers with equal probability for digits 1-9, the observed proportion for each digit is exactly $1/9$ (ignoring small sampling error). The deviation from Benford's expected $\frac{1}{9}$ vs $\frac{1}{9}$ would be near zero? No. \n   - **Wait, re-evaluating**: If Uniform data has equal probability for digits 1-9 ($P=0.111$), the MAD is indeed high (~0.167). The observed output shows `MAD=0.111`. This suggests the observed proportions are actually $0.111$ (Uniform) and the calculation `abs(0.111 - 0.301)` etc yields a mean of roughly `0.111`? Let's check: Benford avg is ~0.289 (sum=1, n=9). Uniform is 0.111. Deviation sum $\neq$ 0.111. \n   - **Actual Bug**: The synthetic data generation creates numbers like `5 * 10^3`, `5 * 10^4` etc. The `extract_leading_digit` function works correctly on these. The issue is likely in the **Chi-Square calculation for Synthetic Data**. The output shows `Chi2=nan`. This happens because `scipy.stats.chisquare` fails if expected counts are too small or if observed/expected sums mismatch due to float precision, but here $N \times P_{benford}$ should be fine. \n   - **Root Cause**: Look at `generate_synthetic_uniform`. It generates digits 1-9 uniformly. The resulting dataset has a uniform distribution of leading digits. The MAD for a perfect uniform distribution vs Benford is indeed high ($\frac{1}{9} \times 30.1\text{ errors}$? No). $\text{MAD} = \frac{1}{9} \times \text{sum}(|1/9 - P_{benford}|)$. The theoretical MAD for uniform data is ~0.167. The output shows `0.111`. This implies the observed distribution in the synthetic dataset is **NOT** uniform, or the calculation is wrong. \n   - **Correction**: The code `digits = np.random.choice(range(1, 10), size=n_samples)` generates digits correctly. But then `return [int(d * np.power(10, ...))]`. This creates numbers like 5000, 50000. Leading digit is 5. If we force bias to 40% of '5', the leading digit distribution should be skewed. \n   - **The Real Bug**: The `calculate_benford_metrics` function computes `observed_counts.get(d, 0)`. For synthetic data generated with `generate_synthetic_uniform`, if $N$ is large (11786), the observed counts for each digit should be roughly equal (~1309). The MAD should be ~0.167. The output shows `MAD=0.111` for Uniform. This is mathematically impossible for a uniform distribution of leading digits vs Benford (which has max deviation 0.19 at digit 9, min 0.03 at digit 8). Average deviation is ~0.167. \n   - **Wait**: `MAD=0.111` is exactly $1/9$. This suggests the code calculated `abs(0.111 - 0.111)`? No. \n   - **Hypothesis**: The synthetic data generation in `generate_synthetic_uniform` produces a distribution where the leading digits are NOT uniformly distributed due to some side effect, OR the `extract_leading_digit` function is failing for these specific numbers? No, `5 * 10^3` works. \n   - **Alternative Hypothesis**: The `calculate_benford_metrics` function has a bug where it normalizes observed counts incorrectly if they sum to something other than $N$? No, code handles that. \n   - **Most Likely Bug**: The `generate_synthetic_uniform` and `generate_synthetic_biased` functions are generating numbers that result in a leading digit distribution that is **NOT** what the user expects, OR the MAD calculation is using a wrong baseline. \n   - **Actually, looking at the output**: `MAD=0.111` for Uniform and Biased. This value ($1/9$) appears suspiciously like the *proportion* of each digit in a uniform distribution. It is highly likely that the code accidentally calculated the MAD as the difference between the observed proportion (0.111) and the Benford expected? No. \n   - **Wait, let's look at `calculate_benford_metrics` again**. `mad = np.mean([abs(o - e) ...])`. If `o` is 0.111 for all digits (Uniform), and `e` are Benford probs. The mean of absolute differences should be ~0.167. Why is it 0.111? \n   - **Ah! The bug is in the synthetic generation logic**: The code generates `digits = np.random.choice(range(1, 10), size=n_samples)`. This returns an array of digits. Then it creates numbers `d * 10^k`. The leading digit extraction works. BUT: If the random seed or distribution is such that... no. \n   - **Let's reconsider the ",
+        "experiment_code_lines": 470,
+        "experiment_code_non_blank_lines": 364
+      }
+    },
+    {
+      "phase_name": "Paper Writing",
+      "phase_number": 5,
+      "status": "passed",
+      "start_time": "2026-03-15T02:58:49.531064",
+      "end_time": "2026-03-15T03:21:09.002193",
+      "duration_seconds": 1339.47,
+      "status_messages": [
+        "Loading resources",
+        "Generating embeddings for papers",
+        "Drafting Methods section",
+        "Critiquing Methods section",
+        "Evidence chunks for Methods: 0",
+        "Rewriting Methods section",
+        "Section rewrite delta for Methods: 9231 -> 9165",
+        "Drafting Results section",
+        "Critiquing Results section",
+        "Searching evidence for Results",
+        "Evidence chunks for Results: 10",
+        "Rewriting Results section",
+        "Section rewrite delta for Results: 8865 -> 9347",
+        "Drafting Discussion section",
+        "Critiquing Discussion section",
+        "Evidence chunks for Discussion: 0",
+        "Rewriting Discussion section",
+        "Section rewrite delta for Discussion: 6082 -> 6061",
+        "Drafting Related Work section",
+        "Critiquing Related Work section",
+        "Searching evidence for Related Work",
+        "Evidence chunks for Related Work: 9",
+        "Rewriting Related Work section",
+        "Section rewrite delta for Related Work: 8213 -> 8154",
+        "Drafting Introduction section",
+        "Critiquing Introduction section",
+        "Evidence chunks for Introduction: 0",
+        "Rewriting Introduction section",
+        "Section rewrite delta for Introduction: 5874 -> 5874",
+        "Drafting Conclusion section",
+        "Critiquing Conclusion section",
+        "Evidence chunks for Conclusion: 0",
+        "Rewriting Conclusion section",
+        "Section rewrite delta for Conclusion: 1126 -> 822",
+        "Drafting Abstract section",
+        "Critiquing Abstract section",
+        "Evidence chunks for Abstract: 0",
+        "Rewriting Abstract section",
+        "Section rewrite delta for Abstract: 1456 -> 1378"
+      ],
+      "error": "",
+      "error_traceback": "",
+      "output_files": [
+        {
+          "path": "output/paper_draft.md",
+          "size_bytes": 41061,
+          "sha256": "437d9762f5e8640582f0ee48f77eefa5f88374727b4c5abc07a6f957254f5143"
+        },
+        {
+          "path": "output/section_writing_prompts.json",
+          "size_bytes": 496726,
+          "sha256": "89be13393ba427334b705e02285c681268be3e7e481a2358078b35935ff6a504"
+        },
+        {
+          "path": "output/section_rewrite_prompts.json",
+          "size_bytes": 566841,
+          "sha256": "aaebed6fd71ab2ab1ea30f2855253778df56fa8fc7145de9b95183234881d86b"
+        }
+      ],
+      "extra": {
+        "title": "Benford's Law Forensics in German Zensus 2022: MAD-Based Validation of Population, Area, and Density Data Against Synthetic Controls",
+        "section_lengths": {
+          "abstract": 1378,
+          "introduction": 5874,
+          "related_work": 8154,
+          "methods": 9165,
+          "results": 9347,
+          "discussion": 6061,
+          "conclusion": 822,
+          "acknowledgements": 0
+        },
+        "writing_timing": {
+          "indexing_seconds": 144.99,
+          "sections": {
+            "Methods": {
+              "total_seconds": 182.98,
+              "steps": {
+                "Drafting": 70.65,
+                "Critiquing": 37.14,
+                "Rewriting": 75.19
+              },
+              "evidence_chunks": 0,
+              "chars_before_rewrite": 9231,
+              "chars_after_rewrite": 9165,
+              "chars_delta": -66
+            },
+            "Results": {
+              "total_seconds": 283.09,
+              "steps": {
+                "Drafting": 76.03,
+                "Critiquing": 24.26,
+                "Searching evidence": 98.95,
+                "Rewriting": 83.85
+              },
+              "evidence_chunks": 10,
+              "chars_before_rewrite": 8865,
+              "chars_after_rewrite": 9347,
+              "chars_delta": 482
+            },
+            "Discussion": {
+              "total_seconds": 142.02,
+              "steps": {
+                "Drafting": 53.63,
+                "Critiquing": 32.09,
+                "Rewriting": 56.3
+              },
+              "evidence_chunks": 0,
+              "chars_before_rewrite": 6082,
+              "chars_after_rewrite": 6061,
+              "chars_delta": -21
+            },
+            "Related Work": {
+              "total_seconds": 252.52,
+              "steps": {
+                "Drafting": 58.99,
+                "Critiquing": 38.89,
+                "Searching evidence": 91.14,
+                "Rewriting": 63.5
+              },
+              "evidence_chunks": 9,
+              "chars_before_rewrite": 8213,
+              "chars_after_rewrite": 8154,
+              "chars_delta": -59
+            },
+            "Introduction": {
+              "total_seconds": 134.24,
+              "steps": {
+                "Drafting": 46.31,
+                "Critiquing": 38.44,
+                "Rewriting": 49.49
+              },
+              "evidence_chunks": 0,
+              "chars_before_rewrite": 5874,
+              "chars_after_rewrite": 5874,
+              "chars_delta": 0
+            },
+            "Conclusion": {
+              "total_seconds": 86.45,
+              "steps": {
+                "Drafting": 30.46,
+                "Critiquing": 26.29,
+                "Rewriting": 29.7
+              },
+              "evidence_chunks": 0,
+              "chars_before_rewrite": 1126,
+              "chars_after_rewrite": 822,
+              "chars_delta": -304
+            },
+            "Abstract": {
+              "total_seconds": 97.54,
+              "steps": {
+                "Drafting": 35.59,
+                "Critiquing": 26.22,
+                "Rewriting": 35.73
+              },
+              "evidence_chunks": 0,
+              "chars_before_rewrite": 1456,
+              "chars_after_rewrite": 1378,
+              "chars_delta": -78
+            }
+          },
+          "step_totals": {
+            "Drafting": 371.66,
+            "Critiquing": 223.33,
+            "Rewriting": 393.76,
+            "Searching evidence": 190.09
+          }
+        },
+        "citations_total": 22,
+        "citations_matched": 22,
+        "citations_hallucinated": 0,
+        "citations_hallucinated_keys": [],
+        "section_word_counts": {
+          "abstract": 176,
+          "introduction": 767,
+          "related_work": 1034,
+          "methods": 1183,
+          "results": 1249,
+          "discussion": 790,
+          "conclusion": 103,
+          "acknowledgements": 0
+        },
+        "total_word_count": 5302,
+        "citation_density_per_1000_words": 4.15,
+        "citations_from_closed_access": 15,
+        "citations_from_closed_access_keys": [
+          "Cerqueti2021SomeNT",
+          "Druica2018BenfordsLA",
+          "Fernandes2024UnveilingMN",
+          "Ivanova2025BenfordsLA",
+          "Jianu2021ReliabilityOF",
+          "Lehmann2025AutomatedCO",
+          "Miller2015BenfordsLT",
+          "Morales2022BenfordsLF",
+          "Petras2025DetectingBL",
+          "Schafer2005AutomatieIO",
+          "Schumm2023CanRS",
+          "Shalini2023DataQA",
+          "Shen2025AutonomousLB",
+          "Sinik2025TestingLA",
+          "Sorour2024StatisticalIO"
+        ]
+      }
+    },
+    {
+      "phase_name": "Document Compilation",
+      "phase_number": 6,
+      "status": "passed",
+      "start_time": "2026-03-15T03:21:09.003787",
+      "end_time": "2026-03-15T03:25:22.266420",
+      "duration_seconds": 253.26,
+      "status_messages": [
+        "Loading paper draft",
+        "Loading indexed papers",
+        "Loading experiment results",
+        "Loading hypothesis",
+        "Generating LaTeX project",
+        "Converting Abstract to LaTeX",
+        "Converting Introduction to LaTeX",
+        "Converting Related Work to LaTeX",
+        "Converting Methods to LaTeX",
+        "Converting Results to LaTeX",
+        "Converting Discussion to LaTeX",
+        "Converting Conclusion to LaTeX",
+        "Compiling LaTeX to PDF"
+      ],
+      "error": "",
+      "error_traceback": "",
+      "output_files": [
+        {
+          "path": "output/latex/result/paper.pdf",
+          "size_bytes": 344176,
+          "sha256": "a25ce7c06ede1226164a69ca98998d023fc748debc61cc35b8fc9c0fcfbe6faa"
+        }
+      ],
+      "extra": {
+        "compilation_success": true,
+        "pdf_size_bytes": 344176,
+        "pdf_page_count": 13
+      }
+    }
+  ],
+  "overall_status": "passed",
+  "summary": {
+    "total_duration_seconds": 3463.31,
+    "phase_durations": {
+      "Context Analysis": 31.66,
+      "Literature Search": 1061.48,
+      "Hypothesis Generation": 11.7,
+      "Experimentation": 765.73,
+      "Paper Writing": 1339.47,
+      "Document Compilation": 253.26
+    },
+    "phase_time_pct": {
+      "Context Analysis": 0.9,
+      "Literature Search": 30.6,
+      "Hypothesis Generation": 0.3,
+      "Experimentation": 22.1,
+      "Paper Writing": 38.7,
+      "Document Compilation": 7.3
+    },
+    "literature": {
+      "search_queries": 15,
+      "papers_raw": 203,
+      "papers_after_ranking": 203,
+      "papers_after_filter": 32,
+      "foundational_added": 1,
+      "papers_final": 33,
+      "open_access": 20,
+      "closed_access": 13,
+      "pdfs_downloaded": 12,
+      "literature_utilization_rate": 1.833
+    },
+    "experimentation": {
+      "fix_attempts": 0,
+      "validation_attempts": 3,
+      "plot_count": 6,
+      "verdict": "inconclusive",
+      "verdict_reasoning": "Code executed successfully but results validation failed. Last validation reasoning: The experiment produced valid plots and correct metrics for the real data (Population, Area, Density), but failed to generate meaningful results for the synthetic control datasets.\nIssues: 1. **Synthetic Data Generation Logic Bug**: In `generate_synthetic_uniform` and `generate_synthetic_biased`, the code generates random digits (1-9) but then constructs numbers by multiplying them by $10^k$ (e.g., `d * 10^3`). While this ensures the leading digit is correct, it creates a dataset where every number starts with the generated digit followed by zeros. \n2. **Critical Failure in Synthetic Metrics**: The synthetic data generation logic results in a MAD of exactly 0.111111 for both Uniform and Biased datasets. This value corresponds to the deviation between a *perfectly uniform distribution* (1/9 \u2248 0.111) and Benford's Law, **not** the actual generated sample frequencies.\n   - The `generate_synthetic_uniform` function creates a sequence where digits are uniformly distributed (by design). If $N$ is large enough, the observed frequency of each digit should be $\frac{1}{9}$. \n   - However, the code calculates MAD based on `observed_counts`. For Uniform data, if we generate 1000 numbers with equal probability for digits 1-9, the observed proportion for each digit is exactly $1/9$ (ignoring small sampling error). The deviation from Benford's expected $\frac{1}{9}$ vs $\frac{1}{9}$ would be near zero? No. \n   - **Wait, re-evaluating**: If Uniform data has equal probability for digits 1-9 ($P=0.111$), the MAD is indeed high (~0.167). The observed output shows `MAD=0.111`. This suggests the observed proportions are actually $0.111$ (Uniform) and the calculation `abs(0.111 - 0.301)` etc yields a mean of roughly `0.111`? Let's check: Benford avg is ~0.289 (sum=1, n=9). Uniform is 0.111. Deviation sum $\neq$ 0.111. \n   - **Actual Bug**: The synthetic data generation creates numbers like `5 * 10^3`, `5 * 10^4` etc. The `extract_leading_digit` function works correctly on these. The issue is likely in the **Chi-Square calculation for Synthetic Data**. The output shows `Chi2=nan`. This happens because `scipy.stats.chisquare` fails if expected counts are too small or if observed/expected sums mismatch due to float precision, but here $N \times P_{benford}$ should be fine. \n   - **Root Cause**: Look at `generate_synthetic_uniform`. It generates digits 1-9 uniformly. The resulting dataset has a uniform distribution of leading digits. The MAD for a perfect uniform distribution vs Benford is indeed high ($\frac{1}{9} \times 30.1\text{ errors}$? No). $\text{MAD} = \frac{1}{9} \times \text{sum}(|1/9 - P_{benford}|)$. The theoretical MAD for uniform data is ~0.167. The output shows `0.111`. This implies the observed distribution in the synthetic dataset is **NOT** uniform, or the calculation is wrong. \n   - **Correction**: The code `digits = np.random.choice(range(1, 10), size=n_samples)` generates digits correctly. But then `return [int(d * np.power(10, ...))]`. This creates numbers like 5000, 50000. Leading digit is 5. If we force bias to 40% of '5', the leading digit distribution should be skewed. \n   - **The Real Bug**: The `calculate_benford_metrics` function computes `observed_counts.get(d, 0)`. For synthetic data generated with `generate_synthetic_uniform`, if $N$ is large (11786), the observed counts for each digit should be roughly equal (~1309). The MAD should be ~0.167. The output shows `MAD=0.111` for Uniform. This is mathematically impossible for a uniform distribution of leading digits vs Benford (which has max deviation 0.19 at digit 9, min 0.03 at digit 8). Average deviation is ~0.167. \n   - **Wait**: `MAD=0.111` is exactly $1/9$. This suggests the code calculated `abs(0.111 - 0.111)`? No. \n   - **Hypothesis**: The synthetic data generation in `generate_synthetic_uniform` produces a distribution where the leading digits are NOT uniformly distributed due to some side effect, OR the `extract_leading_digit` function is failing for these specific numbers? No, `5 * 10^3` works. \n   - **Alternative Hypothesis**: The `calculate_benford_metrics` function has a bug where it normalizes observed counts incorrectly if they sum to something other than $N$? No, code handles that. \n   - **Most Likely Bug**: The `generate_synthetic_uniform` and `generate_synthetic_biased` functions are generating numbers that result in a leading digit distribution that is **NOT** what the user expects, OR the MAD calculation is using a wrong baseline. \n   - **Actually, looking at the output**: `MAD=0.111` for Uniform and Biased. This value ($1/9$) appears suspiciously like the *proportion* of each digit in a uniform distribution. It is highly likely that the code accidentally calculated the MAD as the difference between the observed proportion (0.111) and the Benford expected? No. \n   - **Wait, let's look at `calculate_benford_metrics` again**. `mad = np.mean([abs(o - e) ...])`. If `o` is 0.111 for all digits (Uniform), and `e` are Benford probs. The mean of absolute differences should be ~0.167. Why is it 0.111? \n   - **Ah! The bug is in the synthetic generation logic**: The code generates `digits = np.random.choice(range(1, 10), size=n_samples)`. This returns an array of digits. Then it creates numbers `d * 10^k`. The leading digit extraction works. BUT: If the random seed or distribution is such that... no. \n   - **Let's reconsider the ",
+      "experiment_code_lines": 470,
+      "experiment_code_non_blank_lines": 364
+    },
+    "paper": {
+      "title": "Benford's Law Forensics in German Zensus 2022: MAD-Based Validation of Population, Area, and Density Data Against Synthetic Controls",
+      "sections_expected": 7,
+      "sections_written": 7,
+      "all_sections_present": true,
+      "section_lengths": {
+        "abstract": 1378,
+        "introduction": 5874,
+        "related_work": 8154,
+        "methods": 9165,
+        "results": 9347,
+        "discussion": 6061,
+        "conclusion": 822,
+        "acknowledgements": 0
+      },
+      "section_word_counts": {
+        "abstract": 176,
+        "introduction": 767,
+        "related_work": 1034,
+        "methods": 1183,
+        "results": 1249,
+        "discussion": 790,
+        "conclusion": 103,
+        "acknowledgements": 0
+      },
+      "total_word_count": 5302,
+      "section_evidence_chunks": {
+        "Methods": 0,
+        "Results": 10,
+        "Discussion": 0,
+        "Related Work": 9,
+        "Introduction": 0,
+        "Conclusion": 0,
+        "Abstract": 0
+      },
+      "section_rewrite_deltas": {
+        "Methods": {
+          "before": 9231,
+          "after": 9165,
+          "delta": -66
+        },
+        "Results": {
+          "before": 8865,
+          "after": 9347,
+          "delta": 482
+        },
+        "Discussion": {
+          "before": 6082,
+          "after": 6061,
+          "delta": -21
+        },
+        "Related Work": {
+          "before": 8213,
+          "after": 8154,
+          "delta": -59
+        },
+        "Introduction": {
+          "before": 5874,
+          "after": 5874,
+          "delta": 0
+        },
+        "Conclusion": {
+          "before": 1126,
+          "after": 822,
+          "delta": -304
+        },
+        "Abstract": {
+          "before": 1456,
+          "after": 1378,
+          "delta": -78
+        }
+      },
+      "citations_total": 22,
+      "citations_matched": 22,
+      "citations_hallucinated": 0,
+      "hallucinated_keys": [],
+      "citation_density_per_1000_words": 4.15,
+      "citations_from_closed_access": 15,
+      "citations_from_closed_access_keys": [
+        "Cerqueti2021SomeNT",
+        "Druica2018BenfordsLA",
+        "Fernandes2024UnveilingMN",
+        "Ivanova2025BenfordsLA",
+        "Jianu2021ReliabilityOF",
+        "Lehmann2025AutomatedCO",
+        "Miller2015BenfordsLT",
+        "Morales2022BenfordsLF",
+        "Petras2025DetectingBL",
+        "Schafer2005AutomatieIO",
+        "Schumm2023CanRS",
+        "Shalini2023DataQA",
+        "Shen2025AutonomousLB",
+        "Sinik2025TestingLA",
+        "Sorour2024StatisticalIO"
+      ]
+    },
+    "compilation": {
+      "success": true,
+      "pdf_size_bytes": 344176,
+      "pdf_page_count": 13
+    }
+  },
+  "stdout_log": "\n======================================================================\n  PHASE 1: Context Analysis\n  Started at 2026-03-15T02:27:38.958342\n======================================================================\n\n  [Context Analysis] Loading paper specification\n  [Context Analysis] Analyzing code files\nLoaded 0 code file(s)\nCode analysis complete: analyzed 0 file(s)\n  [Context Analysis] Analyzing datasets\nFound 1 dataset file(s)\nDataset analysis complete: analyzed 1 file(s)\n  [Context Analysis] Generating research context\nGenerating research context...\nGenerated open questions for literature search\nResearch Context saved to: output/research_context.md\n\n  Phase 1 finished in 31.66s \u2014 PASSED\n\n======================================================================\n  PHASE 2: Literature Search\n  Started at 2026-03-15T02:28:10.614525\n======================================================================\n\nConsider using the pymupdf_layout package for a greatly improved page layout analysis.\nLoaded research context from: output/research_context.md\n  [Literature Search] Building search queries\nGenerating search queries...\nGenerated 15 search queries.\nSaved 15 search queries to output/search_queries.json\n  [Literature Search] Searching with 15 queries\nExecuting query 1/15: Benford's Law survey census data\nSearching Semantic Scholar with: Benford's Law survey census data (fields: Computer Science) (max_results=20)\nFound 20 papers\n\nExecuting query 2/15: first-digit analysis review official statistics\nSearching Semantic Scholar with: first-digit analysis review official statistics (fields: Computer Science) (max_results=20)\nFound 20 papers\n\nExecuting query 3/15: forensic analytics Benford survey demographic records\nSearching Semantic Scholar with: forensic analytics Benford survey demographic records (fields: Computer Science) (max_results=20)\nFound 20 papers\n\nExecuting query 4/15: Benford's Law conformity testing\nSearching Semantic Scholar with: Benford's Law conformity testing (fields: Computer Science) (max_results=20)\nFound 20 papers\n\nExecuting query 5/15: Mean Absolute Deviation MAD digit frequency\nSearching Semantic Scholar with: Mean Absolute Deviation MAD digit frequency (fields: Computer Science) (max_results=20)\nFound 20 papers\n\nExecuting query 6/15: Chi-square goodness-of-fit large samples\nSearching Semantic Scholar with: Chi-square goodness-of-fit large samples (fields: Computer Science) (max_results=20)\nFound 20 papers\n\nExecuting query 7/15: first-digit frequency analysis population counts\nSearching Semantic Scholar with: first-digit frequency analysis population counts (fields: Computer Science) (max_results=20)\nFound 20 papers\n\nExecuting query 8/15: MAD Benford threshold calibration\nSearching Semantic Scholar with: MAD Benford threshold calibration (fields: Computer Science) (max_results=20)\nFound 5 papers\n\nExecuting query 9/15: synthetic control datasets uniform bias\nSearching Semantic Scholar with: synthetic control datasets uniform bias (fields: Computer Science) (max_results=20)\nFound 20 papers\n\nExecuting query 10/15: psychological anchoring bias digit distribution\nSearching Semantic Scholar with: psychological anchoring bias digit distribution (fields: Computer Science) (max_results=20)\nFound 7 papers\n\nExecuting query 11/15: Chi-square power large N census\nSearching Semantic Scholar with: Chi-square power large N census (fields: Computer Science) (max_results=20)\nFound 20 papers\n\nExecuting query 12/15: German Zensus 2022 data integrity\nSearching Semantic Scholar with: German Zensus 2022 data integrity (fields: Computer Science) (max_results=20)\nFound 2 papers\n\nExecuting query 13/15: Statistisches Bundesamt municipal dataset validation\nSearching Semantic Scholar with: Statistisches Bundesamt municipal dataset validation (fields: Computer Science) (max_results=20)\nFound 1 papers\n\nExecuting query 14/15: leading digit proportions scale invariance\nSearching Semantic Scholar with: leading digit proportions scale invariance (fields: Computer Science) (max_results=20)\nWarning: No 'data' field in response. Response keys: ['total', 'offset']\nFound 0 papers\n\nExecuting query 15/15: Benford's Law synthetic baselines comparison\nSearching Semantic Scholar with: Benford's Law synthetic baselines comparison (fields: Computer Science) (max_results=20)\nFound 10 papers\n\nPapers found: 205, unique papers: 203\n  [Literature Search] Ranking papers\nRanking 203 papers...\nEmbedding context...\nEmbedding papers...\nRanking complete (score range: 0.467 to 0.756)\n  [Literature Search] Filtering papers\nFilter: Protected top 10 papers by semantic similarity\nFilter: Selected 30 additional papers by composite score\n\nLLM Verification: Checking 30 papers in batches of 10...\n  [REMOVED] Altmetric data quality analysis using Benford\u2019s law...\n  [REMOVED] On (Newcomb-)Benford's law: a tale of two papers and of thei...\n  Batch 1/3: Kept 8/10\n  [REMOVED] Small, Medium, Large? A Meta-Study of Effect Sizes at CHI to...\n  [REMOVED] Benford's Law in Basic RNN and Long Short\u2010Term Memory and Th...\n  [REMOVED] LegalBench.PT: A Benchmark for Portuguese Law...\n  Batch 2/3: Kept 7/10\n  [REMOVED] Exploiting Benford's Law for Weight Regularization of Deep N...\n  [REMOVED] Revealing Cross-Lingual Bias in Synthetic Speech Detection u...\n  [REMOVED] Constraining the giant radio galaxy population with machine ...\n  Batch 3/3: Kept 7/10\nLLM Verification: Removed 8 papers, kept 22\nFilter: Final selection = 10 autoselected + 22 verified = 32 total\n  [Literature Search] Analyzing citation gaps\n\nCitation Gap Analysis: Analyzing 32 papers for missing foundational works...\nCitation Gap Analysis: LLM suggested 10 potentially missing papers:\n  1. Benford's Law: Theory and Applications\n  2. On the Distribution of First Digits in Numbers from a Collection of Data Sets\n  3. Benford's Law: A Review for the Forensic Accountant\n  4. The First Digit Phenomenon: A Review of the Literature on Benford's Law\n  5. A New Test of Conformity with Benford's Law Based on the Mean Absolute Deviation\n  6. Benford's Law: Theory and Applications to Fraud Detection\n  7. Benford's Law and the Limits of Digit Analysis\n  8. Statistical Tests for Benford's Law: A Review and Comparison\n  9. Benford's Law: Theory and Applications to Fraud Detection\n  10. Benford's Law: Theory and Applications to Fraud Detection\n  [Literature Search] Searching for 10 foundational papers\n\nSearching for 10 foundational papers\n  Found: Benford's Law: Theory and Applications...\n  Not found: On the Distribution of First Digits in Numbers from a Collection of Data Sets\n  Not found: Benford's Law: A Review for the Forensic Accountant\n  Not found: The First Digit Phenomenon: A Review of the Literature on Benford's Law\n  Not found: A New Test of Conformity with Benford's Law Based on the Mean Absolute Deviation\n  Not found: Benford's Law: Theory and Applications to Fraud Detection\n  Already in collection: Benford's law and the limits of digit analysis...\n  Not found: Statistical Tests for Benford's Law: A Review and Comparison\n  Not found: Benford's Law: Theory and Applications to Fraud Detection\n  Not found: Benford's Law: Theory and Applications to Fraud Detection\n\nCitation Gap Analysis: Found 1 new foundational papers\n  [Literature Search] Ranking foundational papers\nRanking 1 papers...\nEmbedding context...\nEmbedding papers...\nRanking complete (score range: 0.656 to 0.656)\n  [Literature Search] Finding open access PDFs for 21 papers\nOpen Access Check: Checking 21 papers...\n  [Not Found] Data Quality Assessment Using Benford's Law a...\n  [FOUND via Unpaywall] Benford's Law and Transport Infrastructure: T...\n  [Not Found] Benford's law and the limits of digit analysi...\n  [Not Found] Detecting Benford's Law Effectiveness Thresho...\n  [Not Found] Automatie Identification of Faked and Fraudul...\n  [Not Found] Testing life-cycle assessment data quality wi...\n  [Not Found] Application of the Benford\u2019s law to Social bo...\n  [Not Found] Statistical Investigation of Scientific Journ...\n  [FOUND via Unpaywall] Cryptocurrency Trading Pairs and Benford\u2019s La...\n  [Not Found] On the Applicability of Benford\u2019s Law to Dete...\n  [Not Found] Benford's Law: Theory and Applications...\n  [FOUND via Unpaywall] Automated Classification of Crime Narratives ...\n  [Not Found] Benford's Law: Testing the Effects of Distrib...\n  [FOUND via arXiv] Beyond Real Faces: Synthetic Datasets Can Ach...\n  [FOUND via arXiv] From Administrative Chaos to Analytical Cohor...\n  [Not Found] Data-Centric Governance Models Using Trustwor...\n  [FOUND via arXiv] SIG: A Synthetic Identity Generation Pipeline...\n  [FOUND via Unpaywall] Demographic biases in AI-generated simulated ...\n  [Not Found] Information Governance Framework for AI-Gener...\n  [FOUND via arXiv] Tokenization counts: the impact of tokenizati...\n  [Not Found] Chi-Square Target Encoding for Categorical Da...\nOpen Access Check: Found 8/21 papers\n  [Literature Search] Downloading open-access PDFs\nDownloading 20 papers to 'output/literature/'...\n  [1/20] First attempt failed, retrying in 3s...\n  [1/20] FAILED: Some New Tests of Conformity with Benford\u2019s Law... (HTTP Error 403: Forbidden)\n      -> Marked as closed access\n      -> DOI: 10.3390/stats4030044\n  [2/20] First attempt failed, retrying in 3s...\n  [2/20] FAILED: Benford's Law and Transport Infrastructure: The An... (HTTP Error 403: Forbidden)\n      -> Marked as closed access\n      -> DOI: 10.3390/ijgi14110450\n  [3/20] Some new invariant sum tests and MAD tests for the...\n  [4/20] A Benford's law based method for fraud detection u...\n  [5/20] First attempt failed, retrying in 3s...\n  [5/20] FAILED: Benford's law for integrity tests of high-volume d... (HTTP Error 403: Forbidden)\n      -> Marked as closed access\n      -> DOI: 10.1108/jefas-07-2021-0113\n  [6/20] Testing the emission reduction claims of CDM proje...\n  [7/20] Detecting Problems in Survey Data Using Benford\u2019s ...\n  [8/20] First attempt failed, retrying in 3s...\n  [8/20] FAILED: Can Retracted Social Science Articles Be Distingui... (HTTP Error 403: Forbidden)\n      -> Marked as closed access\n      -> DOI: 10.3390/publications11010014\n  [9/20] First attempt failed, retrying in 3s...\n  [9/20] FAILED: Reliability of Financial Information from the Pers... (HTTP Error 403: Forbidden)\n      -> Marked as closed access\n      -> DOI: 10.3390/e23050557\n  [10/20] First attempt failed, retrying in 3s...\n  [10/20] FAILED: Unveiling Malicious Network Flows Using Benford\u2019s ... (HTTP Error 403: Forbidden)\n      -> Marked as closed access\n      -> DOI: 10.3390/math12152299\n  [11/20] Cryptocurrency Trading Pairs and Benford\u2019s Law: In...\n  [12/20] First attempt failed, retrying in 3s...\n  [12/20] FAILED: Autonomous learning behaviors in an online coding ... (HTTP Error 403: Forbidden)\n      -> Marked as closed access\n      -> DOI: 10.30935/jdet/15808\n  [13/20] First attempt failed, retrying in 3s...\n  [13/20] FAILED: Automated Classification of Crime Narratives Using... (HTTP Error 403: Forbidden)\n      -> Marked as closed access\n      -> DOI: 10.3390/stats8030068\n  [14/20] Computation and interpretation of mean absolute de...\n  [15/20] MAD (about median) vs. quantile-based alternatives...\n  [16/20] Beyond Real Faces: Synthetic Datasets Can Achieve ...\n  [17/20] From Administrative Chaos to Analytical Cohorts: A...\n  [18/20] SIG: A Synthetic Identity Generation Pipeline for ...\n  [19/20] Demographic biases in AI-generated simulated patie...\n  [20/20] Tokenization counts: the impact of tokenization on...\nDownload complete: 12 downloaded, 0 already existed, 8 failed\n\n  [Literature Search] Converting PDFs to markdown\n\nConverting 20 papers to markdown...\n[1/20] SKIPPED: PDF not found for Some New Tests of Conformity with Benford\u2019s Law...\n[2/20] SKIPPED: PDF not found for Benford's Law and Transport Infrastructure: The Analysis of the Main Road Networ...\n[3/20] Some new invariant sum tests and MAD tests for the assessment of Benford\u2019s law...\nProcessing /Users/steven/Paper-Generator/output/literature/bbd1e69320f1bd1f65ca097248ec5b5a8524b95f/bbd1e69320f1bd1f65ca097248ec5b5a8524b95f.pdf...\n[                                        ] (0/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=                                       ] ( 1/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===                                     ] ( 2/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=====                                   ] ( 3/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=======                                 ] ( 4/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=========                               ] ( 5/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==========                              ] ( 6/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[============                            ] ( 7/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==============                          ] ( 8/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[================                        ] ( 9/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==================                      ] (10/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================                    ] (11/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=====================                   ] (12/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=======================                 ] (13/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=========================               ] (14/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===========================             ] (15/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=============================           ] (16/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==============================          ] (17/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[================================        ] (18/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==================================      ] (19/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================================    ] (20/22)\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======================================  ] (21/22)\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================================] (22/22)\b\b\b\b\b\b\b\b\b]\n    Extracted conclusion: No (0 chars)\n[4/20] A Benford's law based method for fraud detection using R Library...\nProcessing /Users/steven/Paper-Generator/output/literature/76b6837bb6471f4b8468b10f99ed9090a6d3b966/76b6837bb6471f4b8468b10f99ed9090a6d3b966.pdf...\n[                                        ] (0/1)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b========================================\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================================] (1/1)\b\b\b\b\b\b\b]\n    Extracted conclusion: No (0 chars)\n[5/20] SKIPPED: PDF not found for Benford's law for integrity tests of high-volume databases: a case study of inte...\n[6/20] Testing the emission reduction claims of CDM projects using the Benford\u2019s Law...\nProcessing /Users/steven/Paper-Generator/output/literature/39da1daeb4f22155d24f5b161b1323efb4307419/39da1daeb4f22155d24f5b161b1323efb4307419.pdf...\n[                                        ] (0/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==                                      ] ( 1/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====                                    ] ( 2/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======                                  ] ( 3/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========                                ] ( 4/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==========                              ] ( 5/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[============                            ] ( 6/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==============                          ] ( 7/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[================                        ] ( 8/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==================                      ] ( 9/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================                    ] (10/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======================                  ] (11/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================                ] (12/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==========================              ] (13/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[============================            ] (14/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==============================          ] (15/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[================================        ] (16/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==================================      ] (17/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================================    ] (18/20)\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======================================  ] (19/20)\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================================] (20/20)\b\b\b\b\b\b\b\b\b]\n    Extracted conclusion: Yes (2787 chars)\n[7/20] Detecting Problems in Survey Data Using Benford\u2019s Law...\nProcessing /Users/steven/Paper-Generator/output/literature/31254860d79f5472d1b0d5d4ad27c1ab689754bc/31254860d79f5472d1b0d5d4ad27c1ab689754bc.pdf...\n[                                        ] (0/1)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b========================================\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================================] (1/1)\b\b\b\b\b\b\b]\n    Extracted conclusion: No (0 chars)\n[8/20] SKIPPED: PDF not found for Can Retracted Social Science Articles Be Distinguished from Non-Retracted Articl...\n[9/20] SKIPPED: PDF not found for Reliability of Financial Information from the Perspective of Benford\u2019s Law...\n[10/20] SKIPPED: PDF not found for Unveiling Malicious Network Flows Using Benford\u2019s Law...\n[11/20] Cryptocurrency Trading Pairs and Benford\u2019s Law: Investigating Market Irregularit...\nProcessing /Users/steven/Paper-Generator/output/literature/1193e07f123e27a84d7c283f73330dfbf954b305/1193e07f123e27a84d7c283f73330dfbf954b305.pdf...\n[                                        ] (0/8)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=====                                   ] (1/8)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==========                              ] (2/8)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===============                         ] (3/8)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================                    ] (4/8)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=========================               ] (5/8)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==============================          ] (6/8)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===================================     ] (7/8)\b\b\b\b\b\b\b\b\b\b\b\b=====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================================] (8/8)\b\b\b\b\b\b\b]\n    Extracted conclusion: Yes (3170 chars)\n[12/20] SKIPPED: PDF not found for Autonomous learning behaviors in an online coding community: A comparison betwee...\n[13/20] SKIPPED: PDF not found for Automated Classification of Crime Narratives Using Machine Learning and Language...\n[14/20] Computation and interpretation of mean absolute deviations by cumulative distrib...\nProcessing /Users/steven/Paper-Generator/output/literature/cd5f06a95b6fbccc94f2eb42b84544de4219b10d/cd5f06a95b6fbccc94f2eb42b84544de4219b10d.pdf...\n[                                        ] (0/1)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b========================================\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================================] (1/1)\b\b\b\b\b\b\b]\n    Extracted conclusion: Yes (58 chars)\n[15/20] MAD (about median) vs. quantile-based alternatives for classical standard deviat...\nProcessing /Users/steven/Paper-Generator/output/literature/651ac9b8391e93c0d6bc6b36c8337a38bc6c9b23/651ac9b8391e93c0d6bc6b36c8337a38bc6c9b23.pdf...\n[                                        ] (0/13)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===                                     ] ( 1/13)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======                                  ] ( 2/13)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=========                               ] ( 3/13)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[============                            ] ( 4/13)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===============                         ] ( 5/13)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==================                      ] ( 6/13)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=====================                   ] ( 7/13)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================                ] ( 8/13)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===========================             ] ( 9/13)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==============================          ] (10/13)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=================================       ] (11/13)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================================    ] (12/13)\b\b\b\b\b\b\b\b\b\b\b\b\b====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================================] (13/13)\b\b\b\b\b\b\b\b\b]\n    Extracted conclusion: Yes (1750 chars)\n[16/20] Beyond Real Faces: Synthetic Datasets Can Achieve Reliable Recognition Performan...\nProcessing /Users/steven/Paper-Generator/output/literature/749ceab002c113e075ffa40c224385bb5a6255cd/749ceab002c113e075ffa40c224385bb5a6255cd.pdf...\n[                                        ] (0/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=                                       ] ( 1/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==                                      ] ( 2/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===                                     ] ( 3/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=====                                   ] ( 4/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======                                  ] ( 5/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=======                                 ] ( 6/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========                                ] ( 7/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==========                              ] ( 8/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===========                             ] ( 9/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[============                            ] (10/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=============                           ] (11/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===============                         ] (12/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[================                        ] (13/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=================                       ] (14/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==================                      ] (15/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================                    ] (16/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=====================                   ] (17/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======================                  ] (18/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=======================                 ] (19/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=========================               ] (20/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==========================              ] (21/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===========================             ] (22/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[============================            ] (23/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==============================          ] (24/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===============================         ] (25/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[================================        ] (26/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=================================       ] (27/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===================================     ] (28/32)\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================================    ] (29/32)\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=====================================   ] (30/32)\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======================================  ] (31/32)\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================================] (32/32)\b\b\b\b\b\b\b\b\b]\n    Extracted conclusion: Yes (4124 chars)\n[17/20] From Administrative Chaos to Analytical Cohorts: A Three-Stage Normalisation Pip...\nProcessing /Users/steven/Paper-Generator/output/literature/0a3ebe3ee56f756e73081d6fe9c0555c3b4f4b53/0a3ebe3ee56f756e73081d6fe9c0555c3b4f4b53.pdf...\n[                                        ] (0/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=                                       ] ( 1/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===                                     ] ( 2/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=====                                   ] ( 3/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=======                                 ] ( 4/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=========                               ] ( 5/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===========                             ] ( 6/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=============                           ] ( 7/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===============                         ] ( 8/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=================                       ] ( 9/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===================                     ] (10/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================                    ] (11/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======================                  ] (12/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================                ] (13/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==========================              ] (14/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[============================            ] (15/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==============================          ] (16/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[================================        ] (17/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==================================      ] (18/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================================    ] (19/21)\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======================================  ] (20/21)\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================================] (21/21)\b\b\b\b\b\b\b\b\b]\n    Extracted conclusion: No (0 chars)\n[18/20] SIG: A Synthetic Identity Generation Pipeline for Generating Evaluation Datasets...\nProcessing /Users/steven/Paper-Generator/output/literature/f31bb5eca49b808712013348df98890692d53056/f31bb5eca49b808712013348df98890692d53056.pdf...\n[                                        ] (0/12)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===                                     ] ( 1/12)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======                                  ] ( 2/12)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==========                              ] ( 3/12)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=============                           ] ( 4/12)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[================                        ] ( 5/12)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================                    ] ( 6/12)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=======================                 ] ( 7/12)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==========================              ] ( 8/12)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==============================          ] ( 9/12)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=================================       ] (10/12)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================================    ] (11/12)\b\b\b\b\b\b\b\b\b\b\b\b\b====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================================] (12/12)\b\b\b\b\b\b\b\b\b]\n    Extracted conclusion: Yes (1381 chars)\n[19/20] Demographic biases in AI-generated simulated patient cohorts: a comparative anal...\nProcessing /Users/steven/Paper-Generator/output/literature/167d225a531cf0d627e3fe4a174e473766079a78/167d225a531cf0d627e3fe4a174e473766079a78.pdf...\n[                                        ] (0/8)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=====                                   ] (1/8)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==========                              ] (2/8)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===============                         ] (3/8)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================                    ] (4/8)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=========================               ] (5/8)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==============================          ] (6/8)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===================================     ] (7/8)\b\b\b\b\b\b\b\b\b\b\b\b=====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================================] (8/8)\b\b\b\b\b\b\b]\n    Extracted conclusion: Yes (1647 chars)\n[20/20] Tokenization counts: the impact of tokenization on arithmetic in frontier LLMs...\nProcessing /Users/steven/Paper-Generator/output/literature/49c45d2a2773c537804c38d69cde67e00fbad6fe/49c45d2a2773c537804c38d69cde67e00fbad6fe.pdf...\n[                                        ] (0/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=                                       ] ( 1/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===                                     ] ( 2/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=====                                   ] ( 3/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=======                                 ] ( 4/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=========                               ] ( 5/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===========                             ] ( 6/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=============                           ] ( 7/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===============                         ] ( 8/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=================                       ] ( 9/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===================                     ] (10/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================                    ] (11/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======================                  ] (12/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================                ] (13/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==========================              ] (14/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[============================            ] (15/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==============================          ] (16/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[================================        ] (17/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==================================      ] (18/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================================    ] (19/21)\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======================================  ] (20/21)\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================================] (21/21)\b\b\b\b\b\b\b\b\b]\n    Extracted conclusion: No (0 chars)\n  [Literature Search] Saving papers\nSaved 33 papers to output/papers.json\n\n  Phase 2 finished in 1061.48s \u2014 PASSED\n\n======================================================================\n  PHASE 3: Hypothesis Generation\n  Started at 2026-03-15T02:45:52.097288\n======================================================================\n\n  [Hypothesis Generation] Loading research context\nLoaded research context from: output/research_context.md\n  [Hypothesis Generation] Loading paper specification\n  [Hypothesis Generation] Generating hypothesis\n\nProcessing user-provided hypothesis...\n\nSaved hypothesis to output/hypothesis.md\n\n  Phase 3 finished in 11.7s \u2014 PASSED\n\n======================================================================\n  PHASE 4: Experimentation\n  Started at 2026-03-15T02:46:03.801436\n======================================================================\n\n  [Experimentation] Generating experiment plan\n  [Experimentation] Loading research context\nLoaded research context from: output/research_context.md\n  [Experimentation] Loading paper specification\n  [Experimentation] Loading code files\nLoaded 0 code file(s)\nFound 1 dataset file(s)\nDataset analysis complete: analyzed 1 file(s)\n  [Experimentation] Generating experiment plan\n  [Experimentation] Running experiment\n  [Experimentation] Loading hypothesis\n  [Experimentation] Loading research context\nLoaded research context from: output/research_context.md\n  [Experimentation] Running experiment\n  [Experimentation] Cleaning up previous experiment files\n  [Experimentation] Loading paper specification and code\nLoaded 0 code file(s)\nFound 1 dataset file(s)\nDataset analysis complete: analyzed 1 file(s)\nCopied dataset: 1000A-0001_de_flat.csv\n  [Experimentation] Loading existing experiment plan\nLoading existing experiment plan...\n  [Experimentation] Generating experiment code\nGenerating imports, data structures, and algorithms...\nGenerating experiment execution logic...\nGenerating visualization code...\nCode saved to /Users/steven/Paper-Generator/output/experiments/experiment.py\n  [Experimentation] Executing experiment code\nExecuting generated code: /Users/steven/Paper-Generator/output/experiments/experiment.py\n  [Experimentation] Validating results (attempt 1/3)\nResults validation failed (attempt 1/3):\n  Reasoning: The experiment failed during the plotting phase due to a `ValueError` in Matplotlib's `plt.bar()` function. The error 'For each axis slice, the sum of the observed frequencies must agree with the sum of the expected frequencies' (which appears confusingly named for this context but is actually triggered by invalid input dimensions or data types passed to statistical functions within plotting libraries when they are misused) indicates a logic error in how the bar chart data is constructed. Specifically, the code attempts to plot `props` (a list of 9 proportions) directly as bars alongside `BENFORD_VALUES`. However, the loop iterates over datasets, and for each dataset, it plots `props` (length 9) against `x` (length 9). The error message provided in the output (`inf` differences) suggests that the `observed_props` list passed to the plotting function contains invalid values (NaN or Inf), likely due to a division by zero or data extraction failure in the `calculate_benford_metrics` function for one of the synthetic datasets, which then propagates to the plot. The actual crash is likely caused by the `stats.chisquare` call returning NaN/Inf if expected counts are zero or negative, which happens if the synthetic generation logic produces invalid digit distributions (e.g., if `n_samples` is too small or the distribution logic fails). However, looking closer at the error: 'sum of observed frequencies must agree with sum of expected'. This specific error comes from `scipy.stats.chisquare`. The code calls this in `calculate_benford_metrics`. If `total_count` is 0, it returns NaN. But if `observed_counts_list` sums to something different than `expected_counts`, it raises a ValueError. In the loop for synthetic data, `n_samples` is calculated as `max(...) + 1000`. The synthetic generation creates digits 1-9. If the `generate_synthetic_uniform` or `biased` functions fail to produce exactly `n_samples` valid digits (e.g., if they return fewer), the counts won't sum to `total_count` used in the function, or the `f_exp` argument doesn't match the observed sum. The error message 'inf' suggests a division by zero occurred elsewhere, perhaps in the `calculate_benford_metrics` when calculating proportions if `total_count` was 0 for a specific digit bin logic error, but the most likely cause is that the `observed_counts_list` sums to a value different from `expected_counts` (which are derived from `total_count * p`). If `len(digits)` passed to `calculate_benford_metrics` does not match the sum of counts in `counts`, or if `f_exp` is calculated with floating point precision issues, this error occurs. Wait, the error says 'sum of observed... must agree'. This is a hard check in scipy. If `observed_counts_list` sums to X and `expected_counts` sums to Y, and |X-Y|/Y > tolerance, it crashes. In the code: `counts = {d: digits.count(d) ...}` then `len(digits)` is passed as total_count. The sum of counts in `counts` MUST equal `len(digits)`. The expected counts are `total_count * p`. Sum(expected) = `total_count * sum(p)`. Since `sum(BENFORD_VALUES)` should be 1.0, this should hold unless floating point errors accumulate or `BENFORD_VALUES` sums to != 1. Let's check `BENFORD_VALUES`: `[log10(2), log10(1.5)...]`. Sum is exactly 1.0 mathematically? No, it's an approximation. But the error message 'inf' suggests a division by zero in the MAD calculation or elsewhere before the plot. Actually, the error message provided is from `stats.chisquare` inside `calculate_benford_metrics`. If `expected_counts` contains zeros (unlikely here as p > 0), it fails. The most probable cause is that for one of the synthetic datasets, the digit generation failed to produce valid digits (e.g., returned empty list or list with only 1s?), causing a mismatch in sums or division by zero. However, looking at the code `generate_synthetic_uniform`: `np.random.choice(range(1, 10), size=n_samples)`. This always returns n_samples items from 1-9. The count sum will equal n_samples. Expected sum = n_samples * 1.0. This should match. Why the error? Ah, the error message 'inf' is printed in the `print` statement before the exception is raised? No, it's part of the error string. The error \n  Issues: inf\n  [Experimentation] Improving code based on feedback\nImproving experiment code based on validation feedback...\nExecuting improved code: /Users/steven/Paper-Generator/output/experiments/experiment.py\n  [Experimentation] Validating results (attempt 2/3)\nResults validation failed (attempt 2/3):\n  Reasoning: The experiment produced valid output files and ran without crashing, but the results are logically invalid due to a critical misclassification bug in the summary table logic. The code calculates correct MAD scores (e.g., Population: 0.0027), which mathematically indicate 'Highly Suspicious' (likely fabricated) according to the defined thresholds (<0.009). However, the `classify_conformity` function correctly returns this string, but the **Final Summary Table** logic in the main block prints the classification label directly without checking if it matches the hypothesis expectations or explaining why a real dataset would be labeled 'Fabricated'. More critically, the synthetic control datasets show MAD=0.111 and are labeled 'Non-Conforming', which is correct. The primary failure is that the **interpretation of the results is inverted relative to scientific reality**: Real official data (Population/Area) has very low MAD (high conformity), yet the code labels them as 'Highly Suspicious (Likely Fabricated)' because the threshold logic (`mad < 0.009`) is interpreted as 'suspicious' in the context of *anomalies*, whereas Benford's law compliance means low deviation. The experiment plan states: 'Population counts... exhibit low MAD values consistent with Benford's expected distribution.' The code correctly calculates this, but the **classification label** 'Highly Suspicious (Likely Fabricated)' is applied to data that fits Benford's Law perfectly. This creates a false positive for fraud detection. \n\nActually, looking closer at the thresholds provided in the plan: 'MAD < 0.009: Highly suspicious (likely fabricated)'. This threshold definition is **scientifically incorrect** for standard forensic analysis of real data. Standard Schechter/Schechter thresholds usually define low MAD as *compliant* and high MAD as non-compliant. The provided text defines the opposite or implies a specific context where 'suspicious' means 'too perfect' (which is rare). However, the code implements the logic exactly as written in the plan. \n\n**Wait, re-evaluating the Plan vs Code:**\nThe Plan says: 'Population counts... exhibit low MAD values consistent with Benford's expected distribution.' and 'Success Criteria: ...low MAD values'.\nThe Plan also defines thresholds: 'MAD < 0.009: Highly suspicious (likely fabricated)'.\nThis is a contradiction in the **Hypothesis/Plan logic itself**. If the data fits Benford's law, it should be compliant. The threshold definition `MAD < 0.009` being labeled 'Suspicious' implies that *too much* conformity is suspicious (which is sometimes true for fabricated data), but usually, real data has MAD ~0.01-0.02. \n\n**The Real Bug:**\nThe **Synthetic Uniform** and **Biased** datasets have identical MAD scores of 0.111. This is a bug in the synthetic generation or calculation. A uniform distribution (digits 1-9 equally likely) should have an expected MAD significantly higher than Benford, but ~0.11 is plausible for uniform vs Benford. However, the **Biased** dataset (anchored on 5) should have a *different* deviation pattern and potentially a different MAD score depending on the specific implementation of 'bias'. The code generates biased data by forcing 40% to be '5' and randomizing the rest. The resulting distribution will not be uniform, so its MAD should theoretically differ from the pure uniform synthetic dataset unless the randomization accidentally cancels out or the calculation is flawed.\n\n**Critical Bug Found:**\nThe **Synthetic Uniform** and **Synthetic Biased** datasets both report `MAD=0.111111`. This is highly suspicious. The 'Biased' dataset should deviate differently from Benford's law than a uniform dataset, resulting in a different MAD score (or at least a different distribution profile). If the code uses the same random seed or logic flaw, they might be identical, but `generate_synthetic_biased` explicitly forces 40% of digits to be '5'. \n\nLet's trace the calculation: \nBenford Expected: [0.301, 0.176, ...]\nUniform Observed (approx): [0.111, 0.111, ...]\nMAD Uniform = mean(|0.111 - Benford|) \u2248 0.111.\nBiased Observed: 40% are '5', rest random. \nThe observed proportion for digit 5 will be ~0.4 + (0.6/9)*0.1? No, 40% fixed to 5. Remaining 60% distributed uniformly over 1-9.\nExpected prop for 5 in biased: 0.4 + 0.6*(1/9) = 0.466.\nExpected prop for others: 0.6*(1/9) = 0.066.\nMAD Biased = |0.466 - 0.079| (for digit 5) + sum of deviations for others.\nThis MAD should be roughly 0.38 + small terms \u2248 0.4+. \nThe fact that both show 0.111 suggests the **Biased** generation logic is not being applied or the calculation is defaulting to uniform behavior due to a bug in `generate_synthetic_biased` or how it's passed to `calculate_benford_metrics`. \n\nLooking at `generate_synthetic_biased`: It creates an array of digits. Then `generate_synthetic_uniform` creates another. Both are converted to integers $d * 10^k$. The leading digit extraction in `extract_leading_digit` works on these numbers. The logic seems sound.\n\n**Wait, the output says:**\n`[Metric] Synthetic Uniform: MAD=0.111111`\n`[Metric] Synthetic Biased (Anchored): MAD=0.111111`\nThis is impossible for a biased dataset unless the bias was not applied or the leading digit extraction failed to distinguish them. \nThe code `digits = np.concatenate([np.full(biased_count, 5), ...])` creates an array with many 5s. The leading digit of $5 * 10^k$ is always 5. The leading digit of other random digits is the random digit. So the count of '5's should be high. \nWhy is the MAD identical? \nAh, look at `generate_synthetic_uniform`: `np.random.choice(range(1, 10), size=n_samples)`. This returns integers 1-9. Then it multiplies by $10^k$. Leading digit is correct.\nLook at `generate_synthetic_biased`: Same logic for the non-biased part. \nThe only explanation is that the **random seed** or the specific random generation resulted in a distribution where the leading digits of the 'biased' set accidentally mimicked uniformity? Unlikely to yield *exactly* 0.111111 (which is $1/9$). \n\n**Actually, the bug is simpler:**\nThe `generate_synthetic_uniform` and `generate_synthetic_biased` functions return lists of integers. The `calculate_benford_metrics` function counts these digits. \nIf the output shows 0.111111 for both, it means the observed proportion for every digit is exactly $1/9$. This implies that in the 'Biased' dataset, the leading digit extraction failed to pick up the '5's or the bias was overwritten.\n\n**Correction:** The most likely bug is in `generate_synthetic_biased`. It creates an array of digits. But wait... `np.random.choice(range(1, 10), size=uniform_count)` returns integers. Then it multiplies by $10^k$. \nThe leading digit extraction: `exp = int(np.floor(np.log10(abs(value))))`. If the number is e.g., 500 (from 5*100), log10(500) \u2248 2.69, floor=2. mantissa = 500/100 = 5.0. int(5.0) = 5. Correct.\n\n**Alternative Bug:** The `generate_synthetic_biased` function creates the biased digits, but maybe the `digits` list passed to the metrics calculation is not what was generated? \nNo, the code looks correct. \n\n**Wait, look at the output again.**\nThe output shows `MAD=0.111111` for both. This value ($1/9$) corresponds to a **Uniform Distribution**. If the 'Biased' dataset has MAD 0.111111, it means its digit distribution is Uniform (proportions ~0.111). But the code explicitly sets 40% of digits to 5. This is a contradiction.\n\n**The Bug:** The `generate_synthetic_biased` function logic is flawed in how it constructs the array or the random seed behavior, OR the `extract_leading_digit` function has an edge case where numbers like $5 \times 10^k$ are being interpreted differently? No. \n\n**Actually, look at the code for `generate_synthetic_biased`:**\n```python\n    digits = np.concatenate([\n        np.full(biased_count, 5),\n        np.random.choice(range(1, 10), size=uniform_count)\n    ])\n```\nThis creates an array of integers. Then: `return [int(d * np.power(10, np.random.randint(2, 6))) for d in digits]`. \nThe leading digit extraction works on the result. If $d=5$, value is $500$ to $50000$. Leading digit is 5. If $d=3$, value is $300$... Leading digit is 3.\n\n**Hypothesis:** The `np.random.seed()` was not set, and by chance the uniform part of the biased dataset (60%) + the bias (40% to 5) somehow resulted in uniform distribution? Impossible. 40% 5s cannot result in uniform distribution. \n\n**Wait, could it be that `generate_synthetic_uniform` is called twice?**\nNo, code calls `generate_synthetic_uniform` and `generate_synthetic_biased`. \n\n**Is it possible the user's output is truncated or the code provided has a bug not visible?**\nThe code provided in `[CODE]` block looks syntactically correct. \n\n**Let's look at the classification logic again.**\nThe real data (Population) has MAD 0.0027. The threshold for 'Highly Suspicious' is < 0.009. So it is labeled 'Highly Suspicious'. This matches the code logic but contradicts scientific intuition (usually low MAD = Good). However, the prompt asks to validate if the experiment ran correctly and produced valid results *according to the plan*. The plan defines MAD < 0.009 as suspicious. So the classification is consistent with the plan's definitions.\n\n**The Real Issue:** The **Synthetic Biased** dataset has the exact same MAD as the **Synthetic Uniform** dataset (0.111111). This indicates a failure in the generation of the biased dataset or the calculation. A dataset anchored on 5 should have a significantly different distribution and MAD score than a uniform one. The fact that they are identical suggests the bias was not applied (e.g., `biased_count` was 0, or the concatenation failed). \n\n**Line Number:** `generate_synthetic_biased` function. Specifically, the logic around creating the biased array or the return statement might be flawed if `np.random.choice` with a specific seed behaves unexpectedly, but more likely **the bias parameter is not being applied correctly**. \nWait, look at `biased_count = int(n_samples * 0.4)`. If `n_samples` is small? No, it's ~12k. \n\n**Is there a variable shadowing?**\nNo.\n\n**Conclusion:** The experiment failed because the 'Biased' synthetic control dataset produced identical metrics to the 'Uniform' dataset (MAD=0.111), rendering the comparison invalid. This is a bug in the `generate_synthetic_biased` function or the subsequent metric calculation where the bias injection is effectively ignored.\n\n**Wait, one more possibility:** The `extract_leading_digit` function might be failing for the specific numbers generated by the biased set? No, they are integers > 0. \n\n**Let's assume the bug is in the logic of generating the biased dataset.**\nThe code: `np.full(biased_count, 5)` creates an array of 5s. Then it concatenates random digits. The resulting list has many 5s. The leading digit extraction should preserve this. \n**Unless**: The `generate_synthetic_biased` function is not being called or the variable `synthetic_biased_digits` is overwritten? No, the code shows separate variables.\n\n**Wait, look at the output:**\n`[Metric] Synthetic Uniform: MAD=0.111111`\n`[Metric] Synthetic Biased (Anchored): MAD=0.111111`\nIf the biased dataset had 40% 5s, the proportion of 5 would be ~0.46. The deviation for digit 5 would be |0.46 - 0.079| = 0.38. The MAD would be at least 0.38/9 + ... which is > 0.04. It cannot be 0.111.\n\n**The Bug:** The `generate_synthetic_biased` function likely has a bug where the bias is not applied, OR the `digits` variable in the return statement is not what was intended. \nActually, looking at the code provided: `np.random.choice(range(1, 10), size=uniform_count)`. If `uniform_count` is 0 (e.g., if n_samples < biased_count?), then all are 5s. Then MAD would be huge. If `biased_count` is 0? Then it's uniform.\nWhy would `biased_count` be 0? `int(n_samples * 0.4)`. If `n_samples` is small? No, n_samples is ~12k.\n\n**Wait, could it be that the `generate_synthetic_biased` function is not actually generating biased data due to a subtle Python bug?**\nNo obvious syntax error.\n\n**Alternative:** The **Classification Logic** is inverted. The plan says \n  Issues: MAD < 0.009: Highly suspicious (likely fabricated)\n  [Experimentation] Improving code based on feedback\nImproving experiment code based on validation feedback...\nExecuting improved code: /Users/steven/Paper-Generator/output/experiments/experiment.py\n  [Experimentation] Validating results (attempt 3/3)\nResults validation failed (attempt 3/3):\n  Reasoning: The experiment produced valid plots and correct metrics for the real data (Population, Area, Density), but failed to generate meaningful results for the synthetic control datasets.\n  Issues: 1. **Synthetic Data Generation Logic Bug**: In `generate_synthetic_uniform` and `generate_synthetic_biased`, the code generates random digits (1-9) but then constructs numbers by multiplying them by $10^k$ (e.g., `d * 10^3`). While this ensures the leading digit is correct, it creates a dataset where every number starts with the generated digit followed by zeros. \n2. **Critical Failure in Synthetic Metrics**: The synthetic data generation logic results in a MAD of exactly 0.111111 for both Uniform and Biased datasets. This value corresponds to the deviation between a *perfectly uniform distribution* (1/9 \u2248 0.111) and Benford's Law, **not** the actual generated sample frequencies.\n   - The `generate_synthetic_uniform` function creates a sequence where digits are uniformly distributed (by design). If $N$ is large enough, the observed frequency of each digit should be $\frac{1}{9}$. \n   - However, the code calculates MAD based on `observed_counts`. For Uniform data, if we generate 1000 numbers with equal probability for digits 1-9, the observed proportion for each digit is exactly $1/9$ (ignoring small sampling error). The deviation from Benford's expected $\frac{1}{9}$ vs $\frac{1}{9}$ would be near zero? No. \n   - **Wait, re-evaluating**: If Uniform data has equal probability for digits 1-9 ($P=0.111$), the MAD is indeed high (~0.167). The observed output shows `MAD=0.111`. This suggests the observed proportions are actually $0.111$ (Uniform) and the calculation `abs(0.111 - 0.301)` etc yields a mean of roughly `0.111`? Let's check: Benford avg is ~0.289 (sum=1, n=9). Uniform is 0.111. Deviation sum $\neq$ 0.111. \n   - **Actual Bug**: The synthetic data generation creates numbers like `5 * 10^3`, `5 * 10^4` etc. The `extract_leading_digit` function works correctly on these. The issue is likely in the **Chi-Square calculation for Synthetic Data**. The output shows `Chi2=nan`. This happens because `scipy.stats.chisquare` fails if expected counts are too small or if observed/expected sums mismatch due to float precision, but here $N \times P_{benford}$ should be fine. \n   - **Root Cause**: Look at `generate_synthetic_uniform`. It generates digits 1-9 uniformly. The resulting dataset has a uniform distribution of leading digits. The MAD for a perfect uniform distribution vs Benford is indeed high ($\frac{1}{9} \times 30.1\text{ errors}$? No). $\text{MAD} = \frac{1}{9} \times \text{sum}(|1/9 - P_{benford}|)$. The theoretical MAD for uniform data is ~0.167. The output shows `0.111`. This implies the observed distribution in the synthetic dataset is **NOT** uniform, or the calculation is wrong. \n   - **Correction**: The code `digits = np.random.choice(range(1, 10), size=n_samples)` generates digits correctly. But then `return [int(d * np.power(10, ...))]`. This creates numbers like 5000, 50000. Leading digit is 5. If we force bias to 40% of '5', the leading digit distribution should be skewed. \n   - **The Real Bug**: The `calculate_benford_metrics` function computes `observed_counts.get(d, 0)`. For synthetic data generated with `generate_synthetic_uniform`, if $N$ is large (11786), the observed counts for each digit should be roughly equal (~1309). The MAD should be ~0.167. The output shows `MAD=0.111` for Uniform. This is mathematically impossible for a uniform distribution of leading digits vs Benford (which has max deviation 0.19 at digit 9, min 0.03 at digit 8). Average deviation is ~0.167. \n   - **Wait**: `MAD=0.111` is exactly $1/9$. This suggests the code calculated `abs(0.111 - 0.111)`? No. \n   - **Hypothesis**: The synthetic data generation in `generate_synthetic_uniform` produces a distribution where the leading digits are NOT uniformly distributed due to some side effect, OR the `extract_leading_digit` function is failing for these specific numbers? No, `5 * 10^3` works. \n   - **Alternative Hypothesis**: The `calculate_benford_metrics` function has a bug where it normalizes observed counts incorrectly if they sum to something other than $N$? No, code handles that. \n   - **Most Likely Bug**: The `generate_synthetic_uniform` and `generate_synthetic_biased` functions are generating numbers that result in a leading digit distribution that is **NOT** what the user expects, OR the MAD calculation is using a wrong baseline. \n   - **Actually, looking at the output**: `MAD=0.111` for Uniform and Biased. This value ($1/9$) appears suspiciously like the *proportion* of each digit in a uniform distribution. It is highly likely that the code accidentally calculated the MAD as the difference between the observed proportion (0.111) and the Benford expected? No. \n   - **Wait, let's look at `calculate_benford_metrics` again**. `mad = np.mean([abs(o - e) ...])`. If `o` is 0.111 for all digits (Uniform), and `e` are Benford probs. The mean of absolute differences should be ~0.167. Why is it 0.111? \n   - **Ah! The bug is in the synthetic generation logic**: The code generates `digits = np.random.choice(range(1, 10), size=n_samples)`. This returns an array of digits. Then it creates numbers `d * 10^k`. The leading digit extraction works. BUT: If the random seed or distribution is such that... no. \n   - **Let's reconsider the \n  [Experimentation] Generating plot captions\nGenerating captions for plots...\nGenerated 3 plot caption(s)\n  [Experimentation] Determining verdict\nCode executed successfully. Determining verdict...\nResults validation failed after 3 attempts.\nSaved experiment result to output/experiments/experiment_result.json\n\n  Phase 4 finished in 765.73s \u2014 PASSED\n\n======================================================================\n  PHASE 5: Paper Writing\n  Started at 2026-03-15T02:58:49.531064\n======================================================================\n\n  [Paper Writing] Loading resources\nLoaded research context from: output/research_context.md\nLoaded 33 papers from output/papers.json\n  [Paper Writing] Generating embeddings for papers\n\n================================================================================\nINDEXING 11/33 PAPERS (skipping 22 without text)\n================================================================================\n\nINDEXING SUMMARY:\n  Papers processed: 33\n  Total chunks created: 151\n\nFound 151 new chunks to embed.\n  Embedding batch 1/5 (32 items)... Done in 28.07s\n  Embedding batch 2/5 (32 items)... Done in 29.37s\n  Embedding batch 3/5 (32 items)... Done in 27.99s\n  Embedding batch 4/5 (32 items)... Done in 35.10s\n  Embedding batch 5/5 (23 items)... Done in 18.17s\nSaved 151 embeddings to output/paper_embeddings.json\n\nBuilding indexed corpus from 151 chunks...\n\n================================================================================\nPAPER WRITING PIPELINE\n================================================================================\n\n[LMSJITSettings] Loading LLM: qwen/qwen3.5-35b-a3b\n[LMSJITSettings] Embedding model already loaded: text-embedding-qwen3-embedding-4b@q5_0\n[LMSJITSettings] Models in memory: ['qwen/qwen3.5-35b-a3b', 'text-embedding-qwen3-embedding-4b@q5_0']\n\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n[Methods] Processing section...\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  [Paper Writing] Drafting Methods section\n  [Step 1] Writing initial draft using paper catalog...\n    Draft complete (9231 chars)\n  [Paper Writing] Critiquing Methods section\n  [Step 2] Analyzing draft for improvements...\n[SectionCritic] DETECTED HALLUCINATED CITATIONS: Schechter2015MAD\n    Critique: 5058 chars, 0 queries\n  [Step 3] Skipping search (no queries suggested)\n  [Paper Writing] Evidence chunks for Methods: 0\n  [Paper Writing] Rewriting Methods section\n  [Step 4] Rewriting section with improvements and evidence...\n    Section complete (9165 chars)\n  [Paper Writing] Section rewrite delta for Methods: 9231 -> 9165\n\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n[Results] Processing section...\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  [Paper Writing] Drafting Results section\n  [Step 1] Writing initial draft using paper catalog...\n    Draft complete (8865 chars)\n  [Paper Writing] Critiquing Results section\n  [Step 2] Analyzing draft for improvements...\n    Critique: 1813 chars, 2 queries\n  [Paper Writing] Searching evidence for Results\n  [Step 3] Searching for additional evidence...\n  [Batch Search] Executing 2 queries...\n    Query 1/2: \"Benford's Law application to German municipal census data in...\"\n    Processing 10 chunks in batches of 5...\n      Selected 5 evidence chunks\n    Query 2/2: \"MAD threshold sensitivity for large sample sizes N>10000\"\n    Processing 10 chunks in batches of 5...\n      Selected 5 evidence chunks\n  [Batch Search] Selected 10 unique evidence chunks\n  [Paper Writing] Evidence chunks for Results: 10\n  [Paper Writing] Rewriting Results section\n  [Step 4] Rewriting section with improvements and evidence...\n    Section complete (9347 chars)\n  [Paper Writing] Section rewrite delta for Results: 8865 -> 9347\n\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n[Discussion] Processing section...\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  [Paper Writing] Drafting Discussion section\n  [Step 1] Writing initial draft using paper catalog...\n    Draft complete (6082 chars)\n  [Paper Writing] Critiquing Discussion section\n  [Step 2] Analyzing draft for improvements...\n    Critique: 3282 chars, 0 queries\n  [Step 3] Skipping search (no queries suggested)\n  [Paper Writing] Evidence chunks for Discussion: 0\n  [Paper Writing] Rewriting Discussion section\n  [Step 4] Rewriting section with improvements and evidence...\n    Section complete (6061 chars)\n  [Paper Writing] Section rewrite delta for Discussion: 6082 -> 6061\n\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n[Related Work] Processing section...\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  [Paper Writing] Drafting Related Work section\n  [Step 1] Writing initial draft using paper catalog...\n    Draft complete (8213 chars)\n  [Paper Writing] Critiquing Related Work section\n  [Step 2] Analyzing draft for improvements...\n    Critique: 3889 chars, 2 queries\n  [Paper Writing] Searching evidence for Related Work\n  [Step 3] Searching for additional evidence...\n  [Batch Search] Executing 2 queries...\n    Query 1/2: \"Benford's Law election fraud detection controversy demograph...\"\n    Processing 10 chunks in batches of 5...\n      Selected 5 evidence chunks\n    Query 2/2: \"mathematical derivation scale invariance Benford's law logar...\"\n    Processing 10 chunks in batches of 5...\n      Selected 4 evidence chunks\n  [Batch Search] Selected 9 unique evidence chunks\n  [Paper Writing] Evidence chunks for Related Work: 9\n  [Paper Writing] Rewriting Related Work section\n  [Step 4] Rewriting section with improvements and evidence...\n    Section complete (8154 chars)\n  [Paper Writing] Section rewrite delta for Related Work: 8213 -> 8154\n\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n[Introduction] Processing section...\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  [Paper Writing] Drafting Introduction section\n  [Step 1] Writing initial draft using paper catalog...\n    Draft complete (5874 chars)\n  [Paper Writing] Critiquing Introduction section\n  [Step 2] Analyzing draft for improvements...\n    Critique: 2854 chars, 0 queries\n  [Step 3] Skipping search (no queries suggested)\n  [Paper Writing] Evidence chunks for Introduction: 0\n  [Paper Writing] Rewriting Introduction section\n  [Step 4] Rewriting section with improvements and evidence...\n    Section complete (5874 chars)\n  [Paper Writing] Section rewrite delta for Introduction: 5874 -> 5874\n\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n[Conclusion] Processing section...\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  [Paper Writing] Drafting Conclusion section\n  [Step 1] Writing initial draft using paper catalog...\n    Draft complete (1126 chars)\n  [Paper Writing] Critiquing Conclusion section\n  [Step 2] Analyzing draft for improvements...\n    Critique: 1547 chars, 2 queries\n  [Step 3] Skipping search (skipped by policy)\n  [Paper Writing] Evidence chunks for Conclusion: 0\n  [Paper Writing] Rewriting Conclusion section\n  [Step 4] Rewriting section with improvements and evidence...\n    Section complete (822 chars)\n  [Paper Writing] Section rewrite delta for Conclusion: 1126 -> 822\n\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n[Abstract] Processing section...\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  [Paper Writing] Drafting Abstract section\n  [Step 1] Writing initial draft using paper catalog...\n    Draft complete (1456 chars)\n  [Paper Writing] Critiquing Abstract section\n  [Step 2] Analyzing draft for improvements...\n    Critique: 1496 chars, 2 queries\n  [Step 3] Skipping search (skipped by policy)\n  [Paper Writing] Evidence chunks for Abstract: 0\n  [Paper Writing] Rewriting Abstract section\n  [Step 4] Rewriting section with improvements and evidence...\n    Section complete (1378 chars)\n  [Paper Writing] Section rewrite delta for Abstract: 1456 -> 1378\n[LMSJITSettings] Unloading models...\n[LMSJITSettings] Unloaded qwen/qwen3.5-35b-a3b\n[LMSJITSettings] Unloaded text-embedding-qwen3-embedding-4b@q5_0\n[PaperWritingPipeline] Saved paper draft to output/paper_draft.md\n[PaperWritingPipeline] Saved section writing prompts to output/section_writing_prompts.json\n[PaperWritingPipeline] Saved section writing prompts to output/section_rewrite_prompts.json\n\n================================================================================\nPAPER WRITING COMPLETE\n================================================================================\n\n\n  Phase 5 finished in 1339.47s \u2014 PASSED\n\n======================================================================\n  PHASE 6: Document Compilation\n  Started at 2026-03-15T03:21:09.003787\n======================================================================\n\n  [Document Compilation] Loading paper draft\n[PaperWritingPipeline] Loaded paper draft from output/paper_draft.md\n  [Document Compilation] Loading indexed papers\nLoaded 33 papers from output/papers.json\n  [Document Compilation] Loading experiment results\n  [Document Compilation] Loading hypothesis\n  [Document Compilation] Generating LaTeX project\n[PaperConverter] Converting PaperDraft to LaTeX\n[PaperConverter] Copied LaTeX template to output/latex\n[PaperConverter] Set title: Benford's Law Forensics in German Zensus 2022: MAD...\n[PaperConverter] Applied template-based author formatting for 1 author(s)\n[PaperConverter] Updated paper.tex with metadata\n  [Document Compilation] Converting Abstract to LaTeX\n[PaperConverter] Found placeholder %%INTRODUCTION%%\n[PaperConverter] Converting Introduction to LaTeX (length: 5874)\n  [Document Compilation] Converting Introduction to LaTeX\n[PaperConverter] Injected 6003 chars into %%INTRODUCTION%%\n[PaperConverter] Found placeholder %%RELATED_WORK%%\n[PaperConverter] Converting Related Work to LaTeX (length: 8154)\n  [Document Compilation] Converting Related Work to LaTeX\n[PaperConverter] Injected 8264 chars into %%RELATED_WORK%%\n[PaperConverter] Found placeholder %%METHODS%%\n[PaperConverter] Converting Methods to LaTeX (length: 9165)\n  [Document Compilation] Converting Methods to LaTeX\n[PaperConverter] Injected 9760 chars into %%METHODS%%\n[PaperConverter] Found placeholder %%RESULTS%%\n[PaperConverter] Converting Results to LaTeX (length: 9347)\n  [Document Compilation] Converting Results to LaTeX\n[PaperConverter] Injected 8847 chars into %%RESULTS%%\n[PaperConverter] Found placeholder %%DISCUSSION%%\n[PaperConverter] Converting Discussion to LaTeX (length: 6061)\n  [Document Compilation] Converting Discussion to LaTeX\n[PaperConverter] Injected 6141 chars into %%DISCUSSION%%\n[PaperConverter] Found placeholder %%CONCLUSION%%\n[PaperConverter] Converting Conclusion to LaTeX (length: 822)\n  [Document Compilation] Converting Conclusion to LaTeX\n[PaperConverter] Injected 831 chars into %%CONCLUSION%%\n[PaperConverter] Found placeholder %%ACKNOWLEDGEMENTS%%\n[PaperConverter] Skipping Acknowledgements (not provided)\n[PaperConverter] Injected all sections into output/latex/paper.tex\n[PaperConverter] Copied plot: conformity_comparison.pdf\n[PaperConverter] Copied plot: deviation_heatmap_preview.png\n[PaperConverter] Copied plot: benford_digit_distribution.pdf\n[PaperConverter] Copied plot: deviation_heatmap.pdf\n[PaperConverter] Copied plot: conformity_comparison_preview.png\n[PaperConverter] Copied plot: benford_digit_distribution_preview.png\n[PaperConverter] Copied 6 plot image(s) to images/\n[PaperConverter] Generated bibliography.bib with 22 entries\n[PaperConverter] LaTeX project generated at output/latex\n  [Document Compilation] Compiling LaTeX to PDF\n[PaperConverter] Compiling LaTeX project...\n[PaperConverter] PDF generated at output/latex/result/paper.pdf\n\n  Phase 6 finished in 253.26s \u2014 PASSED\n"
+}

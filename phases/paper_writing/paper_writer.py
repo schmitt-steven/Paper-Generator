@@ -147,8 +147,8 @@ class PaperWriter:
         self,
         draft: PaperDraft,
         context: ResearchContext,
-        temperature: float = 0.2,
-        max_tokens: int = 200,
+        temperature: float = 0.1,
+        max_tokens: int = 250,
     ) -> str:
         """Generate a paper title based on the complete paper draft."""
 
@@ -249,7 +249,7 @@ class PaperWriter:
         experiment: Optional[ExperimentResult],
         previous_sections: Optional[dict[Section, str]] = None,
         paper_specification: Optional[PaperSpecification] = None,
-        temperature: float = 0.2,
+        temperature: float = 0.1,
         next_section_type: Optional[Section] = None,
         section_order: Optional[Sequence[Section]] = None,
     ) -> str:
@@ -386,6 +386,7 @@ The following papers are available for citation. Use their citation keys in squa
 
 [WRITING REQUIREMENTS — STRICT]
 - Produce a cohesive, original, publication-quality academic narrative.
+- PAPER SPECIFICATION: You MUST strictly follow the scope and length constraints in [PAPER SPECIFICATION]. Try not to exceed the targeted length.
 - CITATION FORMAT: Use square brackets with the EXACT citation keys provided (e.g., [AuthorYear]).
 - CRITICAL: Copy citation keys EXACTLY. Do NOT shorten or modify them.
 - CRITICAL: NEVER use numeric citations like [1], [2]. These are strictly forbidden.
@@ -421,7 +422,7 @@ The following papers are available for citation. Use their citation keys in squa
         experiment: Optional[ExperimentResult],
         previous_sections: Optional[dict[Section, str]] = None,
         paper_specification: Optional[PaperSpecification] = None,
-        temperature: float = 0.2,
+        temperature: float = 0.1,
         next_section_type: Optional[Section] = None,
         section_order: Optional[Sequence[Section]] = None,
     ) -> str:
@@ -576,7 +577,7 @@ Rewrite the {section_type.value} section, addressing the suggested improvements 
             conclusion = PaperWriter._normalize_text(paper.conclusion or "")
 
             # Truncate long abstracts
-            abstract_truncated = abstract[:500] + "..." if len(abstract) > 500 else abstract
+            abstract_truncated = abstract[:1000] + "..." if len(abstract) > 1000 else abstract
 
             lines = [
                 f"[{citation_key}]",
@@ -585,7 +586,8 @@ Rewrite the {section_type.value} section, addressing the suggested improvements 
             ]
 
             if conclusion:
-                conclusion_truncated = conclusion[:500] + "..." if len(conclusion) > 500 else conclusion
+                # Truncate long conclusions
+                conclusion_truncated = conclusion[:1000] + "..." if len(conclusion) > 1000 else conclusion
                 lines.append(f"Conclusion: {conclusion_truncated}")
 
             items.append("\n".join(lines))

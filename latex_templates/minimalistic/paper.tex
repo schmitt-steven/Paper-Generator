@@ -12,7 +12,10 @@
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs}
 \usepackage{etoolbox}
+\usepackage{adjustbox}
 \AtBeginEnvironment{table}{\centering}
+\BeforeBeginEnvironment{tabular}{\begin{adjustbox}{max width=\linewidth,center}}
+\AfterEndEnvironment{tabular}{\end{adjustbox}}
 
 %% ── Graphics ────────────────────────────────────────────────────────
 \usepackage{graphicx}

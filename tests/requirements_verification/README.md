@@ -1,25 +1,28 @@
 # Requirements Verification Test Suite
 
-This directory contains the automated test suite used to verify the Paper Generator's system requirements for the evaluation chapter.
+This directory contains the automated tests used to verify the Paper Generator's system requirements for the evaluation chapter.
+
+All tests are described in more detail in thesis section 5.1.
 
 ## Overview
 
 The evaluation uses three methods to verify the requirements:
 
-1. **Static Analysis (Pre-run)**  
+1. **Static Analysis**  
    Tests that parse the project's source code and configuration files. These require no active LLM server and execute instantly.
    - `C1`: Technology Stack
    - `NFR1`: Privacy
 
-2. **Output Inspection & Integration (Post-run)**  
-   Tests that inspect the `output/` directory after a complete pipeline execution and run integration checks on the prompt payloads and model loaded states. These verify that the system produced the artifacts required by the functional requirements (FR1–FR8).
+2. **Output Inspection & Integration**  
+   Tests that inspect the `output/` directory after a complete pipeline execution and run integration checks on the prompt and model loaded states. These verify that the system produced the artifacts required by the functional requirements (FR1–FR8).
 
 3. **Cost Analysis (Documentary)**  
    `NFR2` (Free Execution) is verified via a documented Bill of Materials (BOM) rather than an automated script. See the NFR2 section below.
 
 ## Running the Tests
 
-The automated tests are written using `pytest`. Run them from the project root:
+The automated tests are written using `pytest`.
+To run all at once from the project root:
 
 ```bash
 # Run all automated verification tests
@@ -44,13 +47,13 @@ Verifies dynamic model switching at runtime. It simulates phase transitions by s
 
 ### C1: Technology Stack
 **Test:** `test_c1_tech_stack.py`  
-Scans the production codebase to confirm it contains `.py` files, imports the `tkinter` GUI library, and imports the `lmstudio` Python SDK.
+Scans the production codebase to confirm it contains `.py` files, imports the `tkinter` GUI library and imports the `lmstudio` Python SDK.
 
 ### NFR1: Privacy
 **Test:** `test_nfr1_privacy.py`  
 Verifies local-only inference by tracing all model loads. It proves that:
 1. Every model load in the codebase uses `lms.llm()` or `lms.embedding_model()`.
-2. The `lms` alias is strictly bound to the `lmstudio` SDK.
+2. The `lms` alias is always bound to the `lmstudio` SDK.
 Because the LM Studio SDK connects exclusively to the local `localhost` server by design, this proves no inference data leaves the machine.
 
 ### NFR2: Free Execution
@@ -62,31 +65,4 @@ Verification method: Cost analysis (documented in thesis Section 5.1).
   NFR2 cannot be reduced to a binary code-level check, because proving a system
   costs nothing is inherently a qualitative claim. A blocklist of paid packages or
   API keys can never be exhaustive. The proof is therefore a Bill of Materials (BOM)
-  that accounts for every runtime component:
-
-  1. Runtime language
-     Python is distributed under the Python Software Foundation License.
-     It is open-source and free to use without restriction.
-
-  2. Third-party packages (see requirements.txt)
-     All dependencies carry OSI-approved open-source licences:
-       - MIT:          lmstudio, pydantic, sv-ttk, markdown, tkinterweb
-       - Apache 2.0:   requests
-       - BSD-3-Clause: pandas, numpy, scipy, seaborn
-       - PSF License:  matplotlib
-       - HPND License: pillow
-       - AGPL-3.0:     PyMuPDF, pymupdf4llm
-
-  3. Inference engine
-     LM Studio (version 0.4.6+1) is free for personal and research use.
-     All model inference runs on the user's local hardware. There are no
-     pay-per-token API calls.
-
-  4. External API endpoints
-     The system makes external network calls only for literature retrieval:
-       - Semantic Scholar API (https://api.semanticscholar.org)
-         Public academic API, no billing account required.
-       - Unpaywall API (https://unpaywall.org/products/api)
-         Free academic API, no billing account required.
-       - arXiv API (https://export.arxiv.org/api/query)
-         Free academic API, no billing account required.
+  that accounts for every runtime component.

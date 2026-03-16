@@ -30,24 +30,24 @@ from dataclasses import dataclass, field, asdict
 
 PIPELINE_PARAMS = {
     # Phase 2 — Literature Search
-    "search_query_count": 15,       # hardcoded in LiteratureSearch.build_search_queries prompt
-    "max_results_per_query": 20,       # hardcoded in run_automated_search
-    "fields_of_study": "Computer Science",  # hardcoded in search_papers
-    "ranking_weights": {                      # hardcoded in run_automated_search
+    "search_query_count": 15,      
+    "max_results_per_query": 20,       
+    "fields_of_study": "Computer Science",  
+    "ranking_weights": {                     
         "relevance": 0.8,
         "citations": 0.1,
         "recency": 0.1,
     },
-    "filter_target_count": 40,       # hardcoded in run_automated_search → PaperFilter
-    "filter_min_relevance": 0.5,      # hardcoded in run_automated_search → PaperFilter
+    "filter_target_count": 40,       
+    "filter_min_relevance": 0.5,     
 
     # Phase 4 — Experimentation
-    "experiment_max_fix_attempts": 5,        # hardcoded in ExperimentRunner
-    "experiment_max_validation_attempts": 3,  # hardcoded in ExperimentRunner
+    "experiment_max_fix_attempts": 5,        
+    "experiment_max_validation_attempts": 3,  
 
     # Phase 5 — Paper Writing  (passable — forwarded to write_paper)
-    "chunks_per_query": 5,            # evidence chunks kept per critic query
-    "max_chunks_per_paper": 2,        # max chunks from the same paper per query
+    "chunks_per_query": 5,            
+    "max_chunks_per_paper": 2,        
 }
 
 
@@ -55,7 +55,7 @@ PIPELINE_PARAMS = {
 
 @dataclass
 class PhaseLog:
-    """Captures all metadata for a single pipeline phase."""
+    """Saves all metadata for a phase."""
     phase_name: str
     phase_number: int
     status: str = "pending"          # pending | running | passed | failed
@@ -71,7 +71,7 @@ class PhaseLog:
 
 @dataclass
 class DemoLog:
-    """Top-level log for the entire demonstration run."""
+    """Summary log for the entire demonstration run."""
     run_id: str = ""
     start_time: str = ""
     end_time: str = ""
@@ -611,10 +611,21 @@ PHASES = [
 ]
 
 
+def _clear_literature_folder():
+    """Remove all contents of output/literature/ before a fresh run."""
+    import shutil
+    lit_dir = Path("output/literature")
+    if lit_dir.exists():
+        shutil.rmtree(lit_dir)
+    lit_dir.mkdir(parents=True, exist_ok=True)
+
+
 def main():
     # Ensure we're in the project root
     project_root = Path(__file__).resolve().parent.parent.parent
     os.chdir(project_root)
+
+    _clear_literature_folder()
 
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     log = DemoLog(
@@ -624,10 +635,11 @@ def main():
         pipeline_params=PIPELINE_PARAMS,
     )
 
-    log_output_path = Path(f"tests/demonstration/demo_log_{run_id}.json")
-    log_output_path.parent.mkdir(parents=True, exist_ok=True)
+    run_dir = Path(f"tests/demonstration/run_{run_id}")
+    run_dir.mkdir(parents=True, exist_ok=True)
+    log_output_path = run_dir / f"demo_log_{run_id}.json"
 
-    print(f"Demo run {run_id} — logging to {log_output_path}")
+    print(f"Demo run {run_id} — run folder: {run_dir}")
     print(f"Project root: {project_root}\n")
 
     all_passed = True
@@ -646,6 +658,14 @@ def main():
                 print(f"\n  Stopping: phase {i} ({name}) failed.")
                 break
 
+            # Stop early if experiment verdict is not proven
+            if name == "Experimentation":
+                verdict = phase_log.extra.get("verdict", "")
+                if verdict in ("inconclusive", "disproven"):
+                    all_passed = False
+                    print(f"\n  Stopping: experiment verdict is '{verdict}'. Skipping paper writing and compilation.")
+                    break
+
     log.end_time = datetime.now().isoformat()
     log.total_duration_seconds = round(
         (datetime.fromisoformat(log.end_time) - datetime.fromisoformat(log.start_time)).total_seconds(), 2
@@ -662,6 +682,16 @@ def main():
     # Also save summary as separate file for quick access
     summary_path = log_output_path.with_name(log_output_path.stem + "_summary.json")
     summary_path.write_text(json.dumps(summary, indent=2, default=str), encoding="utf-8")
+
+    # Copy entire output/ folder into the run directory
+    import shutil
+    output_src = project_root / "output"
+    output_dst = run_dir / "output"
+    if output_src.exists():
+        if output_dst.exists():
+            shutil.rmtree(output_dst)
+        shutil.copytree(output_src, output_dst)
+        print(f"  Output copied to: {output_dst}")
 
     print(f"  Log saved to:     {log_output_path}")
     print(f"  Summary saved to: {summary_path}\n")

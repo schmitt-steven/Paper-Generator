@@ -1,5 +1,6 @@
 import re
 import textwrap
+import html
 from typing import List, Dict
 from phases.paper_search.paper import Paper
 from phases.paper_writing.data_models import PaperDraft
@@ -21,16 +22,20 @@ def extract_citation_keys_from_markdown(md_text: str) -> set[str]:
     """
     # Pattern to match [key1] or [key1, key2] or [key1; key2]
     # Handles both comma and semicolon separators
-    # Uses negative lookahead `(?![a-zA-Z]\b)` to ignore single-letter bracketed text like `[d]`
-    pattern = r'\[((?:(?![a-zA-Z]\b)[a-zA-Z0-9]+)(?:\s*[,;]\s*(?:(?![a-zA-Z]\b)[a-zA-Z0-9]+))*)\]'
+    pattern = r'\[([a-zA-Z0-9]+(?:\s*[,;]\s*[a-zA-Z0-9]+)*)\]'
     matches = re.findall(pattern, md_text)
-    
+
     citation_keys = set()
     for match in matches:
         # Split by comma or semicolon and strip whitespace
         keys = [k.strip() for k in re.split(r'[,;]', match)]
-        citation_keys.update(keys)
-    
+        for key in keys:
+            # Citation keys must contain at least one digit (e.g. year like Smith2024).
+            # This filters out plain English words used in square-bracket notation
+            # for variable names, lists, etc. (e.g. [Area, Density, Population]).
+            if re.search(r'\d', key):
+                citation_keys.add(key)
+
     return citation_keys
 
 
@@ -110,6 +115,8 @@ def generate_bibtex_entry(paper: Paper) -> str:
         BibTeX entry as string
     """
     if paper.bibtex:
+        # Unescape HTML entities (e.g. &amp; → &) then escape & for LaTeX
+        bibtex = html.unescape(paper.bibtex).replace('&', r'\&')
         # Replace the BibTeX entry key with paper.citation_key to ensure
         # the key in the .bib file matches \cite{} commands in the LaTeX.
         # The raw bibtex may have a different key (e.g., with Unicode accents
@@ -118,10 +125,10 @@ def generate_bibtex_entry(paper: Paper) -> str:
             return re.sub(
                 r'(@\w+\{)[^,]+',
                 lambda m: m.group(1) + paper.citation_key,
-                paper.bibtex,
+                bibtex,
                 count=1,
             )
-        return paper.bibtex
+        return bibtex
     
     # Generate minimal BibTeX entry
     # Extract year from published date

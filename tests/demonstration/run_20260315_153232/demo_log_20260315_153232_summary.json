@@ -1,0 +1,138 @@
+{
+  "total_duration_seconds": 2499.13,
+  "phase_durations": {
+    "Context Analysis": 43.94,
+    "Literature Search": 397.57,
+    "Hypothesis Generation": 11.33,
+    "Experimentation": 426.14,
+    "Paper Writing": 1345.23,
+    "Document Compilation": 274.92
+  },
+  "phase_time_pct": {
+    "Context Analysis": 1.8,
+    "Literature Search": 15.9,
+    "Hypothesis Generation": 0.5,
+    "Experimentation": 17.1,
+    "Paper Writing": 53.8,
+    "Document Compilation": 11.0
+  },
+  "literature": {
+    "search_queries": 15,
+    "papers_raw": 232,
+    "papers_after_ranking": 232,
+    "papers_after_filter": 33,
+    "foundational_added": 4,
+    "papers_final": 37,
+    "open_access": 22,
+    "closed_access": 15,
+    "pdfs_downloaded": 11,
+    "literature_utilization_rate": 1.455
+  },
+  "experimentation": {
+    "fix_attempts": 0,
+    "validation_attempts": 1,
+    "plot_count": 6,
+    "verdict": "proven",
+    "verdict_reasoning": "The hypothesis is PROVEN because the experimental results strongly support its core scientific claims. First, the observed data (Population Count and Area) exhibit extremely low Mean Absolute Deviation (MAD) scores of 0.0027 and 0.0062 respectively, confirming they align closely with Benford's Law as predicted for naturally occurring aggregates. Second, the derived Density metric also shows a very low MAD of 0.0082, maintaining conformity. Crucially, the hypothesis predicts that synthetic controls would show significant deviations; this is confirmed by the high MAD scores (0.0586 and 0.0970) for the Uniform and Biased datasets, which clearly differentiate them from the real data. While the 'Too Perfect' classification flags potential over-rounding in the real data, the statistical distinction between the conforming real-world aggregates and the deviating synthetic controls is overwhelming and validates the hypothesis's intent to distinguish natural laws from artificial patterns.",
+    "experiment_code_lines": 366,
+    "experiment_code_non_blank_lines": 296
+  },
+  "paper": {
+    "title": "Benford's Law Forensics in German Zensus 2022: MAD and Chi-Square Validation of Population Counts, Areas, and Densities Against Synthetic Controls",
+    "sections_expected": 7,
+    "sections_written": 7,
+    "all_sections_present": true,
+    "section_lengths": {
+      "abstract": 1337,
+      "introduction": 5818,
+      "related_work": 4966,
+      "methods": 9149,
+      "results": 9108,
+      "discussion": 5353,
+      "conclusion": 895,
+      "acknowledgements": 0
+    },
+    "section_word_counts": {
+      "abstract": 166,
+      "introduction": 748,
+      "related_work": 647,
+      "methods": 1239,
+      "results": 1222,
+      "discussion": 691,
+      "conclusion": 114,
+      "acknowledgements": 0
+    },
+    "total_word_count": 4827,
+    "section_evidence_chunks": {
+      "Methods": 0,
+      "Results": 0,
+      "Discussion": 10,
+      "Related Work": 9,
+      "Introduction": 10,
+      "Conclusion": 0,
+      "Abstract": 0
+    },
+    "section_rewrite_deltas": {
+      "Methods": {
+        "before": 9212,
+        "after": 9149,
+        "delta": -63
+      },
+      "Results": {
+        "before": 9102,
+        "after": 9108,
+        "delta": 6
+      },
+      "Discussion": {
+        "before": 5146,
+        "after": 5353,
+        "delta": 207
+      },
+      "Related Work": {
+        "before": 5386,
+        "after": 4966,
+        "delta": -420
+      },
+      "Introduction": {
+        "before": 5794,
+        "after": 5818,
+        "delta": 24
+      },
+      "Conclusion": {
+        "before": 952,
+        "after": 895,
+        "delta": -57
+      },
+      "Abstract": {
+        "before": 1674,
+        "after": 1337,
+        "delta": -337
+      }
+    },
+    "citations_total": 16,
+    "citations_matched": 16,
+    "citations_hallucinated": 0,
+    "hallucinated_keys": [],
+    "citation_density_per_1000_words": 3.31,
+    "citations_from_closed_access": 12,
+    "citations_from_closed_access_keys": [
+      "Cerqueti2021SomeNT",
+      "Druica2018BenfordsLA",
+      "Hill1998TheFD",
+      "Ivanova2025BenfordsLA",
+      "Josic2020TheAO",
+      "Kossovsky2021OnTM",
+      "Miller2015BenfordsLT",
+      "Mir2025OnL",
+      "Morales2022BenfordsLF",
+      "Petras2025DetectingBL",
+      "Schumm2023CanRS",
+      "Shalini2023DataQA"
+    ]
+  },
+  "compilation": {
+    "success": true,
+    "pdf_size_bytes": 329579,
+    "pdf_page_count": 12
+  }
+}

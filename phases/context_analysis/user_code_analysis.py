@@ -467,6 +467,51 @@ class DatasetAnalyzer:
             dataset.columns = list(df.columns)
             dataset.dtypes = ", ".join(f"{col} ({dtype})" for col, dtype in zip(df.columns, df.dtypes))
 
+            # For object/string columns, collect unique values to help LLM identify codes.
+            # Long-format CSVs may repeat the same variable for hundreds of rows, so we
+            # sample from the beginning, middle, and end to capture diverse values.
+            unique_values_info = []
+            try:
+                if suffix in ('.csv', '.tsv'):
+                    sep = '\t' if suffix == '.tsv' else None
+                    engine = 'python' if sep is None else 'c'
+                    total_rows = dataset.row_count or 0
+                    # Read from beginning, middle, and end for diverse coverage
+                    dfs = []
+                    dfs.append(pd.read_csv(file_path, nrows=2000, sep=sep, engine=engine,
+                                           encoding='utf-8-sig', encoding_errors='replace'))
+                    if total_rows > 4000:
+                        mid = max(0, total_rows // 2 - 1000)
+                        dfs.append(pd.read_csv(file_path, skiprows=range(1, mid), nrows=2000,
+                                               sep=sep, engine=engine, encoding='utf-8-sig',
+                                               encoding_errors='replace'))
+                    if total_rows > 2000:
+                        tail_skip = max(1, total_rows - 2000)
+                        dfs.append(pd.read_csv(file_path, skiprows=range(1, tail_skip), nrows=2000,
+                                               sep=sep, engine=engine, encoding='utf-8-sig',
+                                               encoding_errors='replace'))
+                    df_sample = pd.concat(dfs, ignore_index=True) if len(dfs) > 1 else dfs[0]
+                else:
+                    df_sample = df  # reuse 5-row sample for other formats
+
+                for col in df_sample.columns:
+                    if df_sample[col].dtype == object:
+                        uniq = df_sample[col].dropna().unique()
+                        n = len(uniq)
+                        if n == 1:
+                            unique_values_info.append(f"  - {col}: [{uniq[0]!r}] (constant)")
+                        elif n <= 50:
+                            unique_values_info.append(f"  - {col}: {list(uniq[:50])}")
+                        else:
+                            # High-cardinality: show the most frequent values instead
+                            top = df_sample[col].value_counts().head(20).index.tolist()
+                            unique_values_info.append(f"  - {col} ({n}+ unique values, top 20 most frequent): {top}")
+            except Exception:
+                pass
+
+            if unique_values_info:
+                dataset.dtypes += "\n\nUnique/frequent values in string columns (sampled across file):\n" + "\n".join(unique_values_info)
+
             # Build load instruction with relative path for experiments
             rel_path = f"datasets/{dataset.file_name}"
             template = DatasetAnalyzer.LOAD_INSTRUCTIONS.get(suffix, 'pd.read_csv("{path}")')

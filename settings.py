@@ -45,7 +45,7 @@ class Settings:
     # Paper Writing Phase
     PAPER_INDEXING_EMBEDDING_MODEL = "text-embedding-qwen3-embedding-4b@q5_0"  # Must be an embedding model!
     PAPER_WRITING_MODEL = "qwen/qwen3.5-35b-a3b"
-    GENERATE_ACKNOWLEDGEMENTS = True
+    GENERATE_ACKNOWLEDGEMENTS = False
     CRITIC_MAX_SEARCH_QUERIES = 2  # Max number of search queries the section critic suggests (0-5)
 
     # LaTeX Generation Phase

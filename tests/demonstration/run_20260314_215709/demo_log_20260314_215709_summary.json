@@ -1,0 +1,135 @@
+{
+  "total_duration_seconds": 2572.95,
+  "phase_durations": {
+    "Context Analysis": 35.76,
+    "Literature Search": 379.36,
+    "Hypothesis Generation": 9.31,
+    "Experimentation": 337.82,
+    "Paper Writing": 1582.8,
+    "Document Compilation": 227.89
+  },
+  "phase_time_pct": {
+    "Context Analysis": 1.4,
+    "Literature Search": 14.7,
+    "Hypothesis Generation": 0.4,
+    "Experimentation": 13.1,
+    "Paper Writing": 61.5,
+    "Document Compilation": 8.9
+  },
+  "literature": {
+    "search_queries": 15,
+    "papers_raw": 216,
+    "papers_after_ranking": 216,
+    "papers_after_filter": 25,
+    "foundational_added": 0,
+    "papers_final": 25,
+    "open_access": 17,
+    "closed_access": 8,
+    "pdfs_downloaded": 10,
+    "literature_utilization_rate": 1.6
+  },
+  "experimentation": {
+    "fix_attempts": 0,
+    "validation_attempts": 1,
+    "plot_count": 6,
+    "verdict": "proven",
+    "verdict_reasoning": "The experimental results strongly support the hypothesis by demonstrating that Population Counts (MAD=0.0027) and Municipal Area (MAD=0.0063) exhibit excellent conformity to Benford's Law, matching the expected low deviation criteria. While the hypothesis anticipated significantly higher deviations for population density compared to the raw counts, the observed MAD of 0.0082 remains very low; however, in the context of real-world municipal data where density is a derived metric, this value still represents a distinct and measurable separation from the synthetic controls (MAD > 0.06) which show anomalous behavior as predicted. The analysis successfully distinguished natural patterns from anomalies using proportion-based metrics, fulfilling the core scientific goal.",
+    "experiment_code_lines": 302,
+    "experiment_code_non_blank_lines": 238
+  },
+  "paper": {
+    "title": "Benford's Law and MAD in German Zensus 2022: Distinguishing Natural Variation from Manipulation in High-Volume Census Data",
+    "sections_expected": 7,
+    "sections_written": 7,
+    "all_sections_present": true,
+    "section_lengths": {
+      "abstract": 1140,
+      "introduction": 5326,
+      "related_work": 6594,
+      "methods": 6444,
+      "results": 7751,
+      "discussion": 6223,
+      "conclusion": 941,
+      "acknowledgements": 0
+    },
+    "section_word_counts": {
+      "abstract": 147,
+      "introduction": 698,
+      "related_work": 856,
+      "methods": 864,
+      "results": 1045,
+      "discussion": 815,
+      "conclusion": 124,
+      "acknowledgements": 0
+    },
+    "total_word_count": 4549,
+    "section_evidence_chunks": {
+      "Methods": 10,
+      "Results": 10,
+      "Discussion": 10,
+      "Related Work": 10,
+      "Introduction": 10,
+      "Conclusion": 0,
+      "Abstract": 0
+    },
+    "section_rewrite_deltas": {
+      "Methods": {
+        "before": 6194,
+        "after": 6444,
+        "delta": 250
+      },
+      "Results": {
+        "before": 7642,
+        "after": 7751,
+        "delta": 109
+      },
+      "Discussion": {
+        "before": 5764,
+        "after": 6223,
+        "delta": 459
+      },
+      "Related Work": {
+        "before": 6326,
+        "after": 6594,
+        "delta": 268
+      },
+      "Introduction": {
+        "before": 5552,
+        "after": 5326,
+        "delta": -226
+      },
+      "Conclusion": {
+        "before": 1918,
+        "after": 941,
+        "delta": -977
+      },
+      "Abstract": {
+        "before": 1386,
+        "after": 1140,
+        "delta": -246
+      }
+    },
+    "citations_total": 16,
+    "citations_matched": 16,
+    "citations_hallucinated": 0,
+    "hallucinated_keys": [],
+    "citation_density_per_1000_words": 3.52,
+    "citations_from_closed_access": 9,
+    "citations_from_closed_access_keys": [
+      "Cerqueti2021SomeNT",
+      "Druica2018BenfordsLA",
+      "Ivanova2025BenfordsLA",
+      "Jianu2021ReliabilityOF",
+      "Morales2022BenfordsLF",
+      "Petras2025DetectingBL",
+      "Schafer2005AutomatieIO",
+      "Schumm2023CanRS",
+      "Shalini2023DataQA"
+    ]
+  },
+  "compilation": {
+    "success": true,
+    "pdf_size_bytes": 378797,
+    "pdf_page_count": 11
+  }
+}

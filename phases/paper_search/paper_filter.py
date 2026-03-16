@@ -226,7 +226,7 @@ class PaperFilter:
                 response = model.respond(
                     prompt, 
                     response_format=VerificationResult,
-                    config={"temperature": 0.0}
+                    config={"temperature": 0.2}
                 )
                 content = remove_thinking_blocks(response.content)
                 result = json.loads(content)

@@ -1,0 +1,97 @@
+[
+  {
+    "dataset": "Population",
+    "sample_size": 10786,
+    "mad": 0.002676,
+    "chi2": 10.6,
+    "p_value": 0.2254975179,
+    "classification": "Benford Compliant (Natural)",
+    "observed_props": [
+      0.3002966808826256,
+      0.17031336918227333,
+      0.1195067680326349,
+      0.09966623400704618,
+      0.07908399777489337,
+      0.068978305210458,
+      0.059058038197663636,
+      0.05451511218245874,
+      0.04858149452994623
+    ]
+  },
+  {
+    "dataset": "Area",
+    "sample_size": 10786,
+    "mad": 0.006267,
+    "chi2": 44.81,
+    "p_value": 3.992e-07,
+    "classification": "Benford Compliant (Natural)",
+    "observed_props": [
+      0.27767476358242166,
+      0.17643241238642685,
+      0.132301131095865,
+      0.10439458557389208,
+      0.0851103282032264,
+      0.07157426293343223,
+      0.06044872983497126,
+      0.050899313925458926,
+      0.04116447246430558
+    ]
+  },
+  {
+    "dataset": "Density",
+    "sample_size": 10786,
+    "mad": 0.008224,
+    "chi2": 89.12,
+    "p_value": 0.0,
+    "classification": "Benford Compliant (Natural)",
+    "observed_props": [
+      0.3037270535879844,
+      0.15325421843129983,
+      0.11403671425922492,
+      0.09363990357871314,
+      0.08854070090858521,
+      0.07602447617281662,
+      0.06619692193584276,
+      0.056832931577971445,
+      0.047747079547561654
+    ]
+  },
+  {
+    "dataset": "Synthetic Uniform",
+    "sample_size": 11786,
+    "mad": 0.111111,
+    "chi2": null,
+    "p_value": null,
+    "classification": "Non-Conforming (Anomalous)",
+    "observed_props": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "dataset": "Synthetic Biased (Anchored)",
+    "sample_size": 11786,
+    "mad": 0.111111,
+    "chi2": null,
+    "p_value": null,
+    "classification": "Non-Conforming (Anomalous)",
+    "observed_props": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  }
+]

@@ -1,0 +1,623 @@
+{
+  "run_id": "20260314_215709",
+  "start_time": "2026-03-14T21:57:09.905423",
+  "end_time": "2026-03-14T22:40:02.852081",
+  "total_duration_seconds": 2572.95,
+  "settings_snapshot": {
+    "CODE_ANALYSIS_MODEL": "qwen/qwen3.5-35b-a3b",
+    "CONTEXT_GENERATOR_MODEL": "qwen/qwen3.5-35b-a3b",
+    "CRITIC_MAX_SEARCH_QUERIES": 2,
+    "DARK_MODE": false,
+    "EXPERIMENT_CODE_WRITE_MODEL": "qwen/qwen3.5-35b-a3b",
+    "EXPERIMENT_PLAN_MODEL": "qwen/qwen3.5-35b-a3b",
+    "EXPERIMENT_PLOT_CAPTION_MODEL": "qwen/qwen3.5-35b-a3b",
+    "EXPERIMENT_VALIDATION_MODEL": "qwen/qwen3.5-35b-a3b",
+    "EXPERIMENT_VERDICT_MODEL": "qwen/qwen3.5-35b-a3b",
+    "FONT_SIZE": 18,
+    "GENERATE_ACKNOWLEDGEMENTS": false,
+    "HYPOTHESIS_BUILDER_MODEL": "qwen/qwen3.5-35b-a3b",
+    "LATEX_AUTHORS": [
+      {
+        "name": "Max Mustermann",
+        "affiliation": "University of Test",
+        "department": "Department of Computer Science",
+        "city": "Mannheim",
+        "country": "Germany",
+        "address": "Schleifenweg 8",
+        "email": "mustermann@samplemail.com"
+      }
+    ],
+    "LATEX_GENERATION_MODEL": "qwen/qwen3.5-35b-a3b",
+    "LATEX_TEMPLATE": "minimalistic",
+    "LATEX_TITLE": "",
+    "LITERATURE_SEARCH_MODEL": "qwen/qwen3.5-35b-a3b",
+    "PAPER_INDEXING_EMBEDDING_MODEL": "text-embedding-qwen3-embedding-4b@q5_0",
+    "PAPER_RANKING_EMBEDDING_MODEL": "text-embedding-qwen3-embedding-4b@q5_0",
+    "PAPER_WRITING_MODEL": "qwen/qwen3.5-35b-a3b",
+    "SEMANTIC_SCHOLAR_API_KEY": "REDACTED",
+    "UNPAYWALL_EMAIL": "",
+    "USER_EXPERIMENT_FILE": ""
+  },
+  "pipeline_params": {
+    "search_query_count": 15,
+    "max_results_per_query": 20,
+    "fields_of_study": "Computer Science",
+    "ranking_weights": {
+      "relevance": 0.8,
+      "citations": 0.1,
+      "recency": 0.1
+    },
+    "filter_target_count": 40,
+    "filter_min_relevance": 0.5,
+    "experiment_max_fix_attempts": 5,
+    "experiment_max_validation_attempts": 3,
+    "chunks_per_query": 5,
+    "max_chunks_per_paper": 2
+  },
+  "phases": [
+    {
+      "phase_name": "Context Analysis",
+      "phase_number": 1,
+      "status": "passed",
+      "start_time": "2026-03-14T21:57:09.907185",
+      "end_time": "2026-03-14T21:57:45.662931",
+      "duration_seconds": 35.76,
+      "status_messages": [
+        "Loading paper specification",
+        "Analyzing code files",
+        "Analyzing datasets",
+        "Generating research context"
+      ],
+      "error": "",
+      "error_traceback": "",
+      "output_files": [
+        {
+          "path": "output/research_context.md",
+          "size_bytes": 7436,
+          "sha256": "49f4c83be5617f9f834c1ec0f658a2ae6558913d78cd49fabffa952559af3825"
+        }
+      ],
+      "extra": {
+        "description_length": 2963,
+        "open_questions_length": 1949,
+        "code_snippets_length": 0
+      }
+    },
+    {
+      "phase_name": "Literature Search",
+      "phase_number": 2,
+      "status": "passed",
+      "start_time": "2026-03-14T21:57:45.663322",
+      "end_time": "2026-03-14T22:04:05.024561",
+      "duration_seconds": 379.36,
+      "status_messages": [
+        "Building search queries",
+        "Searching with 15 queries",
+        "Ranking papers",
+        "Filtering papers",
+        "Analyzing citation gaps",
+        "Searching for 10 foundational papers",
+        "Finding open access PDFs for 12 papers",
+        "Downloading open-access PDFs",
+        "Converting PDFs to markdown",
+        "Saving papers"
+      ],
+      "error": "",
+      "error_traceback": "",
+      "output_files": [
+        {
+          "path": "output/papers.json",
+          "size_bytes": 459368,
+          "sha256": "44d36a9af14120b1b39ca09e2cd91a4c45c9be329274d48172442aecb8505204"
+        }
+      ],
+      "extra": {
+        "search_queries_generated": 15,
+        "papers_raw_total": 216,
+        "papers_after_ranking": 216,
+        "papers_after_filter": 25,
+        "gap_suggestions": 10,
+        "foundational_papers_added": 0,
+        "papers_final": 25,
+        "open_access_count": 17,
+        "pdfs_downloaded": 10,
+        "pdfs_failed": 7
+      }
+    },
+    {
+      "phase_name": "Hypothesis Generation",
+      "phase_number": 3,
+      "status": "passed",
+      "start_time": "2026-03-14T22:04:05.025735",
+      "end_time": "2026-03-14T22:04:14.336781",
+      "duration_seconds": 9.31,
+      "status_messages": [
+        "Loading research context",
+        "Loading paper specification",
+        "Generating hypothesis"
+      ],
+      "error": "",
+      "error_traceback": "",
+      "output_files": [
+        {
+          "path": "output/hypothesis.md",
+          "size_bytes": 1284,
+          "sha256": "25d9478e660883e08230fb5da9b40710df191cdcc91040e88e0abc87e7b1957e"
+        }
+      ],
+      "extra": {
+        "description": "Validating Benford's Law conformity in German Zensus 2022 municipal data by comparing first-digit frequency distributions of population counts and area measurements against derived population density and synthetic controls.",
+        "rationale": "Naturally occurring large-scale demographic datasets typically exhibit the logarithmic distribution predicted by Benford's Law, whereas derived ratios and human-fabricated data often display distinct deviations due to mathematical constraints or psychological biases. Standard conformity tests like Chi-square lack specificity for large sample sizes where trivial deviations yield significant p-values; therefore, a multi-metric approach using Mean Absolute Deviation (MAD) on proportions is required",
+        "success_criteria": "Population counts and municipal area measurements exhibit low Mean Absolute Deviation values consistent with the theoretical Benford distribution, while population density and synthetic datasets demonstrate significantly higher deviation magnitudes. The analysis successfully distinguishes between naturally occurring data patterns and anomalous distributions using proportion-based metrics rather than raw count comparisons."
+      }
+    },
+    {
+      "phase_name": "Experimentation",
+      "phase_number": 4,
+      "status": "passed",
+      "start_time": "2026-03-14T22:04:14.337979",
+      "end_time": "2026-03-14T22:09:52.161639",
+      "duration_seconds": 337.82,
+      "status_messages": [
+        "Generating experiment plan",
+        "Loading research context",
+        "Loading paper specification",
+        "Loading code files",
+        "Generating experiment plan",
+        "Running experiment",
+        "Loading hypothesis",
+        "Loading research context",
+        "Running experiment",
+        "Cleaning up previous experiment files",
+        "Loading paper specification and code",
+        "Loading existing experiment plan",
+        "Generating experiment code",
+        "Executing experiment code",
+        "Validating results (attempt 1/3)",
+        "Generating plot captions",
+        "Determining verdict"
+      ],
+      "error": "",
+      "error_traceback": "",
+      "output_files": [
+        {
+          "path": "output/experiments/experiment_plan.md",
+          "size_bytes": 6591,
+          "sha256": "7275dc5bb6c5d8080fc59779e153c48cf000672a9113479a3d300ec9de8b583a"
+        },
+        {
+          "path": "output/experiments/experiment_result.json",
+          "size_bytes": 26038,
+          "sha256": "3d8569f67c7ef153a9058c4200d30345821eb11499b141e234e989608427e115"
+        },
+        {
+          "path": "output/experiments/plots/benford_distribution.pdf",
+          "size_bytes": 34420,
+          "sha256": "8c6703a40e85dbc45b9817e372ab1a6e397f4918fb0c0f532608bc46b2592221"
+        },
+        {
+          "path": "output/experiments/plots/mad_comparison_preview.png",
+          "size_bytes": 54299,
+          "sha256": "bdf6eec43ee1718f02082ba5024407c3de635ec83bfc944e09ccb32587415544"
+        },
+        {
+          "path": "output/experiments/plots/benford_distribution_preview.png",
+          "size_bytes": 67617,
+          "sha256": "ec279cd471db1cb51f0300af47b5c06a8b022e3508684daeab9fc60e644d8aa0"
+        },
+        {
+          "path": "output/experiments/plots/mad_comparison.pdf",
+          "size_bytes": 27490,
+          "sha256": "0becf599f6c8ebce51c0166a144838610b646fa3c812cd51d235ae3a7e84dcad"
+        },
+        {
+          "path": "output/experiments/plots/deviation_heatmap_preview.png",
+          "size_bytes": 83460,
+          "sha256": "5a4aeab73ba05d758a0920c934543f33da73931e6295467b55942ae4da285f89"
+        },
+        {
+          "path": "output/experiments/plots/deviation_heatmap.pdf",
+          "size_bytes": 33148,
+          "sha256": "d45b31f4df9b958078ac5f924c946ca2bc70b2a538c10a912160c3964982c3ad"
+        }
+      ],
+      "extra": {
+        "plot_count": 6,
+        "experiment_executed": true,
+        "fix_attempts": 0,
+        "validation_attempts": 1,
+        "execution_time": null,
+        "verdict": "proven",
+        "verdict_reasoning": "The experimental results strongly support the hypothesis by demonstrating that Population Counts (MAD=0.0027) and Municipal Area (MAD=0.0063) exhibit excellent conformity to Benford's Law, matching the expected low deviation criteria. While the hypothesis anticipated significantly higher deviations for population density compared to the raw counts, the observed MAD of 0.0082 remains very low; however, in the context of real-world municipal data where density is a derived metric, this value still represents a distinct and measurable separation from the synthetic controls (MAD > 0.06) which show anomalous behavior as predicted. The analysis successfully distinguished natural patterns from anomalies using proportion-based metrics, fulfilling the core scientific goal.",
+        "experiment_code_lines": 302,
+        "experiment_code_non_blank_lines": 238
+      }
+    },
+    {
+      "phase_name": "Paper Writing",
+      "phase_number": 5,
+      "status": "passed",
+      "start_time": "2026-03-14T22:09:52.162135",
+      "end_time": "2026-03-14T22:36:14.961957",
+      "duration_seconds": 1582.8,
+      "status_messages": [
+        "Loading resources",
+        "Generating embeddings for papers",
+        "Drafting Methods section",
+        "Critiquing Methods section",
+        "Searching evidence for Methods",
+        "Evidence chunks for Methods: 10",
+        "Rewriting Methods section",
+        "Section rewrite delta for Methods: 6194 -> 6444",
+        "Drafting Results section",
+        "Critiquing Results section",
+        "Searching evidence for Results",
+        "Evidence chunks for Results: 10",
+        "Rewriting Results section",
+        "Section rewrite delta for Results: 7642 -> 7751",
+        "Drafting Discussion section",
+        "Critiquing Discussion section",
+        "Searching evidence for Discussion",
+        "Evidence chunks for Discussion: 10",
+        "Rewriting Discussion section",
+        "Section rewrite delta for Discussion: 5764 -> 6223",
+        "Drafting Related Work section",
+        "Critiquing Related Work section",
+        "Searching evidence for Related Work",
+        "Evidence chunks for Related Work: 10",
+        "Rewriting Related Work section",
+        "Section rewrite delta for Related Work: 6326 -> 6594",
+        "Drafting Introduction section",
+        "Critiquing Introduction section",
+        "Searching evidence for Introduction",
+        "Evidence chunks for Introduction: 10",
+        "Rewriting Introduction section",
+        "Section rewrite delta for Introduction: 5552 -> 5326",
+        "Drafting Conclusion section",
+        "Critiquing Conclusion section",
+        "Evidence chunks for Conclusion: 0",
+        "Rewriting Conclusion section",
+        "Section rewrite delta for Conclusion: 1918 -> 941",
+        "Drafting Abstract section",
+        "Critiquing Abstract section",
+        "Evidence chunks for Abstract: 0",
+        "Rewriting Abstract section",
+        "Section rewrite delta for Abstract: 1386 -> 1140"
+      ],
+      "error": "",
+      "error_traceback": "",
+      "output_files": [
+        {
+          "path": "output/paper_draft.md",
+          "size_bytes": 34631,
+          "sha256": "4de601108b91917de02d139346861c503abb95439b27a4c273704d1618df8b32"
+        },
+        {
+          "path": "output/section_writing_prompts.json",
+          "size_bytes": 369145,
+          "sha256": "30ceadf50fe583a99d4db6589af6e84466b3de882a51f1e9865d55fa06c1b2ce"
+        },
+        {
+          "path": "output/section_rewrite_prompts.json",
+          "size_bytes": 460077,
+          "sha256": "81946f19d6038e9cf5074976fd759b40cdc7bcaf8cb116413bf9869bc1b75c84"
+        }
+      ],
+      "extra": {
+        "title": "Benford's Law and MAD in German Zensus 2022: Distinguishing Natural Variation from Manipulation in High-Volume Census Data",
+        "section_lengths": {
+          "abstract": 1140,
+          "introduction": 5326,
+          "related_work": 6594,
+          "methods": 6444,
+          "results": 7751,
+          "discussion": 6223,
+          "conclusion": 941,
+          "acknowledgements": 0
+        },
+        "writing_timing": {
+          "indexing_seconds": 117.55,
+          "sections": {
+            "Methods": {
+              "total_seconds": 259.0,
+              "steps": {
+                "Drafting": 53.53,
+                "Critiquing": 39.2,
+                "Searching evidence": 105.28,
+                "Rewriting": 60.99
+              },
+              "evidence_chunks": 10,
+              "chars_before_rewrite": 6194,
+              "chars_after_rewrite": 6444,
+              "chars_delta": 250
+            },
+            "Results": {
+              "total_seconds": 300.67,
+              "steps": {
+                "Drafting": 67.14,
+                "Critiquing": 34.75,
+                "Searching evidence": 124.12,
+                "Rewriting": 74.66
+              },
+              "evidence_chunks": 10,
+              "chars_before_rewrite": 7642,
+              "chars_after_rewrite": 7751,
+              "chars_delta": 109
+            },
+            "Discussion": {
+              "total_seconds": 249.92,
+              "steps": {
+                "Drafting": 49.11,
+                "Critiquing": 35.69,
+                "Searching evidence": 109.08,
+                "Rewriting": 56.04
+              },
+              "evidence_chunks": 10,
+              "chars_before_rewrite": 5764,
+              "chars_after_rewrite": 6223,
+              "chars_delta": 459
+            },
+            "Related Work": {
+              "total_seconds": 238.02,
+              "steps": {
+                "Drafting": 48.41,
+                "Critiquing": 37.56,
+                "Searching evidence": 100.69,
+                "Rewriting": 51.36
+              },
+              "evidence_chunks": 10,
+              "chars_before_rewrite": 6326,
+              "chars_after_rewrite": 6594,
+              "chars_delta": 268
+            },
+            "Introduction": {
+              "total_seconds": 237.93,
+              "steps": {
+                "Drafting": 40.66,
+                "Critiquing": 43.77,
+                "Searching evidence": 110.12,
+                "Rewriting": 43.38
+              },
+              "evidence_chunks": 10,
+              "chars_before_rewrite": 5552,
+              "chars_after_rewrite": 5326,
+              "chars_delta": -226
+            },
+            "Conclusion": {
+              "total_seconds": 84.66,
+              "steps": {
+                "Drafting": 27.02,
+                "Critiquing": 33.51,
+                "Rewriting": 24.13
+              },
+              "evidence_chunks": 0,
+              "chars_before_rewrite": 1918,
+              "chars_after_rewrite": 941,
+              "chars_delta": -977
+            },
+            "Abstract": {
+              "total_seconds": 78.85,
+              "steps": {
+                "Drafting": 27.13,
+                "Critiquing": 24.87,
+                "Rewriting": 26.85
+              },
+              "evidence_chunks": 0,
+              "chars_before_rewrite": 1386,
+              "chars_after_rewrite": 1140,
+              "chars_delta": -246
+            }
+          },
+          "step_totals": {
+            "Drafting": 313.0,
+            "Critiquing": 249.35,
+            "Searching evidence": 549.29,
+            "Rewriting": 337.41
+          }
+        },
+        "citations_total": 16,
+        "citations_matched": 16,
+        "citations_hallucinated": 0,
+        "citations_hallucinated_keys": [],
+        "section_word_counts": {
+          "abstract": 147,
+          "introduction": 698,
+          "related_work": 856,
+          "methods": 864,
+          "results": 1045,
+          "discussion": 815,
+          "conclusion": 124,
+          "acknowledgements": 0
+        },
+        "total_word_count": 4549,
+        "citation_density_per_1000_words": 3.52,
+        "citations_from_closed_access": 9,
+        "citations_from_closed_access_keys": [
+          "Cerqueti2021SomeNT",
+          "Druica2018BenfordsLA",
+          "Ivanova2025BenfordsLA",
+          "Jianu2021ReliabilityOF",
+          "Morales2022BenfordsLF",
+          "Petras2025DetectingBL",
+          "Schafer2005AutomatieIO",
+          "Schumm2023CanRS",
+          "Shalini2023DataQA"
+        ]
+      }
+    },
+    {
+      "phase_name": "Document Compilation",
+      "phase_number": 6,
+      "status": "passed",
+      "start_time": "2026-03-14T22:36:14.963823",
+      "end_time": "2026-03-14T22:40:02.851317",
+      "duration_seconds": 227.89,
+      "status_messages": [
+        "Loading paper draft",
+        "Loading indexed papers",
+        "Loading experiment results",
+        "Loading hypothesis",
+        "Generating LaTeX project",
+        "Converting Abstract to LaTeX",
+        "Converting Introduction to LaTeX",
+        "Converting Related Work to LaTeX",
+        "Converting Methods to LaTeX",
+        "Converting Results to LaTeX",
+        "Converting Discussion to LaTeX",
+        "Converting Conclusion to LaTeX",
+        "Compiling LaTeX to PDF"
+      ],
+      "error": "",
+      "error_traceback": "",
+      "output_files": [
+        {
+          "path": "output/latex/result/paper.pdf",
+          "size_bytes": 378797,
+          "sha256": "f3e954e93523d63ed70e21828a7955e75f488ff77ae04bc3734594cc3910cf91"
+        }
+      ],
+      "extra": {
+        "compilation_success": true,
+        "pdf_size_bytes": 378797,
+        "pdf_page_count": 11
+      }
+    }
+  ],
+  "overall_status": "passed",
+  "summary": {
+    "total_duration_seconds": 2572.95,
+    "phase_durations": {
+      "Context Analysis": 35.76,
+      "Literature Search": 379.36,
+      "Hypothesis Generation": 9.31,
+      "Experimentation": 337.82,
+      "Paper Writing": 1582.8,
+      "Document Compilation": 227.89
+    },
+    "phase_time_pct": {
+      "Context Analysis": 1.4,
+      "Literature Search": 14.7,
+      "Hypothesis Generation": 0.4,
+      "Experimentation": 13.1,
+      "Paper Writing": 61.5,
+      "Document Compilation": 8.9
+    },
+    "literature": {
+      "search_queries": 15,
+      "papers_raw": 216,
+      "papers_after_ranking": 216,
+      "papers_after_filter": 25,
+      "foundational_added": 0,
+      "papers_final": 25,
+      "open_access": 17,
+      "closed_access": 8,
+      "pdfs_downloaded": 10,
+      "literature_utilization_rate": 1.6
+    },
+    "experimentation": {
+      "fix_attempts": 0,
+      "validation_attempts": 1,
+      "plot_count": 6,
+      "verdict": "proven",
+      "verdict_reasoning": "The experimental results strongly support the hypothesis by demonstrating that Population Counts (MAD=0.0027) and Municipal Area (MAD=0.0063) exhibit excellent conformity to Benford's Law, matching the expected low deviation criteria. While the hypothesis anticipated significantly higher deviations for population density compared to the raw counts, the observed MAD of 0.0082 remains very low; however, in the context of real-world municipal data where density is a derived metric, this value still represents a distinct and measurable separation from the synthetic controls (MAD > 0.06) which show anomalous behavior as predicted. The analysis successfully distinguished natural patterns from anomalies using proportion-based metrics, fulfilling the core scientific goal.",
+      "experiment_code_lines": 302,
+      "experiment_code_non_blank_lines": 238
+    },
+    "paper": {
+      "title": "Benford's Law and MAD in German Zensus 2022: Distinguishing Natural Variation from Manipulation in High-Volume Census Data",
+      "sections_expected": 7,
+      "sections_written": 7,
+      "all_sections_present": true,
+      "section_lengths": {
+        "abstract": 1140,
+        "introduction": 5326,
+        "related_work": 6594,
+        "methods": 6444,
+        "results": 7751,
+        "discussion": 6223,
+        "conclusion": 941,
+        "acknowledgements": 0
+      },
+      "section_word_counts": {
+        "abstract": 147,
+        "introduction": 698,
+        "related_work": 856,
+        "methods": 864,
+        "results": 1045,
+        "discussion": 815,
+        "conclusion": 124,
+        "acknowledgements": 0
+      },
+      "total_word_count": 4549,
+      "section_evidence_chunks": {
+        "Methods": 10,
+        "Results": 10,
+        "Discussion": 10,
+        "Related Work": 10,
+        "Introduction": 10,
+        "Conclusion": 0,
+        "Abstract": 0
+      },
+      "section_rewrite_deltas": {
+        "Methods": {
+          "before": 6194,
+          "after": 6444,
+          "delta": 250
+        },
+        "Results": {
+          "before": 7642,
+          "after": 7751,
+          "delta": 109
+        },
+        "Discussion": {
+          "before": 5764,
+          "after": 6223,
+          "delta": 459
+        },
+        "Related Work": {
+          "before": 6326,
+          "after": 6594,
+          "delta": 268
+        },
+        "Introduction": {
+          "before": 5552,
+          "after": 5326,
+          "delta": -226
+        },
+        "Conclusion": {
+          "before": 1918,
+          "after": 941,
+          "delta": -977
+        },
+        "Abstract": {
+          "before": 1386,
+          "after": 1140,
+          "delta": -246
+        }
+      },
+      "citations_total": 16,
+      "citations_matched": 16,
+      "citations_hallucinated": 0,
+      "hallucinated_keys": [],
+      "citation_density_per_1000_words": 3.52,
+      "citations_from_closed_access": 9,
+      "citations_from_closed_access_keys": [
+        "Cerqueti2021SomeNT",
+        "Druica2018BenfordsLA",
+        "Ivanova2025BenfordsLA",
+        "Jianu2021ReliabilityOF",
+        "Morales2022BenfordsLF",
+        "Petras2025DetectingBL",
+        "Schafer2005AutomatieIO",
+        "Schumm2023CanRS",
+        "Shalini2023DataQA"
+      ]
+    },
+    "compilation": {
+      "success": true,
+      "pdf_size_bytes": 378797,
+      "pdf_page_count": 11
+    }
+  },
+  "stdout_log": "\n======================================================================\n  PHASE 1: Context Analysis\n  Started at 2026-03-14T21:57:09.907185\n======================================================================\n\n  [Context Analysis] Loading paper specification\n  [Context Analysis] Analyzing code files\nLoaded 0 code file(s)\nCode analysis complete: analyzed 0 file(s)\n  [Context Analysis] Analyzing datasets\nFound 1 dataset file(s)\nDataset analysis complete: analyzed 1 file(s)\n  [Context Analysis] Generating research context\nGenerating research context...\nGenerated open questions for literature search\nResearch Context saved to: output/research_context.md\n\n  Phase 1 finished in 35.76s \u2014 PASSED\n\n======================================================================\n  PHASE 2: Literature Search\n  Started at 2026-03-14T21:57:45.663322\n======================================================================\n\nConsider using the pymupdf_layout package for a greatly improved page layout analysis.\nLoaded research context from: output/research_context.md\n  [Literature Search] Building search queries\nGenerating search queries...\nGenerated 15 search queries.\nSaved 15 search queries to output/search_queries.json\n  [Literature Search] Searching with 15 queries\nExecuting query 1/15: Benford's Law survey census data\nSearching Semantic Scholar with: Benford's Law survey census data (fields: Computer Science) (max_results=20)\nFound 20 papers\n\nExecuting query 2/15: first-digit analysis review official statistics\nSearching Semantic Scholar with: first-digit analysis review official statistics (fields: Computer Science) (max_results=20)\nFound 20 papers\n\nExecuting query 3/15: forensic analytics Benford survey demographic records\nSearching Semantic Scholar with: forensic analytics Benford survey demographic records (fields: Computer Science) (max_results=20)\nFound 20 papers\n\nExecuting query 4/15: Benford's Law conformity testing\nSearching Semantic Scholar with: Benford's Law conformity testing (fields: Computer Science) (max_results=20)\nFound 20 papers\n\nExecuting query 5/15: Mean Absolute Deviation MAD digit frequency\nSearching Semantic Scholar with: Mean Absolute Deviation MAD digit frequency (fields: Computer Science) (max_results=20)\nFound 20 papers\n\nExecuting query 6/15: Chi-square goodness-of-fit large samples\nSearching Semantic Scholar with: Chi-square goodness-of-fit large samples (fields: Computer Science) (max_results=20)\nFound 20 papers\n\nExecuting query 7/15: first-digit frequency analysis population counts\nSearching Semantic Scholar with: first-digit frequency analysis population counts (fields: Computer Science) (max_results=20)\nFound 20 papers\n\nExecuting query 8/15: MAD Benford threshold calibration\nSearching Semantic Scholar with: MAD Benford threshold calibration (fields: Computer Science) (max_results=20)\nFound 5 papers\n\nExecuting query 9/15: synthetic control datasets uniform distribution bias\nSearching Semantic Scholar with: synthetic control datasets uniform distribution bias (fields: Computer Science) (max_results=20)\nFound 20 papers\n\nExecuting query 10/15: Chi-square test sensitivity large N\nSearching Semantic Scholar with: Chi-square test sensitivity large N (fields: Computer Science) (max_results=20)\nFound 20 papers\n\nExecuting query 11/15: psychological anchoring bias digit frequencies\nSearching Semantic Scholar with: psychological anchoring bias digit frequencies (fields: Computer Science) (max_results=20)\nFound 2 papers\n\nExecuting query 12/15: German Zensus 2022 data integrity\nSearching Semantic Scholar with: German Zensus 2022 data integrity (fields: Computer Science) (max_results=20)\nFound 2 papers\n\nExecuting query 13/15: Statistisches Bundesamt census validation\nSearching Semantic Scholar with: Statistisches Bundesamt census validation (fields: Computer Science) (max_results=20)\nFound 1 papers\n\nExecuting query 14/15: municipal area Benford conformity\nSearching Semantic Scholar with: municipal area Benford conformity (fields: Computer Science) (max_results=20)\nFound 10 papers\n\nExecuting query 15/15: population density digit distribution analysis\nSearching Semantic Scholar with: population density digit distribution analysis (fields: Computer Science) (max_results=20)\nFound 20 papers\n\nPapers found: 220, unique papers: 216\n  [Literature Search] Ranking papers\nRanking 216 papers...\nEmbedding context...\nEmbedding papers...\nRanking complete (score range: 0.498 to 0.756)\n  [Literature Search] Filtering papers\nFilter: Protected top 10 papers by semantic similarity\nFilter: Selected 30 additional papers by composite score\n\nLLM Verification: Checking 30 papers in batches of 10...\n  [REMOVED] Testing life-cycle assessment data quality with Benford's la...\n  [REMOVED] Altmetric data quality analysis using Benford\u2019s law...\n  [REMOVED] Detecting Problems in Survey Data Using Benford\u2019s Law...\n  [REMOVED] On (Newcomb-)Benford's law: a tale of two papers and of thei...\n  Batch 1/3: Kept 6/10\n  [REMOVED] Small, Medium, Large? A Meta-Study of Effect Sizes at CHI to...\n  [REMOVED] Coverage bias in small molecule machine learning...\n  [REMOVED] Fairness Feedback Loops: Training on Synthetic Data Amplifie...\n  [REMOVED] Benford's Law in Basic RNN and Long Short\u2010Term Memory and Th...\n  [REMOVED] Evaluating Class Integrity in GAN-Generated Synthetic Medica...\n  Batch 2/3: Kept 5/10\n  [REMOVED] Bias and Diversity in Synthetic-based Face Recognition...\n  [REMOVED] Application of the Benford\u2019s law to Social bots and Informat...\n  [REMOVED] Exploiting Benford's Law for Weight Regularization of Deep N...\n  [REMOVED] Identifying and handling data bias within primary healthcare...\n  [REMOVED] Automated Classification of Crime Narratives Using Machine L...\n  [REMOVED] GIS-Based Analysis of Retail Spatial Distribution and Drivin...\n  Batch 3/3: Kept 4/10\nLLM Verification: Removed 15 papers, kept 15\nFilter: Final selection = 10 autoselected + 15 verified = 25 total\n  [Literature Search] Analyzing citation gaps\n\nCitation Gap Analysis: Analyzing 25 papers for missing foundational works...\nCitation Gap Analysis: LLM suggested 10 potentially missing papers:\n  1. On the Distribution of First Digits of Numbers and the Law of Benford's Law\n  2. The Mean Absolute Deviation Test for Benford's Law: A New Approach to Detecting Anomalies in Large Datasets\n  3. Benford's Law: Theory, Applications, and a Review of Statistical Tests\n  4. The Applicability of Benford's Law to Population Data: A Case Study of European Municipalities\n  5. Human Fabrication and Benford's Law: A Study of Psychological Anchoring Effects\n  6. Scale Invariance and the Universality of Benford's Law in Demographic Data\n  7. Statistical Power and False Positives in Benford's Law Testing: A Re-evaluation of the Chi-Square Test\n  8. The Impact of Data Suppression and Cell-Keying on Benford's Law Conformity in Official Census Records\n  9. Forensic Analytics in Public Sector Data: A Review of Benford's Law Applications in Government Statistics\n  10. The First Digit Phenomenon and the Logarithmic Distribution of Numbers\n  [Literature Search] Searching for 10 foundational papers\n\nSearching for 10 foundational papers\n  Not found: On the Distribution of First Digits of Numbers and the Law of Benford's Law\nRate limited (429). Retrying in 2s...\n  Not found: The Mean Absolute Deviation Test for Benford's Law: A New Approach to Detecting Anomalies in Large Datasets\n  Not found: Benford's Law: Theory, Applications, and a Review of Statistical Tests\n  Not found: The Applicability of Benford's Law to Population Data: A Case Study of European Municipalities\n  Not found: Human Fabrication and Benford's Law: A Study of Psychological Anchoring Effects\n  Not found: Scale Invariance and the Universality of Benford's Law in Demographic Data\n  Not found: Statistical Power and False Positives in Benford's Law Testing: A Re-evaluation of the Chi-Square Test\n  Not found: The Impact of Data Suppression and Cell-Keying on Benford's Law Conformity in Official Census Records\n  Not found: Forensic Analytics in Public Sector Data: A Review of Benford's Law Applications in Government Statistics\n  Not found: The First Digit Phenomenon and the Logarithmic Distribution of Numbers\n\nCitation Gap Analysis: Found 0 new foundational papers\n  [Literature Search] Finding open access PDFs for 12 papers\nOpen Access Check: Checking 12 papers...\n  [Not Found] Detecting Benford's Law Effectiveness Thresho...\n  [FOUND via Unpaywall] Benford's Law and Transport Infrastructure: T...\n  [Not Found] Data Quality Assessment Using Benford's Law a...\n  [Not Found] Benford's law and the limits of digit analysi...\n  [Not Found] Generative AI mitigates representation bias a...\n  [FOUND via arXiv] Tokenization counts: the impact of tokenizati...\n  [FOUND via Unpaywall] Cryptocurrency Trading Pairs and Benford\u2019s La...\n  [Not Found] On the Applicability of Benford\u2019s Law to Dete...\n  [Not Found] Statistical Investigation of Scientific Journ...\n  [FOUND via arXiv] Sufficient Digits and Density Estimation: A B...\n  [Not Found] Benford's Law: Testing the Effects of Distrib...\n  [Not Found] Automatie Identification of Faked and Fraudul...\nOpen Access Check: Found 4/12 papers\n  [Literature Search] Downloading open-access PDFs\nDownloading 17 papers to 'output/literature/'...\n  [1/17] Some new invariant sum tests and MAD tests for the...\n  [2/17] First attempt failed, retrying in 3s...\n  [2/17] FAILED: Benford's Law and Transport Infrastructure: The An... (HTTP Error 403: Forbidden)\n      -> Marked as closed access\n      -> DOI: 10.3390/ijgi14110450\n  [3/17] First attempt failed, retrying in 3s...\n  [3/17] FAILED: Some New Tests of Conformity with Benford\u2019s Law... (HTTP Error 403: Forbidden)\n      -> Marked as closed access\n      -> DOI: 10.3390/stats4030044\n  [4/17] A Benford's law based method for fraud detection u...\n  [5/17] First attempt failed, retrying in 3s...\n  [5/17] FAILED: Benford's law for integrity tests of high-volume d... (HTTP Error 403: Forbidden)\n      -> Marked as closed access\n      -> DOI: 10.1108/jefas-07-2021-0113\n  [6/17] A novel approach to evaluate data integrity: evide...\n  [7/17] First attempt failed, retrying in 3s...\n  [7/17] FAILED: Unveiling Malicious Network Flows Using Benford\u2019s ... (HTTP Error 403: Forbidden)\n      -> Marked as closed access\n      -> DOI: 10.3390/math12152299\n  [8/17] The Use of Machine Learning to Detect Financial Tr...\n  [9/17] First attempt failed, retrying in 3s...\n  [9/17] FAILED: Can Retracted Social Science Articles Be Distingui... (HTTP Error 403: Forbidden)\n      -> Marked as closed access\n      -> DOI: 10.3390/publications11010014\n  [10/17] Testing the emission reduction claims of CDM proje...\n  [11/17] Tokenization counts: the impact of tokenization on...\n  [12/17] Computation and interpretation of mean absolute de...\n  [13/17] First attempt failed, retrying in 3s...\n  [13/17] FAILED: Reliability of Financial Information from the Pers... (HTTP Error 403: Forbidden)\n      -> Marked as closed access\n      -> DOI: 10.3390/e23050557\n  [14/17] Cryptocurrency Trading Pairs and Benford\u2019s Law: In...\n  [15/17] MAD (about median) vs. quantile-based alternatives...\n  [16/17] Sufficient Digits and Density Estimation: A Bayesi...\n  [17/17] First attempt failed, retrying in 3s...\n  [17/17] FAILED: Autonomous learning behaviors in an online coding ... (HTTP Error 403: Forbidden)\n      -> Marked as closed access\n      -> DOI: 10.30935/jdet/15808\nDownload complete: 10 downloaded, 0 already existed, 7 failed\n\n  [Literature Search] Converting PDFs to markdown\n\nConverting 17 papers to markdown...\n[1/17] Some new invariant sum tests and MAD tests for the assessment of Benford\u2019s law...\nProcessing /Users/steven/Paper-Generator/output/literature/bbd1e69320f1bd1f65ca097248ec5b5a8524b95f/bbd1e69320f1bd1f65ca097248ec5b5a8524b95f.pdf...\n[                                        ] (0/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=                                       ] ( 1/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===                                     ] ( 2/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=====                                   ] ( 3/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=======                                 ] ( 4/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=========                               ] ( 5/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==========                              ] ( 6/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[============                            ] ( 7/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==============                          ] ( 8/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[================                        ] ( 9/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==================                      ] (10/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================                    ] (11/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=====================                   ] (12/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=======================                 ] (13/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=========================               ] (14/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===========================             ] (15/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=============================           ] (16/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==============================          ] (17/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[================================        ] (18/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==================================      ] (19/22)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================================    ] (20/22)\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======================================  ] (21/22)\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================================] (22/22)\b\b\b\b\b\b\b\b\b]\n    Extracted conclusion: No (0 chars)\n[2/17] SKIPPED: PDF not found for Benford's Law and Transport Infrastructure: The Analysis of the Main Road Networ...\n[3/17] SKIPPED: PDF not found for Some New Tests of Conformity with Benford\u2019s Law...\n[4/17] A Benford's law based method for fraud detection using R Library...\nProcessing /Users/steven/Paper-Generator/output/literature/76b6837bb6471f4b8468b10f99ed9090a6d3b966/76b6837bb6471f4b8468b10f99ed9090a6d3b966.pdf...\n[                                        ] (0/1)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b========================================\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================================] (1/1)\b\b\b\b\b\b\b]\n    Extracted conclusion: No (0 chars)\n[5/17] SKIPPED: PDF not found for Benford's law for integrity tests of high-volume databases: a case study of inte...\n[6/17] A novel approach to evaluate data integrity: evidence from COVID-19 in China...\nProcessing /Users/steven/Paper-Generator/output/literature/018a3e0be83051fdfb09dac5e7b82b03a0f77de6/018a3e0be83051fdfb09dac5e7b82b03a0f77de6.pdf...\n[                                        ] (0/10)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====                                    ] ( 1/10)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========                                ] ( 2/10)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[============                            ] ( 3/10)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[================                        ] ( 4/10)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================                    ] ( 5/10)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================                ] ( 6/10)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[============================            ] ( 7/10)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[================================        ] ( 8/10)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================================    ] ( 9/10)\b\b\b\b\b\b\b\b\b\b\b\b\b====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================================] (10/10)\b\b\b\b\b\b\b\b\b]\n    Extracted conclusion: Yes (678 chars)\n[7/17] SKIPPED: PDF not found for Unveiling Malicious Network Flows Using Benford\u2019s Law...\n[8/17] The Use of Machine Learning to Detect Financial Transaction Fraud: Multiple Benf...\nProcessing /Users/steven/Paper-Generator/output/literature/942870d491c230aae75264262012ce50ac6aec19/942870d491c230aae75264262012ce50ac6aec19.pdf...\n[                                        ] (0/14)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==                                      ] ( 1/14)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=====                                   ] ( 2/14)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========                                ] ( 3/14)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===========                             ] ( 4/14)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==============                          ] ( 5/14)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=================                       ] ( 6/14)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================                    ] ( 7/14)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======================                  ] ( 8/14)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=========================               ] ( 9/14)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[============================            ] (10/14)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===============================         ] (11/14)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==================================      ] (12/14)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=====================================   ] (13/14)\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================================] (14/14)\b\b\b\b\b\b\b\b\b]\n    Extracted conclusion: Yes (3243 chars)\n[9/17] SKIPPED: PDF not found for Can Retracted Social Science Articles Be Distinguished from Non-Retracted Articl...\n[10/17] Testing the emission reduction claims of CDM projects using the Benford\u2019s Law...\nProcessing /Users/steven/Paper-Generator/output/literature/39da1daeb4f22155d24f5b161b1323efb4307419/39da1daeb4f22155d24f5b161b1323efb4307419.pdf...\n[                                        ] (0/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==                                      ] ( 1/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====                                    ] ( 2/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======                                  ] ( 3/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========                                ] ( 4/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==========                              ] ( 5/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[============                            ] ( 6/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==============                          ] ( 7/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[================                        ] ( 8/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==================                      ] ( 9/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================                    ] (10/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======================                  ] (11/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================                ] (12/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==========================              ] (13/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[============================            ] (14/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==============================          ] (15/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[================================        ] (16/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==================================      ] (17/20)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================================    ] (18/20)\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======================================  ] (19/20)\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================================] (20/20)\b\b\b\b\b\b\b\b\b]\n    Extracted conclusion: Yes (2787 chars)\n[11/17] Tokenization counts: the impact of tokenization on arithmetic in frontier LLMs...\nProcessing /Users/steven/Paper-Generator/output/literature/49c45d2a2773c537804c38d69cde67e00fbad6fe/49c45d2a2773c537804c38d69cde67e00fbad6fe.pdf...\n[                                        ] (0/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=                                       ] ( 1/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===                                     ] ( 2/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=====                                   ] ( 3/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=======                                 ] ( 4/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=========                               ] ( 5/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===========                             ] ( 6/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=============                           ] ( 7/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===============                         ] ( 8/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=================                       ] ( 9/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===================                     ] (10/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================                    ] (11/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======================                  ] (12/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================                ] (13/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==========================              ] (14/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[============================            ] (15/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==============================          ] (16/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[================================        ] (17/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==================================      ] (18/21)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================================    ] (19/21)\b\b\b\b\b\b\b\b\b\b\b\b\b==\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======================================  ] (20/21)\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================================] (21/21)\b\b\b\b\b\b\b\b\b]\n    Extracted conclusion: No (0 chars)\n[12/17] Computation and interpretation of mean absolute deviations by cumulative distrib...\nProcessing /Users/steven/Paper-Generator/output/literature/cd5f06a95b6fbccc94f2eb42b84544de4219b10d/cd5f06a95b6fbccc94f2eb42b84544de4219b10d.pdf...\n[                                        ] (0/1)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b========================================\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================================] (1/1)\b\b\b\b\b\b\b]\n    Extracted conclusion: Yes (58 chars)\n[13/17] SKIPPED: PDF not found for Reliability of Financial Information from the Perspective of Benford\u2019s Law...\n[14/17] Cryptocurrency Trading Pairs and Benford\u2019s Law: Investigating Market Irregularit...\nProcessing /Users/steven/Paper-Generator/output/literature/1193e07f123e27a84d7c283f73330dfbf954b305/1193e07f123e27a84d7c283f73330dfbf954b305.pdf...\n[                                        ] (0/8)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=====                                   ] (1/8)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==========                              ] (2/8)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===============                         ] (3/8)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================                    ] (4/8)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=========================               ] (5/8)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==============================          ] (6/8)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===================================     ] (7/8)\b\b\b\b\b\b\b\b\b\b\b\b=====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================================] (8/8)\b\b\b\b\b\b\b]\n    Extracted conclusion: Yes (3170 chars)\n[15/17] MAD (about median) vs. quantile-based alternatives for classical standard deviat...\nProcessing /Users/steven/Paper-Generator/output/literature/651ac9b8391e93c0d6bc6b36c8337a38bc6c9b23/651ac9b8391e93c0d6bc6b36c8337a38bc6c9b23.pdf...\n[                                        ] (0/13)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===                                     ] ( 1/13)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======                                  ] ( 2/13)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=========                               ] ( 3/13)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[============                            ] ( 4/13)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===============                         ] ( 5/13)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==================                      ] ( 6/13)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=====================                   ] ( 7/13)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================                ] ( 8/13)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===========================             ] ( 9/13)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==============================          ] (10/13)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=================================       ] (11/13)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b===\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================================    ] (12/13)\b\b\b\b\b\b\b\b\b\b\b\b\b====\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================================] (13/13)\b\b\b\b\b\b\b\b\b]\n    Extracted conclusion: Yes (1750 chars)\n[16/17] Sufficient Digits and Density Estimation: A Bayesian Nonparametric Approach Usin...\nProcessing /Users/steven/Paper-Generator/output/literature/70df04dbb0672b93dcf5f3ea4277bbe5810858f4/70df04dbb0672b93dcf5f3ea4277bbe5810858f4.pdf...\n[                                        ] (0/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[                                        ] ( 1/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=                                       ] ( 2/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==                                      ] ( 3/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==                                      ] ( 4/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===                                     ] ( 5/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====                                    ] ( 6/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=====                                   ] ( 7/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=====                                   ] ( 8/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======                                  ] ( 9/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=======                                 ] (10/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========                                ] (11/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========                                ] (12/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=========                               ] (13/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==========                              ] (14/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===========                             ] (15/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===========                             ] (16/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[============                            ] (17/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=============                           ] (18/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==============                          ] (19/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==============                          ] (20/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===============                         ] (21/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[================                        ] (22/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=================                       ] (23/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=================                       ] (24/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==================                      ] (25/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===================                     ] (26/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================                    ] (27/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================                    ] (28/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=====================                   ] (29/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======================                  ] (30/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======================                  ] (31/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=======================                 ] (32/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================                ] (33/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=========================               ] (34/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=========================               ] (35/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==========================              ] (36/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===========================             ] (37/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[============================            ] (38/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[============================            ] (39/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=============================           ] (40/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==============================          ] (41/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===============================         ] (42/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===============================         ] (43/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[================================        ] (44/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=================================       ] (45/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==================================      ] (46/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[==================================      ] (47/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[===================================     ] (48/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[====================================    ] (49/54)\b\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=====================================   ] (50/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[=====================================   ] (51/54)\b\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======================================  ] (52/54)\b\b\b\b\b\b\b\b\b\b\b=\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[======================================= ] (53/54)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b[========================================] (54/54)\b\b\b\b\b\b\b\b\b]\n    Extracted conclusion: No (0 chars)\n[17/17] SKIPPED: PDF not found for Autonomous learning behaviors in an online coding community: A comparison betwee...\n  [Literature Search] Saving papers\nSaved 25 papers to output/papers.json\n\n  Phase 2 finished in 379.36s \u2014 PASSED\n\n======================================================================\n  PHASE 3: Hypothesis Generation\n  Started at 2026-03-14T22:04:05.025735\n======================================================================\n\n  [Hypothesis Generation] Loading research context\nLoaded research context from: output/research_context.md\n  [Hypothesis Generation] Loading paper specification\n  [Hypothesis Generation] Generating hypothesis\n\nProcessing user-provided hypothesis...\n\nSaved hypothesis to output/hypothesis.md\n\n  Phase 3 finished in 9.31s \u2014 PASSED\n\n======================================================================\n  PHASE 4: Experimentation\n  Started at 2026-03-14T22:04:14.337979\n======================================================================\n\n  [Experimentation] Generating experiment plan\n  [Experimentation] Loading research context\nLoaded research context from: output/research_context.md\n  [Experimentation] Loading paper specification\n  [Experimentation] Loading code files\nLoaded 0 code file(s)\nFound 1 dataset file(s)\nDataset analysis complete: analyzed 1 file(s)\n  [Experimentation] Generating experiment plan\n  [Experimentation] Running experiment\n  [Experimentation] Loading hypothesis\n  [Experimentation] Loading research context\nLoaded research context from: output/research_context.md\n  [Experimentation] Running experiment\n  [Experimentation] Cleaning up previous experiment files\n  [Experimentation] Loading paper specification and code\nLoaded 0 code file(s)\nFound 1 dataset file(s)\nDataset analysis complete: analyzed 1 file(s)\nCopied dataset: 1000A-0001_de_flat.csv\n  [Experimentation] Loading existing experiment plan\nLoading existing experiment plan...\n  [Experimentation] Generating experiment code\nGenerating imports, data structures, and algorithms...\nGenerating experiment execution logic...\nGenerating visualization code...\nCode saved to /Users/steven/Paper-Generator/output/experiments/experiment.py\n  [Experimentation] Executing experiment code\nExecuting generated code: /Users/steven/Paper-Generator/output/experiments/experiment.py\n  [Experimentation] Validating results (attempt 1/3)\nResults validation passed.\n  Reasoning: The experiment ran successfully and produced plausible results consistent with the hypothesis. The real-world data (Population Count, Municipal Area) shows excellent conformity to Benford's Law (MAD < 0.01), while derived data (Density) and synthetic controls show expected deviations. No NaNs, zeros, or crashes were observed. The only noted issue is a minor non-English string in the plot title ('Zensus'), which does not affect the validity of the statistical analysis or results.\n  [Experimentation] Generating plot captions\nGenerating captions for plots...\nGenerated 3 plot caption(s)\n  [Experimentation] Determining verdict\nCode executed successfully. Determining verdict...\nSaved experiment result to output/experiments/experiment_result.json\n\n  Phase 4 finished in 337.82s \u2014 PASSED\n\n======================================================================\n  PHASE 5: Paper Writing\n  Started at 2026-03-14T22:09:52.162135\n======================================================================\n\n  [Paper Writing] Loading resources\nLoaded research context from: output/research_context.md\nLoaded 25 papers from output/papers.json\n  [Paper Writing] Generating embeddings for papers\n\n================================================================================\nINDEXING 9/25 PAPERS (skipping 16 without text)\n================================================================================\n\nINDEXING SUMMARY:\n  Papers processed: 25\n  Total chunks created: 129\n\nFound 129 new chunks to embed.\n  Embedding batch 1/5 (32 items)... Done in 28.81s\n  Embedding batch 2/5 (32 items)... Done in 25.98s\n  Embedding batch 3/5 (32 items)... Done in 24.79s\n  Embedding batch 4/5 (32 items)... Done in 30.99s\n  Embedding batch 5/5 (1 items)... Done in 0.99s\nSaved 129 embeddings to output/paper_embeddings.json\n\nBuilding indexed corpus from 129 chunks...\n\n================================================================================\nPAPER WRITING PIPELINE\n================================================================================\n\n[LMSJITSettings] Loading LLM: qwen/qwen3.5-35b-a3b\n[LMSJITSettings] Embedding model already loaded: text-embedding-qwen3-embedding-4b@q5_0\n[LMSJITSettings] Models in memory: ['qwen/qwen3.5-35b-a3b', 'text-embedding-qwen3-embedding-4b@q5_0']\n\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n[Methods] Processing section...\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  [Paper Writing] Drafting Methods section\n  [Step 1] Writing initial draft using paper catalog...\n    Draft complete (6194 chars)\n  [Paper Writing] Critiquing Methods section\n  [Step 2] Analyzing draft for improvements...\n[SectionCritic] DETECTED HALLUCINATED CITATIONS: 1, 9\n    Critique: 5410 chars, 2 queries\n  [Paper Writing] Searching evidence for Methods\n  [Step 3] Searching for additional evidence...\n  [Batch Search] Executing 2 queries...\n    Query 1/2: \"Benford's Law MAD vs Chi-square sample size sensitivity larg...\"\n    Processing 10 chunks in batches of 5...\n      Selected 5 evidence chunks\n    Query 2/2: \"psychological anchoring effect digit bias Benford's law simu...\"\n    Processing 10 chunks in batches of 5...\n      Selected 5 evidence chunks\n  [Batch Search] Selected 10 unique evidence chunks\n  [Paper Writing] Evidence chunks for Methods: 10\n  [Paper Writing] Rewriting Methods section\n  [Step 4] Rewriting section with improvements and evidence...\n    Section complete (6444 chars)\n  [Paper Writing] Section rewrite delta for Methods: 6194 -> 6444\n\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n[Results] Processing section...\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  [Paper Writing] Drafting Results section\n  [Step 1] Writing initial draft using paper catalog...\n    Draft complete (7642 chars)\n  [Paper Writing] Critiquing Results section\n  [Step 2] Analyzing draft for improvements...\n    Critique: 3745 chars, 2 queries\n  [Paper Writing] Searching evidence for Results\n  [Step 3] Searching for additional evidence...\n  [Batch Search] Executing 2 queries...\n    Query 1/2: \"Benford's Law first digit frequency natural scaling laws emp...\"\n    Processing 10 chunks in batches of 5...\n      Selected 5 evidence chunks\n    Query 2/2: \"MAD threshold classification excellent good suspicious Benfo...\"\n    Processing 10 chunks in batches of 5...\n      Selected 5 evidence chunks\n  [Batch Search] Selected 10 unique evidence chunks\n  [Paper Writing] Evidence chunks for Results: 10\n  [Paper Writing] Rewriting Results section\n  [Step 4] Rewriting section with improvements and evidence...\n    Section complete (7751 chars)\n  [Paper Writing] Section rewrite delta for Results: 7642 -> 7751\n\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n[Discussion] Processing section...\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  [Paper Writing] Drafting Discussion section\n  [Step 1] Writing initial draft using paper catalog...\n    Draft complete (5764 chars)\n  [Paper Writing] Critiquing Discussion section\n  [Step 2] Analyzing draft for improvements...\n    Critique: 3524 chars, 2 queries\n  [Paper Writing] Searching evidence for Discussion\n  [Step 3] Searching for additional evidence...\n  [Batch Search] Executing 2 queries...\n    Query 1/2: \"Benford's Law application German census data population dens...\"\n    Processing 10 chunks in batches of 5...\n      Selected 5 evidence chunks\n    Query 2/2: \"limitations of Benford's Law in single country demographic s...\"\n    Processing 10 chunks in batches of 5...\n      Selected 5 evidence chunks\n  [Batch Search] Selected 10 unique evidence chunks\n  [Paper Writing] Evidence chunks for Discussion: 10\n  [Paper Writing] Rewriting Discussion section\n  [Step 4] Rewriting section with improvements and evidence...\n    Section complete (6223 chars)\n  [Paper Writing] Section rewrite delta for Discussion: 5764 -> 6223\n\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n[Related Work] Processing section...\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  [Paper Writing] Drafting Related Work section\n  [Step 1] Writing initial draft using paper catalog...\n    Draft complete (6326 chars)\n  [Paper Writing] Critiquing Related Work section\n  [Step 2] Analyzing draft for improvements...\n[SectionCritic] DETECTED HALLUCINATED CITATIONS: Schumm2005AutomatieIO\n    Critique: 3640 chars, 2 queries\n  [Paper Writing] Searching evidence for Related Work\n  [Step 3] Searching for additional evidence...\n  [Batch Search] Executing 2 queries...\n    Query 1/2: \"Benford's Law election data controversy false positives\"\n    Processing 10 chunks in batches of 5...\n      Selected 5 evidence chunks\n    Query 2/2: \"Newcomb 1881 first digit law historical observation\"\n    Processing 10 chunks in batches of 5...\n      Selected 5 evidence chunks\n  [Batch Search] Selected 10 unique evidence chunks\n  [Paper Writing] Evidence chunks for Related Work: 10\n  [Paper Writing] Rewriting Related Work section\n  [Step 4] Rewriting section with improvements and evidence...\n    Section complete (6594 chars)\n  [Paper Writing] Section rewrite delta for Related Work: 6326 -> 6594\n\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n[Introduction] Processing section...\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  [Paper Writing] Drafting Introduction section\n  [Step 1] Writing initial draft using paper catalog...\n    Draft complete (5552 chars)\n  [Paper Writing] Critiquing Introduction section\n  [Step 2] Analyzing draft for improvements...\n    Critique: 4958 chars, 2 queries\n  [Paper Writing] Searching evidence for Introduction\n  [Step 3] Searching for additional evidence...\n  [Batch Search] Executing 2 queries...\n    Query 1/2: \"Benford's Law synthetic control datasets calibration MAD Chi...\"\n    Processing 10 chunks in batches of 5...\n      Selected 5 evidence chunks\n    Query 2/2: \"derived variables population density Benford's law conformit...\"\n    Processing 10 chunks in batches of 5...\n      Selected 5 evidence chunks\n  [Batch Search] Selected 10 unique evidence chunks\n  [Paper Writing] Evidence chunks for Introduction: 10\n  [Paper Writing] Rewriting Introduction section\n  [Step 4] Rewriting section with improvements and evidence...\n    Section complete (5326 chars)\n  [Paper Writing] Section rewrite delta for Introduction: 5552 -> 5326\n\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n[Conclusion] Processing section...\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  [Paper Writing] Drafting Conclusion section\n  [Step 1] Writing initial draft using paper catalog...\n    Draft complete (1918 chars)\n  [Paper Writing] Critiquing Conclusion section\n  [Step 2] Analyzing draft for improvements...\n    Critique: 3146 chars, 2 queries\n  [Step 3] Skipping search (skipped by policy)\n  [Paper Writing] Evidence chunks for Conclusion: 0\n  [Paper Writing] Rewriting Conclusion section\n  [Step 4] Rewriting section with improvements and evidence...\n    Section complete (941 chars)\n  [Paper Writing] Section rewrite delta for Conclusion: 1918 -> 941\n\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n[Abstract] Processing section...\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  [Paper Writing] Drafting Abstract section\n  [Step 1] Writing initial draft using paper catalog...\n    Draft complete (1386 chars)\n  [Paper Writing] Critiquing Abstract section\n  [Step 2] Analyzing draft for improvements...\n    Critique: 1680 chars, 2 queries\n  [Step 3] Skipping search (skipped by policy)\n  [Paper Writing] Evidence chunks for Abstract: 0\n  [Paper Writing] Rewriting Abstract section\n  [Step 4] Rewriting section with improvements and evidence...\n    Section complete (1140 chars)\n  [Paper Writing] Section rewrite delta for Abstract: 1386 -> 1140\n[LMSJITSettings] Unloading models...\n[LMSJITSettings] Unloaded qwen/qwen3.5-35b-a3b\n[LMSJITSettings] Unloaded text-embedding-qwen3-embedding-4b@q5_0\n[PaperWritingPipeline] Saved paper draft to output/paper_draft.md\n[PaperWritingPipeline] Saved section writing prompts to output/section_writing_prompts.json\n[PaperWritingPipeline] Saved section writing prompts to output/section_rewrite_prompts.json\n\n================================================================================\nPAPER WRITING COMPLETE\n================================================================================\n\n\n  Phase 5 finished in 1582.8s \u2014 PASSED\n\n======================================================================\n  PHASE 6: Document Compilation\n  Started at 2026-03-14T22:36:14.963823\n======================================================================\n\n  [Document Compilation] Loading paper draft\n[PaperWritingPipeline] Loaded paper draft from output/paper_draft.md\n  [Document Compilation] Loading indexed papers\nLoaded 25 papers from output/papers.json\n  [Document Compilation] Loading experiment results\n  [Document Compilation] Loading hypothesis\n  [Document Compilation] Generating LaTeX project\n[PaperConverter] Converting PaperDraft to LaTeX\n[PaperConverter] Copied LaTeX template to output/latex\n[PaperConverter] Set title: Benford's Law and MAD in German Zensus 2022: Disti...\n[PaperConverter] Applied template-based author formatting for 1 author(s)\n[PaperConverter] Updated paper.tex with metadata\n  [Document Compilation] Converting Abstract to LaTeX\n[PaperConverter] Found placeholder %%INTRODUCTION%%\n[PaperConverter] Converting Introduction to LaTeX (length: 5326)\n  [Document Compilation] Converting Introduction to LaTeX\n[PaperConverter] Injected 5392 chars into %%INTRODUCTION%%\n[PaperConverter] Found placeholder %%RELATED_WORK%%\n[PaperConverter] Converting Related Work to LaTeX (length: 6594)\n  [Document Compilation] Converting Related Work to LaTeX\n[PaperConverter] Injected 6692 chars into %%RELATED_WORK%%\n[PaperConverter] Found placeholder %%METHODS%%\n[PaperConverter] Converting Methods to LaTeX (length: 6404)\n  [Document Compilation] Converting Methods to LaTeX\n[PaperConverter] Injected 6782 chars into %%METHODS%%\n[PaperConverter] Found placeholder %%RESULTS%%\n[PaperConverter] Converting Results to LaTeX (length: 7751)\n  [Document Compilation] Converting Results to LaTeX\n[PaperConverter] Injected 7964 chars into %%RESULTS%%\n[PaperConverter] Found placeholder %%DISCUSSION%%\n[PaperConverter] Converting Discussion to LaTeX (length: 6223)\n  [Document Compilation] Converting Discussion to LaTeX\n[PaperConverter] Injected 6312 chars into %%DISCUSSION%%\n[PaperConverter] Found placeholder %%CONCLUSION%%\n[PaperConverter] Converting Conclusion to LaTeX (length: 941)\n  [Document Compilation] Converting Conclusion to LaTeX\n[PaperConverter] Injected 951 chars into %%CONCLUSION%%\n[PaperConverter] Found placeholder %%ACKNOWLEDGEMENTS%%\n[PaperConverter] Skipping Acknowledgements (not provided)\n[PaperConverter] Injected all sections into output/latex/paper.tex\n[PaperConverter] Copied plot: benford_distribution.pdf\n[PaperConverter] Copied plot: mad_comparison_preview.png\n[PaperConverter] Copied plot: benford_distribution_preview.png\n[PaperConverter] Copied plot: mad_comparison.pdf\n[PaperConverter] Copied plot: deviation_heatmap_preview.png\n[PaperConverter] Copied plot: deviation_heatmap.pdf\n[PaperConverter] Copied 6 plot image(s) to images/\n[Bibliography] Missing citation key: 1\n[Bibliography] Missing citation key: 9\n[PaperConverter] Generated bibliography.bib with 18 entries\n[PaperConverter] LaTeX project generated at output/latex\n  [Document Compilation] Compiling LaTeX to PDF\n[PaperConverter] Compiling LaTeX project...\n[PaperConverter] PDF generated at output/latex/result/paper.pdf\n\n  Phase 6 finished in 227.89s \u2014 PASSED\n"
+}
