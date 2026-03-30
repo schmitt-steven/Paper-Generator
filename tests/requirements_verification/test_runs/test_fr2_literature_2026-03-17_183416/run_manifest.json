@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-03-17T18:43:21.890580",
+  "git_commit": "5fff9bb",
+  "platform": "macOS-26.2-arm64-arm-64bit-Mach-O",
+  "python": "3.14.0",
+  "exit_status": 0,
+  "summary": {
+    "total": 2,
+    "passed": 2,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "nodeid": "tests/requirements_verification/test_fr2_literature.py::test_fr2_papers_json_exists_and_valid",
+      "outcome": "passed",
+      "duration_s": 0.002,
+      "failure_summary": null
+    },
+    {
+      "nodeid": "tests/requirements_verification/test_fr2_literature.py::test_fr2_at_least_one_pdf_downloaded",
+      "outcome": "passed",
+      "duration_s": 0.004,
+      "failure_summary": null
+    }
+  ]
+}

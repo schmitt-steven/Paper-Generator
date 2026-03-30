@@ -31,12 +31,15 @@ def collect_source_files() -> list[Path]:
 SOURCE_FILES = collect_source_files()
 
 
-def test_c1_python_files_exist():
+def test_c1_python_files_exist(log_evidence):
     """C1 (Python): The project contains .py source files."""
+    rel_paths = [str(p.relative_to(PROJECT_ROOT)) for p in SOURCE_FILES]
+    log_evidence("source_file_count", len(SOURCE_FILES))
+    log_evidence("source_files_sample", rel_paths[:10])
     assert SOURCE_FILES, "No .py source files found in the project."
 
 
-def test_c1_tkinter_imported():
+def test_c1_tkinter_imported(log_evidence):
     """C1 (Tkinter): At least one source file imports tkinter."""
     hits = []
     for path in SOURCE_FILES:
@@ -46,10 +49,11 @@ def test_c1_tkinter_imported():
             if s.startswith("import tkinter") or s.startswith("from tkinter"):
                 hits.append(str(path.relative_to(PROJECT_ROOT)))
                 break
+    log_evidence("files_importing_tkinter", hits)
     assert hits, "No `import tkinter` found in any source file."
 
 
-def test_c1_lmstudio_sdk_imported():
+def test_c1_lmstudio_sdk_imported(log_evidence):
     """C1 (LM Studio SDK): At least one source file imports the lmstudio package."""
     hits = []
     for path in SOURCE_FILES:
@@ -59,23 +63,29 @@ def test_c1_lmstudio_sdk_imported():
             if s.startswith("import lmstudio") or s.startswith("from lmstudio") or "import lmstudio" in s:
                 hits.append(str(path.relative_to(PROJECT_ROOT)))
                 break
+    log_evidence("files_importing_lmstudio", hits)
     assert hits, "No `import lmstudio` found in any source file."
 
 
-def test_c1_requirements_file_lists_lmstudio():
+def test_c1_requirements_file_lists_lmstudio(log_evidence):
     """C1 (LM Studio SDK): The requirements.txt file lists lmstudio as a dependency."""
     req_file = PROJECT_ROOT / "requirements.txt"
     assert req_file.exists(), "requirements.txt not found."
-    
-    found = False
+
+    matched_line = None
     for line in req_file.read_text().splitlines():
         line = line.strip().lower()
         if not line or line.startswith("#"):
             continue
-        # Split off version specifiers like "lmstudio>=1.5.0"
         pkg_name = line.split(">=")[0].split("<=")[0].split("==")[0].split("!=")[0].strip()
         if pkg_name == "lmstudio":
-            found = True
+            matched_line = line
             break
-            
-    assert found, "lmstudio is not listed as a dependency in requirements.txt"
+
+    log_evidence("requirements_lmstudio_entry", matched_line)
+    assert matched_line, "lmstudio is not listed as a dependency in requirements.txt"
+
+
+if __name__ == "__main__":
+    import pytest, sys
+    sys.exit(pytest.main([__file__, "-v"]))

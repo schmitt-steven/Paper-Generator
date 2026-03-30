@@ -1,0 +1,96 @@
+\documentclass[11pt,a4paper]{article}
+
+%% ── Layout & fonts ──────────────────────────────────────────────────
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenx}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[english]{babel}
+
+%% ── Maths & tables ─────────────────────────────────────────────────
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{etoolbox}
+\usepackage{adjustbox}
+\AtBeginEnvironment{table}{\centering}
+\BeforeBeginEnvironment{tabular}{\begin{adjustbox}{max width=\linewidth,center}}
+\AfterEndEnvironment{tabular}{\end{adjustbox}}
+
+%% ── Graphics ────────────────────────────────────────────────────────
+\usepackage{graphicx}
+\graphicspath{{images/}}
+\DeclareGraphicsExtensions{.pdf,.png,.jpeg,.jpg}
+
+%% ── Code listings ───────────────────────────────────────────────────
+\usepackage{listings}
+\usepackage{fancyvrb}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+%% ── Bibliography (biblatex + biber) ─────────────────────────────────
+\usepackage[autostyle=true]{csquotes}
+\usepackage[backend=biber,
+            sorting=none,
+            doi=true,
+            isbn=false,
+            url=true,
+            maxnames=6,
+            minnames=1,
+            style=ieee]{biblatex}
+\addbibresource{bibliography.bib}
+
+%% ── Hyperlinks (load last) ─────────────────────────────────────────
+\definecolor{linkblue}{RGB}{40,100,180}
+\usepackage[unicode=true,
+            colorlinks=true,
+            linkcolor=linkblue,
+            citecolor=linkblue,
+            urlcolor=linkblue]{hyperref}
+
+%% ── Title block ─────────────────────────────────────────────────────
+\title{\bfseries %%TITLE%%}
+\author{%
+%%BEGIN_AUTHOR%%
+{{name}}\\
+{\small {{department}}, {{affiliation}}}\\
+{\small {{city}}, {{country}}}\\
+{\small \texttt{{{email}}}}
+%%END_AUTHOR%%
+}
+\date{}
+
+%% ════════════════════════════════════════════════════════════════════
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+\noindent
+%%ABSTRACT%%
+\end{abstract}
+
+\section{Introduction}
+%%INTRODUCTION%%
+
+\section{Related Work}
+%%RELATED_WORK%%
+
+\section{Methods}
+%%METHODS%%
+
+\section{Results}
+%%RESULTS%%
+
+\section{Discussion}
+%%DISCUSSION%%
+
+\section{Conclusion}
+%%CONCLUSION%%
+
+%%ACKNOWLEDGEMENTS%%
+
+\printbibliography
+
+\end{document}

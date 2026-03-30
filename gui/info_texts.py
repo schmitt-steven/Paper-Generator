@@ -94,7 +94,7 @@ evidence retrieval entirely (the critic still suggests improvements, but there w
 """
 
 
-CODE_FILES_INFO = """\
+CODE_DATASETS_INFO = """\
 Upload your code files and datasets relevant to the topic of the paper here. Files are automatically categorized based on their format.
 
 # Code Files
@@ -112,18 +112,15 @@ Code files help the LLM understand your algorithm and generate more accurate res
 
 Datasets are analyzed for metadata (columns, types, row count, sample rows) without loading the full content. The LLM uses this metadata to write correct data loading code during experiments.
 
-**Supported formats**: .csv, .tsv, .json, .jsonl, .xlsx, .xls, .parquet
+**Supported formats**: .csv, .json
 
 Datasets are copied to the experiment working directory under a `datasets/` subfolder and can be loaded with pandas.
-"""
 
-USER_EXPERIMENT_INFO = """\
-## Bring Your Own Experiment
+# Bring Your Own Experiment
 
 You can use one of your uploaded Python files as the experiment, \
-skipping both experiment plan generation and experiment code generation.
-
-Your script will be executed directly via Python subprocess.
+skipping both experiment plan generation and experiment code generation. \
+Your script will be executed directly via a Python subprocess.
 
 ### Requirements
 

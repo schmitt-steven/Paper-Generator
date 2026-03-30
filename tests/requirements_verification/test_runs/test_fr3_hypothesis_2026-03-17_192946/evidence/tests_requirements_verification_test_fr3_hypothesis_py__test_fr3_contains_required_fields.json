@@ -1,0 +1,9 @@
+{
+  "sections_found": [
+    "^#+\\s*.*description.*$",
+    "^#+\\s*.*rationale.*$",
+    "^#+\\s*.*success criteria.*$"
+  ],
+  "sections_missing": [],
+  "full_content": "# Research Hypothesis\n\n## Description\nValidating Benford's Law conformity for German municipal population counts and area measurements from the Zensus 2022 while observing significant deviations in derived population density ratios and synthetically generated control datasets.\n\n## Rationale\nNaturally occurring population counts and physical area measurements typically follow the logarithmic distribution predicted by Benford's Law, whereas derived ratios like population density often violate this pattern due to mathematical constraints. Synthetic data with uniform or fabricated digit distributions serves as a negative control to calibrate detection sensitivity. This distinction allows for the differentiation between genuine structural anomalies in official statistics and random variation or fabrication artifacts.\n\n## Success Criteria\nObserved first-digit frequency distributions for population counts and area measurements align closely with theoretical Benford expectations, while derived density ratios and synthetic controls exhibit distinct deviations from these expectations.\n"
+}

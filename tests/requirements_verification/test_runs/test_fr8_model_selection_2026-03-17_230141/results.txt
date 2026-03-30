@@ -1,0 +1,24 @@
+Test Run : 2026-03-17T23:01:42.607853
+Commit   : 5fff9bb
+Platform : macOS-26.2-arm64-arm-64bit-Mach-O
+Python   : 3.14.0
+
+Results  : 1 passed, 0 failed, 0 errors, 0 skipped
+======================================================================
+
+[PASSED] tests/requirements_verification/test_fr8_model_selection.py::test_fr8_dynamic_model_selection  (0.886s)
+  --- stdout ---
+  
+  --- Starting FR8 Verification ---
+  Testing dynamic model loading with:
+    Context Analysis -> qwen/qwen3.5-35b-a3b
+    Hypothesis Generation -> qwen/qwen3.5-35b-a3b
+  
+  [FR8] Simulating Phase: Context Analysis
+  [FR8] Expected Model: qwen/qwen3.5-35b-a3b
+  [FR8] Confirmed: qwen/qwen3.5-35b-a3b successfully loaded.
+  
+  [FR8] Simulating Phase: Hypothesis Generation
+  [FR8] Expected Model: qwen/qwen3.5-35b-a3b
+  [FR8] Confirmed: qwen/qwen3.5-35b-a3b successfully loaded.
+  FR8 dynamic model loading verified.

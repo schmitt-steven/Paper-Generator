@@ -52,9 +52,9 @@ class ValidationResult(BaseModel):
 
 @dataclass
 class HypothesisEvaluation:
-    """Final verdict on whether hypothesis is proven/disproven/inconclusive."""
+    """Final verdict on whether hypothesis is supported/not supported/inconclusive."""
     hypothesis_id: str
-    verdict: str  # "proven", "disproven", or "inconclusive"
+    verdict: str  # e.g. "supported", "not supported", "inconclusive", "partially supported"
     reasoning: str
 
 

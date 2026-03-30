@@ -9,8 +9,8 @@ from typing import List
 from dataclasses import dataclass
 
 from ..base_frame import BaseFrame, CardBorderFrame, InfoPopup, ProgressPopup
-from ..info_texts import START_PAGE_INFO, PAPER_SPECIFICATION_INFO, STYLE_GUIDELINES_INFO, CODE_FILES_INFO, USER_EXPERIMENT_INFO
-from ..theme_colors import CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT, MUTED_TEXT
+from ..info_texts import START_PAGE_INFO, PAPER_SPECIFICATION_INFO, STYLE_GUIDELINES_INFO, CODE_DATASETS_INFO
+from ..theme_colors import CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT, MUTED_TEXT, SECONDARY_TEXT_DARK, SECONDARY_TEXT_LIGHT, LINK_COLOR_DARK, LINK_COLOR_LIGHT
 from ..icons import HoverColor
 from phases.context_analysis.research_context_generator import ResearchContextGenerator
 from settings import Settings
@@ -25,8 +25,9 @@ CODE_EXTENSIONS = {
 }
 
 DATASET_EXTENSIONS = {
-    '.csv', '.tsv', '.json', '.jsonl',
-    '.xlsx', '.xls', '.parquet'
+    '.csv', '.json',
+    # '.tsv', '.jsonl',
+    # '.xlsx', '.xls', '.parquet'
 }
 
 ALL_EXTENSIONS = CODE_EXTENSIONS | DATASET_EXTENSIONS
@@ -323,7 +324,7 @@ class StartScreen(BaseFrame):
         info_btn = self.controller.icons.create_icon_label(
             header,
             icon_name="info",
-            command=lambda: InfoPopup(self.controller, "Code & Data", CODE_FILES_INFO),
+            command=lambda: InfoPopup(self.controller, "Code & Data", CODE_DATASETS_INFO),
             scale=1.5,
             hover_color=HoverColor.BLUE
         )
@@ -430,21 +431,36 @@ class StartScreen(BaseFrame):
         )
         x_btn.pack(side="right", padx=(10, 0))
 
-        # "Use as Experiment" / "Remove Experiment" button for .py code files
+        # "Use as Experiment" / "Remove Experiment" link for .py code files
         if user_file.file_type == "code" and user_file.filename.endswith('.py'):
+            is_dark = self.controller.current_theme == "dark"
+            normal_color = SECONDARY_TEXT_DARK if is_dark else SECONDARY_TEXT_LIGHT
+            hover_color = LINK_COLOR_DARK if is_dark else LINK_COLOR_LIGHT
+
             if is_experiment:
-                exp_btn = ttk.Button(
+                exp_label = ttk.Label(
                     content_row,
                     text="Remove Experiment",
-                    command=lambda: self._deactivate_experiment()
+                    font=self.controller.fonts.default_font,
+                    foreground=normal_color,
+                    cursor="hand2",
+                    style="CardRow.TLabel"
                 )
+                exp_label.bind("<Button-1>", lambda e: self._deactivate_experiment())
             else:
-                exp_btn = ttk.Button(
+                exp_label = ttk.Label(
                     content_row,
                     text="Use as Experiment",
-                    command=lambda f=user_file: self._on_use_as_experiment_click(f)
+                    font=self.controller.fonts.default_font,
+                    foreground=normal_color,
+                    cursor="hand2",
+                    style="CardRow.TLabel"
                 )
-            exp_btn.pack(side="right", padx=(10, 0))
+                exp_label.bind("<Button-1>", lambda e, f=user_file: self._on_use_as_experiment_click(f))
+
+            exp_label.bind("<Enter>", lambda e: exp_label.configure(foreground=hover_color))
+            exp_label.bind("<Leave>", lambda e: exp_label.configure(foreground=normal_color))
+            exp_label.pack(side="right", padx=(10, 0))
 
         return entry_frame
 

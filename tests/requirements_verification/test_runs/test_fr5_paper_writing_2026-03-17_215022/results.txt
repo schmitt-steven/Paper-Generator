@@ -1,0 +1,146 @@
+Test Run : 2026-03-17T22:05:16.111746
+Commit   : 5fff9bb
+Platform : macOS-26.2-arm64-arm-64bit-Mach-O
+Python   : 3.14.0
+
+Results  : 3 passed, 0 failed, 0 errors, 0 skipped
+======================================================================
+
+[PASSED] tests/requirements_verification/test_fr5_paper_writing.py::test_fr5_paper_draft_exists  (0.001s)
+  --- stdout ---
+  Loaded research context from: output/research_context.md
+  Loaded 36 papers from output/papers.json
+  
+  ================================================================================
+  INDEXING 0/36 PAPERS (skipping 36 without text)
+  ================================================================================
+  
+  
+  ================================================================================
+  PAPER WRITING PIPELINE
+  ================================================================================
+  
+  [LMSJITSettings] LLM already loaded: qwen/qwen3.5-35b-a3b
+  [LMSJITSettings] Loading embedding model: text-embedding-qwen3-embedding-4b@q5_0
+  [LMSJITSettings] Models in memory: ['qwen/qwen3.5-35b-a3b', 'text-embedding-qwen3-embedding-4b@q5_0']
+  
+  ────────────────────────────────────────────────────────────
+  [Methods] Processing section...
+  ────────────────────────────────────────────────────────────
+    [Step 1] Writing initial draft using paper catalog...
+      Draft complete (5625 chars)
+    [Step 2] Analyzing draft for improvements...
+      Critique: 2923 chars, 2 queries
+    [Step 3] Searching for additional evidence...
+    [Batch Search] Executing 2 queries...
+      Query 1/2: "Benford's Law sample size sensitivity Chi-square vs MAD comp..."
+        Selected 0 evidence chunks
+      Query 2/2: "German Zensus 2022 quality flags exact values suppression ce..."
+        Selected 0 evidence chunks
+    [Batch Search] Selected 0 unique evidence chunks
+    [Step 4] Rewriting section with improvements and evidence...
+      Section complete (5779 chars)
+  
+  ────────────────────────────────────────────────────────────
+  [Results] Processing section...
+  ────────────────────────────────────────────────────────────
+    [Step 1] Writing initial draft using paper catalog...
+      Draft complete (9147 chars)
+    [Step 2] Analyzing draft for improvements...
+      Critique: 1695 chars, 2 queries
+    [Step 3] Searching for additional evidence...
+    [Batch Search] Executing 2 queries...
+      Query 1/2: "Benford's Law application to German municipal census data de..."
+        Selected 0 evidence chunks
+      Query 2/2: "statistical significance of Benford deviations in derived po..."
+        Selected 0 evidence chunks
+    [Batch Search] Selected 0 unique evidence chunks
+    [Step 4] Rewriting section with improvements and evidence...
+      Section complete (9152 chars)
+  
+  ────────────────────────────────────────────────────────────
+  [Discussion] Processing section...
+  ────────────────────────────────────────────────────────────
+    [Step 1] Writing initial draft using paper catalog...
+      Draft complete (4349 chars)
+    [Step 2] Analyzing draft for improvements...
+      Critique: 3913 chars, 2 queries
+    [Step 3] Searching for additional evidence...
+    [Batch Search] Executing 2 queries...
+      Query 1/2: "Benford's Law multiplicative growth mechanism municipal popu..."
+        Selected 0 evidence chunks
+      Query 2/2: "limitations of synthetic Benford control datasets for fraud ..."
+        Selected 0 evidence chunks
+    [Batch Search] Selected 0 unique evidence chunks
+    [Step 4] Rewriting section with improvements and evidence...
+      Section complete (4297 chars)
+  
+  ────────────────────────────────────────────────────────────
+  [Related Work] Processing section...
+  ────────────────────────────────────────────────────────────
+    [Step 1] Writing initial draft using paper catalog...
+      Draft complete (5711 chars)
+    [Step 2] Analyzing draft for improvements...
+      Critique: 3311 chars, 2 queries
+    [Step 3] Searching for additional evidence...
+    [Batch Search] Executing 2 queries...
+      Query 1/2: "Benford's Law scale invariance mathematical derivation units..."
+        Selected 0 evidence chunks
+      Query 2/2: "controversy Benford's Law election data analysis structural ..."
+        Selected 0 evidence chunks
+    [Batch Search] Selected 0 unique evidence chunks
+    [Step 4] Rewriting section with improvements and evidence...
+      Section complete (6333 chars)
+  
+  ────────────────────────────────────────────────────────────
+  [Introduction] Processing section...
+  ────────────────────────────────────────────────────────────
+    [Step 1] Writing initial draft using paper catalog...
+      Draft complete (5463 chars)
+    [Step 2] Analyzing draft for improvements...
+      Critique: 5801 chars, 2 queries
+    [Step 3] Searching for additional evidence...
+    [Batch Search] Executing 2 queries...
+      Query 1/2: "Benford's Law application to German municipal census data Ze..."
+        Selected 0 evidence chunks
+      Query 2/2: "limitations of Benford's Law in derived demographic ratios p..."
+        Selected 0 evidence chunks
+    [Batch Search] Selected 0 unique evidence chunks
+    [Step 4] Rewriting section with improvements and evidence...
+      Section complete (5470 chars)
+  
+  ────────────────────────────────────────────────────────────
+  [Conclusion] Processing section...
+  ────────────────────────────────────────────────────────────
+    [Step 1] Writing initial draft using paper catalog...
+      Draft complete (920 chars)
+    [Step 2] Analyzing draft for improvements...
+      Critique: 2595 chars, 2 queries
+    [Step 3] Skipping search (skipped by policy)
+    [Step 4] Rewriting section with improvements and evidence...
+      Section complete (778 chars)
+  
+  ────────────────────────────────────────────────────────────
+  [Abstract] Processing section...
+  ────────────────────────────────────────────────────────────
+    [Step 1] Writing initial draft using paper catalog...
+      Draft complete (1372 chars)
+    [Step 2] Analyzing draft for improvements...
+      Critique: 1209 chars, 2 queries
+    [Step 3] Skipping search (skipped by policy)
+    [Step 4] Rewriting section with improvements and evidence...
+      Section complete (1194 chars)
+  [LMSJITSettings] Unloading models...
+  [LMSJITSettings] Unloaded qwen/qwen3.5-35b-a3b
+  [LMSJITSettings] Unloaded text-embedding-qwen3-embedding-4b@q5_0
+  [PaperWritingPipeline] Saved paper draft to output/paper_draft.md
+  [PaperWritingPipeline] Saved section writing prompts to output/section_writing_prompts.json
+  [PaperWritingPipeline] Saved section writing prompts to output/section_rewrite_prompts.json
+  
+  ================================================================================
+  PAPER WRITING COMPLETE
+  ================================================================================
+
+[PASSED] tests/requirements_verification/test_fr5_paper_writing.py::test_fr5_markdown_files_contain_citations  (0.001s)
+
+[PASSED] tests/requirements_verification/test_fr5_paper_writing.py::test_fr5_at_least_one_real_citation  (0.001s)

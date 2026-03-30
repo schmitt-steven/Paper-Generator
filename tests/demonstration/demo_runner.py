@@ -23,7 +23,7 @@ from dataclasses import dataclass, field, asdict
 
 
 # ── Pipeline parameters ─────────────────────────────────────────────────────
-# Documents every parameter that influences the demo output.
+# Parameters that influences the demo output.
 # Parameters marked "passable" are forwarded to the backend; the rest are
 # hardcoded in the source and recorded here for reproducibility.
 # This excludes the paramters in settings.py
@@ -374,7 +374,7 @@ def phase_4_experimentation(log: PhaseLog):
 
 def _build_writing_timing(events: list[tuple[float, str]]) -> dict:
     """
-    Parse timestamped status callbacks into per-section, per-step timing.
+    Parse status callbacks into per-section and per-step timing.
 
     Returns a dict like:
     {
@@ -385,16 +385,14 @@ def _build_writing_timing(events: list[tuple[float, str]]) -> dict:
                 "steps": {
                     "Drafting": 45.2,
                     "Critiquing": 30.1,
-                    "Searching evidence": 80.5,
-                    "Rewriting": 24.2
+                    ...
                 }
             }, ...
         },
         "step_totals": {
             "Drafting": 310.0,
             "Critiquing": 200.0,
-            "Searching evidence": 500.0,
-            "Rewriting": 180.0
+            ...
         }
     }
     """
@@ -472,8 +470,8 @@ def phase_5_paper_writing(log: PhaseLog):
         log.status_messages.append(msg)
         print(f"  [{log.phase_name}] {msg}")
 
-    # Load resources (same as generate_new_draft but we call write_paper directly
-    # so we can pass through the controllable pipeline params)
+    # Load resources (same as generate_new_draft but call write_paper directly
+    # so it can pass through the controllable pipeline params)
     cb("Loading resources")
     research_context = ResearchContextGenerator.load_research_context("output/research_context.md")
     experiment_result = ExperimentRunner.load_experiment_result("output/experiments/experiment_result.json")
@@ -661,7 +659,7 @@ def main():
             # Stop early if experiment verdict is not proven
             if name == "Experimentation":
                 verdict = phase_log.extra.get("verdict", "")
-                if verdict in ("inconclusive", "disproven"):
+                if verdict in ("inconclusive", "not supported"):
                     all_passed = False
                     print(f"\n  Stopping: experiment verdict is '{verdict}'. Skipping paper writing and compilation.")
                     break
@@ -698,7 +696,7 @@ def main():
 
 
 def _build_summary(log: DemoLog) -> dict:
-    """Build a flat summary of key metrics from the completed demo log."""
+    """Build summary of key metrics from the completed demo log."""
     summary = {}
     phases_by_name = {p["phase_name"]: p for p in log.phases}
 

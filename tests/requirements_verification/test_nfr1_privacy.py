@@ -10,7 +10,7 @@ Method: Proof by  model-load tracing.
   production codebase goes through lms.llm() or lms.embedding_model() — the two
   lmstudio SDK entry points — and that no file binds the `lms` alias to anything
   other than the lmstudio package.
-  
+
   Proof chain:
     lms.llm() / lms.embedding_model()
     -> lmstudio SDK
@@ -47,27 +47,36 @@ def uses_lms(source: str) -> bool:
     return any(p.search(source) for p in MODEL_LOAD_PATTERNS)
 
 
-def test_nfr1_all_model_loads_use_lmstudio():
+def test_nfr1_all_model_loads_use_lmstudio(log_evidence):
     """
     NFR1: Every file that loads a model does so via lms.llm() or lms.embedding_model(),
     which are lmstudio SDK calls that route to the local LM Studio server.
     """
     violations = []
+    compliant_files = []
     for path in collect_source_files():
         source = path.read_text(encoding="utf-8", errors="ignore")
         if not uses_lms(source):
             continue  # file does not load any model — skip
         rel = path.relative_to(PROJECT_ROOT)
 
-        # Every file that calls lms.llm() or lms.embedding_model() must import
-        # `lms` from the lmstudio package (not a reassigned alias).
         if not VALID_LMS_IMPORT.search(source):
-            # Check for any other binding of `lms`
             other_lms = re.search(r'\blms\b\s*=', source)
             violations.append(
                 f"[{rel}] uses lms.* but does not import lmstudio as lms"
                 + (f" (lms re-bound at: {other_lms.group(0)!r})" if other_lms else "")
             )
+        else:
+            compliant_files.append(str(rel))
+
+    log_evidence("compliant_files", compliant_files)
+    log_evidence("violations", violations)
+    log_evidence("proof_chain", (
+        "lms.llm() / lms.embedding_model() "
+        "-> lmstudio SDK "
+        "-> LM Studio local server (localhost only) "
+        "-> local inference"
+    ))
 
     assert not violations, (
         "Model load(s) found that do not provably route through lmstudio:\n"
@@ -75,7 +84,7 @@ def test_nfr1_all_model_loads_use_lmstudio():
     )
 
 
-def test_nfr1_model_loads_exist():
+def test_nfr1_model_loads_exist(log_evidence):
     """
     NFR1: lmstudio model loads are actually present in the codebase.
     Confirms the production code calls the SDK, not that all calls happen to be absent.
@@ -86,4 +95,10 @@ def test_nfr1_model_loads_exist():
         if uses_lms(source):
             hits.append(str(path.relative_to(PROJECT_ROOT)))
 
+    log_evidence("files_with_lms_calls", hits)
     assert hits, "No lms.llm() or lms.embedding_model() calls found in production code."
+
+
+if __name__ == "__main__":
+    import pytest, sys
+    sys.exit(pytest.main([__file__, "-v"]))

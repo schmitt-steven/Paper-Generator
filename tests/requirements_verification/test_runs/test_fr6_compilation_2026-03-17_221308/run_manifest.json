@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-03-17T22:17:01.711696",
+  "git_commit": "5fff9bb",
+  "platform": "macOS-26.2-arm64-arm-64bit-Mach-O",
+  "python": "3.14.0",
+  "exit_status": 0,
+  "summary": {
+    "total": 2,
+    "passed": 2,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "nodeid": "tests/requirements_verification/test_fr6_compilation.py::test_fr6_compilation_succeeds",
+      "outcome": "passed",
+      "duration_s": 0.011,
+      "failure_summary": null
+    },
+    {
+      "nodeid": "tests/requirements_verification/test_fr6_compilation.py::test_fr6_pdf_file_exists_and_valid",
+      "outcome": "passed",
+      "duration_s": 0.0,
+      "failure_summary": null
+    }
+  ]
+}

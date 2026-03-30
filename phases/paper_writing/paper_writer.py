@@ -30,17 +30,13 @@ class PaperWriter:
             summary = item.summary or "No summary provided."
 
             item_lines = [
-                "<item>",
-                f"  <citation_key>{citation_key}</citation_key>",
-                f"  <title>{title}</title>",
-                f"  <summary>{summary}</summary>",
-                "</item>"
+                f"[{citation_key}]",
+                f"Title: {title}",
+                summary,
             ]
             items.append("\n".join(item_lines))
 
-        # Indent the joined items by two spaces for the <evidence> block
-        indented_items = textwrap.indent("\n".join(items), "  ")
-        return f"<evidence>\n{indented_items}\n</evidence>"
+        return "\n\n".join(items)
 
     @staticmethod
     def _format_plots_for_prompt(plots: list[Plot]) -> str:
@@ -76,16 +72,11 @@ class PaperWriter:
         # Define which previous sections each section should see
         section_dependencies = {
             Section.RESULTS: [Section.METHODS],
-            Section.DISCUSSION: [Section.RESULTS, Section.METHODS],
-            Section.CONCLUSION: [Section.METHODS,Section.RESULTS, Section.DISCUSSION],
-            Section.ABSTRACT: [
-                Section.METHODS,
-                Section.RESULTS,
-                Section.DISCUSSION,
-                Section.INTRODUCTION,
-                Section.RELATED_WORK,
-                Section.CONCLUSION,
-            ],
+            Section.DISCUSSION: [Section.METHODS, Section.RESULTS],
+            Section.RELATED_WORK: [Section.METHODS, Section.RESULTS, Section.DISCUSSION],
+            Section.INTRODUCTION: [Section.RELATED_WORK, Section.METHODS, Section.RESULTS, Section.DISCUSSION],
+            Section.CONCLUSION: [Section.METHODS, Section.RESULTS, Section.DISCUSSION],
+            Section.ABSTRACT: [Section.INTRODUCTION, Section.RELATED_WORK, Section.METHODS, Section.RESULTS, Section.DISCUSSION, Section.CONCLUSION],
         }
         
         relevant_sections = section_dependencies.get(section_type, [])
@@ -403,7 +394,7 @@ The following papers are available for citation. Use their citation keys in squa
 
 [GENERATION RULES — DO NOT VIOLATE]
 - Do NOT reference the guidelines or instructions.
-- STRICTLY FORBIDDEN: Do NOT start your text with ANY section heading — not "# Methods", not "## Results", not "# Introduction", nothing. Your first output character must be prose content, not a "#" symbol. The heading already exists above your output.
+- STRICTLY FORBIDDEN: Do NOT start your text with ANY section heading — not "# Methods", not "## Results", not "# Introduction", just nothing! Your first output character must be prose content, NOT a "#" symbol. The heading already exists above your output.
 - STRICTLY FORBIDDEN: Do NOT attempt to start or write the next section after finishing this one. Stop writing immediately upon completing the current section.
 - You MAY use markdown subsection headings (### and ####) to organize longer sections where sub-topics benefit from labeling.
 - SUBSECTION RULES: If you use subsections, you MUST use at least two of the same level. NEVER use just a single subsection.
@@ -468,7 +459,7 @@ The following papers are available for citation. Use their citation keys in squa
 You are an expert academic writer revising a section based on feedback.
 
 [TASK]
-Rewrite the {section_type.value} section, addressing the suggested improvements and incorporating new evidence.
+Rewrite the original {section_type.value} section, addressing the suggested improvements and incorporating new evidence.
 
 [SECTION TYPE]
 {section_type.value}

@@ -1,0 +1,107 @@
+[
+  {
+    "size": 1000,
+    "distribution": "Random",
+    "hybrid_time_ms": 0.9504,
+    "quicksort_time_ms": 1.0159,
+    "speedup_factor": 1.07
+  },
+  {
+    "size": 1000,
+    "distribution": "Sorted",
+    "hybrid_time_ms": 0.6568,
+    "quicksort_time_ms": 0.9171,
+    "speedup_factor": 1.4
+  },
+  {
+    "size": 1000,
+    "distribution": "Reverse Sorted",
+    "hybrid_time_ms": 0.667,
+    "quicksort_time_ms": 0.8621,
+    "speedup_factor": 1.29
+  },
+  {
+    "size": 2500,
+    "distribution": "Random",
+    "hybrid_time_ms": 2.5859,
+    "quicksort_time_ms": 2.8377,
+    "speedup_factor": 1.1
+  },
+  {
+    "size": 2500,
+    "distribution": "Sorted",
+    "hybrid_time_ms": 1.7418,
+    "quicksort_time_ms": 2.4483,
+    "speedup_factor": 1.41
+  },
+  {
+    "size": 2500,
+    "distribution": "Reverse Sorted",
+    "hybrid_time_ms": 1.7866,
+    "quicksort_time_ms": 2.3056,
+    "speedup_factor": 1.29
+  },
+  {
+    "size": 5000,
+    "distribution": "Random",
+    "hybrid_time_ms": 5.6876,
+    "quicksort_time_ms": 5.7318,
+    "speedup_factor": 1.01
+  },
+  {
+    "size": 5000,
+    "distribution": "Sorted",
+    "hybrid_time_ms": 3.7097,
+    "quicksort_time_ms": 5.0144,
+    "speedup_factor": 1.35
+  },
+  {
+    "size": 5000,
+    "distribution": "Reverse Sorted",
+    "hybrid_time_ms": 3.8127,
+    "quicksort_time_ms": 4.9688,
+    "speedup_factor": 1.3
+  },
+  {
+    "size": 10000,
+    "distribution": "Random",
+    "hybrid_time_ms": 12.0529,
+    "quicksort_time_ms": 12.3335,
+    "speedup_factor": 1.02
+  },
+  {
+    "size": 10000,
+    "distribution": "Sorted",
+    "hybrid_time_ms": 7.5154,
+    "quicksort_time_ms": 10.0162,
+    "speedup_factor": 1.33
+  },
+  {
+    "size": 10000,
+    "distribution": "Reverse Sorted",
+    "hybrid_time_ms": 7.8106,
+    "quicksort_time_ms": 10.2661,
+    "speedup_factor": 1.31
+  },
+  {
+    "size": 20000,
+    "distribution": "Random",
+    "hybrid_time_ms": 25.0364,
+    "quicksort_time_ms": 25.0953,
+    "speedup_factor": 1.0
+  },
+  {
+    "size": 20000,
+    "distribution": "Sorted",
+    "hybrid_time_ms": 15.8164,
+    "quicksort_time_ms": 22.3091,
+    "speedup_factor": 1.41
+  },
+  {
+    "size": 20000,
+    "distribution": "Reverse Sorted",
+    "hybrid_time_ms": 16.4517,
+    "quicksort_time_ms": 22.0636,
+    "speedup_factor": 1.34
+  }
+]

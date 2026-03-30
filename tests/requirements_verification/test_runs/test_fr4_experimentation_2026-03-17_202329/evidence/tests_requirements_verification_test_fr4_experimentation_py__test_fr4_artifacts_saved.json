@@ -1,0 +1,16 @@
+{
+  "artifact_count": 11,
+  "artifacts": [
+    "experiments/results.json",
+    "experiments/experiment_result.json",
+    "experiments/analyze_population.py",
+    "experiments/hypothesis_evaluation.json",
+    "experiments/datasets/1000A-0001_de_flat.csv",
+    "experiments/plots/conformity_comparison_mad.pdf",
+    "experiments/plots/deviation_heatmap_preview.png",
+    "experiments/plots/benford_digit_distribution.pdf",
+    "experiments/plots/deviation_heatmap.pdf",
+    "experiments/plots/conformity_comparison_mad_preview.png",
+    "experiments/plots/benford_digit_distribution_preview.png"
+  ]
+}

@@ -1,0 +1,1111 @@
+[
+  {
+    "id": "76b6837bb6471f4b8468b10f99ed9090a6d3b966",
+    "title": "A Benford's law based method for fraud detection using R Library",
+    "published": "2021-11-01T00:00:00",
+    "authors": [
+      "C. D. S. Azevedo",
+      "R. F. Gonçalves",
+      "V. L. Gava",
+      "M. Spínola"
+    ],
+    "summary": "Benford Law (BL) states that the occurrence of significant digits in many natural and human phenomena data sets are not uniformly scattered, as one could naively expect, but follow a logarithmic-type distribution. Here, we present a method that consists of the use of BL analysis over first and first-two digits, three statistical conformity tests – Z-statistics, Mean Absolute Deviation (MAD) and Chi-square (χ2) as well as the summation test which looks for excessively large numbers, having fraud detection as one of its application. We developed the method for fraud detection in the case of the Brazilian Bolsa Familia welfare program. In this case, we submitted four periods of Brazilian welfare program payments to the method with a dataset of 13,442,529 records. We provide a practical implementation of the method based on open-source R library released on a public repository. Furthermore, code implementation of the algorithm as well as datasets are freely available. Advantages of the algorithm are listed below: • The method was developed based on open source libraries • The technique is simple, rapid and ease of use • Easily applicable to other social welfare program auditing",
+    "pdf_url": "https://doi.org/10.1016/j.mex.2021.101575",
+    "doi": "10.1016/j.mex.2021.101575",
+    "fields_of_study": [
+      "Medicine"
+    ],
+    "venue": "MethodsX",
+    "citation_count": 14,
+    "bibtex": "@Article{Azevedo2021ABL,\n author = {C. D. S. Azevedo and R. F. Gonçalves and V. L. Gava and M. Spínola},\n booktitle = {MethodsX},\n journal = {MethodsX},\n title = {A Benford's law based method for fraud detection using R Library},\n volume = {8},\n year = {2021}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.7814936839958804,
+      "citation_score": 0.5057697468467662,
+      "recency_score": 0.4687573033249377,
+      "final_score": 0.7226476522138747
+    },
+    "citation_key": "Azevedo2021ABL",
+    "is_open_access": true,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "4fd35743e81fbe956c8decbc008bcb3ace06e0bc",
+    "title": "Detecting Benford's Law Effectiveness Threshold Differences According to Affecting Operation",
+    "published": "2025-04-03T00:00:00",
+    "authors": [
+      "Jaroslav Petráš",
+      "Ardian Hyseni",
+      "J. Zbojovský",
+      "Marek Pavlík"
+    ],
+    "summary": "Benford’s Law describes the effect of specific first significant digit probability distribution in natural datasets. In the case of non-natural or artificial intervention within such datasets, the first digit probability distribution tends to deviate from the theoretical distribution. Thus, Benford’s Law-based methods are useful in detecting unnatural changes in datasets indicating artificial manipulation of the original data. In our article, we first briefly describe the theory behind this law with an overview of Benford’s Law’s properties. We then focus on conformity tests for Benford’s Law as methods for data change detection compared with the original dataset. In our research, the datasets were collected from electricity consumption metering devices. We provide the results of conformity with Benford’s Law for affected datasets within a series of simulations with different affecting operations. We found a research gap when comparing the deviation from a theoretical first-digit probability distribution for different operations affecting the original dataset. We have made a series of simulations with different affecting operations and we tried to determine the effectiveness thresholds for each operation. As shown in the results section, different intervention operations manifest different specific thresholds of such deviations from Benford’s Law’s distribution.",
+    "pdf_url": "",
+    "doi": "10.3390/axioms14040273",
+    "fields_of_study": [
+      "Computer Science"
+    ],
+    "venue": "Axioms",
+    "citation_count": 1,
+    "bibtex": "@Article{Petráš2025DetectingBL,\n author = {Jaroslav Petráš and Ardian Hyseni and J. Zbojovský and Marek Pavlík},\n booktitle = {Axioms},\n journal = {Axioms},\n pages = {273},\n title = {Detecting Benford's Law Effectiveness Threshold Differences According to Affecting Operation},\n volume = {14},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.7781904741549899,
+      "citation_score": 0.3439655172413793,
+      "recency_score": 0.8478065288267804,
+      "final_score": 0.741729583930808
+    },
+    "citation_key": "Petras2025DetectingBL",
+    "is_open_access": false,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "c25b9286b378b60ca6a7dc64a8e1530a278fe953",
+    "title": "Can Retracted Social Science Articles Be Distinguished from Non-Retracted Articles by Some of the Same Authors, Using Benford's Law or Other Statistical Methods?",
+    "published": "2023-03-03T00:00:00",
+    "authors": [
+      "W. Schumm",
+      "D. Crawford",
+      "Lorenza Lockett",
+      "Asma bin Ateeq",
+      "Abdullah AlRashed"
+    ],
+    "summary": "A variety of ways to detect problems in small sample social science surveys has been discussed by a variety of authors. Here, several new approaches for detecting anomalies in large samples are presented and their use illustrated through comparisons of seven retracted or corrected journal articles with a control group of eight articles published since 2000 by a similar group of authors on similar topics; all the articles involved samples from several hundred to many thousands of participants. Given the small sample of articles (k = 15) and low statistical power, only 2/12 of individual anomaly comparisons were not statistically significant, but large effect sizes (d > 0.80) were common for most of the anomaly comparisons. A six-item total anomaly scale featured a Cronbach alpha of 0.92, suggesting that the six anomalies were moderately correlated rather than isolated issues. The total anomaly scale differentiated the two groups of articles, with an effect size of 3.55 (p < 0.001); an anomaly severity scale derived from the same six items, with an alpha of 0.94, yielded an effect size of 3.52 (p < 0.001). Deviations from the predicted distribution of first digits in regression coefficients (Benford’s Law) were associated with anomalies and differences between the two groups of articles; however, the results were mixed in terms of statistical significance, though the effect sizes were large (d ≥ 0.90). The methodology was able to detect unusual anomalies in both retracted and non-retracted articles. In conclusion, the results provide several useful approaches that may be helpful for detecting questionable research practices, especially data or results fabrication, in social science, medical, or other scientific research.",
+    "pdf_url": "https://www.mdpi.com/2304-6775/11/1/14/pdf?version=1678327658",
+    "doi": "10.3390/publications11010014",
+    "fields_of_study": [
+      "Computer Science"
+    ],
+    "venue": "Publ.",
+    "citation_count": 3,
+    "bibtex": "@Article{Schumm2023CanRS,\n author = {W. Schumm and D. Crawford and Lorenza Lockett and Asma bin Ateeq and Abdullah AlRashed},\n booktitle = {Publ.},\n journal = {Publ.},\n pages = {14},\n title = {Can Retracted Social Science Articles Be Distinguished from Non-Retracted Articles by Some of the Same Authors, Using Benford's Law or Other Statistical Methods?},\n volume = {11},\n year = {2023}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.7576158885731366,
+      "citation_score": 0.33897297297297296,
+      "recency_score": 0.5905971937510449,
+      "final_score": 0.699049727530911
+    },
+    "citation_key": "Schumm2023CanRS",
+    "is_open_access": true,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "8f294c38846110b5c266dc93970286f863e94569",
+    "title": "Automatie Identification of Faked and Fraudulent Interviews in the German SOEP",
+    "published": "2005-01-01T00:00:00",
+    "authors": [
+      "C. Schäfer",
+      "Jörg-Peter Schräpler",
+      "Klaus Müller",
+      "G. Wagner"
+    ],
+    "summary": "Based on data from the German Socio-Economic Panel (SOEP), this paper presents two new tools for the identification of faked interviews in surveys. One method is based on Benford's Law, and the other exploits the empirical observation that fakers most often produce answers with less variability than could be expected from the whole survey. We focus on fabricated data, which was taken out of the survey before the data was disseminated to external users. For two samples, the resulting rankings of the interviewers with respect to their cheating behavior are given. For both methods all of the evident fakers are identified.",
+    "pdf_url": "",
+    "doi": "10.3790/schm.125.1.183",
+    "fields_of_study": [
+      "Engineering"
+    ],
+    "venue": "Journal of Contextual Economics – Schmollers Jahrbuch",
+    "citation_count": 24,
+    "bibtex": "@Article{Schäfer2005AutomatieIO,\n author = {C. Schäfer and Jörg-Peter Schräpler and Klaus Müller and G. Wagner},\n booktitle = {Journal of Contextual Economics – Schmollers Jahrbuch},\n journal = {Journal of Contextual Economics – Schmollers Jahrbuch},\n title = {Automatie Identification of Faked and Fraudulent Interviews in the German SOEP},\n year = {2005}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.7576104287503236,
+      "citation_score": 0.35054615881213685,
+      "recency_score": 0.025362423407954877,
+      "final_score": 0.6436792012222682
+    },
+    "citation_key": "Schafer2005AutomatieIO",
+    "is_open_access": false,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "9edda58d105be61dfff89cf3e55452b380fe1f02",
+    "title": "Do Pandemic Related Datasets with High Artificial Control Still Follow the Benford’s Law?",
+    "published": "2021-08-02T00:00:00",
+    "authors": [
+      "C. Dissanayake",
+      "J. Daniel"
+    ],
+    "summary": "Benford’s Law (BL) is being used extensively in research for several purposes including for the detection of potential manipulations of the data to detect fraud since datasets tend to follow the Benford’s distribution when they occur naturally without artificial control. The COVID-19 pandemic has heavily impacted business and non-business-related activities. Datasets related to the pandemic are being used in many different analyses to arrive at different conclusions. However, the credibility of the results and conclusions depend heavily on the accuracy of the datasets. The COVID-19 related datasets are obvious results of intense human intervention and artificial control efforts;therefore, the question arises as to whether Benford’s analysis can still be used to detect anomalous datasets among them? This research uses several publicly available datasets and uses predictive analytics to perform the Benford’s analysis. The applicability of BL is first verified using a regular dataset occurred prior to the pandemic, and then applied on COVID-19 related datasets to test the research hypothesis. The results demonstrate that even the datasets with sufficiently large sample sizes with considerable human intervention and artificial control follow the Benford’s distribution and that Benford’s analysis can still detect the anomalous datasets. The findings are anticipated to be useful for the data analysts and researchers and adds to the current literature gap. This paper may also serve as a class case study for the academia teaching data analytics. © IEOM Society International.",
+    "pdf_url": "",
+    "doi": "10.46254/eu04.20210459",
+    "fields_of_study": [
+      "Medicine"
+    ],
+    "venue": "Proceedings of the International Conference on Industrial Engineering and Operations Management",
+    "citation_count": 0,
+    "bibtex": "@Conference{Dissanayake2021DoPR,\n author = {C. Dissanayake and J. Daniel},\n booktitle = {Proceedings of the International Conference on Industrial Engineering and Operations Management},\n journal = {Proceedings of the International Conference on Industrial Engineering and Operations Management},\n title = {Do Pandemic Related Datasets with High Artificial Control Still Follow the Benford’s Law?},\n year = {2021}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.7565795372124376,
+      "citation_score": 0.0,
+      "recency_score": 0.4489500881162622,
+      "final_score": 0.6501586385815764
+    },
+    "citation_key": "Dissanayake2021DoPR",
+    "is_open_access": false,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "a22e31545e568833d48678457c3155595f4ed11c",
+    "title": "Application of Benford’s law in Data Analysis",
+    "published": "2019-02-01T00:00:00",
+    "authors": [
+      "Feifei Li",
+      "Shuqing Han",
+      "Hongyv Zhang",
+      "Jianwen Ding",
+      "Jianhua Zhang",
+      "Jianzhai Wu"
+    ],
+    "summary": "In the era of big data, data is growing explosively. Data quality control has become a key factor in maximizing data value. It is important and urgent to establish a scientific data quality detection method. Benford’s law has become an effective tool for detection of data quality and identification of anomaly data in various fields. On the basis of expounding the basic principles of Benford’s law, this paper summarizes its application in different levels of natural and social sciences, explores the data conditions of the law and the factors affecting the accuracy of the detection, and proposes the model improvement idea in three aspects of extending detection scope, combination of several methods and strengthening the explanation of detection results. The development of Benford’s Law in the future requires scholars from all fields to study more about its essence, strengthen its integration with other data processing technologies, and then expand its application.",
+    "pdf_url": "https://iopscience.iop.org/article/10.1088/1742-6596/1168/3/032133/pdf",
+    "doi": "10.1088/1742-6596/1168/3/032133",
+    "fields_of_study": [
+      "Physics",
+      "Computer Science"
+    ],
+    "venue": "Journal of Physics: Conference Series",
+    "citation_count": 20,
+    "bibtex": "@Conference{Li2019ApplicationOB,\n author = {Feifei Li and Shuqing Han and Hongyv Zhang and Jianwen Ding and Jianhua Zhang and Jianzhai Wu},\n booktitle = {Journal of Physics: Conference Series},\n journal = {Journal of Physics: Conference Series},\n title = {Application of Benford’s law in Data Analysis},\n volume = {1168},\n year = {2019}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.7559720440375521,
+      "citation_score": 0.48468281430219146,
+      "recency_score": 0.2911253806047797,
+      "final_score": 0.682358454720739
+    },
+    "citation_key": "Li2019ApplicationOB",
+    "is_open_access": true,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "31254860d79f5472d1b0d5d4ad27c1ab689754bc",
+    "title": "Detecting Problems in Survey Data Using Benford’s Law",
+    "published": "2012-04-04T00:00:00",
+    "authors": [
+      "G. Judge",
+      "L. Schechter"
+    ],
+    "summary": null,
+    "pdf_url": "http://www.aae.wisc.edu/lschechter/benford.pdf",
+    "doi": "10.3368/jhr.44.1.1",
+    "fields_of_study": [
+      "Computer Science"
+    ],
+    "venue": "The Journal of human resources",
+    "citation_count": 200,
+    "bibtex": "@Article{Judge2012DetectingPI,\n author = {G. Judge and L. Schechter},\n booktitle = {The Journal of human resources},\n journal = {The Journal of Human Resources},\n pages = {1 - 24},\n title = {Detecting Problems in Survey Data Using Benford’s Law},\n volume = {44},\n year = {2012}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.7547056908940593,
+      "citation_score": 0.7433758586849852,
+      "recency_score": 0.0891675482655264,
+      "final_score": 0.6870188934102985
+    },
+    "citation_key": "Judge2012DetectingPI",
+    "is_open_access": true,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "e993cd171bcb08f002c4299fbaa10373b83fc470",
+    "title": "Detecting Possibly Fraudulent or Error-Prone Survey Data Using Benford's Law",
+    "published": "2003-03-17T00:00:00",
+    "authors": [
+      "D. Swanson",
+      "M. Cho",
+      "J. Eltinge"
+    ],
+    "summary": null,
+    "pdf_url": "",
+    "doi": null,
+    "fields_of_study": [
+      "Computer Science"
+    ],
+    "venue": "",
+    "citation_count": 33,
+    "bibtex": "@Inproceedings{Swanson2003DetectingPF,\n author = {D. Swanson and M. Cho and J. Eltinge},\n title = {Detecting Possibly Fraudulent or Error-Prone Survey Data Using Benford's Law},\n year = {2003}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.7525787404549761,
+      "citation_score": 0.3747791929532198,
+      "recency_score": 0.01857915739807728,
+      "final_score": 0.6413988273991106
+    },
+    "citation_key": "Swanson2003DetectingPF",
+    "is_open_access": false,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "04eeee33373edbe9079d1a172996c768163d72bc",
+    "title": "Forensic Audit Model Based on Benford’s Law and Anomaly Detection Algorithms in Corporate Expense Reports",
+    "published": "2025-05-31T00:00:00",
+    "authors": [
+      "Waras",
+      "Mahir Zeynalov"
+    ],
+    "summary": "Corporate expense reports are often vulnerable to fraudulent practices such as fictitious entries, inflated costs, and data manipulation, which can undermine the reliability of financial statements and damage stakeholder trust. Traditional auditing methods, while essential, face limitations in handling large-scale data and in identifying complex patterns of fraud. This research aims to address these challenges by developing a forensic audit model that integrates Benford’s Law with anomaly detection algorithms to improve the accuracy of fraud detection. The study employed anonymized corporate expense report records containing numerical, categorical, and textual attributes. Data preprocessing involved cleaning, normalization, and feature extraction, followed by applying Benford’s Law to identify abnormal digit distributions. Machine learning algorithms, including Isolation Forest, Local Outlier Factor (LOF), and DBSCAN, were then used to detect anomalies in transaction data. The findings indicate that the hybrid model combining these methods achieved superior results with an accuracy of 93.4% and an F1-score of 90.4%, outperforming standalone approaches and significantly reducing false positives and false negatives. This suggests that integrating statistical and machine learning techniques enhances the reliability and efficiency of forensic auditing in detecting suspicious financial activities. The study concludes that such a hybrid framework provides a more comprehensive fraud detection system, offering practical benefits for corporate internal control and regulatory oversight, as well as theoretical contributions to the advancement of data-driven forensic auditing.",
+    "pdf_url": "",
+    "doi": "10.70062/jiafc.v1i2.208",
+    "fields_of_study": [],
+    "venue": "Journal of Investigative Auditing &amp; Financial Crime",
+    "citation_count": 0,
+    "bibtex": "@Article{Waras2025ForensicAM,\n author = {Waras and Mahir Zeynalov},\n booktitle = {Journal of Investigative Auditing &amp; Financial Crime},\n journal = {Journal of Investigative Auditing &amp; Financial Crime},\n title = {Forensic Audit Model Based on Benford’s Law and Anomaly Detection Algorithms in Corporate Expense Reports},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.748959786346431,
+      "citation_score": 0.1,
+      "recency_score": 0.8714596778171819,
+      "final_score": 0.6963137968588631
+    },
+    "citation_key": "Waras2025ForensicAM",
+    "is_open_access": false,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "6ab775e58bb4edb268bf2a04f60ebf93fb91e8f6",
+    "title": "Benford’s Law as an Instrument for Fraud Detection in Surveys Using the Data of the Socio-Economic Panel (SOEP)",
+    "published": "2010-03-17T00:00:00",
+    "authors": [
+      "Jörg-Peter Schräpler"
+    ],
+    "summary": null,
+    "pdf_url": "http://www.diw.de/documents/publikationen/73/diw_01.c.349061.de/diw_sp0273.pdf",
+    "doi": "10.1515/jbnst-2011-5-609",
+    "fields_of_study": [
+      "Mathematics",
+      "Computer Science"
+    ],
+    "venue": "",
+    "citation_count": 18,
+    "bibtex": "@Article{Schräpler2010BenfordsLA,\n author = {Jörg-Peter Schräpler},\n journal = {Jahrbücher für Nationalökonomie und Statistik},\n pages = {685 - 718},\n title = {Benford’s Law as an Instrument for Fraud Detection in Surveys Using the Data of the Socio-Economic Panel (SOEP)},\n volume = {231},\n year = {2010}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.7443361715597266,
+      "citation_score": 0.35,
+      "recency_score": 0.0625,
+      "final_score": 0.6367189372477814
+    },
+    "citation_key": "Schrapler2010BenfordsLA",
+    "is_open_access": true,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "0715e5a82d551db99bc8a8e3be7dadd620d4fdac",
+    "title": "Unveiling Malicious Network Flows Using Benford’s Law",
+    "published": "2024-07-23T00:00:00",
+    "authors": [
+      "Pedro Fernandes",
+      "S. O. Ciardhuáin",
+      "Mário Antunes"
+    ],
+    "summary": "The increasing proliferation of cyber-attacks threatening the security of computer networks has driven the development of more effective methods for identifying malicious network flows. The inclusion of statistical laws, such as Benford’s Law, and distance functions, applied to the first digits of network flow metadata, such as IP addresses or packet sizes, facilitates the detection of abnormal patterns in the digits. These techniques also allow for quantifying discrepancies between expected and suspicious flows, significantly enhancing the accuracy and speed of threat detection. This paper introduces a novel method for identifying and analyzing anomalies within computer networks. It integrates Benford’s Law into the analysis process and incorporates a range of distance functions, namely the Mean Absolute Deviation (MAD), the Kolmogorov–Smirnov test (KS), and the Kullback–Leibler divergence (KL), which serve as dispersion measures for quantifying the extent of anomalies detected in network flows. Benford’s Law is recognized for its effectiveness in identifying anomalous patterns, especially in detecting irregularities in the first digit of the data. In addition, Bayes’ Theorem was implemented in conjunction with the distance functions to enhance the detection of malicious traffic flows. Bayes’ Theorem provides a probabilistic perspective on whether a traffic flow is malicious or benign. This approach is characterized by its flexibility in incorporating new evidence, allowing the model to adapt to emerging malicious behavior patterns as they arise. Meanwhile, the distance functions offer a quantitative assessment, measuring specific differences between traffic flows, such as frequency, packet size, time between packets, and other relevant metadata. Integrating these techniques has increased the model’s sensitivity in detecting malicious flows, reducing the number of false positives and negatives, and enhancing the resolution and effectiveness of traffic analysis. Furthermore, these techniques expedite decisions regarding the nature of traffic flows based on a solid statistical foundation and provide a better understanding of the characteristics that define these flows, contributing to the comprehension of attack vectors and aiding in preventing future intrusions. The effectiveness and applicability of this joint method have been demonstrated through experiments with the CICIDS2017 public dataset, which was explicitly designed to simulate real scenarios and provide valuable information to security professionals when analyzing computer networks. The proposed methodology opens up new perspectives in investigating and detecting anomalies and intrusions in computer networks, which are often attributed to cyber-attacks. This development culminates in creating a promising model that stands out for its effectiveness and speed, accurately identifying possible intrusions with an F1 of nearly 80%, a recall of 99.42%, and an accuracy of 65.84%.",
+    "pdf_url": "https://www.mdpi.com/2227-7390/12/15/2299/pdf?version=1722417320",
+    "doi": "10.3390/math12152299",
+    "fields_of_study": [],
+    "venue": "Mathematics",
+    "citation_count": 7,
+    "bibtex": "@Article{Fernandes2024UnveilingMN,\n author = {Pedro Fernandes and S. O. Ciardhuáin and Mário Antunes},\n booktitle = {Mathematics},\n journal = {Mathematics},\n title = {Unveiling Malicious Network Flows Using Benford’s Law},\n year = {2024}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.7424522121728442,
+      "citation_score": 0.5356312292358804,
+      "recency_score": 0.751556492324123,
+      "final_score": 0.7226805418942757
+    },
+    "citation_key": "Fernandes2024UnveilingMN",
+    "is_open_access": true,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "31e4b1281eb97aa60a8061e574a53c41cf2c106b",
+    "title": "Uncovering Financial Shenanigans: Benford’s Law as a Computer Assisted Analytical Procedure",
+    "published": "2020-06-04T00:00:00",
+    "authors": [
+      "Nirosh Kuruppu"
+    ],
+    "summary": "PricewaterhouseCoopers (2020) has reported the highest level of economic crime in their comprehensive annual survey of the issue since it launched more than twenty years ago. Two thirds of respondents indicated that the costs of fraud can reach up to a million dollars each, amounting to approximately ten percent of their annual turnover. Inside perpetrators such as employees commit about 37 percent of these frauds. In this context, a technique known as Benford’s Law can be cost-effectively applied to detect financial fraud which can be invaluable to auditors and other financial professionals. Benford’s technique is founded on the mathematical distribution of integers found in nature and has been shown to be particularly efficient and cost-effective in financial fraud detection. The technique can swiftly flag suspicious transactions from lists of numbers that comprise millions of records when employed as a computer assisted auditing procedure. Despite this, Benford’s Law is not widely used in accounting and finance. One of the key reasons for its limited use is because fraud investigators are often incognizant and unfamiliar with the method, and how it can be implemented in a fraud detection workflow. This paper set forth a concise and organised approach for implementing Benford’s technique as an analytical procedure through the well-known IDEA generalised audit software to flag suspicious transactions, which can then be further investigated. Both the application of the method and its interpretation in situations of both compliance and non-compliance is discussed. The methodology proposed in this paper can be an indispensable aid for fraud investigators in view of the considerable costs associated with economic crime.",
+    "pdf_url": "https://doi.org/10.5539/ijbm.v15n7p37",
+    "doi": "10.5539/ijbm.v15n7p37",
+    "fields_of_study": [
+      "Business"
+    ],
+    "venue": "International journal of business management",
+    "citation_count": 1,
+    "bibtex": "@Article{Kuruppu2020UncoveringFS,\n author = {Nirosh Kuruppu},\n booktitle = {International journal of business management},\n journal = {International Journal of Business and Management},\n title = {Uncovering Financial Shenanigans: Benford’s Law as a Computer Assisted Analytical Procedure},\n year = {2020}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.7405217354640946,
+      "citation_score": 0.0,
+      "recency_score": 0.367143199941336,
+      "final_score": 0.6291317083654092
+    },
+    "citation_key": "Kuruppu2020UncoveringFS",
+    "is_open_access": true,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "fb238a90256ae307f771f48f3b4891f276df5d6f",
+    "title": "Detection of Cyber-Attacks of Power Systems Through Benford’s Law",
+    "published": "2021-05-01T00:00:00",
+    "authors": [
+      "F. Milano",
+      "A. Gómez-Expósito"
+    ],
+    "summary": "This letter proposes an application of the Benford’s law for the detection of cyber attacks in power system state estimators. Benford’s law, also known as 1st-digit law, states an unexpected property of the distribution of the first digit of certain sets of data, and has been found to apply to a surprisingly wide range of data domains. The first novel contribution of the letter is to show that the Benford’s law applies to power system data as well. A relevant property of this law is its high sensitivity to manipulations and, in fact, it is often utilized to detect frauds. Based on this feature, the second contribution of the letter is to utilize the Benford’s law to detect malicious data introduced by hackers in the supervisory control and data acquisition (SCADA) system of a transmission network. Tests based on power system models ranging from 9 to 21,177 buses show promising results.",
+    "pdf_url": "",
+    "doi": "10.1109/TSG.2020.3042897",
+    "fields_of_study": [
+      "Computer Science"
+    ],
+    "venue": "IEEE Transactions on Smart Grid",
+    "citation_count": 16,
+    "bibtex": "@Article{Milano2021DetectionOC,\n author = {F. Milano and A. Gómez-Expósito},\n booktitle = {IEEE Transactions on Smart Grid},\n journal = {IEEE Transactions on Smart Grid},\n pages = {2741-2744},\n title = {Detection of Cyber-Attacks of Power Systems Through Benford’s Law},\n volume = {12},\n year = {2021}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.7364954675599955,
+      "citation_score": 0.5080372182561964,
+      "recency_score": 0.42957202145662393,
+      "final_score": 0.6829572980192784
+    },
+    "citation_key": "Milano2021DetectionOC",
+    "is_open_access": false,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "8846fc8963a210ec79d5ebb23330f4df9141a6b1",
+    "title": "Anomaly Detection in Financial Data: Comparative Analysis of Statistical Methods and Machine Learning in Simulation Studies",
+    "published": "2026-01-31T00:00:00",
+    "authors": [
+      "P. Sihombing"
+    ],
+    "summary": "The increasing prevalence of financial fraud in the digital era demands the development of reliable and efficient detection methods. This study aims to conduct a systematic comparative analysis of the effectiveness and consistency of seven anomaly detection methods on simulated transactional financial data. The methods tested cover a broad spectrum, ranging from Benford's Law, robust statistical methods (based on MAD), supervised machine learning (Logistic Regression and Random Forest), to unsupervised machine learning (K-Means Clustering and Isolation Forest). Using a simulation study based on R software, a dataset with 20,000 transactions was generated, 5% of which were manipulated as fraud with clear scenarios. The analysis results show that almost all methods successfully detected anomalies with a high success rate. Supervised models, such as Binary Logistic Regression, showed near-perfect performance, while unsupervised methods such as K-Means and Robust Distance (MAD) also showed recall rates above 95%. Although all methods performed well, there were differences in the trade-off between recall and false positives, underscoring the importance of choosing a method that suits business objectives. This study concludes that a layered approach that combines statistical screening with advanced machine learning models is the most comprehensive approach to fraud mitigation",
+    "pdf_url": "",
+    "doi": "10.35897/hasina.v3i1.2340",
+    "fields_of_study": [],
+    "venue": "Hasina: Jurnal Akuntansi dan Bisnis Syariah",
+    "citation_count": 0,
+    "bibtex": "@Article{Sihombing2026AnomalyDI,\n author = {P. Sihombing},\n booktitle = {Hasina: Jurnal Akuntansi dan Bisnis Syariah},\n journal = {Hasina: Jurnal Akuntansi dan Bisnis Syariah},\n title = {Anomaly Detection in Financial Data: Comparative Analysis of Statistical Methods and Machine Learning in Simulation Studies},\n year = {2026}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.7324154830529949,
+      "citation_score": 0.1,
+      "recency_score": 0.9788767849113973,
+      "final_score": 0.6938200649335357
+    },
+    "citation_key": "Sihombing2026AnomalyDI",
+    "is_open_access": false,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "5be6ac0f1b238728a29ccbf2d3de2ba515f4ca84",
+    "title": "Application Research of Benford’s Law in Testing Agrometeorological Data",
+    "published": "2019-09-05T00:00:00",
+    "authors": [
+      "Lang Qin",
+      "Shuqing Han",
+      "Liwei Xing",
+      "Jianhua Zhang",
+      "Jing Zhang",
+      "Ruyi Yang",
+      "Jianzhai Wu"
+    ],
+    "summary": "Benford’s law is an effective tool to test the quality of data sets. In order to strengthen the research on the quality evaluation of agrometeorological data, this paper empirically analyzed the precipitation data sets of China from 1951 to 2015 from the time, space and time staggered dimensions. It was found that the overall and local quality of precipitation data sets in China was high. Further improvement and expansion of Benford’s law’s application in the future can help to detect and control the quality of agricultural data efficiently and improve the utilization rate of agricultural data.",
+    "pdf_url": "https://doi.org/10.1088/1755-1315/310/5/052030",
+    "doi": "10.1088/1755-1315/310/5/052030",
+    "fields_of_study": [
+      "Physics",
+      "Computer Science"
+    ],
+    "venue": "IOP Conference Series: Earth and Environment",
+    "citation_count": 3,
+    "bibtex": "@Conference{Qin2019ApplicationRO,\n author = {Lang Qin and Shuqing Han and Liwei Xing and Jianhua Zhang and Jing Zhang and Ruyi Yang and Jianzhai Wu},\n booktitle = {IOP Conference Series: Earth and Environment},\n journal = {IOP Conference Series: Earth and Environmental Science},\n title = {Application Research of Benford’s Law in Testing Agrometeorological Data},\n volume = {310},\n year = {2019}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.7322162211110894,
+      "citation_score": 0.08377358490566039,
+      "recency_score": 0.32254144753703134,
+      "final_score": 0.6264044801331408
+    },
+    "citation_key": "Qin2019ApplicationRO",
+    "is_open_access": true,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "f2753b1331902b70e46fe811bd3b93cb8bc17f67",
+    "title": "Analysis of Benford’s Law for No-Reference Quality Assessment of Natural, Screen-Content, and Synthetic Images",
+    "published": "2021-09-29T00:00:00",
+    "authors": [
+      "D. Varga"
+    ],
+    "summary": "With the tremendous growth and usage of digital images, no-reference image quality assessment is becoming increasingly important. This paper presents in-depth analysis of Benford’s law inspired first digit distribution feature vectors for no-reference quality assessment of natural, screen-content, and synthetic images in various viewpoints. Benford’s law makes a prediction for the probability distribution of first digits in natural datasets. It has been applied among others for detecting fraudulent income tax returns, detecting scientific fraud, election forensics, and image forensics. In particular, our analysis is based on first digit distributions in multiple domains (wavelet coefficients, DCT coefficients, singular values, etc.) as feature vectors and the extracted features are mapped onto image quality scores. Extensive experiments have been carried out on seven large image quality benchmark databases. It has been demonstrated that first digit distributions are quality-aware features, and it is possible to reach or outperform the state-of-the-art with them.",
+    "pdf_url": "https://www.mdpi.com/2079-9292/10/19/2378/pdf?version=1632898568",
+    "doi": "10.3390/electronics10192378",
+    "fields_of_study": [
+      "Computer Science"
+    ],
+    "venue": "Electronics",
+    "citation_count": 14,
+    "bibtex": "@Article{Varga2021AnalysisOB,\n author = {D. Varga},\n booktitle = {Electronics},\n journal = {Electronics},\n title = {Analysis of Benford’s Law for No-Reference Quality Assessment of Natural, Screen-Content, and Synthetic Images},\n year = {2021}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.7221043308619834,
+      "citation_score": 0.5039176161262051,
+      "recency_score": 0.4614754496962949,
+      "final_score": 0.6742227712718367
+    },
+    "citation_key": "Varga2021AnalysisOB",
+    "is_open_access": true,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "9628bf01b8091c6fc091570c504f09222b2770e1",
+    "title": "On the use of Benford's law to detect GAN-generated images",
+    "published": "2020-04-16T00:00:00",
+    "authors": [
+      "Nicolò Bonettini",
+      "Paolo Bestagini",
+      "S. Milani",
+      "S. Tubaro"
+    ],
+    "summary": "The advent of Generative Adversarial Network (GAN) architectures has given anyone the ability of generating incredibly realistic synthetic imagery. The malicious diffusion of GAN-generated images may lead to serious social and political consequences (e.g., fake news spreading, opinion formation, etc.). It is therefore important to regulate the widespread distribution of synthetic imagery by developing solutions able to detect them. In this paper, we study the possibility of using Benford's law to discriminate GAN-generated images from natural photographs. Benford's law describes the distribution of the most significant digit for quantized Discrete Cosine Transform (DCT) coefficients. Extending and generalizing this property, we show that it is possible to extract a compact feature vector from an image. This feature vector can be fed to an extremely simple classifier for GAN-generated image detection purpose.",
+    "pdf_url": "https://arxiv.org/pdf/2004.07682",
+    "doi": "10.1109/ICPR48806.2021.9412944",
+    "fields_of_study": [
+      "Computer Science",
+      "Engineering"
+    ],
+    "venue": "International Conference on Pattern Recognition",
+    "citation_count": 46,
+    "bibtex": "@Article{Bonettini2020OnTU,\n author = {Nicolò Bonettini and Paolo Bestagini and S. Milani and S. Tubaro},\n booktitle = {International Conference on Pattern Recognition},\n journal = {2020 25th International Conference on Pattern Recognition (ICPR)},\n pages = {5495-5502},\n title = {On the use of Benford's law to detect GAN-generated images},\n year = {2020}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.7214954862061109,
+      "citation_score": 0.636424935545713,
+      "recency_score": 0.3587065793186743,
+      "final_score": 0.6767095404513275
+    },
+    "citation_key": "Bonettini2020OnTU",
+    "is_open_access": true,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "21d1d1657eb42ec5e6913a10b6a6c28ee023c9af",
+    "title": "Social networks bot detection using Benford’s law",
+    "published": "2020-11-04T00:00:00",
+    "authors": [
+      "M. Kalameyets",
+      "D. Levshun",
+      "S. Soloviev",
+      "A. Chechulin",
+      "Igor Kotenko"
+    ],
+    "summary": "The paper considers the task of bot detection in social networks. It checks the hypothesis that bots break Benford’s law much more often than users, so one can identify them. A bot detection approach is proposed based on experiments where the test results for bot datasets of different classes and real-user datasets of different communities are evaluated and compared. The experiments show that automatically controlled bots possibly can be identified by disagreement with Benford’s law, while human-orchestrated bots are not.",
+    "pdf_url": "",
+    "doi": "10.1145/3433174.3433589",
+    "fields_of_study": [
+      "Computer Science"
+    ],
+    "venue": "International Conference on Security of Information and Networks",
+    "citation_count": 3,
+    "bibtex": "@Article{Kalameyets2020SocialNB,\n author = {M. Kalameyets and D. Levshun and S. Soloviev and A. Chechulin and Igor Kotenko},\n booktitle = {International Conference on Security of Information and Networks},\n journal = {13th International Conference on Security of Information and Networks},\n title = {Social networks bot detection using Benford’s law},\n year = {2020}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.7209793683244151,
+      "citation_score": 0.3047473200612557,
+      "recency_score": 0.3947845886523124,
+      "final_score": 0.646736685530889
+    },
+    "citation_key": "Kalameyets2020SocialNB",
+    "is_open_access": false,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "373ba9ab923380776c60921f0ce7a5d699c29c43",
+    "title": "Application of the Benford’s law to Social bots and Information Operations activities",
+    "published": "2020-06-01T00:00:00",
+    "authors": [
+      "Lale M adahali",
+      "M. Hall"
+    ],
+    "summary": "Benford’s law shows the pattern of behavior in normal systems. It states that in natural systems digits’ frequency have a certain pattern such that the occurrence of first digits in numbers are unevenly distributed. In systems with natural behavior, numbers begin with a “1” are more common than numbers beginning with “9”. It implies that if the distribution of first digits deviate from the expected distribution, it is indicative of fraud. It has many applications in forensic accounting, stock markets, finding abnormal data in survey data, and natural science. We investigate whether social media bots and Information Operations activities are conformant to the Benford’s law. Our results showed that bots’ behavior adhere to Benford’s law, suggesting that using this law helps in detecting malicious online automated accounts and their activities on social media. However, activities related to Information Operations did not show consistency in regards to Benford’s law. Our findings shedlight on the importance of examining regular and anomalous online behavior to avoid malicious and contaminated content on social media.",
+    "pdf_url": "",
+    "doi": "10.1109/CyberSA49311.2020.9139709",
+    "fields_of_study": [
+      "Computer Science"
+    ],
+    "venue": "International Conference on Cyber Situational Awareness",
+    "citation_count": 15,
+    "bibtex": "@Article{adahali2020ApplicationOT,\n author = {Lale M adahali and M. Hall},\n booktitle = {International Conference on Cyber Situational Awareness},\n journal = {2020 International Conference on Cyber Situational Awareness, Data Analytics and Assessment (CyberSA)},\n pages = {1-8},\n title = {Application of the Benford’s law to Social bots and Information Operations activities},\n year = {2020}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.7201307769657176,
+      "citation_score": 0.46723404255319145,
+      "recency_score": 0.36662101666405134,
+      "final_score": 0.6594901274942985
+    },
+    "citation_key": "adahali2020ApplicationOT",
+    "is_open_access": false,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "7849c75acd84deaa90ce678d6edf03de716fe007",
+    "title": "On the Use of Benford’s Law to Detect JPEG Biometric Data Tampering",
+    "published": "2017-07-06T00:00:00",
+    "authors": [
+      "Iorliam Aamo",
+      "S. Caleb"
+    ],
+    "summary": "Tampering of biometric data has attracted a great deal of attention recently. Furthermore, there could be an intentional or accidental use of a particular biometric sample instead of another for a particular application. Therefore, there exists a need to propose a method to detect data tampering, as well as differentiate biometric samples in cases of intentional or accidental use for a different application. In this paper, fingerprint image tampering is studied. Furthermore, optically acquired fingerprints, synthetically generated fingerprints and contact-less acquired fingerprints are studied for separation purposes using the Benford’s law divergence metric. Benford’s law has shown in literature to be very effective in detecting tampering of natural images. In this paper, the Benford’s law features with support vector machine are proposed for the detection of malicious tampering of JPEG fingerprint images. This method is aimed at protecting against insider attackers and hackers. This proposed method detected tampering effectively, with Equal Error Rate (EER) of 2.08%. Again, the experimental results illustrate that, optically acquired fingerprints, synthetically generated fingerprints and contact-less acquired fingerprints can be separated by the proposed method effectively.",
+    "pdf_url": "http://www.scirp.org/journal/PaperDownload.aspx?paperID=77757",
+    "doi": "10.4236/JIS.2017.83016",
+    "fields_of_study": [
+      "Computer Science"
+    ],
+    "venue": "",
+    "citation_count": 6,
+    "bibtex": "@Article{Aamo2017OnTU,\n author = {Iorliam Aamo and S. Caleb},\n journal = {Journal of Information Security},\n pages = {240-256},\n title = {On the Use of Benford’s Law to Detect JPEG Biometric Data Tampering},\n volume = {08},\n year = {2017}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.7199552745355519,
+      "citation_score": 0.31520151133501256,
+      "recency_score": 0.22161792424627494,
+      "final_score": 0.6296461631865702
+    },
+    "citation_key": "Aamo2017OnTU",
+    "is_open_access": true,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "797df71e26e0014bffea3c6ed50fb4922a979617",
+    "title": "Investigation of Benford’s Law with YouTube Social Media Statistics",
+    "published": "2021-11-02T00:00:00",
+    "authors": [
+      "Chi-Wei Chen",
+      "Shaoquan Yu",
+      "Hsin-Yi Chen"
+    ],
+    "summary": "In this study, we used social media data to investigate Benford’s Law. In our experimental analysis, we used three control variables: Total Subscriptions, Total Views, and Video Uploads of Youtube channels to verify if the data is artificial and whether or not it fits Benford’s Law. We noticed how Total Subscriptions does not fit Benford’s Law for the top 5000 most-subscribed channels, and Total Views doesn’t fit for the top 5000 most-viewed channels. The reasons that cause this difference are further investigated in this paper. We also proposed a mathematical model to verify if other datasets fit Benford’s Law. After curve fitting the experimental data, results revealed that closer a and b values in our mathematical model indicate that a dataset fits Benford’s Law.",
+    "pdf_url": "https://doi.org/10.47611/jsrhs.v10i3.1677",
+    "doi": "10.47611/jsrhs.v10i3.1677",
+    "fields_of_study": [],
+    "venue": "Journal of student-scientists' research",
+    "citation_count": 0,
+    "bibtex": "@Article{Chen2021InvestigationOB,\n author = {Chi-Wei Chen and Shaoquan Yu and Hsin-Yi Chen},\n booktitle = {Journal of student-scientists' research},\n journal = {Journal of Student Research},\n title = {Investigation of Benford’s Law with YouTube Social Media Statistics},\n year = {2021}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.7183822762667237,
+      "citation_score": 0.0,
+      "recency_score": 0.4689797502046668,
+      "final_score": 0.6216037960338456
+    },
+    "citation_key": "Chen2021InvestigationOB",
+    "is_open_access": true,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "fc62337fa0a4730eb667b12823b021cc76868796",
+    "title": "Audio Transformer for Synthetic Speech Detection via Benford's Law Distribution Analysis",
+    "published": "2024-06-10T00:00:00",
+    "authors": [
+      "Anitha Bhat Talagini Ashoka",
+      "L. Cuccovillo",
+      "P. Aichroth"
+    ],
+    "summary": "This paper introduces a novel approach that enhances synthetic speech detection by applying Benford’s law analysis to the encoder embeddings. By leveraging Benford’s Law as supplementary information alongside the existing embeddings, the model gains a detailed understanding of both content-related features and numerical distribution patterns. Our approach demonstrates superior performance on the ASVspoof 2019 LA dataset, achieving an AUC score of 0.921, while providing enhanced interpretability.",
+    "pdf_url": "",
+    "doi": "10.1145/3643491.3660288",
+    "fields_of_study": [
+      "Computer Science"
+    ],
+    "venue": "MAD@ICMR",
+    "citation_count": 1,
+    "bibtex": "@Article{Ashoka2024AudioTF,\n author = {Anitha Bhat Talagini Ashoka and L. Cuccovillo and P. Aichroth},\n booktitle = {MAD@ICMR},\n journal = {Proceedings of the 3rd ACM International Workshop on Multimedia AI against Disinformation},\n title = {Audio Transformer for Synthetic Speech Detection via Benford's Law Distribution Analysis},\n year = {2024}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.7136888542137224,
+      "citation_score": 0.30530232558139536,
+      "recency_score": 0.7363795976267511,
+      "final_score": 0.6751192756917926
+    },
+    "citation_key": "Ashoka2024AudioTF",
+    "is_open_access": false,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "455b97a2b9bdbead9d4ad077abd29a0e2ce98fe6",
+    "title": "On (Newcomb-)Benford's law: a tale of two papers and of their disproportionate citations. How citation counts can become biased",
+    "published": "2025-12-26T00:00:00",
+    "authors": [
+      "Tariq Ahmad Mir",
+      "M. Ausloos"
+    ],
+    "summary": "The first digit (FD) phenomenon i.e., the significant digits of numbers in large data are often distributed according to a logarithmically decreasing function was first reported by S. Newcomb and then many decades later independently by F. Benford. After its century long neglect the last three decades have seen huge growth in the number of relevant publications. However, notwithstanding the rising popularity the two independent proponents of the phenomenon are not equally acknowledged an indication of which is disproportionate number of citations accumulated by Newcomb (1881) and Benford (1938). In the present study we use citation analysis to show that the formalization of the eponym Benford's law, a name questionable itself for overlooking Newcomb's contribution, by Raimi (1976) had a strong adverse effect on the future citations of Newcomb (1881). Furthermore, we identify the papers published over various decades of the developmental history of the FD phenomenon, which latter turned out to be amongst the most cited ones in the field. We find that lack of its consideration, intentional or occasionally out of ignorance for referencing by the prominent papers, is responsible for a far lesser number of citations of Newcomb (1881) in comparison to Benford (1938).",
+    "pdf_url": "",
+    "doi": "10.48550/arXiv.2601.02395",
+    "fields_of_study": [
+      "Physics",
+      "Computer Science"
+    ],
+    "venue": "arXiv.org",
+    "citation_count": 0,
+    "bibtex": "@Article{Mir2025OnL,\n author = {Tariq Ahmad Mir and M. Ausloos},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {On (Newcomb-)Benford's law: a tale of two papers and of their disproportionate citations. How citation counts can become biased},\n volume = {abs/2601.02395},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.712853038290211,
+      "citation_score": 0.1,
+      "recency_score": 0.9622999250882385,
+      "final_score": 0.6765124231409927
+    },
+    "citation_key": "Mir2025OnL",
+    "is_open_access": false,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "22621cd540b910561980118802bb23940d74b224",
+    "title": "Benford's Law: Theory and Applications",
+    "published": "2015-01-31T00:00:00",
+    "authors": [
+      "Steven J. Miller"
+    ],
+    "summary": null,
+    "pdf_url": "",
+    "doi": "10.1515/9781400866595",
+    "fields_of_study": [
+      "Computer Science",
+      "Psychology"
+    ],
+    "venue": "",
+    "citation_count": 87,
+    "bibtex": "@Inproceedings{Miller2015BenfordsLT,\n author = {Steven J. Miller},\n title = {Benford's Law: Theory and Applications},\n year = {2015}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.7062823453477947,
+      "citation_score": 0.6377430470095988,
+      "recency_score": 0.14549364688154148,
+      "final_score": 0.6433495456673498
+    },
+    "citation_key": "Miller2015BenfordsLT",
+    "is_open_access": false,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "10967192ed1afc7fb722d75e8bf279d1e3c32eb0",
+    "title": "Does Human Speech Follow Benford’s Law?",
+    "published": "2022-03-24T00:00:00",
+    "authors": [
+      "Leo Hsu",
+      "Visar Berisha"
+    ],
+    "summary": "Researchers have observed that the frequencies of leading digits in many man-made and naturally occurring datasets follow a logarithmic curve, with digits that start with the number 1 accounting for ~ 30% of all numbers in the dataset and digits that start with the number 9 accounting for ~ 5% of all numbers in the dataset. This phenomenon, known as Benford’s Law, is highly repeatable and appears in lists of numbers from electricity bills, stock prices, tax returns, house prices, death rates, lengths of rivers, and naturally occurring images. In this paper we demonstrate that human speech spectra also follow Benford’s Law, on average. That is, when averaged over many speakers, the frequencies of leading digits in speech magnitude spectra follow this distribution, although with some variability at the individual sample level. We use this observation to motivate a new set of features that can be efficiently extracted from speech and demonstrate that these features can be used to classify between human speech and synthetic speech.",
+    "pdf_url": "http://arxiv.org/pdf/2203.13352",
+    "doi": "10.1109/ICASSP49357.2023.10094603",
+    "fields_of_study": [
+      "Computer Science"
+    ],
+    "venue": "IEEE International Conference on Acoustics, Speech, and Signal Processing",
+    "citation_count": 3,
+    "bibtex": "@Article{Hsu2022DoesHS,\n author = {Leo Hsu and Visar Berisha},\n booktitle = {IEEE International Conference on Acoustics, Speech, and Signal Processing},\n journal = {ICASSP 2023 - 2023 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)},\n pages = {1-5},\n title = {Does Human Speech Follow Benford’s Law?},\n year = {2022}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.7052782430886847,
+      "citation_score": 0.3202888583218707,
+      "recency_score": 0.5016632772308148,
+      "final_score": 0.6464178080262164
+    },
+    "citation_key": "Hsu2022DoesHS",
+    "is_open_access": true,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "5cbf152f3e7caadeb2637ca33b2154f197768a0b",
+    "title": "Benford's Law in Basic RNN and Long Short‐Term Memory and Their Associations",
+    "published": "2025-07-29T00:00:00",
+    "authors": [
+      "Farshad Ghassemi Toosi"
+    ],
+    "summary": "Benford's Law describes the distribution of numerical patterns, specifically focusing on the frequency of the leading digit in a set of natural numbers. It divides these numbers into nine groups based on their first digit, with the largest category comprising numbers beginning with 1, followed by those starting with 2, and so on. Each neuron within a neural network (NN) is associated with a numerical value called a weight, which is updated according to specific functions. This research examines the Degree of Benford's Law Existence (DBLE) across two language model methodologies: (1) recurrent neural networks (RNNs) and (2) long short‐term memory (LSTM). Additionally, this study investigates whether models with higher performance exhibit a stronger presence of DBLE. Two neural network language models, namely: (1) simple RNN and (2) LSTM, were selected as the subject models for the experiment. Each model is tested with five different optimizers and four different datasets (textual corpora selected from Wikipedia). This results in a total of 20 different configurations for each model. The neuron weights for each configuration were extracted at each epoch, and the following metrics were measured at each epoch: (1) DBLE, (2) training set accuracy, (3) training set error, (4) test set accuracy, and (5) test set error. The results show that the weights in both models, across all optimizers, follow Benford's Law. Additionally, the findings indicate a strong correlation between DBLE and the performance on the training set in both language models. This means that models with higher performance on the training set exhibit a stronger correlation of DBLE.",
+    "pdf_url": "",
+    "doi": "10.1002/ail2.70002",
+    "fields_of_study": [],
+    "venue": "Applied AI Letters",
+    "citation_count": 0,
+    "bibtex": "@Article{Toosi2025BenfordsLI,\n author = {Farshad Ghassemi Toosi},\n booktitle = {Applied AI Letters},\n journal = {Applied AI Letters},\n title = {Benford's Law in Basic RNN and Long Short‐Term Memory and Their Associations},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.7026996658924263,
+      "citation_score": 0.1,
+      "recency_score": 0.8961978167632884,
+      "final_score": 0.6617795143902698
+    },
+    "citation_key": "Toosi2025BenfordsLI",
+    "is_open_access": false,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "fe2c6a398f210b9d045d222af4a1c13ebba9137f",
+    "title": "Autonomous learning behaviors in an online coding community: A comparison between project viewing/playing and code remixing in Scratch using Benford’s law",
+    "published": "2025-01-02T00:00:00",
+    "authors": [
+      "Ray Y. Shen"
+    ],
+    "summary": "Previous studies of code-learning behaviors have been conducted in structured educational settings, utilizing student engagement metrics such as homework submission, task completion, and interactions with instructors. These types of metrics, however, are absent in open online coding platforms. To characterize autonomous code-learning behaviors in an online community, this work applied Benford’s law to analyze user engagement metrics of trending projects on Scratch, the world’s largest online coding platform for young learners. Statistical analysis revealed that the extent of conformity to Benford’s law is independent of the project categories. Of all four user engagement metrics, the views metric exhibited the strongest conformity to Benford’s law, while the remixes metric–the metric most closely associated with code-learning behaviors–showed the greatest deviation from Benford’s law. This was confirmed by Pearson’s χ² test, Nigrini’s (2012) mean absolute deviation test, and an evaluation of the mantissas of the user engagement metrics. This study demonstrates that the extent of conformity to Benford’s law can be used as novel features for characterizing autonomous code-learning behaviors in unsupervised online settings. The results of this work pave the way for future studies to correlate the extent of conformity to Benford’s law with specific elements of code that attract autonomous learning, providing opportunities to optimize the content and design of online coding platforms.",
+    "pdf_url": "https://zenodo.org/records/13932005/files/JDET-29256-2024-R2.pdf",
+    "doi": "10.30935/jdet/15808",
+    "fields_of_study": [],
+    "venue": "Journal of Digital Educational Technology",
+    "citation_count": 0,
+    "bibtex": "@Article{Shen2025AutonomousLB,\n author = {Ray Y. Shen},\n booktitle = {Journal of Digital Educational Technology},\n journal = {Journal of Digital Educational Technology},\n title = {Autonomous learning behaviors in an online coding community: A comparison between project viewing/playing and code remixing in Scratch using Benford’s law},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.698960699043958,
+      "citation_score": 0.1,
+      "recency_score": 0.8119826893843225,
+      "final_score": 0.6503668281735987
+    },
+    "citation_key": "Shen2025AutonomousLB",
+    "is_open_access": true,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "f700dd53e14bb5408d3867932f21e72baffac7a2",
+    "title": "Generalized Benford's Law for Blind Detection of Morphed Face Images",
+    "published": "2018-06-14T00:00:00",
+    "authors": [
+      "A. Makrushin",
+      "Christian Krätzer",
+      "T. Neubert",
+      "J. Dittmann"
+    ],
+    "summary": "A morphed face image in a photo ID is a serious threat to image-based user verification enabling that multiple persons could be matched with the same document. The application of machine-readable travel documents (MRTD) at automated border control (ABC) gates is an example of a verification scenario that is very sensitive to this kind of fraud. Detection of morphed face images prior to face matching is, therefore, indispensable for effective border security. We introduce the face morphing detection approach based on fitting a logarithmic curve to nine Benford features extracted from quantized DCT coefficients of JPEG compressed original and morphed face images. We separately study the parameters of the logarithmic curve in face and background regions to establish the traces imposed by the morphing process. The evaluation results show that a single parameter of the logarithmic curve may be sufficient to clearly separate morphed and original images.",
+    "pdf_url": "",
+    "doi": "10.1145/3206004.3206018",
+    "fields_of_study": [
+      "Computer Science"
+    ],
+    "venue": "Information Hiding and Multimedia Security Workshop",
+    "citation_count": 24,
+    "bibtex": "@Article{Makrushin2018GeneralizedBL,\n author = {A. Makrushin and Christian Krätzer and T. Neubert and J. Dittmann},\n booktitle = {Information Hiding and Multimedia Security Workshop},\n journal = {Proceedings of the 6th ACM Workshop on Information Hiding and Multimedia Security},\n title = {Generalized Benford's Law for Blind Detection of Morphed Face Images},\n year = {2018}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.6933779486876124,
+      "citation_score": 0.502692753769351,
+      "recency_score": 0.2607821773763326,
+      "final_score": 0.6310498520646584
+    },
+    "citation_key": "Makrushin2018GeneralizedBL",
+    "is_open_access": false,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "9e354b146c148eecd8c2b9ca6aaab350c5e20b68",
+    "title": "Properties of the ENCE and other MAD-based calibration metrics",
+    "published": "2023-05-17T00:00:00",
+    "authors": [
+      "P. Pernot"
+    ],
+    "summary": "The Expected Normalized Calibration Error (ENCE) is a popular calibration statistic used in Machine Learning to assess the quality of prediction uncertainties for regression problems. Estimation of the ENCE is based on the binning of calibration data. In this short note, I illustrate an annoying property of the ENCE, i.e. its proportionality to the square root of the number of bins for well calibrated or nearly calibrated datasets. A similar behavior affects the calibration error based on the variance of z-scores (ZVE), and in both cases this property is a consequence of the use of a Mean Absolute Deviation (MAD) statistic to estimate calibration errors. Hence, the question arises of which number of bins to choose for a reliable estimation of calibration error statistics. A solution is proposed to infer ENCE and ZVE values that do not depend on the number of bins for datasets assumed to be calibrated, providing simultaneously a statistical calibration test. It is also shown that the ZVE is less sensitive than the ENCE to outstanding errors or uncertainties.",
+    "pdf_url": "http://arxiv.org/pdf/2305.11905",
+    "doi": "10.48550/arXiv.2305.11905",
+    "fields_of_study": [
+      "Computer Science",
+      "Physics",
+      "Mathematics"
+    ],
+    "venue": "arXiv.org",
+    "citation_count": 8,
+    "bibtex": "@Article{Pernot2023PropertiesOT,\n author = {P. Pernot},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Properties of the ENCE and other MAD-based calibration metrics},\n volume = {abs/2305.11905},\n year = {2023}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.6802216732034501,
+      "citation_score": 0.48585507246376813,
+      "recency_score": 0.6119904769866619,
+      "final_score": 0.6539618935078031
+    },
+    "citation_key": "Pernot2023PropertiesOT",
+    "is_open_access": true,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "2962787495bc378f1a246bd44c3b1a360b625bb8",
+    "title": "Leveraging Benford’s Law for Effective Intrusion Detection in MQTT-IoT Networks",
+    "published": "2025-01-06T00:00:00",
+    "authors": [
+      "Munmun Swain",
+      "Charugundla Lakshmi Nishitha",
+      "Meghana Maganti",
+      "Kamalakanta Sethi",
+      "Nikhil Tripathi"
+    ],
+    "summary": "Heterogeneous smart devices communicate through different messaging protocols in IoT networks. Among them, Message Queuing Telemetry Transport (MQTT) is a widely used communication protocol due to its lightweight and publish-subscribe architecture. However, these features make it more vulnerable to various types of cyber-attacks. Therefore, effective intrusion detection systems must be designed to detect these threats in the IoT environment. Due to its limited memory and computational power, existing IDS models require significant modifications to work efficiently. To overcome these challenges, we proposed a lightweight IDS, specifically designed for resource-constrained devices. Our proposed IDS utilizes Benford’s Law and linear regression on MQTT network flows. Our extensive experiments conducted by using the MQTT-IoT-IDS2020 dataset have demonstrated promising results. The dataset supports analysis of both bidirectional and unidirectional MQTT network flows. It allows validation of our IDS model under different network conditions and attack scenarios. This approach effectively meets the unique demands of IoT networks and offers a practical and efficient solution for detecting malicious activities within these environments.",
+    "pdf_url": "",
+    "doi": "10.1109/COMSNETS63942.2025.10885615",
+    "fields_of_study": [
+      "Computer Science"
+    ],
+    "venue": "International Conference on Communication Systems and Networks",
+    "citation_count": 1,
+    "bibtex": "@Article{Swain2025LeveragingBL,\n author = {Munmun Swain and Charugundla Lakshmi Nishitha and Meghana Maganti and Kamalakanta Sethi and Nikhil Tripathi},\n booktitle = {International Conference on Communication Systems and Networks},\n journal = {2025 17th International Conference on COMmunication Systems and NETworks (COMSNETS)},\n pages = {348-355},\n title = {Leveraging Benford’s Law for Effective Intrusion Detection in MQTT-IoT Networks},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.6736103962600004,
+      "citation_score": 0.3271724137931034,
+      "recency_score": 0.8135250792387425,
+      "final_score": 0.6529580663111849
+    },
+    "citation_key": "Swain2025LeveragingBL",
+    "is_open_access": false,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "6a3ca23d87b7864b02616f6ce13c7cc976e4c6d6",
+    "title": "Exploiting Benford's Law for Weight Regularization of Deep Neural Networks",
+    "published": "2025-03-17T00:00:00",
+    "authors": [
+      "Julius Ott",
+      "Huawei Sun",
+      "Enrico Rinaldi",
+      "Gianfranco Mauro",
+      "Lorenzo Servadei",
+      "Robert Wille"
+    ],
+    "summary": null,
+    "pdf_url": "",
+    "doi": null,
+    "fields_of_study": [
+      "Computer Science"
+    ],
+    "venue": "Trans. Mach. Learn. Res.",
+    "citation_count": 1,
+    "bibtex": "@Article{Ott2025ExploitingBL,\n author = {Julius Ott and Huawei Sun and Enrico Rinaldi and Gianfranco Mauro and Lorenzo Servadei and Robert Wille},\n booktitle = {Trans. Mach. Learn. Res.},\n journal = {Trans. Mach. Learn. Res.},\n title = {Exploiting Benford's Law for Weight Regularization of Deep Neural Networks},\n volume = {2025},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.6734756448425652,
+      "citation_score": 0.34005479452054793,
+      "recency_score": 0.8409961585026996,
+      "final_score": 0.6568856111763769
+    },
+    "citation_key": "Ott2025ExploitingBL",
+    "is_open_access": false,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "ee4fd65bc75fdd254a68f4bed4e605d40356f793",
+    "title": "Ensemble Threshold Calibration for Stable Sensitivity Control",
+    "published": "2025-10-02T00:00:00",
+    "authors": [
+      "John N. Daras"
+    ],
+    "summary": "Precise recall control is critical in large-scale spatial conflation and entity-matching tasks, where missing even a few true matches can break downstream analytics, while excessive manual review inflates cost. Classical confidence-interval cuts such as Clopper-Pearson or Wilson provide lower bounds on recall, but they routinely overshoot the target by several percentage points and exhibit high run-to-run variance under skewed score distributions. We present an end-to-end framework that achieves exact recall with sub-percent variance over tens of millions of geometry pairs, while remaining TPU-friendly. Our pipeline starts with an equigrid bounding-box filter and compressed sparse row (CSR) candidate representation, reducing pair enumeration by two orders of magnitude. A deterministic xxHash bootstrap sample trains a lightweight neural ranker; its scores are propagated to all remaining pairs via a single forward pass and used to construct a reproducible, score-decile-stratified calibration set. Four complementary threshold estimators - Clopper-Pearson, Jeffreys, Wilson, and an exact quantile - are aggregated via inverse-variance weighting, then fused across nine independent subsamples. This ensemble reduces threshold variance compared to any single method. Evaluated on two real cadastral datasets (approximately 6.31M and 67.34M pairs), our approach consistently hits a recall target within a small error, decreases redundant verifications relative to other calibrations, and runs end-to-end on a single TPU v3 core.",
+    "pdf_url": "https://arxiv.org/pdf/2510.02116v1",
+    "doi": "10.48550/arXiv.2510.02116",
+    "fields_of_study": [
+      "Computer Science",
+      "Mathematics"
+    ],
+    "venue": "arXiv.org",
+    "citation_count": 0,
+    "bibtex": "@Article{Daras2025EnsembleTC,\n author = {John N. Daras},\n booktitle = {arXiv.org},\n journal = {ArXiv},\n title = {Ensemble Threshold Calibration for Stable Sensitivity Control},\n volume = {abs/2510.02116},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.6728738089204945,
+      "citation_score": 0.1,
+      "recency_score": 0.9242654708533395,
+      "final_score": 0.6407255942217296
+    },
+    "citation_key": "Daras2025EnsembleTC",
+    "is_open_access": true,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "9f7abc7b76977506e309a60208c7fa0c15639a0c",
+    "title": "The Impact of BABA: Mean Absolute Deviation (MAD) Tool: Beyond Spreadsheet Simple Statistics",
+    "published": "2024-03-17T00:00:00",
+    "authors": [
+      "Tuan Badrol Hisham Tuan Besar",
+      "Idaya Husna Mohd",
+      "Siti Nadia Nadirah Abdull Malek",
+      "Sharidatul Akma Abu Seman"
+    ],
+    "summary": "This study evaluates the effectiveness and user experience of the Business Analytic Basic Aid (BABA) Mean Absolute Deviation (MAD) tool compared to manual MAD calculations using Excel among students. Initially, students were taught to perform MAD calculations manually with Excel, followed by an introduction to the BABA automated MAD tool. A survey was conducted to assess various aspects of usability, complexity, and overall experience with both methods. Survey results indicated a general preference for the BABA automated MAD tool, with high ratings for ease of use (mean: 3.96) and quick learning (mean: 4.06). However, the tool was perceived as somewhat complex (mean: 2.88), and students expressed a need for technical support (mean: 3.36). Despite these challenges, confidence in using the tool was high (mean: 3.78), and students appreciated its well-integrated functions (mean: 3.88).The findings suggest that while the BABA automated MAD tool provides significant advantages over manual calculations, further refinements and user support are needed to address its complexities. The study highlights the potential for improved learning outcomes and efficiency in statistical analysis through the adoption of automated tools in educational settings, offering valuable insights for educators and tool developers.",
+    "pdf_url": "",
+    "doi": "10.47772/ijriss.2024.8090158",
+    "fields_of_study": [],
+    "venue": "International journal of research and innovation in social science",
+    "citation_count": 0,
+    "bibtex": "@Article{Besar2024TheIO,\n author = {Tuan Badrol Hisham Tuan Besar and Idaya Husna Mohd and Siti Nadia Nadirah Abdull Malek and Sharidatul Akma Abu Seman},\n booktitle = {International journal of research and innovation in social science},\n journal = {International Journal of Research and Innovation in Social Science},\n title = {The Impact of BABA: Mean Absolute Deviation (MAD) Tool: Beyond Spreadsheet Simple Statistics},\n year = {2024}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.6692488277902736,
+      "citation_score": 0.1,
+      "recency_score": 0.7072745386162979,
+      "final_score": 0.6161265160938487
+    },
+    "citation_key": "Besar2024TheIO",
+    "is_open_access": false,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "79432f4c1e0e9302214bb52ec377ca4879193d90",
+    "title": "Threshold-Independent Fair Matching through Score Calibration",
+    "published": "2024-05-30T00:00:00",
+    "authors": [
+      "Mohammad Hossein Moslemi",
+      "Mostafa Milani"
+    ],
+    "summary": "Entity Matching (EM) is a critical task in numerous fields, such as healthcare, finance, and public administration, as it identifies records that refer to the same entity within or across different databases. EM faces considerable challenges, particularly with false positives and negatives. These are typically addressed by generating matching scores and apply thresholds to balance false positives and negatives in various contexts.However, adjusting these thresholds can affect the fairness of the outcomes, a critical factor that remains largely overlooked in current fair EM research. The existing body of research on fair EM tends to concentrate on static thresholds, neglecting their critical impact on fairness. To address this, we introduce a new approach in EM using recent metrics for evaluating biases in score-based binary classification, particularly through the lens of distributional parity. This approach enables the application of various bias metrics—like equalized odds, equal opportunity, and demographic parity—without depending on threshold settings. Our experiments with leading matching methods reveal potential biases, and by applying a calibration technique for EM scores using Wasserstein barycenters, we not only mitigate these biases but also preserve accuracy across real-world datasets. This paper contributes to the field of fairness in data cleaning, especially within EM, which is a central task in data cleaning, by promoting a method for generating matching scores that reduce biases across different thresholds.",
+    "pdf_url": "https://arxiv.org/pdf/2405.20051",
+    "doi": "10.1145/3665601.3669845",
+    "fields_of_study": [
+      "Computer Science"
+    ],
+    "venue": "GUIDE-AI@SIGMOD",
+    "citation_count": 10,
+    "bibtex": "@Article{Moslemi2024ThresholdIndependentFM,\n author = {Mohammad Hossein Moslemi and Mostafa Milani},\n booktitle = {GUIDE-AI@SIGMOD},\n journal = {Proceedings of the Conference on Governance, Understanding and Integration of Data for Effective and Responsible AI},\n title = {Threshold-Independent Fair Matching through Score Calibration},\n year = {2024}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.6566680296543166,
+      "citation_score": 0.573366724738676,
+      "recency_score": 0.7325466143053964,
+      "final_score": 0.6559257576278605
+    },
+    "citation_key": "Moslemi2024ThresholdIndependentFM",
+    "is_open_access": true,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "cb36f7ab92a20e7e94b7a20dd7a91f96279582b0",
+    "title": "An Improved RANSAC Method Using Absolute Median Deviation (MAD) Based on Adaptive Threshold",
+    "published": "2024-05-16T00:00:00",
+    "authors": [
+      "Khalid Akdim",
+      "A. Roukhe",
+      "H. Roukhe"
+    ],
+    "summary": "Image processing now plays a relevant role in a wide range of fields. Image registration, a critical aspect of image processing, encompasses essential issues like image fusion, and remote sensing. One of the most robust algorithms used in feature registration is the Oriented FAST and Rotated BRIEF (ORB). Several optimization methods, including random sample consensus (RANSAC), have been adopted to reduce the outliers in this algorithm ORB and find optimal parameters of the image registration problem. However, RANSAC-based methods exhibit some deficiencies such as a high number of iterations, increased false positives ratio of mismatches, and a fixed threshold value determined through experimentation resulting in lower accuracy of transform model parameters. In this paper, we propose a modified version of RANSAC incorporating a Median Absolute Deviation (MAD) based on an adaptive threshold to address these deficiencies. To verify the validity of our proposed approach, a comprehensive experimental analysis has been done on a database of two images. A study, of the influence of certain factors such as the angle of rotation of the sensed image, the scale of the sensed image, and the noise applied to the sensed image. The simulation results show that the proposed method can achieve good transform model parameters in terms of Mean Square Error (MSE), Structure Similarity Index Method (SSIM), and Peak Signal to Noise Ratio (PSNR).",
+    "pdf_url": "",
+    "doi": "10.1109/IRASET60544.2024.10549597",
+    "fields_of_study": [],
+    "venue": "2024 4th International Conference on Innovative Research in Applied Science, Engineering and Technology (IRASET)",
+    "citation_count": 1,
+    "bibtex": "@Conference{Akdim2024AnIR,\n author = {Khalid Akdim and A. Roukhe and H. Roukhe},\n booktitle = {2024 4th International Conference on Innovative Research in Applied Science, Engineering and Technology (IRASET)},\n journal = {2024 4th International Conference on Innovative Research in Applied Science, Engineering and Technology (IRASET)},\n pages = {1-6},\n title = {An Improved RANSAC Method Using Absolute Median Deviation (MAD) Based on Adaptive Threshold},\n year = {2024}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.6462340358094668,
+      "citation_score": 0.30361194029850747,
+      "recency_score": 0.7276971134758131,
+      "final_score": 0.6201181340250055
+    },
+    "citation_key": "Akdim2024AnIR",
+    "is_open_access": false,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  },
+  {
+    "id": "97e2cac42a8d99b8573c8c47b9770ecc1e52e8e9",
+    "title": "Comprehensive Analysis of DDoS Anomaly Detection in Software-Defined Networks",
+    "published": "2025-03-17T00:00:00",
+    "authors": [
+      "Abdinasir Hirsi",
+      "Mohammed A. Alhartomi",
+      "L. Audah",
+      "Adeeb Salh",
+      "Nan Mad Sahar",
+      "Salman Ahmed",
+      "G. Ansa",
+      "Abdullahi Farah"
+    ],
+    "summary": "Software-Defined Networking (SDN) offers significant advantages for modern networks, including flexibility, centralized control, and reduced dependency on vendor-specific hardware. However, these benefits introduce security vulnerabilities, particularly from Distributed Denial-of-Service (DDoS) attacks, which represent some of the most disruptive threats to SDN environments. A review of the literature shows that while various techniques have been proposed to counteract DDoS threats, many studies have focused on single detection methods, with only a few utilizing multiple approaches. This fragmented focus limits a comprehensive approach to addressing DDoS threats across the SDN layers. To bridge this gap, this paper presents the first comprehensive review of DDoS anomaly detection in SDN, examining over 165 primary research articles published between 2020 and 2024. A novel taxonomy of DDoS attacks is introduced, categorizing them by distinct characteristics, and mapping each attack type to relevant detection methods within specific SDN layers. The survey provides a layer-by-layer analysis of DDoS detection techniques, covering the application, control, and infrastructure layers, and offers a structured overview that clarifies the applicability and effectiveness of each method. The paper concludes by synthesizing key findings, identifying unresolved challenges, and outlining future research directions to advance DDoS detection mechanisms in SDN. This roadmap is designed to guide researchers in addressing security vulnerabilities and enhancing SDN resilience against evolving DDoS threats.",
+    "pdf_url": "https://doi.org/10.1109/access.2025.3535943",
+    "doi": "10.1109/ACCESS.2025.3535943",
+    "fields_of_study": [
+      "Computer Science"
+    ],
+    "venue": "IEEE Access",
+    "citation_count": 26,
+    "bibtex": "@Article{Hirsi2025ComprehensiveAO,\n author = {Abdinasir Hirsi and Mohammed A. Alhartomi and L. Audah and Adeeb Salh and Nan Mad Sahar and Salman Ahmed and G. Ansa and Abdullahi Farah},\n booktitle = {IEEE Access},\n journal = {IEEE Access},\n pages = {23013-23071},\n title = {Comprehensive Analysis of DDoS Anomaly Detection in Software-Defined Networks},\n volume = {13},\n year = {2025}\n}\n",
+    "markdown_text": null,
+    "ranking": {
+      "relevance_score": 0.6304989658777461,
+      "citation_score": 0.8801780821917808,
+      "recency_score": 0.8409961585026996,
+      "final_score": 0.676516596771645
+    },
+    "citation_key": "Hirsi2025ComprehensiveAO",
+    "is_open_access": true,
+    "user_provided": false,
+    "pdf_path": null,
+    "conclusion": null
+  }
+]

@@ -1,0 +1,42 @@
+{
+  "PRS018": {
+    "label": "Population Count",
+    "count": 10786,
+    "mad": 0.002675649222924438,
+    "chi2_stat": 10.598579980854977,
+    "p_value": 0.22549751791711053,
+    "classification": "Highly Conformant"
+  },
+  "FLC001": {
+    "label": "Area (km\u00b2)",
+    "count": 10786,
+    "mad": 0.006266990822189215,
+    "chi2_stat": 44.81324048206553,
+    "p_value": 3.992384018562186e-07,
+    "classification": "Highly Conformant"
+  },
+  "PRS017": {
+    "label": "Population Density",
+    "count": 10786,
+    "mad": 0.008224260533955486,
+    "chi2_stat": 89.12376987617834,
+    "p_value": 7.00340773638989e-16,
+    "classification": "Highly Conformant"
+  },
+  "Synth-Uniform": {
+    "label": "Synthetic Uniform",
+    "count": 32358,
+    "mad": 0.059984872017843464,
+    "chi2_stat": 12934.986380464361,
+    "p_value": 0.0,
+    "classification": "Non-Conformant / Suspicious"
+  },
+  "Synth-Biased": {
+    "label": "Synthetic Biased",
+    "count": 32358,
+    "mad": 0.10064204642179214,
+    "chi2_stat": 55472.63824777359,
+    "p_value": 0.0,
+    "classification": "Non-Conformant / Suspicious"
+  }
+}

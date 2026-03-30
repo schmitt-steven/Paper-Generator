@@ -1126,7 +1126,7 @@ Do NOT do this:
         self,
         evaluation: HypothesisEvaluation
     ) -> str:
-        """Save hypothesis evaluation (proven/disproven/inconclusive)."""
+        """Save hypothesis evaluation (supported/not supported/inconclusive)."""
 
         eval_data = {
             "hypothesis_id": evaluation.hypothesis_id,
@@ -1284,20 +1284,22 @@ Do NOT do this:
             {validation_warning}
 
             [TASK]
-        Determine if the hypothesis is PROVEN, DISPROVEN, or INCONCLUSIVE based on the evidence.
-        
+        Determine whether the hypothesis is SUPPORTED, NOT SUPPORTED, or INCONCLUSIVE based on the evidence.
+        In empirical science, hypotheses are supported or not supported by data — they are never strictly proven or disproven.
+
         [GUIDELINES]
         1. Apply scientific judgement. Do not be robotically strict about exact numerical thresholds if the trend is overwhelming and statistically significant.
-        2. If the results strongly support the core hypothesis but miss a specific metric by a negligible margin (e.g. 0.89 vs 0.90), rule PROVEN.
-        3. If the results match the expected behavior/trend described in the hypothesis, favor PROVEN.
-        4. Only rule DISPROVEN if the results directly contradict the hypothesis.
+        2. If the results strongly support the core hypothesis but miss a specific metric by a negligible margin (e.g. 0.89 vs 0.90), rule SUPPORTED.
+        3. If the results match the expected behavior/trend described in the hypothesis, favor SUPPORTED.
+        4. Only rule NOT SUPPORTED if the results directly contradict the hypothesis.
         5. Only rule INCONCLUSIVE if the data is messy, contradictory, or the code failed to produce meaningful metrics.
-        6. Your goal is to validate the scientific discovery, not to act as a harsh gatekeeper. If the experiment works, say so!
+        6. If the hypothesis has multiple sub-claims and only some are supported, use 'partially supported' rather than forcing an ill-fitting standard label.
+        7. Your goal is to validate the scientific discovery, not to act as a harsh gatekeeper. If the experiment works, say so!
 
         Focus on whether the CORE SCIENTIFIC CLAIM is supported by the data.
-            
+
             Provide:
-            1. Your verdict: 'proven', 'disproven', or 'inconclusive'
+            1. Your verdict: 'supported', 'not supported', or 'inconclusive'. Use 'partially supported' if the results are genuinely mixed across sub-claims.
             2. Brief reasoning based on the success criteria and observed results
 
             [OUTPUT STYLE]
@@ -1314,11 +1316,6 @@ Do NOT do this:
             verdict_result = VerdictResult(**parsed_dict)
             verdict = remove_thinking_blocks(verdict_result.verdict).strip().lower()
             reasoning = remove_thinking_blocks(verdict_result.reasoning)
-            
-            # Validate verdict
-            if verdict not in ["proven", "disproven", "inconclusive"]:
-                verdict = "inconclusive"
-                reasoning += f"\\n\\nNote: Invalid verdict '{verdict_result.verdict}' was returned, defaulting to 'inconclusive'."
             
             return verdict, reasoning
         except Exception as e:

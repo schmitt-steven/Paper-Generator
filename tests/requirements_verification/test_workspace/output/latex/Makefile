@@ -1,0 +1,39 @@
+TEMP_DIR = temp
+RESULT_DIR = result
+LATEX = pdflatex
+BIBTEX = biber
+MAKEINDEX = makeindex
+
+define latex-it
+$(eval FILE = $(firstword $^))
+cp bibliography.bib $(TEMP_DIR)
+@echo "Building $(FILE)"
+@echo $(FILE)
+@$(LATEX) -draftmode -output-directory=$(TEMP_DIR) $(FILE)
+@cd $(TEMP_DIR) ; $(BIBTEX) $(basename $(FILE))
+@$(LATEX) -draftmode -output-directory=$(TEMP_DIR) $(FILE) > /dev/null
+@$(LATEX) -draftmode -output-directory=$(TEMP_DIR) $(FILE) > /dev/null
+@$(LATEX) -output-directory=$(TEMP_DIR) $(FILE)
+endef
+
+.PHONY: all
+all: $(TEMP_DIR) $(RESULT_DIR) \
+	$(TEMP_DIR)/paper.pdf \
+	$(RESULT_DIR)/paper.pdf \
+
+.PHONY: clean
+clean:
+	rm -rf $(TEMP_DIR)
+	rm -rf $(RESULT_DIR)
+
+$(TEMP_DIR)/paper.pdf: paper.tex bibliography.bib
+	$(latex-it)
+
+$(RESULT_DIR)/paper.pdf: $(TEMP_DIR)/paper.pdf
+	cat $< > $@
+
+$(TEMP_DIR):
+	mkdir $(TEMP_DIR)
+
+$(RESULT_DIR):
+	mkdir $(RESULT_DIR)

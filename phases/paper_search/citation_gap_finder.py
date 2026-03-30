@@ -22,9 +22,8 @@ from utils.llm_utils import remove_thinking_blocks
 
 class SuggestedPaper(BaseModel):
     """A paper suggested by the LLM as missing from the collection."""
-    title: str              # Approximate/known title
-
-    reason: str             # Why paper is important for this research
+    title: str  # Approximate/known title
+    reason: str  # Why paper is important for this research
 
 
 class CitationGapResult(BaseModel):
@@ -62,7 +61,8 @@ class CitationGapFinder:
         prompt = f"""You are an expert academic researcher. Analyze this paper collection for a literature review and identify MISSING foundational or highly-cited papers.
 
 YOUR TASK:
-Identify up to {max_suggestions} important papers that are commonly cited in this research area but MISSING from the collection above.
+Identify important papers that are commonly cited in this research area but MISSING from the collection above.
+You may suggest AT MOST {max_suggestions} papers, but suggest FEWER if you are not confident about a paper's existence or exact title. Quality over quantity — a shorter list of certain papers is far better than a long list with hallucinated ones.
 
 RESEARCH TOPIC:
 {research_context}
@@ -76,7 +76,8 @@ Focus on:
 3. CANONICAL REFERENCES - Papers that are almost always cited in this topic area
 
 IMPORTANT RULES:
-- Only suggest papers you are CONFIDENT actually exist
+- Only suggest papers you are HIGHLY CONFIDENT actually exist — if you are not sure, omit the paper
+- Do NOT pad the list to reach {max_suggestions}; an empty list is acceptable if no foundational papers are clearly missing
 - Suggest papers that would typically be cited in Introduction, Related Work, or Methods sections
 - The title must be EXACT and precise. We use it for strict title matching, so typos or approximate titles will fail.
 - Do NOT suggest papers that are already in the collection (check titles carefully)
@@ -176,5 +177,3 @@ Return your suggestions in the structured format."""
             lines.append(f"... and {len(papers) - max_papers} more papers")
         
         return "\n".join(lines)
-    
-

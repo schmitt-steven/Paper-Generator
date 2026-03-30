@@ -1,6 +1,6 @@
-# Research Paper Generator
+# Local Research Paper Generator
 
-An automated system that builds complete research papers locally and privately. No hidden (API) costs. A GUI app uses language and embedding models via LM Studio to search literature, formulate hypotheses, execute code for live experiments, draft text sections and compile the final LaTeX document.
+This app builds complete research papers locally and privately. Zero API costs. A GUI app uses local language and embedding models via LM Studio to search literature, formulate hypotheses, execute code for live experiments, draft text sections and compile the final LaTeX document. It uses a Human-in-the-Loop apprach to always keep you in control of the research process.
 
 ## Generation Process
 

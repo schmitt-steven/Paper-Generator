@@ -320,7 +320,11 @@ class CodeAnalyzer(LazyModelMixin):
 
 # ==================== Dataset Analysis ====================
 
-DATASET_EXTENSIONS = {'.csv', '.tsv', '.json', '.jsonl', '.xlsx', '.xls', '.parquet'}
+DATASET_EXTENSIONS = {
+    '.csv', '.json',
+    # '.tsv', '.jsonl',
+    # '.xlsx', '.xls', '.parquet'
+}
 
 
 @dataclass
@@ -351,12 +355,12 @@ class DatasetAnalyzer:
 
     LOAD_INSTRUCTIONS = {
         '.csv': 'pd.read_csv("{path}")',
-        '.tsv': 'pd.read_csv("{path}", sep="\\t")',
         '.json': 'pd.read_json("{path}")',
-        '.jsonl': 'pd.read_json("{path}", lines=True)',
-        '.xlsx': 'pd.read_excel("{path}")',
-        '.xls': 'pd.read_excel("{path}")',
-        '.parquet': 'pd.read_parquet("{path}")',
+        # '.tsv': 'pd.read_csv("{path}", sep="\\t")',
+        # '.jsonl': 'pd.read_json("{path}", lines=True)',
+        # '.xlsx': 'pd.read_excel("{path}")',
+        # '.xls': 'pd.read_excel("{path}")',
+        # '.parquet': 'pd.read_parquet("{path}")',
     }
 
     @staticmethod

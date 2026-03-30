@@ -1,0 +1,15 @@
+Test Run : 2026-03-17T22:45:14.191070
+Commit   : 5fff9bb
+Platform : macOS-26.2-arm64-arm-64bit-Mach-O
+Python   : 3.14.0
+
+Results  : 4 passed, 0 failed, 0 errors, 0 skipped
+======================================================================
+
+[PASSED] tests/requirements_verification/test_c1_tech_stack.py::test_c1_python_files_exist  (0.0s)
+
+[PASSED] tests/requirements_verification/test_c1_tech_stack.py::test_c1_tkinter_imported  (0.006s)
+
+[PASSED] tests/requirements_verification/test_c1_tech_stack.py::test_c1_lmstudio_sdk_imported  (0.004s)
+
+[PASSED] tests/requirements_verification/test_c1_tech_stack.py::test_c1_requirements_file_lists_lmstudio  (0.001s)
