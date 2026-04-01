@@ -87,7 +87,7 @@ class PaperWriter:
         for prev_section in relevant_sections:
             if prev_section in previous_sections:
                 section_text = previous_sections[prev_section]
-                parts.append(f"{prev_section.value}:\n{section_text}")
+                parts.append(f"# {prev_section.value}\n{section_text}")
         
         if not parts:
             return ""
@@ -242,7 +242,6 @@ class PaperWriter:
         paper_specification: Optional[PaperSpecification] = None,
         temperature: float = 0.1,
         next_section_type: Optional[Section] = None,
-        section_order: Optional[Sequence[Section]] = None,
     ) -> str:
         """Generate initial section draft using paper catalog (not chunked evidence)."""
         model = lms.llm(Settings.PAPER_WRITING_MODEL)
@@ -254,7 +253,6 @@ class PaperWriter:
             previous_sections,
             paper_specification,
             next_section_type,
-            section_order,
         )
 
         response = model.respond(
@@ -276,7 +274,6 @@ class PaperWriter:
         paper_specification: Optional[PaperSpecification] = None,
         temperature: float = 0.2,
         next_section_type: Optional[Section] = None,
-        section_order: Optional[Sequence[Section]] = None,
     ) -> str:
         """Rewrite a section using the critique feedback and new evidence."""
         model = lms.llm(Settings.PAPER_WRITING_MODEL)
@@ -292,7 +289,6 @@ class PaperWriter:
             paper_specification,
             temperature,
             next_section_type,
-            section_order,
         )
         response = model.respond(
             prompt,
@@ -309,7 +305,6 @@ class PaperWriter:
         previous_sections: Optional[dict[Section, str]] = None,
         paper_specification: Optional[PaperSpecification] = None,
         next_section_type: Optional[Section] = None,
-        section_order: Optional[Sequence[Section]] = None,
     ) -> str:
         """Build prompt for initial section draft using paper catalog."""
 
@@ -317,7 +312,7 @@ class PaperWriter:
         context_block = self._format_context(context, experiment)
         paper_catalog = self._format_paper_catalog(papers)
         previous_sections_block = self._format_previous_sections(section_type, previous_sections or {})
-        paper_structure_block = self._format_paper_structure(section_type, section_order)
+        paper_structure_block = self._format_paper_structure(section_type)
 
         # Get section-specific paper specification if available
         paper_spec_block = self._get_paper_spec_block(section_type, paper_specification)
@@ -415,7 +410,6 @@ The following papers are available for citation. Use their citation keys in squa
         paper_specification: Optional[PaperSpecification] = None,
         temperature: float = 0.1,
         next_section_type: Optional[Section] = None,
-        section_order: Optional[Sequence[Section]] = None,
     ) -> str:
         """Build prompt for rewriting a section with critique and new evidence."""
 
@@ -425,7 +419,7 @@ The following papers are available for citation. Use their citation keys in squa
         evidence_block = self._format_evidence_for_prompt(new_evidence)
         previous_sections_block = self._format_previous_sections(section_type, previous_sections or {})
         paper_spec_block = self._get_paper_spec_block(section_type, paper_specification)
-        paper_structure_block = self._format_paper_structure(section_type, section_order)
+        paper_structure_block = self._format_paper_structure(section_type)
 
         improvements_text = critique.improvements
 
@@ -516,16 +510,20 @@ Rewrite the original {section_type.value} section, addressing the suggested impr
 """
 
     @staticmethod
-    def _format_paper_structure(
-        current_section: Section,
-        section_order: Optional[Sequence[Section]] = None,
-    ) -> str:
-        """Format the full paper structure, marking the current section."""
-        if not section_order:
-            return ""
+    def _format_paper_structure(current_section: Section) -> str:
+        """Format the full paper structure in order and mark the current section."""
+        order = [
+            Section.ABSTRACT,
+            Section.INTRODUCTION,
+            Section.RELATED_WORK,
+            Section.METHODS,
+            Section.RESULTS,
+            Section.DISCUSSION,
+            Section.CONCLUSION,
+        ]
 
         lines = []
-        for section in section_order:
+        for section in order:
             if section == current_section:
                 lines.append(f"  → {section.value}  ← (CURRENT)")
             else:

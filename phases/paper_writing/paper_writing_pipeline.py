@@ -181,20 +181,20 @@ class PaperWritingPipeline:
         critic = SectionCritic()
         gatherer = EvidenceGatherer(indexed_corpus=self._indexed_corpus or [])
         
-        section_order = (
+        writing_order = (
             Section.METHODS, Section.RESULTS, Section.DISCUSSION,
             Section.RELATED_WORK, Section.INTRODUCTION, Section.CONCLUSION, Section.ABSTRACT
         )
-        
+
         sections: dict[Section, str] = {}
         evidence_by_section: dict[Section, Sequence[Evidence]] = {}
         prompts_by_section: dict[str, str] = {}
         rewrite_prompts_by_section: dict[str, str] = {}
-        
+
         with LMSJITSettings():
-            for idx, section_type in enumerate(section_order):
+            for idx, section_type in enumerate(writing_order):
                 # Identify next section for forward look
-                next_section_type = section_order[idx + 1] if idx + 1 < len(section_order) else None
+                next_section_type = writing_order[idx + 1] if idx + 1 < len(writing_order) else None
 
                 print(f"\n{'─'*60}")
                 print(f"[{section_type.value}] Processing section...")
@@ -214,7 +214,6 @@ class PaperWritingPipeline:
                     previous_sections=sections,
                     paper_specification=paper_specification,
                     next_section_type=next_section_type,
-                    section_order=section_order,
                 )
                 prompts_by_section[section_type.value] = prompt
                 
@@ -226,7 +225,6 @@ class PaperWritingPipeline:
                     previous_sections=sections,
                     paper_specification=paper_specification,
                     next_section_type=next_section_type,
-                    section_order=section_order,
                 )
                 print(f"    Draft complete ({len(section_draft_v1)} chars)")
                 
@@ -242,7 +240,6 @@ class PaperWritingPipeline:
                     max_queries=max_critique_queries,
                     paper_specification=paper_specification,
                     previous_sections=sections,
-                    section_order=section_order,
                 )
                 print(f"    Critique: {len(critique.improvements)} chars, {len(critique.search_queries)} queries")
                 
@@ -287,7 +284,6 @@ class PaperWritingPipeline:
                     previous_sections=sections,
                     paper_specification=paper_specification,
                     next_section_type=next_section_type,
-                    section_order=section_order,
                 )
                 rewrite_prompts_by_section[section_type.value] = rewrite_prompt
 
@@ -302,7 +298,6 @@ class PaperWritingPipeline:
                     previous_sections=sections,
                     paper_specification=paper_specification,
                     next_section_type=next_section_type,
-                    section_order=section_order,
                 )
                 
                 sections[section_type] = final_section

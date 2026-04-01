@@ -99,10 +99,16 @@ class HypothesisBuilder(LazyModelMixin):
             2. If information is missing, infer reasonable defaults based on the context or mark as "Not specified".
             3. Ensure the output is a valid Hypothesis object.
             4. Use the additional paper specification to better understand the context and intent of the hypothesis.
-            5. CRITICAL for success_criteria: Do NOT include specific numbers, percentages, multipliers, or quantitative targets (e.g., "10x faster", "50% improvement", "reduces error by 20%"). 
-               These are impossible to know before running experiments and are pure speculation. 
-               Instead, use qualitative, observable criteria (e.g., "shows improved convergence", "demonstrates better sample efficiency", "exhibits reduced memory usage", "achieves stable performance")
-            6. ZERO BS POLICY / NO AI META-COMMENTARY: Write directly in the third person about the scientific subject.
+            5. CRITICAL for success_criteria: Criteria must be concrete and testable. Use one or more of the following patterns depending on what fits the hypothesis:
+               - Relative comparison: "achieves lower mean error than baseline Y", "converges in fewer epochs than the baseline"
+               - Statistical significance: "the improvement over baseline X is statistically significant"
+               - Ablation: "removing component Y from the method degrades performance" (use when the method has distinct components)
+               - Existence/capability: "the method successfully performs X where baseline Y fails to" (use when the baseline cannot do the task at all)
+               Do NOT invent specific numeric thresholds — no made-up percentages, multipliers, or quantitative targets (e.g., "10x faster", "50% improvement").
+               However, if the user's paper specification already contains specific numeric targets, you may use those as-is.
+               Avoid vague, unfalsifiable language (e.g., "shows improved convergence", "demonstrates better efficiency").
+               Pick the 1-2 pattern(s) that best fit(s) the hypothesis — do not combine all of them.
+            6. Zero Bullshit Policy / No AI Meta-Commentary: Write directly in the third person about the scientific subject.
                NEVER use phrases like "The user wants me to structure...", "This hypothesis addresses...", "Based on the provided context...".
                Start the description directly with the scientific phenomenon (e.g. "Validating official statistics integrity using Benford's Law...").
                Eliminate entirely AI filler words ("robust", "seamless", "comprehensive", "leverage", "vital").
@@ -111,9 +117,9 @@ class HypothesisBuilder(LazyModelMixin):
             - id: unique identifier (e.g., "user_hypothesis_01")
             - description: Clear, testable scientific statement extracted from the user's input (NO meta-commentary)
             - rationale: The scientific justification for this hypothesis (NO meta-commentary about the user or prompt)
-            - success_criteria: Clear, measurable criterion or criteria for determining if the hypothesis is validated.
-              CRITICAL: Do NOT include specific numbers, percentages, multipliers, or quantitative targets.
-              Use qualitative, observable criteria instead.
+            - success_criteria: Concrete, testable criteria using one or more patterns: relative comparison against a baseline,
+              statistical significance, ablation (component necessity), or existence/capability (binary pass/fail).
+              Do NOT invent numeric thresholds — but if the paper specification provides specific numbers, use them.
             
             Research Context:
             {title_section}{self.research_context.description}

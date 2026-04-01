@@ -33,7 +33,6 @@ class SectionCritic:
         max_queries: Optional[int] = None,
         paper_specification: Optional[PaperSpecification] = None,
         previous_sections: Optional[dict[Section, str]] = None,
-        section_order: Optional[Sequence[Section]] = None,
     ) -> SectionCritique:
         """Analyze a draft section and return structured critique."""
         if max_queries is None:
@@ -42,7 +41,7 @@ class SectionCritic:
         model = lms.llm(Settings.PAPER_WRITING_MODEL)
         prompt = self._build_critique_prompt(
             section_type, draft_text, papers, max_queries, paper_specification,
-            previous_sections or {}, section_order,
+            previous_sections or {},
         )
         
         response = model.respond(
@@ -98,12 +97,11 @@ class SectionCritic:
         max_queries: int,
         paper_specification: Optional[PaperSpecification] = None,
         previous_sections: Optional[dict[Section, str]] = None,
-        section_order: Optional[Sequence[Section]] = None,
     ) -> str:
         """Build the prompt for section critique."""
-        
+
         paper_catalog = self._format_paper_catalog(papers)
-        paper_structure_block = self._format_paper_structure(section_type, section_order)
+        paper_structure_block = self._format_paper_structure(section_type)
         previous_sections_block = self._format_previous_sections(previous_sections or {})
 
         # Get style guidelines
@@ -189,16 +187,20 @@ CRITICAL: Check if the draft satisfies these paper specifications. If not, add s
             - search_queries: list of query strings (max {max_queries})""")
 
     @staticmethod
-    def _format_paper_structure(
-        current_section: Section,
-        section_order: Optional[Sequence[Section]] = None,
-    ) -> str:
-        """Format the full paper structure, marking the current section and written/upcoming status."""
-        if not section_order:
-            return "Not available."
+    def _format_paper_structure(current_section: Section) -> str:
+        """Format the full paper structure in canonical order, marking the current section."""
+        canonical_order = [
+            Section.ABSTRACT,
+            Section.INTRODUCTION,
+            Section.RELATED_WORK,
+            Section.METHODS,
+            Section.RESULTS,
+            Section.DISCUSSION,
+            Section.CONCLUSION,
+        ]
 
         lines = []
-        for section in section_order:
+        for section in canonical_order:
             if section == current_section:
                 lines.append(f"  → {section.value}  ← (CURRENT - under review)")
             else:
