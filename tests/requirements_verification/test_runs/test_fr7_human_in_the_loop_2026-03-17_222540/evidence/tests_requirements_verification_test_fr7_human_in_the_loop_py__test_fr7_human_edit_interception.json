@@ -1,6 +1,0 @@
-{
-  "injected_token": "HUMAN-EDIT-TOKEN-250c8b65-1643-490c-8324-07ca15064675",
-  "token_found_in_payload": true,
-  "payload_length_chars": 1951,
-  "token_context_in_payload": "escription\n\n            [HYPOTHESIS]\n            Description: This is a mock description containing HUMAN-EDIT-TOKEN-250c8b65-1643-490c-8324-07ca15064675.\n            Rationale: Mock rationale.\n            Success Criteria: Mock success criteria.\n\n     "
-}

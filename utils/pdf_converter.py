@@ -2,7 +2,7 @@ import os
 import re
 import pymupdf4llm
 from dataclasses import dataclass
-from phases.paper_search.paper import Paper
+from phases.literature_search.paper import Paper
 from utils.file_utils import preprocess_markdown, remove_references_section, extract_conclusion
 
 
@@ -19,7 +19,7 @@ class MarkdownParseResult:
 class PDFConverter:
     """Convert PDFs with pymupdf4llm."""
 
-    def __init__(self, extract_media=True):
+    def __init__(self, extract_media=False):
         self.extract_media = extract_media
 
     def convert_to_markdown(self, file_path: str) -> MarkdownParseResult:

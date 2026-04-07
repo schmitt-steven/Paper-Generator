@@ -1,6 +1,6 @@
 TEMP_DIR = temp
 RESULT_DIR = result
-LATEX = pdflatex
+LATEX = pdflatex -interaction=nonstopmode
 BIBTEX = biber
 MAKEINDEX = makeindex
 

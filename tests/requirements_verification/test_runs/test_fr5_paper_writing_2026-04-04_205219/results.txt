@@ -1,0 +1,146 @@
+Test Run : 2026-04-04T21:03:48.324572
+Commit   : 08d0aea
+Platform : macOS-26.3.1-arm64-arm-64bit-Mach-O
+Python   : 3.14.0
+
+Results  : 3 passed, 0 failed, 0 errors, 0 skipped
+======================================================================
+
+[PASSED] tests/requirements_verification/test_fr5_paper_writing.py::test_fr5_paper_draft_exists  (0.0s)
+  --- stdout ---
+  Loaded research context from: output/research_context.md
+  Loaded 29 papers from output/papers.json
+  
+  ================================================================================
+  INDEXING 0/29 PAPERS (skipping 29 without text)
+  ================================================================================
+  
+  
+  ================================================================================
+  PAPER WRITING PIPELINE
+  ================================================================================
+  
+  [LMSJITSettings] LLM already loaded: qwen/qwen3.5-35b-a3b
+  [LMSJITSettings] Loading embedding model: text-embedding-qwen3-embedding-4b@q5_0
+  [LMSJITSettings] Models in memory: ['qwen/qwen3.5-35b-a3b', 'text-embedding-qwen3-embedding-4b@q5_0']
+  
+  ────────────────────────────────────────────────────────────
+  [Methods] Processing section...
+  ────────────────────────────────────────────────────────────
+    [Step 1] Writing initial draft using paper catalog...
+      Draft complete (7252 chars)
+    [Step 2] Analyzing draft for improvements...
+      Critique: 1308 chars, 1 queries
+    [Step 3] Searching for additional evidence...
+    [Batch Search] Executing 1 queries...
+      Query 1/1: "Benford's law MAD thresholds classification criteria large s..."
+        Retrieved 0 chunks from vector search
+        Returned 0 chunks after scoring and filtering
+        Selected 0 evidence chunks
+    [Batch Search] Selected 0 unique evidence chunks
+    [Step 4] Rewriting section with improvements and evidence...
+      Section complete (7014 chars)
+  
+  ────────────────────────────────────────────────────────────
+  [Results] Processing section...
+  ────────────────────────────────────────────────────────────
+    [Step 1] Writing initial draft using paper catalog...
+      Draft complete (7864 chars)
+    [Step 2] Analyzing draft for improvements...
+      Critique: 2038 chars, 1 queries
+    [Step 3] Searching for additional evidence...
+    [Batch Search] Executing 1 queries...
+      Query 1/1: "Benford's Law population density derived ratio deviation thr..."
+        Retrieved 0 chunks from vector search
+        Returned 0 chunks after scoring and filtering
+        Selected 0 evidence chunks
+    [Batch Search] Selected 0 unique evidence chunks
+    [Step 4] Rewriting section with improvements and evidence...
+      Section complete (7788 chars)
+  
+  ────────────────────────────────────────────────────────────
+  [Discussion] Processing section...
+  ────────────────────────────────────────────────────────────
+    [Step 1] Writing initial draft using paper catalog...
+      Draft complete (5765 chars)
+    [Step 2] Analyzing draft for improvements...
+      Critique: 4152 chars, 1 queries
+    [Step 3] Searching for additional evidence...
+    [Batch Search] Executing 1 queries...
+      Query 1/1: "Benford's Law derived ratios population density deviation ar..."
+        Retrieved 0 chunks from vector search
+        Returned 0 chunks after scoring and filtering
+        Selected 0 evidence chunks
+    [Batch Search] Selected 0 unique evidence chunks
+    [Step 4] Rewriting section with improvements and evidence...
+      Section complete (5711 chars)
+  
+  ────────────────────────────────────────────────────────────
+  [Related Work] Processing section...
+  ────────────────────────────────────────────────────────────
+    [Step 1] Writing initial draft using paper catalog...
+      Draft complete (7914 chars)
+    [Step 2] Analyzing draft for improvements...
+      Critique: 1452 chars, 1 queries
+    [Step 3] Searching for additional evidence...
+    [Batch Search] Executing 1 queries...
+      Query 1/1: "Newcomb 1881 Benford 1938 historical context first digit law..."
+        Retrieved 0 chunks from vector search
+        Returned 0 chunks after scoring and filtering
+        Selected 0 evidence chunks
+    [Batch Search] Selected 0 unique evidence chunks
+    [Step 4] Rewriting section with improvements and evidence...
+      Section complete (8074 chars)
+  
+  ────────────────────────────────────────────────────────────
+  [Introduction] Processing section...
+  ────────────────────────────────────────────────────────────
+    [Step 1] Writing initial draft using paper catalog...
+      Draft complete (5659 chars)
+    [Step 2] Analyzing draft for improvements...
+      Critique: 5348 chars, 1 queries
+    [Step 3] Searching for additional evidence...
+    [Batch Search] Executing 1 queries...
+      Query 1/1: "Simon Newcomb 1881 first-digit law logarithmic tables histor..."
+        Retrieved 0 chunks from vector search
+        Returned 0 chunks after scoring and filtering
+        Selected 0 evidence chunks
+    [Batch Search] Selected 0 unique evidence chunks
+    [Step 4] Rewriting section with improvements and evidence...
+      Section complete (4918 chars)
+  
+  ────────────────────────────────────────────────────────────
+  [Conclusion] Processing section...
+  ────────────────────────────────────────────────────────────
+    [Step 1] Writing initial draft using paper catalog...
+      Draft complete (985 chars)
+    [Step 2] Analyzing draft for improvements...
+      Critique: 637 chars, 1 queries
+    [Step 3] Skipping search (skipped by policy)
+    [Step 4] Rewriting section with improvements and evidence...
+      Section complete (661 chars)
+  
+  ────────────────────────────────────────────────────────────
+  [Abstract] Processing section...
+  ────────────────────────────────────────────────────────────
+    [Step 1] Writing initial draft using paper catalog...
+      Draft complete (1305 chars)
+    [Step 2] Analyzing draft for improvements...
+      Critique: 930 chars, 1 queries
+    [Step 3] Skipping search (skipped by policy)
+    [Step 4] Rewriting section with improvements and evidence...
+      Section complete (1299 chars)
+  [LMSJITSettings] Unloading models...
+  [LMSJITSettings] Unloaded qwen/qwen3.5-35b-a3b
+  [LMSJITSettings] Unloaded text-embedding-qwen3-embedding-4b@q5_0
+  [PaperWritingPipeline] Saved paper draft to output/paper_draft.md
+  [PaperWritingPipeline] Saved section writing prompts to output/section_writing_prompts.json
+  [PaperWritingPipeline] Saved section writing prompts to output/section_rewrite_prompts.json
+  
+  ================================================================================
+  PAPER WRITING COMPLETE
+  ================================================================================
+
+[PASSED] tests/requirements_verification/test_fr5_paper_writing.py::test_fr5_markdown_files_contain_citations  (0.0s)
+
+[PASSED] tests/requirements_verification/test_fr5_paper_writing.py::test_fr5_at_least_one_real_citation  (0.001s)

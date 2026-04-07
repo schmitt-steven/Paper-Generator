@@ -13,7 +13,7 @@ import time
 import re
 import xml.etree.ElementTree as ET
 from typing import List, Optional
-from phases.paper_search.paper import Paper
+from phases.literature_search.paper import Paper
 
 
 # Default email for Unpaywall API (used if Settings.UNPAYWALL_EMAIL is not set)
@@ -41,8 +41,8 @@ def find_open_access_pdfs(papers: List[Paper], delay: float = 0.3) -> List[Paper
     Updates is_open_access and pdf_url if found.
     """
     papers_to_check = [
-        p for p in papers 
-        if not p.is_open_access or not p.pdf_url
+        p for p in papers
+        if not p.user_provided and (not p.is_open_access or not p.pdf_url)
     ]
     
     if not papers_to_check:
@@ -74,6 +74,7 @@ def find_open_access_pdfs(papers: List[Paper], delay: float = 0.3) -> List[Paper
             found_count += 1
             print(f"  [FOUND via {source}] {paper.title[:45]}...")
         else:
+            paper.is_open_access = False
             print(f"  [Not Found] {paper.title[:45]}...")
         
         # Rate limiting
@@ -118,19 +119,39 @@ def _check_unpaywall(doi: str) -> Optional[str]:
 
 
 def _search_arxiv_by_title(title: str) -> Optional[str]:
-    """Search arXiv for a paper by title."""
+    """Search arXiv for a paper by title. Tries exact phrase first, then AND query."""
     clean_title = _clean_title_for_search(title)
-    
+
     if not clean_title or len(clean_title) < 10:
         return None
-    
+
+    # Build queries: try exact phrase first, then AND of key words
+    queries = [f'ti:"{clean_title}"']
+
+    # Build AND query from significant words (skip very common ones)
+    stop_words = {'a', 'an', 'the', 'of', 'for', 'in', 'on', 'to', 'and', 'with', 'by', 'from', 'is', 'are', 'at', 'as', 'or', 'its', 'via'}
+    words = [w for w in clean_title.split() if w not in stop_words and len(w) > 1]
+    if len(words) >= 2:
+        and_query = " AND ".join(f'ti:{w}' for w in words)
+        queries.append(and_query)
+
+    for search_query in queries:
+        result = _query_arxiv(search_query, clean_title)
+        if result:
+            return result
+
+    return None
+
+
+def _query_arxiv(search_query: str, clean_title: str) -> Optional[str]:
+    """Execute a single arXiv API query and return PDF URL if a matching paper is found."""
     try:
         response = requests.get(
             "http://export.arxiv.org/api/query",
             params={
-                "search_query": f'ti:"{clean_title}"',
+                "search_query": search_query,
                 "start": 0,
-                "max_results": 3
+                "max_results": 5
             },
             timeout=10
         )
@@ -180,7 +201,7 @@ def _clean_title_for_search(title: str) -> str:
     return clean.lower()
 
 
-def _titles_match(title1: str, title2: str, threshold: float = 0.95) -> bool:
+def _titles_match(title1: str, title2: str, threshold: float = 0.85) -> bool:
     """Check if two titles are similar enough to be the same paper."""
     if not title1 or not title2:
         return False

@@ -471,7 +471,7 @@ class ExperimentResultsScreen(BaseFrame):
             self.experiment_result = experiment_result
             
             # --- 1. Verdict Section ---
-            verdict = experiment_result.hypothesis_evaluation.verdict
+            verdict = experiment_result.hypothesis_evaluation.verdict.capitalize()
             reasoning = experiment_result.hypothesis_evaluation.reasoning
             verdict_text = f"**Verdict:** {verdict}\n\n**Reasoning:** {reasoning}"
             

@@ -37,7 +37,7 @@ def run_literature_phase():
 
     # 2. Run literature search
     from phases.context_analysis.research_context_generator import ResearchContextGenerator
-    from phases.paper_search.literature_search import LiteratureSearch
+    from phases.literature_search.literature_search import LiteratureSearch
     from settings import Settings
 
     context = ResearchContextGenerator.load_research_context(str(OUTPUT_DIR / "research_context.md"))

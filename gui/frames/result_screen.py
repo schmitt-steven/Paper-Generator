@@ -11,9 +11,9 @@ import pymupdf  # fitz
 
 from ..base_frame import BaseFrame, ProgressPopup
 from ..info_texts import RESULT_INFO
-from phases.latex_generation.paper_converter import PaperConverter, LaTeXMetadata
+from phases.document_generation.paper_converter import PaperConverter, LaTeXMetadata
 from phases.paper_writing.paper_writing_pipeline import PaperWritingPipeline
-from phases.paper_search.literature_search import LiteratureSearch
+from phases.literature_search.literature_search import LiteratureSearch
 from phases.experimentation.experiment_runner import ExperimentRunner
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.context_analysis.research_context_generator import ResearchContextGenerator

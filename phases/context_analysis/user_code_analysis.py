@@ -182,6 +182,14 @@ class CodeAnalyzer(LazyModelMixin):
             2. **Pure Logic:** Exclude imports, print statements, and error handling.
             3. **Limit:** Maximum 20 lines per snippet. If it's longer, extract the central loop or equation.
 
+            [OUTPUT FORMAT]
+            Respond ONLY with valid JSON using exactly this structure:
+            {{
+                "snippets": [
+                    {{"label": "descriptive label", "code": "the code snippet"}}
+                ]
+            }}
+
             [CODE CONTENT]
             ```python
             {code_analysis.file_content}
@@ -189,7 +197,6 @@ class CodeAnalyzer(LazyModelMixin):
 
         result = self.model.respond(
             prompt,
-            response_format=SnippetExtractionResult,
             config={"temperature": 0.0}
         )
 
@@ -214,6 +221,11 @@ class CodeAnalyzer(LazyModelMixin):
             print(f"[CodeAnalyzer] Failed to parse snippet JSON. Raw content:\n{content[:500]}")
             code_analysis.important_snippets = []
             return code_analysis
+
+        # Normalize field names: model may use "description" instead of "label"
+        for snippet in parsed_dict.get("snippets", []):
+            if "description" in snippet and "label" not in snippet:
+                snippet["label"] = snippet.pop("description")
 
         extraction_result = SnippetExtractionResult(**parsed_dict)
         code_analysis.important_snippets = extraction_result.snippets

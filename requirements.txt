@@ -1,4 +1,4 @@
-# Paper Generator - Dependencies
+# Paper Generator Dependencies
 # Install with: pip install -r requirements.txt
 
 # GUI
@@ -9,7 +9,7 @@ tkinterweb>=3.19.0       # HTML rendering in Tkinter
 
 # LLM Integration
 lmstudio>=1.5.0          # LM Studio SDK
-pydantic>=2.0.0          # Data validation
+pydantic>=2.0.0          # For structured responses and data validation
 
 # Paper Search & Processing
 requests>=2.30.0         # HTTP requests for APIs

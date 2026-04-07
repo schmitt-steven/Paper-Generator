@@ -111,33 +111,33 @@ class SettingsScreen(BaseFrame):
         
         self.settings_vars["UNPAYWALL_EMAIL"] = self.unpaywall_email_var
 
-        # Evidence Search Queries (slider 0-5)
-        row_frame = ttk.Frame(frame, style="CardRow.TFrame")
-        row_frame.pack(fill="x", pady=(10, 2))
-
-        ttk.Label(row_frame, text="Evidence Search Queries", width=35, style="CardRow.TLabel").pack(side="left")
-
-        slider_container = ttk.Frame(row_frame, style="CardRow.TFrame")
-        slider_container.pack(side="right", fill="x", expand=True, padx=(10, 0))
-
-        self.critic_queries_var = tk.IntVar(value=getattr(Settings, "CRITIC_MAX_SEARCH_QUERIES", 5))
-        self.critic_queries_label = ttk.Label(slider_container, text=str(self.critic_queries_var.get()), width=2, style="CardRow.TLabel")
-        self.critic_queries_label.pack(side="right", padx=(10, 0))
-
-        critic_slider = ttk.Scale(
-            slider_container,
-            from_=0,
-            to=5,
-            variable=self.critic_queries_var,
-            orient="horizontal",
-            command=lambda v: (
-                self.critic_queries_var.set(round(float(v))),
-                self.critic_queries_label.config(text=str(round(float(v))))
-            )
-        )
-        critic_slider.pack(side="right", fill="x", expand=True, padx=(0, 5))
-
-        self.settings_vars["CRITIC_MAX_SEARCH_QUERIES"] = self.critic_queries_var
+        # Evidence Search Queries (slider 0-5) — disabled for now
+        # row_frame = ttk.Frame(frame, style="CardRow.TFrame")
+        # row_frame.pack(fill="x", pady=(10, 2))
+        #
+        # ttk.Label(row_frame, text="Evidence Search Queries", width=35, style="CardRow.TLabel").pack(side="left")
+        #
+        # slider_container = ttk.Frame(row_frame, style="CardRow.TFrame")
+        # slider_container.pack(side="right", fill="x", expand=True, padx=(10, 0))
+        #
+        # self.critic_queries_var = tk.IntVar(value=getattr(Settings, "CRITIC_MAX_SEARCH_QUERIES", 5))
+        # self.critic_queries_label = ttk.Label(slider_container, text=str(self.critic_queries_var.get()), width=2, style="CardRow.TLabel")
+        # self.critic_queries_label.pack(side="right", padx=(10, 0))
+        #
+        # critic_slider = ttk.Scale(
+        #     slider_container,
+        #     from_=0,
+        #     to=5,
+        #     variable=self.critic_queries_var,
+        #     orient="horizontal",
+        #     command=lambda v: (
+        #         self.critic_queries_var.set(round(float(v))),
+        #         self.critic_queries_label.config(text=str(round(float(v))))
+        #     )
+        # )
+        # critic_slider.pack(side="right", fill="x", expand=True, padx=(0, 5))
+        #
+        # self.settings_vars["CRITIC_MAX_SEARCH_QUERIES"] = self.critic_queries_var
 
     def create_latex_template_section(self):
         """LaTeX Template section: radio buttons for template selection"""

@@ -45,9 +45,12 @@ class EvidenceGatherer:
         """Run the full evidence retrieval pipeline for a query."""
 
         retrieved_chunks = self._vector_search(query, initial_chunks, exclude_chunk_ids, embedding_model)
+        print(f"      Retrieved {len(retrieved_chunks)} chunks from vector search")
         processed_chunks = self._process_chunks_combined(query, target_section, retrieved_chunks, batch_size=batch_size, llm_model=llm_model)
-        
-        return self._combine_scores(query, processed_chunks, filtered_chunks, max_chunks_per_paper)
+
+        final = self._combine_scores(query, processed_chunks, filtered_chunks, max_chunks_per_paper)
+        print(f"      Returned {len(final)} chunks after scoring and filtering")
+        return final
 
     def _vector_search(
         self,
@@ -106,7 +109,7 @@ class EvidenceGatherer:
                 response = llm_model.respond(
                     prompt,
                     response_format=BatchResult,
-                    config={"temperature": 0.2, "maxTokens": 2048},
+                    config={"temperature": 0.2, "maxTokens": 8192},
                 )
                 
                 content = remove_thinking_blocks(response.content)
@@ -120,14 +123,15 @@ class EvidenceGatherer:
                         # Handling item as dict or object (usually dict with parsed)
                         summary = item.get('summary') if isinstance(item, dict) else getattr(item, 'summary', "Summary missing")
                         score_val = item.get('score') if isinstance(item, dict) else getattr(item, 'score', 0.0)
-                        
+
                         score = self._clamp_score(float(score_val))
                         results.append((chunk, vector_score, summary, score))
                     else:
-                        print(f"[WARNING] LLM returned fewer results than request.")
                         results.append((chunk, vector_score, "Processing failed", 0.0))
+
+                print(f"      Batch {i // batch_size + 1}: scored {len(batch_results)}/{len(batch)} chunks")
             except Exception as e:
-                 print(f"[WARNING] Batch processing failed: {e}")
+                 print(f"      Batch {i // batch_size + 1}: failed ({e})")
                  for chunk, vector_score in batch:
                      results.append((chunk, vector_score, "Processing failed", 0.0))
                      
@@ -217,12 +221,16 @@ class EvidenceGatherer:
 
         weighted: list[Evidence] = []
         for chunk, vector_score, summary, llm_score in chunks:
+            # Skip chunks that failed scoring or scored zero
+            if llm_score <= 0.0:
+                continue
+
             # User request: Use LLM score as primary metric.
             # Vector score is only used for tie-breaking.
-            
+
             # We set combined_score to llm_score so it reflects the primary metric
             combined = llm_score
-            
+
             weighted.append(
                 Evidence(
                     chunk=chunk,

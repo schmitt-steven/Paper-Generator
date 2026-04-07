@@ -7,7 +7,7 @@ import lmstudio as lms
 import numpy as np  # Added for array handling if needed, though list is used for storage
 from settings import Settings
 from utils.file_utils import save_json, load_json, preprocess_markdown
-from phases.paper_search.paper import Paper
+from phases.literature_search.paper import Paper
 from phases.paper_writing.data_models import PaperChunk
 
 

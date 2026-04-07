@@ -1,0 +1,51 @@
+Test Run : 2026-04-04T22:19:38.093501
+Commit   : 08d0aea
+Platform : macOS-26.3.1-arm64-arm-64bit-Mach-O
+Python   : 3.14.0
+
+Results  : 2 passed, 0 failed, 0 errors, 0 skipped
+======================================================================
+
+[PASSED] tests/requirements_verification/test_fr6_compilation.py::test_fr6_compilation_succeeds  (0.01s)
+  --- stdout ---
+  [PaperWritingPipeline] Loaded paper draft from output/paper_draft.md
+  Loaded 29 papers from output/papers.json
+  [PaperConverter] Converting PaperDraft to LaTeX
+  [PaperConverter] Copied LaTeX template to output/latex
+  [PaperConverter] Set title: Benford's Law Validation of German Zensus 2022: Me...
+  [PaperConverter] Applied template-based author formatting for 1 author(s)
+  [PaperConverter] Updated paper.tex with metadata
+  [PaperConverter] Found placeholder %%INTRODUCTION%%
+  [PaperConverter] Converting Introduction to LaTeX (length: 4918)
+  [PaperConverter] Injected 4950 chars into %%INTRODUCTION%%
+  [PaperConverter] Found placeholder %%RELATED_WORK%%
+  [PaperConverter] Converting Related Work to LaTeX (length: 8057)
+  [PaperConverter] Injected 8146 chars into %%RELATED_WORK%%
+  [PaperConverter] Found placeholder %%METHODS%%
+  [PaperConverter] Converting Methods to LaTeX (length: 6974)
+  [PaperConverter] Injected 7372 chars into %%METHODS%%
+  [PaperConverter] Found placeholder %%RESULTS%%
+  [PaperConverter] Converting Results to LaTeX (length: 7788)
+  [PaperConverter] Injected 7329 chars into %%RESULTS%%
+  [PaperConverter] Found placeholder %%DISCUSSION%%
+  [PaperConverter] Converting Discussion to LaTeX (length: 5711)
+  [PaperConverter] Injected 5785 chars into %%DISCUSSION%%
+  [PaperConverter] Found placeholder %%CONCLUSION%%
+  [PaperConverter] Converting Conclusion to LaTeX (length: 661)
+  [PaperConverter] Injected 676 chars into %%CONCLUSION%%
+  [PaperConverter] Found placeholder %%ACKNOWLEDGEMENTS%%
+  [PaperConverter] Skipping Acknowledgements (not provided)
+  [PaperConverter] Injected all sections into output/latex/paper.tex
+  [PaperConverter] Copied plot: benford_distribution.pdf
+  [PaperConverter] Copied plot: mad_comparison_preview.png
+  [PaperConverter] Copied plot: benford_distribution_preview.png
+  [PaperConverter] Copied plot: mad_comparison.pdf
+  [PaperConverter] Copied plot: deviation_heatmap_preview.png
+  [PaperConverter] Copied plot: deviation_heatmap.pdf
+  [PaperConverter] Copied 6 plot image(s) to images/
+  [PaperConverter] Generated bibliography.bib with 15 entries
+  [PaperConverter] LaTeX project generated at output/latex
+  [PaperConverter] Compiling LaTeX project...
+  [PaperConverter] PDF generated at output/latex/result/paper.pdf
+
+[PASSED] tests/requirements_verification/test_fr6_compilation.py::test_fr6_pdf_file_exists_and_valid  (0.0s)

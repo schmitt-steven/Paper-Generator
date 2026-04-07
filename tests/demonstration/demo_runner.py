@@ -203,10 +203,10 @@ def phase_2_literature_search(log: PhaseLog):
     intermediate paper counts at each stage for the summary.
     """
     from phases.context_analysis.research_context_generator import ResearchContextGenerator
-    from phases.paper_search.literature_search import LiteratureSearch
-    from phases.paper_search.paper_ranking import PaperRanker
-    from phases.paper_search.paper_filter import PaperFilter
-    from phases.paper_search.citation_gap_finder import CitationGapFinder
+    from phases.literature_search.literature_search import LiteratureSearch
+    from phases.literature_search.paper_ranking import PaperRanker
+    from phases.literature_search.paper_filter import PaperFilter
+    from phases.literature_search.citation_gap_finder import CitationGapFinder
     from utils.open_access_finder import find_open_access_pdfs
     from utils.pdf_downloader import PDFDownloader
     from utils.pdf_converter import PDFConverter
@@ -460,7 +460,7 @@ def phase_5_paper_writing(log: PhaseLog):
     from phases.context_analysis.research_context_generator import ResearchContextGenerator
     from phases.context_analysis.paper_specification import PaperSpecification
     from phases.experimentation.experiment_runner import ExperimentRunner
-    from phases.paper_search.literature_search import LiteratureSearch
+    from phases.literature_search.literature_search import LiteratureSearch
 
     # Timestamped events for per-step timing
     timed_events: list[tuple[float, str]] = []
@@ -571,7 +571,7 @@ def phase_5_paper_writing(log: PhaseLog):
 
 def phase_6_document_compilation(log: PhaseLog):
     """Phase 6: Convert to LaTeX and compile to PDF."""
-    from phases.latex_generation.paper_converter import PaperConverter
+    from phases.document_generation.paper_converter import PaperConverter
 
     def cb(msg):
         log.status_messages.append(msg)

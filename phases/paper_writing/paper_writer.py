@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 from phases.context_analysis.research_context_generator import ResearchContext
 from phases.context_analysis.paper_specification import PaperSpecification
 from phases.experimentation.experiment_state import ExperimentResult, Plot
-from phases.paper_search.paper import Paper
+from phases.literature_search.paper import Paper
 from phases.paper_writing.data_models import Evidence, PaperDraft, Section, SectionCritique
 from phases.paper_writing.style_guidelines import SectionGuidelinesLoader
 from utils.llm_utils import remove_thinking_blocks

@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 from enum import Enum
 from pydantic import BaseModel
-from phases.paper_search.paper import Paper
+from phases.literature_search.paper import Paper
 
 class Section(str, Enum):
     ABSTRACT = "Abstract"

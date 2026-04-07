@@ -84,6 +84,40 @@ def test_nfr1_all_model_loads_use_lmstudio(log_evidence):
     )
 
 
+def test_nfr1_no_remote_inference(log_evidence):
+    """
+    NFR1: No source file uses known remote inference APIs (OpenAI, Anthropic, etc.).
+    Complements the lmstudio check by scanning for patterns that would bypass local inference.
+    """
+    REMOTE_PATTERNS = [
+        re.compile(r'^\s*import openai\b'),
+        re.compile(r'^\s*from openai\b'),
+        re.compile(r'^\s*import anthropic\b'),
+        re.compile(r'^\s*from anthropic\b'),
+        re.compile(r'^\s*import google\.generativeai\b'),
+        re.compile(r'^\s*from google\.generativeai\b'),
+        re.compile(r'api\.openai\.com'),
+        re.compile(r'api\.anthropic\.com'),
+        re.compile(r'generativelanguage\.googleapis\.com'),
+    ]
+
+    violations = []
+    for path in collect_source_files():
+        source = path.read_text(encoding="utf-8", errors="ignore")
+        rel = path.relative_to(PROJECT_ROOT)
+        for line_no, line in enumerate(source.splitlines(), 1):
+            for pattern in REMOTE_PATTERNS:
+                if pattern.search(line):
+                    violations.append(f"{rel}:{line_no}: {line.strip()}")
+
+    log_evidence("remote_inference_violations", violations)
+
+    assert not violations, (
+        "Found remote inference API usage in production code:\n"
+        + "\n".join(violations)
+    )
+
+
 def test_nfr1_model_loads_exist(log_evidence):
     """
     NFR1: lmstudio model loads are actually present in the codebase.

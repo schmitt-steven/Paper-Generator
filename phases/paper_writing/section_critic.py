@@ -9,11 +9,11 @@ import json
 import textwrap
 from typing import Optional, Sequence
 
-from phases.paper_search.paper import Paper
+from phases.literature_search.paper import Paper
 from phases.paper_writing.data_models import Section, SectionCritique
 from phases.paper_writing.style_guidelines import SectionGuidelinesLoader
 from phases.context_analysis.paper_specification import PaperSpecification
-from phases.latex_generation.bibliography import extract_citation_keys_from_markdown, create_paper_mapping
+from phases.document_generation.bibliography import extract_citation_keys_from_markdown, create_paper_mapping
 from utils.llm_utils import remove_thinking_blocks
 from settings import Settings
 import lmstudio as lms

@@ -1,5 +1,0 @@
-{
-  "exit_code": 0,
-  "stdout_tail": "Starting Benford's Law Conformity Analysis...\nAvailable value_variable_codes: ['FLC001' 'PRS018' 'PRS017']\nAvailable value_q flags: ['e']\nVariable [PRS018 - Population Count]: N=10786, MAD=0.0027, Class=Highly Conformant\nVariable [FLC001 - Area (km\u00b2)]: N=10786, MAD=0.0063, Class=Highly Conformant\nVariable [PRS017 - Population Density]: N=10786, MAD=0.0082, Class=Highly Conformant\nVariable [Synth-Uniform]: N=32358, MAD=0.0600, Class=Non-Conformant / Suspicious\nVariable [Synth-Biased]: N=32358, MAD=0.1006, Class=Non-Conformant / Suspicious\n[Plot Summary: benford_digit_distribution.pdf] Bar chart comparing observed first-digit frequencies for 5 datasets against Benford's Law (black line).\n[Plot Summary: conformity_comparison_mad.pdf] Bar chart showing MAD scores for 5 datasets with threshold lines.\n[Plot Summary: deviation_heatmap.pdf] Heatmap showing magnitude and direction of deviation for each digit across datasets.\n\nResults saved to results.json\nAnalysis complete.\n",
-  "stderr_tail": ""
-}

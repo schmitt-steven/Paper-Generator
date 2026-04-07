@@ -82,15 +82,6 @@ GENERAL_SETTINGS_INFO = """\
 **Semantic Scholar API Key** — Optional API key for higher rate limits when searching for literature.
 
 **Unpaywall Email** — Optional email address used to query the Unpaywall API to find free PDFs of papers.
-
-**Evidence Search Queries** — This setting influences the "Critique" step of the Draft-Critique-Retrieve-Improve" writing pipeline. \
-It sets the maximum number of search queries the critic can suggest per section. \
-These search queries are then used in the "Retrieve" step to find relevant passages in the indexed papers. \
-Each query retrieves chunks from the indexed papers, which are then scored by an LLM and filtered down to the most relevant passages. \
-This is by far the most time-consuming step of the entire writing process. \
-Five queries per section can easily take anything upwards of 30 minutes depending on \
-your hardware. Lowering this value significantly speeds up the paper generation. Set to 0 to skip \
-evidence retrieval entirely (the critic still suggests improvements, but there won't be a search for supporting evidence).
 """
 
 
@@ -116,32 +107,32 @@ Datasets are analyzed for metadata (columns, types, row count, sample rows) with
 
 Datasets are copied to the experiment working directory under a `datasets/` subfolder and can be loaded with pandas.
 
-# Bring Your Own Experiment
-
-You can use one of your uploaded Python files as the experiment, \
-skipping both experiment plan generation and experiment code generation. \
-Your script will be executed directly via a Python subprocess.
-
-### Requirements
-
-- **Python only**: The file must be a `.py` file.
-- **Headless execution**: Avoid GUI windows, `plt.show()` or similar. Use `matplotlib.use('Agg')` before importing pyplot.
-- **Save plots** to a `plots/` subdirectory (relative path). Use **PDF** as the file format.
-- **Save results** to `results.json` in the working directory.
-- **Use relative paths**: The working directory is `output/experiments/`. All file I/O should use relative paths.
-- **No interactive input**: No `input()`, `sys.stdin`, or similar.
-- **Finish within 10 minutes**: The execution has a default 600-second timeout. You can change this in the code.
-- **Importable files**: Your other uploaded code files will be copied to the working directory, so the script can import from them.
-
-### What Gets Skipped
-
-When a user experiment is active:
-1. Experiment plan generation is skipped.
-2. Experiment code generation is skipped.
-3. Your code files are copied to `output/experiments/` and the experiment script executed directly.
-
-The validation, plot captioning and verdict generation steps still run normally.
 """
+# Bring Your Own Experiment (disabled)
+
+# You can use one of your uploaded Python files as the experiment, \
+# skipping both experiment plan generation and experiment code generation. \
+# Your script will be executed directly via a Python subprocess.
+#
+# ### Requirements
+#
+# - **Python only**: The file must be a `.py` file.
+# - **Headless execution**: Avoid GUI windows, `plt.show()` or similar. Use `matplotlib.use('Agg')` before importing pyplot.
+# - **Save plots** to a `plots/` subdirectory (relative path). Use **PDF** as the file format.
+# - **Save results** to `results.json` in the working directory.
+# - **Use relative paths**: The working directory is `output/experiments/`. All file I/O should use relative paths.
+# - **No interactive input**: No `input()`, `sys.stdin`, or similar.
+# - **Finish within 10 minutes**: The execution has a default 600-second timeout. You can change this in the code.
+# - **Importable files**: Your other uploaded code files will be copied to the working directory, so the script can import from them.
+#
+# ### What Gets Skipped
+#
+# When a user experiment is active:
+# 1. Experiment plan generation is skipped.
+# 2. Experiment code generation is skipped.
+# 3. Your code files are copied to `output/experiments/` and the experiment script executed directly.
+#
+# The validation, plot captioning and verdict generation steps still run normally.
 
 PAPER_SPECIFICATION_INFO = """\
 Specify the topic of your paper and requirements for the sections of the paper here.

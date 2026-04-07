@@ -36,7 +36,7 @@ def run_compilation_phase():
         pytest.skip("Cannot run standalone FR6. Missing prerequisite: paper_draft.md. Please run the full test suite.")
         return
 
-    from phases.latex_generation.paper_converter import PaperConverter
+    from phases.document_generation.paper_converter import PaperConverter
     PaperConverter.generate_new_pdf()
 
     os.chdir(original_cwd)

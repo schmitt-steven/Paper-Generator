@@ -1,74 +1,71 @@
-# Experiment Plan: Benford's Law Forensic Analysis of German Zensus 2022 Data
+# Experiment Plan: Recursive Backwards Q-Learning (RBQL) vs. Prioritized Experience Replay
 
 ## 1. Objective and Success Criteria
-**Objective:** To empirically validate the applicability of Benford's Law as a forensic tool for detecting anomalies in official German municipal statistics (Zensus 2022). The experiment will compare the first-digit frequency distributions of three real-world variables against theoretical expectations and synthetic baselines to distinguish natural data patterns from potential fabrication or derived-ratio artifacts.
-
-**Success Criteria:**
-1.  **Conformity Confirmation:** Population counts (`Personen`) and Municipal Area (`Fläche`) must exhibit low Mean Absolute Deviation (MAD) values, indicating strong conformity with Benford's Law ($P(d) = \log_{10}(1 + 1/d)$).
-2.  **Anomaly Detection:** Derived variables (Population Density `Bevölkerungsdichte`) and synthetic controls (Uniform distribution, Human Bias) must exhibit significantly higher MAD values, demonstrating the method's ability to flag non-natural distributions.
-3.  **Robustness:** The analysis must successfully filter out data points with quality flags other than 'e' (exact), ensuring only high-integrity records are analyzed.
-4.  **Metric Validity:** The experiment must demonstrate that MAD is a more interpretable metric for large samples ($N \approx 10,800$) than Chi-square tests, which may yield false positives due to excessive statistical power.
+- **Objective:** Empirically validate the hypothesis that Recursive Backwards Q-Learning (RBQL) achieves superior sample efficiency compared to Prioritized Experience Replay (PER) in deterministic episodic environments with sparse rewards.
+- **Success Criteria:** 
+  - RBQL reaches a target cumulative reward threshold (e.g., >0.5 average episode return) in significantly fewer episodes than PER across multiple random seeds.
+  - RBQL demonstrates faster wall-clock convergence time despite the overhead of backward graph traversal.
+  - Statistical significance (p < 0.05) is observed in the episode count required for convergence between methods.
 
 ## 2. Required Mathematical Formulas & Technical Details
-*   **Benford's Expected Probability:** $P(d) = \log_{10}\left(1 + \frac{1}{d}\right)$ for $d \in \{1, ..., 9\}$.
-    *   Values: $d=1 (30.1\%), d=2 (17.6\%), d=3 (12.5\%), d=4 (9.7\%), d=5 (7.9\%), d=6 (6.7\%), d=7 (5.8\%), d=8 (5.1\%), d=9 (4.6\%)$.
-*   **Mean Absolute Deviation (MAD):** $MAD = \frac{1}{9} \sum_{d=1}^{9} |P_{observed}(d) - P_{expected}(d)|$, where $P_{observed}$ is the proportion of observations starting with digit $d$.
-*   **Chi-Square Goodness-of-Fit (Supplementary):** $\chi^2 = \sum_{d=1}^{9} \frac{(O_d - E_d)^2}{E_d}$, where $O_d$ is observed count and $E_d$ is expected count ($N \times P(d)$).
-*   **First-Digit Extraction:** For a value $x$, the first digit $d = \lfloor x / 10^{\lfloor \log_{10}|x| \rfloor} \rfloor$. Values $\le 0$ or non-numeric are excluded.
+- **Bellman Optimality (RBQL):** $Q(s, a) \leftarrow R_{propagated}$ where $R_{propagated} = r \times \gamma$ is propagated backwards via BFS with direct assignment ($\alpha = 1$). A persistent `Q_updated` mask ensures each state-action pair is assigned at most once.
+- **Bellman Update (PER):** $Q(s, a) \leftarrow Q(s, a) + \alpha [r + \gamma \max_{a'} Q(s', a') - Q(s, a)]$.
+- **State Space:** Discrete integer encoding based on ball/racket coordinates and velocities (7488 states).
+- **Environment:** Deterministic Pong-like dynamics. No stochasticity in transitions; only exploration noise ($\epsilon$-greedy).
 
 ## 3. Experiment Setup
-*   **Data Source:** `datasets/1000A-0001_de_flat.csv` (Zensus 2022, Gemeinde-level).
-*   **Variables to Analyze:**
-    1.  **Population Count:** Filter rows where `value_variable_label` == 'Personen' and `value_q` == 'e'. Extract numeric values from `value`.
-    2.  **Municipal Area:** Filter rows where `value_variable_label` == 'Fläche' and `value_q` == 'e'. Extract numeric values from `value`.
-    3.  **Population Density:** Filter rows where `value_variable_label` == 'Bevölkerungsdichte' and `value_q` == 'e'. Extract numeric values from `value`.
-*   **Synthetic Controls (Generated In-Memory):**
-    1.  **Uniform:** Randomly generate integers 1-9 with equal probability ($P(d)=1/9$). Size $N=10,800$.
-    2.  **Human Bias:** Generate integers favoring '5' and '6' (psychological anchoring) to simulate fabrication. Size $N=10,800$.
-*   **Environment Configuration:**
-    *   Initialize headless mode for plotting: `os.environ['SDL_VIDEODRIVER'] = 'dummy'`, `os.environ['SDL_AUDIODRIVER'] = 'dummy'`.
-    *   Ensure no interactive plots are shown; all figures saved to `.pdf`.
+- **Environment:** Shared `get_state` / `step_env` / `reset_env` helper functions encapsulating the Pong-like dynamics. Headless execution (SDL dummy drivers, Agg matplotlib backend).
+- **Algorithms:** 
+  - **Method A (RBQL):** `run_backward_prop` — BFS backward propagation from terminal states with direct Q-value assignment.
+  - **Method B (Baseline):** `run_prioritized_experience_replay` — standard Q-learning with prioritized replay buffer.
+- **Hyperparameters:** 
+  - Discount Factor ($\gamma$): 0.95
+  - Learning Rate ($\alpha$): 0.1 (PER), 1.0 effective (RBQL direct assignment)
+  - $\epsilon$-Decay: Linear decay from 1.0 to 0 over 400 steps.
+  - Buffer Size (PER): 1000, Batch Size: 32, PER $\alpha$: 0.6, PER $\epsilon$: 1e-4.
+  - Q-table initialization: Small random values (`rand / 1000`).
+- **Runs:** 30 independent seeds per algorithm (seeds 0–29 for RBQL, 1000–1029 for PER).
+- **Budget:** Maximum 300 episodes per run.
 
 ## 4. Metrics to Measure
-*   **Primary Metric:** Mean Absolute Deviation (MAD). Interpretation: $<0.01$ indicates excellent conformity, $0.01-0.02$ good, $>0.05$ suspicious.
-*   **Secondary Metric:** Chi-Square Statistic and p-value (for comparison purposes only).
-*   **Sample Size ($N$):** Total valid records per variable to contextualize the statistical power.
+1.  **Sample Complexity:** Number of episodes required to reach a stable average return (moving average $\geq 0.5$ over a window of 20, sustained until end).
+2.  **Cumulative Reward:** Mean $\pm$ std of episode rewards across seeds (plotting curve).
+3.  **Wall-Clock Time:** Total execution time per algorithm across all seeds + scaling across episode budgets.
+4.  **Total Reward Sum:** Sum of all rewards per run (distribution via boxplot).
 
 ## 5. Implementation Approach
-1.  **Data Loading & Filtering:** Load CSV using `pd.read_csv('datasets/1000A-0001_de_flat.csv', sep=';')`. Filter for `value_q == 'e'` and specific variable labels ('Personen', 'Fläche', 'Bevölkerungsdichte'). Convert `value` column to numeric, coercing errors to NaN.
-2.  **First-Digit Extraction:** Create a function to extract the leading digit from valid positive numbers. Apply this to all three real variables.
-3.  **Synthetic Generation:** Generate two synthetic datasets (Uniform and Biased) with $N=10,800$ using `numpy.random`.
-4.  **Statistical Computation:** For each of the 5 datasets:
-    *   Compute digit frequencies ($d=1..9$).
-    *   Convert to proportions.
-    *   Calculate MAD against Benford's expected probabilities.
-    *   Calculate Chi-Square statistic and p-value (for reference).
-5.  **Visualization Generation:**
-    *   **Plot 1 (Bar Chart):** Grouped bar chart comparing Observed vs. Expected frequencies for all datasets, with Benford curve overlaid.
-    *   **Plot 2 (Conformity Comparison):** Bar chart of MAD values for all 5 datasets with threshold lines ($0.01$, $0.02$, $0.05$).
-    *   **Plot 3 (Heatmap):** Matrix showing deviation magnitude per digit vs. dataset, color-coded by absolute difference.
-6.  **Output:** Print a summary table of MAD and Chi-Square results. Save all plots as `benford_analysis.pdf`.
+- **Code Structure:** Single self-contained script `experiment.py`.
+  - Environment dynamics factored into `get_state`, `step_env`, `reset_env`.
+  - Algorithm implementations: `run_backward_prop`, `run_prioritized_experience_replay` (with helper `update_q_per`).
+  - `run_experiment()` orchestrates seeding, timing, aggregation, and plotting.
+  - Environment variables set for headless execution (`SDL_VIDEODRIVER='dummy'`, matplotlib `Agg` backend).
+- **Main Experiment:** Loop over 30 seeds; for each seed, run both algorithms and record per-episode rewards and wall-clock time.
+- **Scaling Experiment:** Run both algorithms at episode budgets [50, 100, 150, 200, 250, 300] with 5 seeds each, recording mean wall-clock time per budget.
+- **Convergence Detection:** For each seed, find the first episode where the moving average (window=20) reaches $\geq 0.5$ and remains above it for all subsequent windows. Return 300 (max episodes) if no convergence detected.
+- **Aggregation:** Compute mean and std of convergence episodes, total reward sums, and wall-clock times across seeds.
 
-## 6. Pseudocode Algorithm
-```text
-1. LOAD data from 'datasets/1000A-0001_de_flat.csv' (semicolon-delimited).
-2. FILTER rows where value_q == 'e'.
-3. EXTRACT numeric values for variables: Population, Area, Density.
-4. GENERATE synthetic datasets: Uniform(1-9) and Biased(5-heavy), size N=10800.
-5. FOR each dataset (Real + Synthetic):
-    a. COMPUTE first digit d for every value > 0.
-    b. CALCULATE observed proportion P_obs(d) for d in 1..9.
-    c. DEFINE expected proportion P_exp(d) = log10(1 + 1/d).
-    d. CALCULATE MAD = (1/9) * sum(|P_obs - P_exp|).
-    e. CALCULATE Chi-Square statistic and p-value.
-6. GENERATE Plot 1: Bar chart of Observed vs Expected frequencies.
-7. GENERATE Plot 2: Bar chart of MAD values with threshold markers.
-8. GENERATE Plot 3: Heatmap of |P_obs - P_exp| per digit/dataset.
-9. PRINT summary table of all metrics and conformity classification.
-10. SAVE plots to 'benford_analysis.pdf' (headless mode).
-```
+## 6. Output Requirements
+- **Stdout:** 
+  - Print the **Hyperparameter Settings Table** (Markdown format).
+  - Print the **Pseudocode Algorithm Block** for RBQL (10-20 lines, summarizing the backward pass logic).
+  - Print **Convergence Metrics Table**: Mean $\pm$ Std for convergence episode, total reward sum, and wall-clock time for both methods.
+  - Print **Scaling Experiment** results per episode budget.
+- **Visualizations (PDF):**
+  1. `sample_complexity.pdf`: Line plot of Mean Reward vs. Episodes (RBQL vs PER) with shaded $\pm 1$ std bands.
+  2. `boxplots.pdf`: Side-by-side boxplots for Total Reward Sum and Convergence Episode distributions.
+  3. `wall_clock_time.pdf`: Bar chart comparing mean wall-clock time between algorithms.
+  4. `wall_clock_scaling.pdf`: Line graph showing computation time vs. episode budget for both algorithms.
+  - **Style:** Seaborn `ticks` theme with `colorblind` palette, `sns.despine()`. Distinct markers and line styles for monochrome readability. Hatching on PER elements for print distinction.
+  - **Constraint:** Use `plt.savefig(..., format='pdf')`. No `plt.show()`. Close all figures after saving.
+- **JSON:** `results.json` containing hyperparameters, per-algorithm metrics (mean/std time, convergence episodes per seed, total rewards per seed), and scaling experiment data.
+- **Performance:** Total execution time should stay under 10 minutes.
 
-## 7. Output Requirements
-*   **Console Output:** A concise text block displaying the MAD, Chi-Square value, p-value, and a qualitative conclusion ("Conforms", "Suspicious", or "Anomalous") for each of the five datasets.
-*   **Files Generated:** `benford_analysis.pdf` containing three distinct visualizations as described in Section 5.
-*   **Constraints:** All text (labels, titles) must be in English. No interactive windows will appear. Execution time must remain under 5 minutes.
+## 7. Safety & Headless Execution
+- **No GUI:** Explicitly set `os.environ['SDL_VIDEODRIVER'] = 'dummy'` and `os.environ['SDL_AUDIODRIVER'] = 'dummy'` at the start of the script.
+- **No Blocking:** All plotting uses `savefig` and closes figures (`plt.close()`) to prevent memory leaks.
+- **Determinism:** Fix `np.random.seed(seed)` at the start of each run for reproducibility.
+
+## 8. Required Artifacts for Paper (to be generated in output)
+- **Pseudocode:** A text block describing the RBQL backward traversal (State -> Reverse Map -> BFS Queue -> Update).
+- **Hyperparameter Table:** A markdown table listing $\gamma, \alpha, \epsilon_{start}, \epsilon_{end}$, Buffer Size, PER parameters.
+- **Convergence Table:** A markdown table with columns: Method, Mean Episodes to Converge, Std Dev, Mean Total Reward, Mean Time (s).

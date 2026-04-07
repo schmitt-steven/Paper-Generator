@@ -3,66 +3,53 @@
 ## General Information
 
 ### Topic
-Empirical Validation of Benford's Law as an Anomaly Detection Tool: An Analysis of German Municipal Data from the Zensus 2022.
+Recursive Backwards Q-Learning (RBQL) for Model-Based Policy Optimization in Deterministic Episodic Environments.
 
-Benford's Law predicts the probability of leading digit d (1-9):
-P(d) = log₁₀(1 + 1/d)
+Standard Q-learning suffers from high sample complexity in deterministic episodic environments due to the need for repeated visits to propagate sparse terminal rewards. RBQL solves this by building a persistent state-transition model during epsilon-greedy exploration. Upon episode termination, RBQL explicitly traverses the trajectory graph breadth-first backwards from terminal states, using the Bellman optimality equation with full replacement (α=1) to propagate rewards exactly once per state-action pair. 
 
-Yielding: d=1: 30.1%, d=2: 17.6%, d=3: 12.5%, ..., d=9: 4.6%
-
-The Mean Absolute Deviation (MAD) for Benford conformity is defined as: MAD = (1/9) × Σ|P_observed(d) - P_expected(d)| for d = 1..9
-
-When computing deviation metrics such as MAD, calculations must operate on proportions (observed proportion vs. expected proportion), not raw counts. Raw count comparisons scale with sample size and render fixed conformity thresholds meaningless. Additionally, for large samples (N > 10,000), chi-square tests suffer from excess statistical power — even trivially small, scientifically irrelevant deviations will produce significant p-values. The analysis should account for this and not rely on chi-square as the sole conformity criterion.
-
-Dataset:
-- **Source:** Statistisches Bundesamt — Zensus 2022, Zensusdatenbank
-- **Table:** Bevölkerung kompakt (Gebietsstand 15.05.2022), Gemeinde-level
-- **Format:** CSV (semicolon-delimited), flat structure with quality flags
-- **Variables:**
-  - Population Count (`Einwohnerzahl` ) — primary variable
-  - Area, qkm (`Fläche`) — secondary variable
-  - Population Density, Ew/qkm (`Bevölkerungsdichte`) — tertiary variable (a derived ratio)
-- **Sample size:** ~10,800 German municipalities
-- **Quality flags:** `e` = exact, `()` = possibly altered by Cell-Key method, `.` = suppressed. Exclude non-exact values. Note: population counts are always unaltered per Destatis policy.
+Target Venue: JAIR (Journal of Artificial Intelligence Research) format and standards.
 
 ### Hypothesis
-Population counts and municipal area measurements from the German Zensus 2022 conform to Benford's Law, while population density (a derived ratio) and synthetically generated data deviate significantly. This demonstrates Benford's Law's effectiveness as an anomaly detection tool for official statistics.
+In deterministic episodic environments with sparse rewards, performing a breadth-first backward traversal over a persistent state-transition trajectory graph significantly accelerates value propagation. This model-based mechanism eliminates the need for iterative online updates and reduces sample complexity by orders of magnitude compared to standard model-free Q-learning, converging to optimal policies in a single backward pass per episode.
 
 ## Section Requirements
 
 ### Abstract
-3-4 sentences: problem, approach, key results, implications.
+Shortly identify standard Q-learning limitations in deterministic episodic environments, describe the proposed RBQL backward-propagation mechanism, detail the key results (reduced sample complexity and wall-clock times), and highlight the practical implications for model-based policy optimization.
 
 ### Introduction
-Introduce Benford's Law, its mathematical basis (include the core formula), and why it applies to naturally occurring data spanning multiple orders of magnitude. Motivate the study: official statistics underpin policy and financial decisions, so integrity validation matters. State the research question and contributions.
+Introduce Q-learning and its sample inefficiency when dealing with sparse terminal rewards in episodic tasks. Explain the mechanism of Recursive Backwards Q-Learning (RBQL) and how solving reverse trajectory graphs addresses the propagation delay. Motivate the study by highlighting the gap between exact dynamic programming solutions and uniform experience replay. Explicitly frame the core contributions, detailing how the algorithm advances current Q-learning capabilities in deterministic environments.
 
 ### Related Work
-Cover: Newcomb (1881) and Benford (1938), mathematical foundations (scale invariance), empirical applications to population/census data, use in fraud detection (financial auditing), the controversy around election data analysis, and relevant statistical testing approaches.
+Provide a structured review of classical principles and related backward-propagation literature:
+- Foundational RL models: Sutton's Dyna-Q (1990) and Moore & Atkeson's Prioritized Sweeping (1993).
+- Basic value estimation processes: Watkins & Dayan's Q-learning (1992), and Double Q-learning (Hasselt et al., 2015).
+- Recent exact backward solvers: Episodic Backward Update for deep RL (Lee et al., 2018), Fast Online Exact Solutions for Deterministic MDPs (Bertram et al., 2018).
+Explain why standard Q-learning terminology or prior techniques are insufficient to solve the sample efficiency problem in perfectly deterministic models. Acknowledge predecessors clearly to align with JAIR submission guidelines.
 
 ### Methods
-The pipeline should determine and justify appropriate statistical conformity tests. At minimum, the methodology must include:
-- Data preprocessing (parsing, filtering by quality flags, first-digit extraction)
-- At least two complementary statistical tests for Benford conformity (the system should identify and justify which tests are suitable, and discuss why relying on a single test may be problematic for large samples)
-- Generation of synthetic control datasets: one with uniform digit distribution (P(d) = 1/9), and one simulating human fabrication bias (e.g., overrepresentation of a specific digit like 5 to simulate psychological anchoring toward round numbers)
-- Comparative analysis across all real and synthetic variables
+The pipeline should outline the exact algorithmic operations for RBQL. At minimum, methodology must include:
+- Generating experience and recording the episodic state-transition trajectory graph (DAG).
+- The backward breadth-first search execution starting exclusively from terminal states.
+- Bellman optimal updates mapped with full replacement (α=1) and a discount factor γ.
+- A structured exclusion of stochasticity, deep neural function approximators, and continuous properties.
 
-**Required Listing:**
-Include a concise pseudocode algorithm block (10-20 lines max) describing the high-level Benford conformity analysis pipeline. Must be appropriate for a methodology section. The pseudocode should cover the key stages (data filtering, first-digit extraction, frequency computation, MAD/Chi-square calculation, classification) at an abstracted level.
+**Required Listing & Tables:**
+- Include a concise pseudocode algorithm block or procedural list (10-20 lines max) detailing the high-level RBQL backward pass. The code should encapsulate the logical transition tracking, terminal state detection, graph reversal, and synchronous Bellman updates.
+- Include a **Hyperparameter Settings Table** detailing values for learning rate, discount factor, epsilon decay, and environment properties to guarantee strict reproducibility.
 
 ### Results
+**Variables and Metrics:** Sample complexity curves, wall-clock time required for convergence, and final return margins.
 
-**Variables tested:** Population, Area, Density, Synthetic-Uniform, Synthetic-Biased
-
-**Required Plots:**
-1. **First-Digit Distribution Bar Chart:** Observed vs. expected Benford frequencies for each dataset, with Benford's expected distribution overlaid as reference.
-2. **Conformity Comparison Chart:** Visual comparison of the primary conformity metric across all five datasets, with accepted threshold levels clearly marked.
-3. **Per-Digit Deviation Heatmap:** Digits 1-9 vs. datasets, color-coded by deviation magnitude, highlighting statistically significant deviations.
-
-**Required Tables:**
-- Summary table of all test statistics across all five datasets with conformity classification.
+**Required Components:**
+1. **Sample Complexity Comparison Chart:** Visual plot showing cumulative rewards over episodes, explicitly comparing standard model-free Q-learning against RBQL.
+2. **Wall-Clock Time Scaling Plot:** Line graph mapping the computation time required for convergence as environment depth/complexity scales up.
+3. **Convergence Metrics Table:** A detailed summary table reporting precise final metrics (total episodes to converge, computation time per episode, and final max reward) across multiple varied environments.
+4. Ensure all graphs and tables explicitly employ pattern fills or distinct structural markers for monochrome viewing and print readability.
+Demonstrate with clear empirical experiments that claims of "dramatic sample efficiency" hold up mechanically.
 
 ### Discussion
-Analyze why real variables conform or deviate. Address the challenge of statistical testing on large samples (N ≈ 10,800). Discuss limitations (single country, single census year, simplistic synthetic controls). Suggest extensions (longitudinal comparison with Zensus 2011, cross-country analysis, application to financial data).
+Analyze why backward propagation mathematically bypasses standard value iteration loops in deterministic matrices. Address the limitations of the model (restricted strictly to discrete, deterministic environments). Suggest extensions for hybrid transition systems. Clearly discuss the practical utility of the algorithm and its broader algorithmic implications for model-based planning protocols.
 
 ### Conclusion
-2-3 sentences summarizing key findings and practical implications for anomaly detection in official statistics.
+2-3 sentences summarizing the structural findings of the RBQL algorithm and verifying the primary efficiency claims. Frame the results clearly for the machine learning research community.

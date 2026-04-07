@@ -1,0 +1,178 @@
+\chapter{Implementation}
+\label{ch:implementation}
+
+This chapter describes how the system is implemented. 
+The first part describes aspects that apply to the entire system. 
+The following sections explain a selection of complex parts of the system in more detail.
+% The system runs on Python~3.11 or newer and uses LM~Studio\footnote{\url{https://lmstudio.ai/}} for local inference.
+% The \texttt{lmstudio} Python \gls{sdk}\footnote{\url{https://github.com/lmstudio-ai/lmstudio-python}} is used to communicate with LM Studio.
+% \texttt{pymupdf4llm}\footnote{\url{https://github.com/pymupdf/pymupdf4llm}} converts \gls{pdf} files of papers into Markdown.
+% A \LaTeX{} distribution compiles the final document.
+
+\paragraph{Model Configuration}
+Each phase has a dedicated model variables, as shown in Table~\ref{tab:model_variables}, so the user can make use of models that are specialized in a certain task.
+For example, a code generation model can be used for experimentation and an academic writing model for paper writing.
+The experimentation phase also uses a \gls{vlm} to validate plots and write their captions.
+Embedding models are used for ranking papers and for searching relevant text passages during the writing phase.
+When reasoning models are used, their outputs may contain internal thinking blocks wrapped in \texttt{<think>...</think>} tags.
+A post-processing step removes these before saving, so the models internal reasoning does not end up in the result.
+Models can be changed at runtime on the settings screen.
+Each model can be selected from a dropdown menu with the models currently available in LM~Studio, so only valid models can be selected.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Model Configuration Variables}
+    \label{tab:model_variables}
+    \begin{tabularx}{\textwidth}{l l X}
+        \toprule
+        \textbf{Phase} & \textbf{Variables} & \textbf{Type} \\
+        \midrule
+        Context Analysis & 2 & Language Model \\
+        Paper Search & 1 + 1 & Language Model + Embedding Model \\
+        Hypothesis & 1 & Language Model \\
+        Experimentation & 4 + 1 & Language Model + Vision-Language Model \\
+        Paper Writing & 1 + 1 & Language Model + Embedding Model \\
+        \LaTeX{} Generation & 1 & Language Model \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\paragraph{Lazy Model Loading}
+Models are loaded on demand to avoid unnecessarily using the computer's resources at startup and decrease the risk of overloading it.
+Each phase loads its assigned model on first use and caches the instance for following calls.
+
+This works well with LM~Studio's ``Only Keep Last JIT Loaded Model'' option.
+When it is activated, LM~Studio unloads the current model before loading the next, so only one model at a time takes up resources.
+
+The paper writing phase is an exception because it alternates between a language model and an embedding model on every section.
+The language model writes the text, and the embedding model is used to search the indexed literature for relevant context, which will be passed to the language model to improve the text.
+Reloading the model before every switch for all seven sections would cause unnecessary delays.
+Just-in-time-loaded models are unloaded automatically.
+Models loaded via LM Studio's \gls{cli} bypass the auto-unload rule and stay in memory until the phase finishes.
+
+\paragraph{Error Handling}
+Each phase runs in a background thread so the GUI stays responsive when the results of a phase are being generated.
+If a phase should fail, the exception is caught in the background thread and passed to the main thread via Tkinter's \texttt{after()} function.
+The progress popup then switches to an error display, so the user can see the error message.
+The application does not exit, so the user can read the error, perhaps make changes to files or models, and restart the phase.
+
+\paragraph{Structured LLM Responses} % Structured LLM responnses
+\texttt{pydantic}\footnote{\url{https://github.com/pydantic/pydantic}} is used to validate structured JSON outputs from \glspl{llm}.
+When the system needs structured output from an LLM, a subclass of \texttt{BaseModel} defines the expected JSON schema.
+This schema is passed to the LM Studio SDK as a \texttt{response\_format} argument, which signals the model to generate output matching it.
+Listing~\ref{lst:hypothesis_model} shows this for the hypothesis generation phase, which requires the \gls{llm} to always return a hypothesis description, rationale, and success criteria.
+
+\begin{lstlisting}[language=Python, caption={[Hypothesis response schema]Response schema definition and enforcement for the hypothesis generation.}, label={lst:hypothesis_model}]
+class Hypothesis(BaseModel):
+    description: str
+    rationale: str
+    success_criteria: str
+
+result = model.respond(prompt, response_format=Hypothesis)
+\end{lstlisting}
+
+\paragraph{Phase Output}
+Each phase writes its output to the \texttt{output/} directory as JSON or Markdown files. 
+The content of these files is shown when the user opens the corresponding screen. 
+For example, the literature search phase writes its output to \texttt{output/literature_search.json}, and the literature search screen displays its content.
+When a phase fails or the user wants to run a specific phase again, like the document generation phase, the results of the other phases remain unchanged.
+Phases only depend on files and not on each other directly, so any phase can be re-executed without losing the results of others.
+
+
+
+\section{Literature Search and Selection}
+The LLM reads the research context and generates Semantic Scholar queries covering surveys, foundational work, core methods, related approaches, and benchmarks.
+Each query retrieves a batch of results, limited to Computer Science papers.
+All results are stored as paper objects that keep their metadata independent of the API.
+
+\paragraph{Paper Ranking}
+Each paper is scored on three metrics.
+Relevance is the cosine similarity between the paper's title-and-abstract embedding and the research context embedding.
+The citation score is age-aware. Papers earning roughly 30 or more citations per year score 0.9. Papers older than four years with fewer than 0.5 citations per year receive a penalty.
+Recency uses an exponential decay with a four-year half-life, scoring 1.0 for a paper published today and 0.5 for one published four years ago.
+The final score is a weighted sum with relevance at 0.8 and citations and recency at 0.1 each.
+
+Filter selection runs in three steps.
+The top 10 papers by relevance are auto-selected and protected from removal.
+The remaining slots up to a total of 40 are filled by composite score.
+An LLM then checks the non-protected papers in batches of 10, keeping everything unless a paper is unrelated in both method and application.
+If the model call fails, the batch is kept in full.
+
+After filtering, a citation gap detection pass prompts the LLM to identify missing foundational work.
+Suggested titles are searched on Semantic Scholar's exact-match endpoint to retrieve the missing papers.
+
+\paragraph{Open Access Retrieval and Downloading}
+The system needs physical PDF files to parse each paper's text.
+For papers missing a download URL, the system first tries the arXiv API with a title search.
+A result is accepted only if the Jaccard word similarity between the query and the returned title reaches 0.85.
+If arXiv yields nothing, the system falls back to the Unpaywall API using the paper's DOI.
+
+The downloader spoofs a standard browser User-Agent and disables SSL certificate verification to bypass server firewalls and 403 blocks.
+
+
+
+
+\section{Automated Experimentation}
+The experiment runner generates, executes, and validates Python code to test the hypothesis.
+
+\paragraph{Code Generation and Execution}
+Code generation uses a three-step conversational approach.
+An \texttt{lms.Chat} object carries the system prompt with the hypothesis, experiment plan, available packages, and any user-provided code files.
+The first message generates imports, data structures, and algorithm implementations.
+The second adds experiment execution and metric collection, merging it with the previous output.
+The third adds visualization and produces the complete final script.
+The generated file runs in an isolated subprocess with a 10-minute timeout.
+Afterward, the system scans the output directory for new plot and result files.
+
+\paragraph{Error Recovery}
+A non-zero exit code triggers an auto-fix loop.
+The broken code, stdout, and stderr are bundled into a fix message, and the same chat object carries the full failure history across attempts.
+Timeout errors add specific guidance to reduce loop iterations, disable UI windows, and simplify matrix operations.
+The loop runs for up to five attempts before aborting.
+
+\paragraph{Validation and Visual Checking}
+A successful execution triggers a separate validation step.
+The validator reviews the code, execution logs, and plots together.
+Any PDF plots are converted to PNG so the VLM can scan them for missing axis labels, empty graphs, overlapping text, and missing legends.
+These findings are merged into the validation prompt.
+The validator returns a structured result flagging whether the experiment passed and listing specific bugs by line number.
+A failed validation sends the code back for one automated improvement attempt before re-executing.
+
+
+
+\section{Draft-Critique-Retrieve-Improve Pipeline}
+The pipeline writes seven sections. The order is Methods, Results, Discussion, Related Work, Introduction, Conclusion, and Abstract.
+Each section is built through four steps based on the PaperQA~\cite{skarlinski2024languageagentsachievesuperhuman} algorithm:
+
+\begin{enumerate}[nosep]
+	\item \textbf{Initial Draft:} A first version is generated using the paper catalog, research context, experiment logs, and all previously written sections. The system prompt forces the model to use exact citation keys from the catalog.
+	\item \textbf{Critique:} A second model call reviews the draft and outputs an improvement summary alongside a list of search queries targeting weak claims. Every citation key in the text is cross-referenced against the catalog, and unrecognized keys are flagged.
+	\item \textbf{Evidence Search:} Papers are stripped of their abstracts and conclusions, then split into overlapping paragraph chunks of up to 700 tokens. Token counts are estimated as word count divided by 0.75 to avoid slow API tokenization calls. The embedding model converts chunks to vectors, and the critique's search queries retrieve the most similar chunks by cosine similarity. A model call then scores each chunk by contextual relevance and writes a concise summary, stripping any preexisting in-text citations. At most two chunks per paper per query are kept.
+	\item \textbf{Rewrite:} The initial draft, critique feedback, hallucination warnings, and evidence summaries are combined into a rewrite prompt to produce the final section.
+\end{enumerate}
+
+The Abstract and Conclusion skip the evidence search step.
+
+
+
+
+\section{Citation Management and \LaTeX{} Assembly}
+
+\paragraph{Citation Extraction}
+The system scans the final Markdown draft for citation keys in the \texttt{[citationKey]} format.
+Keys must contain at least one digit to filter out plain words used in square-bracket notation for lists or variables.
+Each matched key is looked up in the paper list to extract its BibTeX entry, and a \texttt{bibliography.bib} file is generated.
+Keys that fail to match get a placeholder entry to prevent compilation failures.
+
+\paragraph{\LaTeX{} Template System}
+A template is a standard \LaTeX{} file with \texttt{\%\%SECTION\%\%} placeholders marking where each section goes and a \texttt{\%\%BEGIN\_AUTHOR\%\%...\%\%END\_AUTHOR\%\%} block defining the per-author layout.
+The system fills the template in three passes after copying it to the output directory.
+
+\begin{enumerate}[nosep]
+	\item \textbf{Metadata:} The title placeholder is replaced by string substitution. The author block is duplicated once per author and each copy is filled with name, affiliation, and email fields from the settings.
+	\item \textbf{Content:} An LLM translates each Markdown section to valid \LaTeX{} instead of using fixed conversion rules, then injects the result at the matching placeholder. The prompt instructs the model to format tables with booktabs, scale images to the text width, convert citation keys to \texttt{\textbackslash cite\{key\}}, and escape special characters.
+	\item \textbf{Assets:} Experiment plots are copied into the template's \texttt{images/} directory to keep figure references valid.
+\end{enumerate}
+
+Any folder in \texttt{latex\_templates/} that contains a \texttt{paper.tex} and a \texttt{Makefile} is picked up at startup.
+Document generation is a standalone phase, so the same paper draft can be compiled into any target format by switching the template and re-running it.

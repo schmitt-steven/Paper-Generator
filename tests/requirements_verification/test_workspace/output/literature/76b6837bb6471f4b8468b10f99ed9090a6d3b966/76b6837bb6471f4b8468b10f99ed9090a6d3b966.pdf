@@ -69,7 +69,7 @@ if (pageName == "") {
 			     detail : 'sciencedirect',
 			     format :"MIME-XHTML",
 			     accessType : 'ih:anon_guest',
-			     ipAddress : '84.188.228.233',
+			     ipAddress : '84.188.236.196',
 			     identifierType : 'PII',
                  identifierValue : 'S2215016121003654',
 			     articleName : 'A Benford\'s law based method for fraud detection using R Library',

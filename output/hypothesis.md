@@ -1,10 +1,10 @@
 # Research Hypothesis
 
 ## Description
-Validating Benford's Law conformity in German Zensus 2022 municipal data by comparing first-digit frequency distributions of population counts and area measurements against derived population density and synthetic controls.
+Recursive Backwards Q-Learning (RBQL) propagates sparse terminal rewards to initial states in deterministic episodic environments via a single breadth-first backward traversal of the trajectory graph, eliminating iterative online updates.
 
 ## Rationale
-Naturally occurring large-scale demographic datasets typically exhibit the logarithmic distribution predicted by Benford's Law, whereas derived ratios and human-fabricated data often display distinct deviations due to mathematical constraints or psychological biases. Standard conformity tests like Chi-square lack specificity for large sample sizes where trivial deviations yield significant p-values; therefore, a multi-metric approach using Mean Absolute Deviation (MAD) on proportions is required to distinguish natural variation from systematic anomalies.
+Standard model-free Q-learning requires repeated stochastic visits to propagate value signals through long trajectories, creating high sample complexity. In deterministic environments, the state-transition graph is fully known and acyclic; a breadth-first backward search from terminal states allows exact Bellman optimality updates to reach all visited states in one pass, theoretically reducing the number of required environment interactions.
 
 ## Success Criteria
-Population counts and municipal area measurements exhibit low Mean Absolute Deviation values consistent with the theoretical Benford distribution, while population density and synthetic datasets demonstrate significantly higher deviation magnitudes. The analysis successfully distinguishes between naturally occurring data patterns and anomalous distributions using proportion-based metrics rather than raw count comparisons.
+RBQL achieves convergence to optimal policies in fewer total episodes than standard model-free Q-learning on deterministic episodic tasks with sparse rewards. The improvement in sample complexity (episodes to convergence) is statistically significant across multiple environment configurations.

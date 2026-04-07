@@ -1,175 +1,34 @@
 # Style Guidelines
 ## Abstract
-150-300 words MAX.
-Be specific and verifiable.
-CITATIONS ARE STRICTLY FORBIDDEN. Do NOT include ANY citations in the Abstract.
-
-**Intuitive and Accessible Vocabulary:**
-    Write in a clear, straightforward, and professional style. Prioritize clarity for non-native speakers. Replace robotic, overly academic, or technical jargon with simple, intuitive everyday terms. 
-    - **DON'T:** "Crucially, the system leverages vector embeddings to facilitate contextual alignment."
-    - **DO:** "The system uses vector embeddings to match the text to the context."
-    - *Forbidden Verbs:* leveraging, situating, ensuring, utilizing, facilitating. Use simple equivalents (uses, places, makes sure, helps).
-    - *Forbidden Adverbs:* crucially, strictly, importantly, topically, additionally. 
-
-**Dynamic Sentence Structure:**
-    Vary your sentence lengths and structures. Do not start consecutive sentences the same way. Keep sentences distinct and easy to read. Use concise, direct one-liners where appropriate to punch up readability.
-    - **DON'T:** "The system first loads the data. The system then processes the data. The system finally saves the data."
-    - **DO:** "The process begins by loading the user's data. Once loaded, the system processes it to extract metadata. Finally, the results are saved to the disk."
+150-300 words MAX. No citations.
+**Tone:** Professional but authentic. Choose simple, down-to-earth everyday words over robotic academic jargon.
+- **DON'T:** Use filler words like "leverage", "facilitate", "ensure", "seamless", "robust", "crucially". 
+- **DO:** Use "helps", "uses", "shows".
 
 ## Introduction
-
-Scientific Writing & Tone Guidelines
-1. **Logical Derivation Over Empirical Claims:** 
-   Never make subjective, absolute, or empirical claims about performance, output quality, or user behavior unless you have a specific citation to back it up. Instead, describe the *logical, mechanical effects* of the system's design or algorithms.
-   - **DON'T:** "This method is highly effective and improves accuracy."
-   - **DO:** "This method provides an explicit filtering mechanism, preventing the algorithm from processing out-of-bounds data."
-
-2. **No Baseless Statements:**
-   Every technical statement must either be logically derived from the provided context or explicitly backed by a provided citation. Ungrounded claims in academic texts are strictly prohibited. 
-   - **DON'T:** "Studies show that local models are weaker than cloud models."
-   - **DO:** "Because local models operate with smaller parameter counts and quantized weights, they possess less reasoning capacity than uncompressed cloud models [CITE]."
-
-3. **Intuitive and Accessible Vocabulary:**
-   Write in a clear, straightforward, and professional style. Prioritize clarity for non-native speakers. Replace robotic, overly academic, or technical jargon with simple, intuitive everyday terms. 
-   - **DON'T:** "Crucially, the system leverages vector embeddings to facilitate contextual alignment."
-   - **DO:** "The system uses vector embeddings to match the text to the context."
-   - *Forbidden Verbs:* leveraging, situating, ensuring, utilizing, facilitating. Use simple equivalents (uses, places, makes sure, helps).
-   - *Forbidden Adverbs:* crucially, strictly, importantly, topically, additionally. 
-
-4. **Dynamic Sentence Structure:**
-   Vary your sentence lengths and structures. Do not start consecutive sentences the same way. Keep sentences distinct and easy to read. Use concise, direct one-liners where appropriate to punch up readability.
-   - **DON'T:** "The system first loads the data. The system then processes the data. The system finally saves the data."
-   - **DO:** "The process begins by loading the user's data. Once loaded, the system processes it to extract metadata. Finally, the results are saved to the disk."
+**Tone:** Keep it grounded. Make sentences distinct, active, and punchy. Explain mechanics logically without subjective hype or unbacked empirical claims.
+**JAIR Rules:** Explicitly clarify how the work advances the current state of understanding, why it matters, and its practical utility.
 
 ## Related Work
-
-Scientific Writing & Tone Guidelines
-1. **Logical Derivation Over Empirical Claims:** 
-   Never make subjective, absolute, or empirical claims about performance, output quality, or user behavior unless you have a specific citation to back it up. Instead, describe the *logical, mechanical effects* of the system's design or algorithms.
-   - **DON'T:** "This method is highly effective and improves accuracy."
-   - **DO:** "This method provides an explicit filtering mechanism, preventing the algorithm from processing out-of-bounds data."
-
-2. **No Baseless Statements:**
-   Every technical statement must either be logically derived from the provided context or explicitly backed by a provided citation. Ungrounded claims in academic texts are strictly prohibited. 
-   - **DON'T:** "Studies show that local models are weaker than cloud models."
-   - **DO:** "Because local models operate with smaller parameter counts and quantized weights, they possess less reasoning capacity than uncompressed cloud models [CITE]."
-
-3. **Intuitive and Accessible Vocabulary:**
-   Write in a clear, straightforward, and professional style. Prioritize clarity for non-native speakers. Replace robotic, overly academic, or technical jargon with simple, intuitive everyday terms. 
-   - **DON'T:** "Crucially, the system leverages vector embeddings to facilitate contextual alignment."
-   - **DO:** "The system uses vector embeddings to match the text to the context."
-   - *Forbidden Verbs:* leveraging, situating, ensuring, utilizing, facilitating. Use simple equivalents (uses, places, makes sure, helps).
-   - *Forbidden Adverbs:* crucially, strictly, importantly, topically, additionally. 
-
-4. **Dynamic Sentence Structure:**
-   Vary your sentence lengths and structures. Do not start consecutive sentences the same way. Keep sentences distinct and easy to read. Use concise, direct one-liners where appropriate to punch up readability.
-   - **DON'T:** "The system first loads the data. The system then processes the data. The system finally saves the data."
-   - **DO:** "The process begins by loading the user's data. Once loaded, the system processes it to extract metadata. Finally, the results are saved to the disk."
+**Tone:** Straightforward and factual. If you can use a simpler word, do it. Avoid the stereotypical "AI academic voice."
+**JAIR Rules:** Acknowledge predecessors. If introducing new techniques, clearly explain why current methods are insufficient.
 
 ## Methods
-
-Scientific Writing & Tone Guidelines
-1. **Logical Derivation Over Empirical Claims:** 
-   Never make subjective, absolute, or empirical claims about performance, output quality, or user behavior unless you have a specific citation to back it up. Instead, describe the *logical, mechanical effects* of the system's design or algorithms.
-   - **DON'T:** "This method is highly effective and improves accuracy."
-   - **DO:** "This method provides an explicit filtering mechanism, preventing the algorithm from processing out-of-bounds data."
-
-2. **No Baseless Statements:**
-   Every technical statement must either be logically derived from the provided context or explicitly backed by a provided citation. Ungrounded claims in academic texts are strictly prohibited. 
-   - **DON'T:** "Studies show that local models are weaker than cloud models."
-   - **DO:** "Because local models operate with smaller parameter counts and quantized weights, they possess less reasoning capacity than uncompressed cloud models [CITE]."
-
-3. **Intuitive and Accessible Vocabulary:**
-   Write in a clear, straightforward, and professional style. Prioritize clarity for non-native speakers. Replace robotic, overly academic, or technical jargon with simple, intuitive everyday terms. 
-   - **DON'T:** "Crucially, the system leverages vector embeddings to facilitate contextual alignment."
-   - **DO:** "The system uses vector embeddings to match the text to the context."
-   - *Forbidden Verbs:* leveraging, situating, ensuring, utilizing, facilitating. Use simple equivalents (uses, places, makes sure, helps).
-   - *Forbidden Adverbs:* crucially, strictly, importantly, topically, additionally. 
-
-4. **Dynamic Sentence Structure:**
-   Vary your sentence lengths and structures. Do not start consecutive sentences the same way. Keep sentences distinct and easy to read. Use concise, direct one-liners where appropriate to punch up readability.
-   - **DON'T:** "The system first loads the data. The system then processes the data. The system finally saves the data."
-   - **DO:** "The process begins by loading the user's data. Once loaded, the system processes it to extract metadata. Finally, the results are saved to the disk."
+**Tone:** Be direct and mechanical. Do not start consecutive sentences the same way.
+**JAIR Rules:** Describe the principles underlying the system. Any algorithmic setups must be completely reproducible.
 
 ## Results
-Present experiment outcomes with relevant metrics or observations.
-Compare results against expected improvements or baselines if available.
-Never fabricate data or results.
-
-Scientific Writing & Tone Guidelines
-1. **Logical Derivation Over Empirical Claims:** 
-   Never make subjective, absolute, or empirical claims about performance, output quality, or user behavior unless you have a specific citation to back it up. Instead, describe the *logical, mechanical effects* of the system's design or algorithms.
-   - **DON'T:** "This method is highly effective and improves accuracy."
-   - **DO:** "This method provides an explicit filtering mechanism, preventing the algorithm from processing out-of-bounds data."
-
-2. **No Baseless Statements:**
-   Every technical statement must either be logically derived from the provided context or explicitly backed by a provided citation. Ungrounded claims in academic texts are strictly prohibited. 
-   - **DON'T:** "Studies show that local models are weaker than cloud models."
-   - **DO:** "Because local models operate with smaller parameter counts and quantized weights, they possess less reasoning capacity than uncompressed cloud models [CITE]."
-
-3. **Intuitive and Accessible Vocabulary:**
-   Write in a clear, straightforward, and professional style. Prioritize clarity for non-native speakers. Replace robotic, overly academic, or technical jargon with simple, intuitive everyday terms. 
-   - **DON'T:** "Crucially, the system leverages vector embeddings to facilitate contextual alignment."
-   - **DO:** "The system uses vector embeddings to match the text to the context."
-   - *Forbidden Verbs:* leveraging, situating, ensuring, utilizing, facilitating. Use simple equivalents (uses, places, makes sure, helps).
-   - *Forbidden Adverbs:* crucially, strictly, importantly, topically, additionally. 
-
-4. **Dynamic Sentence Structure:**
-   Vary your sentence lengths and structures. Do not start consecutive sentences the same way. Keep sentences distinct and easy to read. Use concise, direct one-liners where appropriate to punch up readability.
-   - **DON'T:** "The system first loads the data. The system then processes the data. The system finally saves the data."
-   - **DO:** "The process begins by loading the user's data. Once loaded, the system processes it to extract metadata. Finally, the results are saved to the disk."
+**Tone:** Let the facts speak. Never use flowery language to exaggerate results.
+**JAIR Rules:** Support claims strictly with data/theory. Report on what was *learned*, not just what was done. Figures must be readable in monochrome.
 
 ## Discussion
-
-Scientific Writing & Tone Guidelines
-1. **Logical Derivation Over Empirical Claims:** 
-   Never make subjective, absolute, or empirical claims about performance, output quality, or user behavior unless you have a specific citation to back it up. Instead, describe the *logical, mechanical effects* of the system's design or algorithms.
-   - **DON'T:** "This method is highly effective and improves accuracy."
-   - **DO:** "This method provides an explicit filtering mechanism, preventing the algorithm from processing out-of-bounds data."
-
-2. **No Baseless Statements:**
-   Every technical statement must either be logically derived from the provided context or explicitly backed by a provided citation. Ungrounded claims in academic texts are strictly prohibited. 
-   - **DON'T:** "Studies show that local models are weaker than cloud models."
-   - **DO:** "Because local models operate with smaller parameter counts and quantized weights, they possess less reasoning capacity than uncompressed cloud models [CITE]."
-
-3. **Intuitive and Accessible Vocabulary:**
-   Write in a clear, straightforward, and professional style. Prioritize clarity for non-native speakers. Replace robotic, overly academic, or technical jargon with simple, intuitive everyday terms. 
-   - **DON'T:** "Crucially, the system leverages vector embeddings to facilitate contextual alignment."
-   - **DO:** "The system uses vector embeddings to match the text to the context."
-   - *Forbidden Verbs:* leveraging, situating, ensuring, utilizing, facilitating. Use simple equivalents (uses, places, makes sure, helps).
-   - *Forbidden Adverbs:* crucially, strictly, importantly, topically, additionally. 
-
-4. **Dynamic Sentence Structure:**
-   Vary your sentence lengths and structures. Do not start consecutive sentences the same way. Keep sentences distinct and easy to read. Use concise, direct one-liners where appropriate to punch up readability.
-   - **DON'T:** "The system first loads the data. The system then processes the data. The system finally saves the data."
-   - **DO:** "The process begins by loading the user's data. Once loaded, the system processes it to extract metadata. Finally, the results are saved to the disk."
+**Tone:** Authentic and accessible. Prioritize clarity for a global audience by cutting all unnecessary jargon. 
+**JAIR Rules:** Link the method's theoretical advancements directly to its practical utility in the field.
 
 ## Conclusion
-
-Scientific Writing & Tone Guidelines
-1. **Logical Derivation Over Empirical Claims:** 
-   Never make subjective, absolute, or empirical claims about performance, output quality, or user behavior unless you have a specific citation to back it up. Instead, describe the *logical, mechanical effects* of the system's design or algorithms.
-   - **DON'T:** "This method is highly effective and improves accuracy."
-   - **DO:** "This method provides an explicit filtering mechanism, preventing the algorithm from processing out-of-bounds data."
-
-2. **No Baseless Statements:**
-   Every technical statement must either be logically derived from the provided context or explicitly backed by a provided citation. Ungrounded claims in academic texts are strictly prohibited. 
-   - **DON'T:** "Studies show that local models are weaker than cloud models."
-   - **DO:** "Because local models operate with smaller parameter counts and quantized weights, they possess less reasoning capacity than uncompressed cloud models [CITE]."
-
-3. **Intuitive and Accessible Vocabulary:**
-   Write in a clear, straightforward, and professional style. Prioritize clarity for non-native speakers. Replace robotic, overly academic, or technical jargon with simple, intuitive everyday terms. 
-   - **DON'T:** "Crucially, the system leverages vector embeddings to facilitate contextual alignment."
-   - **DO:** "The system uses vector embeddings to match the text to the context."
-   - *Forbidden Verbs:* leveraging, situating, ensuring, utilizing, facilitating. Use simple equivalents (uses, places, makes sure, helps).
-   - *Forbidden Adverbs:* crucially, strictly, importantly, topically, additionally. 
-
-4. **Dynamic Sentence Structure:**
-   Vary your sentence lengths and structures. Do not start consecutive sentences the same way. Keep sentences distinct and easy to read. Use concise, direct one-liners where appropriate to punch up readability.
-   - **DON'T:** "The system first loads the data. The system then processes the data. The system finally saves the data."
-   - **DO:** "The process begins by loading the user's data. Once loaded, the system processes it to extract metadata. Finally, the results are saved to the disk."
+**Tone:** Concise and unpretentious summary of facts.
+**JAIR Rules:** Reflect a carefully proofread, polished state.
 
 ## Acknowledgements
-Format and polish the provided acknowledgements text into a professional academic style.
-Keep the original meaning and intent, but ensure proper grammar, flow, and academic tone.
-No citations needed. Keep it concise and appropriate for an academic paper.
+**Tone:** Professional, brief, and authentic.
+**JAIR Rules:** Point to online appendices (like code or data repositories) if relevant.

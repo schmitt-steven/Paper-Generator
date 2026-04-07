@@ -1,10 +1,10 @@
 # Research Hypothesis
 
 ## Description
-This is a mock description containing HUMAN-EDIT-TOKEN-250c8b65-1643-490c-8324-07ca15064675.
+Edited description containing HUMAN-EDIT-TOKEN-de9f460a-0851-4b55-b67a-f25226c4e3fa.
 
 ## Rationale
-Mock rationale.
+Original rationale.
 
 ## Success Criteria
-Mock success criteria.
+Original success criteria.

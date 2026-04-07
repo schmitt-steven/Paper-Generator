@@ -6,32 +6,32 @@
 - **Methodological Class:** First-Digit Frequency Distribution and Mean Absolute Deviation (MAD) Testing
 
 ## 2. Research Direction & Scope
-**Summary:** While established statistical frameworks often rely on chi-square tests to validate data integrity, preliminary analysis suggests these methods may yield excessive false positives in large-scale census datasets due to inflated statistical power over trivial deviations. This work investigates the efficacy of Benford's Law as a robust anomaly detection mechanism for German municipal data from the Zensus 2022, specifically contrasting naturally occurring population counts against derived ratios and synthetic controls. The approach employs a dual-metric validation strategy utilizing Mean Absolute Deviation (MAD) alongside chi-square statistics to distinguish between statistically significant anomalies and scientifically irrelevant noise. By implementing rigorous data normalization for locale-specific formatting and filtering based on quality flags, the methodology aims to isolate genuine structural deviations in population density and area measurements from random variation. The expected outcome is a refined empirical framework that leverages digit frequency distributions to validate the integrity of official statistics without succumbing to sample-size bias.
+**Summary:** While standard statistical tests like the Chi-square often yield spurious significance in large-scale census datasets due to excess power, this work investigates the utility of Benford's Law as a robust anomaly detection mechanism for official German municipal data from Zensus 2022. The approach aims to evaluate conformity across population counts, area measurements, and derived density ratios by computing the Mean Absolute Deviation (MAD) on observed versus expected digit proportions rather than raw counts. By implementing a dual-testing framework that incorporates synthetic control datasets with uniform and psychologically biased distributions, the method is designed to distinguish between natural data scaling properties and potential fabrication artifacts. Preliminary analysis suggests that while primary variables may adhere to logarithmic expectations, derived ratios like population density are likely to exhibit significant deviations, thereby validating Benford's Law as a sensitive tool for integrity validation in high-volume administrative records.
 
 ## 3. Problem Definition
-- **The Bottleneck:** Conventional conformity testing (e.g., chi-square) lacks discriminative power in large samples ($N > 10,000$), where even negligible deviations from expected distributions result in statistically significant p-values that do not reflect practical data integrity issues.
-- **The Constraint:** The analysis is constrained by the necessity to operate on proportions rather than raw counts to ensure scale invariance, and requires strict filtering of non-exact values (e.g., those altered by cell-key methods or suppressed) to maintain dataset validity.
+- **The Bottleneck:** Conventional conformity tests (e.g., Chi-square) lack specificity for large sample sizes ($N > 10,000$), where trivial deviations produce statistically significant p-values that are scientifically irrelevant to fraud detection or data quality assessment.
+- **The Constraint:** The analysis must operate on raw municipal census records containing locale-specific formatting and quality flags (e.g., cell-key suppression) without relying on fixed thresholds derived from raw counts, which scale non-linearly with sample size.
 
 ## 4. Technical Approach
-- **Architecture:** A multi-stage pipeline comprising locale-aware CSV parsing with manual normalization of comma-separated decimals, quality-flag-based record filtering, first-digit extraction from population and area variables, and parallel computation of MAD and chi-square statistics against the theoretical Benford distribution ($P(d) = \log_{10}(1 + 1/d)$).
-- **Key differentiator:** The implementation explicitly prioritizes proportion-based deviation metrics (MAD) over raw count comparisons to mitigate sample-size bias, while simultaneously generating synthetic control datasets with uniform and human-fabrication biases to calibrate the sensitivity of the anomaly detection thresholds.
+- **Architecture:** A multi-stage pipeline utilizing custom CSV parsing for semicolon-delimited UTF-8-sig data, followed by digit extraction and proportion-based statistical computation (arithmetic mean and population standard deviation) to derive the Mean Absolute Deviation (MAD).
+- **Key differentiator:** The implementation distinguishes itself by explicitly calculating conformity metrics on normalized proportions ($P_{observed}$ vs. $P_{expected}$) rather than raw frequencies, thereby mitigating sample-size bias, and employs a comparative framework against synthetic baselines (uniform distribution and human fabrication bias) to contextualize deviations in derived variables like population density.
 
 
 
 # Open Questions for Literature Search
 
 ### Related Work & Prior Art
-1. How do existing studies on Benford's Law in official statistics specifically address the trade-off between statistical significance (p-values) and practical relevance when sample sizes exceed $N > 10,000$?
-2. What empirical evidence exists regarding the performance of Mean Absolute Deviation (MAD) versus Chi-square tests for detecting anomalies in large-scale population census data, particularly regarding false positive rates in naturally skewed distributions?
-3. Which prior methodologies have successfully applied Benford's Law to German municipal datasets or similar European administrative records, and what specific limitations did they encounter with derived ratios or cell-key suppressed values?
+1. How do existing Benford's Law applications in official statistics (e.g., tax audits, election forensics) specifically address the "excess power" problem of Chi-square tests when analyzing large-scale administrative datasets ($N > 10,000$)?
+2. What is the established literature on the validity of Benford's Law for derived variables like population density ratios versus raw counts in municipal census data?
+3. Which prior studies have utilized Mean Absolute Deviation (MAD) as a primary conformity metric to distinguish between natural scaling properties and fabrication artifacts in German or European official statistics?
 
 ### Differentiation & Positioning
-4. How does the proposed dual-metric validation strategy (MAD + Chi-square) theoretically outperform single-metric approaches in distinguishing between "statistically significant" deviations caused by sample size versus genuine structural data integrity failures?
-5. In what specific ways does using proportion-based deviation metrics mitigate the scale-invariance issues inherent in raw count comparisons, and how does this align with or diverge from current state-of-the-art practices in forensic statistics for large datasets?
+4. How does the proposed MAD-based proportion analysis technically differ from standard frequency-count approaches regarding sensitivity to sample size, and what specific thresholds are used in literature to define "significant deviation" for derived ratios?
+5. In the taxonomy of anomaly detection methods, how does this dual-testing framework (comparing against uniform vs. psychologically biased synthetic baselines) position itself relative to existing machine learning or rule-based fraud detection systems for census data?
 
 ### Key Concepts & Background
-6. What are the standard theoretical thresholds (e.g., Benford's Law critical values) for MAD scores that define "conformity" versus "anomaly" in population density variables, and how do these benchmarks vary across different demographic contexts?
-7. How does the presence of locale-specific formatting artifacts (e.g., comma vs. decimal separators) and data suppression techniques (cell-keying) systematically bias first-digit frequency distributions in official German census data compared to idealized synthetic controls?
+6. What are the specific mathematical conditions and domain constraints under which Benford's Law is theoretically expected to hold or fail for population density metrics derived from heterogeneous municipal areas?
+7. How does the literature define "natural scaling properties" versus "fabrication artifacts" in the context of high-volume administrative records, and what standard terminology exists for describing these deviations in statistical forensics?
 
 
 
@@ -78,36 +78,26 @@ statistics_code;statistics_label;time_code;time_label;time;1_variable_code;1_var
 
 **Keywords:** CSV parsing, Destatis 1000A dataset, population density (PRS017), arithmetic mean, population standard deviation, data normalization
 
-**Method:** Implements a custom CSV parser using the `csv` module with semicolon delimiters and UTF-8 encoding, followed by manual calculation of descriptive statistics including variance computation for standard deviation.
+**Method:** Implements a custom CSV parser using the csv module with semicolon delimiters and UTF-8-sig encoding, followed by manual calculation of descriptive statistics including variance computation for standard deviation.
 
 **Contribution:** Data preprocessing and exploratory analysis pipeline for extracting statistical summaries from raw municipal census records.
 
 **Code Snippets (2):**
 
-### Data Normalization and Parsing Logic
+### Population standard deviation calculation
 ```python
-def parse_values(records: list[dict]) -> list[float]:
-    values = []
-    for r in records:
-        raw = r.get("value", "").replace(",", ".")
-        try:
-            values.append(float(raw))
-        except ValueError:
-            pass
-    return values
-```
-
-### Descriptive Statistics: Arithmetic Mean and Standard Deviation
-```python
-def mean(values: list[float]) -> float:
-    return sum(values) / len(values) if values else 0.0
-
 def std(values: list[float]) -> float:
     if len(values) < 2:
         return 0.0
     m = mean(values)
     variance = sum((v - m) ** 2 for v in values) / len(values)
     return variance ** 0.5
+```
+
+### Arithmetic mean calculation
+```python
+def mean(values: list[float]) -> float:
+    return sum(values) / len(values) if values else 0.0
 ```
 
 ---

@@ -1,62 +1,62 @@
 [
   {
-    "query": "Benford's Law survey census data",
+    "query": "\"Recursive Backwards Q-Learning\"",
     "year": null
   },
   {
-    "query": "first-digit analysis review official statistics",
+    "query": "\"breadth-first search\" Q-learning",
     "year": null
   },
   {
-    "query": "forensic analytics Benford survey demographic records",
+    "query": "\"reverse transition map\"",
     "year": null
   },
   {
-    "query": "Benford's Law conformity testing",
+    "query": "\"Bellman optimality\" tabular",
     "year": null
   },
   {
-    "query": "Mean Absolute Deviation MAD digit frequency",
+    "query": "\"Q-learning survey\"",
     "year": null
   },
   {
-    "query": "Chi-square goodness-of-fit large samples",
+    "query": "\"model-based\" Q-learning",
     "year": null
   },
   {
-    "query": "first-digit frequency analysis population counts",
+    "query": "\"value iteration\" deterministic",
     "year": null
   },
   {
-    "query": "MAD Benford threshold calibration",
+    "query": "\"trajectory graph\" exploration",
     "year": null
   },
   {
-    "query": "synthetic control datasets uniform distribution bias",
+    "query": "\"Prioritized Experience Replay\"",
     "year": null
   },
   {
-    "query": "Chi-square test sensitivity large N",
+    "query": "\"Dyna-Q\" algorithm",
     "year": null
   },
   {
-    "query": "psychological anchoring bias digit frequencies",
+    "query": "\"Monte Carlo tree search\"",
     "year": null
   },
   {
-    "query": "German Zensus 2022 data integrity",
+    "query": "\"Atari\" benchmark",
     "year": null
   },
   {
-    "query": "Statistisches Bundesamt census validation",
+    "query": "\"CartPole-v1\"",
     "year": null
   },
   {
-    "query": "municipal area Benford conformity",
+    "query": "\"GridWorld\" sparse reward",
     "year": null
   },
   {
-    "query": "population density digit distribution analysis",
+    "query": "\"sample complexity\" bounds",
     "year": null
   }
 ]

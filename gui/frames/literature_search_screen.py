@@ -11,9 +11,9 @@ from ..base_frame import BaseFrame, ProgressPopup
 from ..icons import HoverColor
 from ..info_texts import LITERATURE_SEARCH_INFO
 from ..theme_colors import CARD_HEADER_BG_DARK, CARD_HEADER_FG_DARK, CARD_HEADER_FG_LIGHT, MUTED_TEXT
-from phases.paper_search.paper import Paper
-from phases.paper_search.user_paper_loader import UserPaperLoader
-from phases.paper_search.literature_search import LiteratureSearch
+from phases.literature_search.paper import Paper
+from phases.literature_search.user_paper_loader import UserPaperLoader
+from phases.literature_search.literature_search import LiteratureSearch
 
 from phases.context_analysis.research_context_generator import ResearchContextGenerator, ResearchContext
 from phases.context_analysis.paper_specification import PaperSpecification
@@ -682,8 +682,9 @@ class LiteratureSearchScreen(BaseFrame):
         return standard_path if standard_path.exists() else None
 
     def _check_pdf_exists(self, paper: Paper) -> bool:
-        """Check if a PDF file exists for the given paper."""
-        return self._get_pdf_path(paper) is not None
+        """Check if a non-empty PDF file exists for the given paper."""
+        path = self._get_pdf_path(paper)
+        return path is not None and path.stat().st_size > 0
 
     def _process_new_papers(self, all_papers: list[Paper], papers_to_process: list[Paper], papers_needing_download: list[Paper] = None):
         """Download and convert papers, save all, then continue or generate hypotheses."""

@@ -4,7 +4,7 @@ from pathlib import Path
 import re
 from phases.context_analysis.research_context_generator import ResearchContext
 from phases.context_analysis.paper_specification import PaperSpecification
-from phases.paper_search.paper import Paper
+from phases.literature_search.paper import Paper
 from phases.paper_writing.data_models import PaperDraft, PaperChunk, Section, Evidence
 from phases.paper_writing.paper_indexer import PaperIndexer
 from phases.paper_writing.paper_writer import PaperWriter
@@ -16,7 +16,7 @@ from utils.file_utils import save_markdown, load_markdown, save_json, load_json
 from settings import Settings
 from phases.context_analysis.research_context_generator import ResearchContextGenerator
 from phases.experimentation.experiment_runner import ExperimentRunner
-from phases.paper_search.literature_search import LiteratureSearch
+from phases.literature_search.literature_search import LiteratureSearch
 
 
 class PaperWritingPipeline:
@@ -305,30 +305,30 @@ class PaperWritingPipeline:
                 if status_callback:
                     status_callback(f"Section rewrite delta for {section_type.value}: {len(section_draft_v1)} -> {len(final_section)}")
 
-        # Generate acknowledgements if enabled
-        acknowledgements = None
-        if Settings.GENERATE_ACKNOWLEDGEMENTS and paper_specification and paper_specification.acknowledgements and paper_specification.acknowledgements.strip():
-            print("\nWriting Acknowledgements section...")
-            acknowledgements = self.writer.generate_acknowledgements(paper_specification.acknowledgements)
+            # Generate acknowledgements if enabled (still inside LMSJITSettings context)
+            acknowledgements = None
+            if Settings.GENERATE_ACKNOWLEDGEMENTS and paper_specification and paper_specification.acknowledgements and paper_specification.acknowledgements.strip():
+                print("\nWriting Acknowledgements section...")
+                acknowledgements = self.writer.generate_acknowledgements(paper_specification.acknowledgements)
 
-        # Create draft (title will be set below)
-        paper_draft = PaperDraft(
-            title="",
-            abstract=sections[Section.ABSTRACT],
-            introduction=sections[Section.INTRODUCTION],
-            related_work=sections[Section.RELATED_WORK],
-            methods=sections[Section.METHODS],
-            results=sections[Section.RESULTS],
-            discussion=sections[Section.DISCUSSION],
-            conclusion=sections[Section.CONCLUSION],
-            acknowledgements=acknowledgements,
-        )
+            # Create draft (title will be set below)
+            paper_draft = PaperDraft(
+                title="",
+                abstract=sections[Section.ABSTRACT],
+                introduction=sections[Section.INTRODUCTION],
+                related_work=sections[Section.RELATED_WORK],
+                methods=sections[Section.METHODS],
+                results=sections[Section.RESULTS],
+                discussion=sections[Section.DISCUSSION],
+                conclusion=sections[Section.CONCLUSION],
+                acknowledgements=acknowledgements,
+            )
 
-        # Use settings title if provided, otherwise generate one
-        if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
-            paper_draft.title = Settings.LATEX_TITLE
-        else:
-            paper_draft.title = self.writer.generate_title(draft=paper_draft, context=research_context)
+            # Use settings title if provided, otherwise generate one
+            if Settings.LATEX_TITLE and Settings.LATEX_TITLE.strip():
+                paper_draft.title = Settings.LATEX_TITLE
+            else:
+                paper_draft.title = self.writer.generate_title(draft=paper_draft, context=research_context)
         
         self._save_paper_draft(paper_draft=paper_draft)
         self._save_prompts(prompts_by_section)

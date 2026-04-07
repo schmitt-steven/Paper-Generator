@@ -13,9 +13,9 @@ from ..theme_colors import (
 from .writing_prompts_screen import WritingPromptsScreen
 from utils.file_utils import load_markdown, save_markdown
 from phases.paper_writing.paper_writing_pipeline import PaperWritingPipeline
-from phases.paper_search.literature_search import LiteratureSearch
-from phases.latex_generation.paper_converter import PaperConverter
-from phases.latex_generation.paper_converter import LaTeXMetadata
+from phases.literature_search.literature_search import LiteratureSearch
+from phases.document_generation.paper_converter import PaperConverter
+from phases.document_generation.paper_converter import LaTeXMetadata
 from phases.hypothesis_generation.hypothesis_builder import HypothesisBuilder
 from phases.experimentation.experiment_runner import ExperimentRunner
 from phases.context_analysis.paper_specification import PaperSpecification

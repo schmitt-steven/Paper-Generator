@@ -3,7 +3,7 @@ import time
 import ssl
 import urllib.request as libreq
 from typing import List, Tuple
-from phases.paper_search.paper import Paper
+from phases.literature_search.paper import Paper
 
 class PDFDownloader:
     
@@ -24,8 +24,11 @@ class PDFDownloader:
         req = libreq.Request(pdf_url, headers=headers)
         
         with libreq.urlopen(req, context=ssl_context) as response:
+            data = response.read()
+            if not data:
+                raise ValueError("Downloaded file is empty (0 bytes)")
             with open(filename, 'wb') as f:
-                f.write(response.read())
+                f.write(data)
 
     @staticmethod
     def download_papers_as_pdfs(
@@ -69,8 +72,8 @@ class PDFDownloader:
                 # Save PDF in paper's folder
                 filename = os.path.join(paper_folder, f"{safe_id}.pdf")
                 
-                # Skip if PDF already exists
-                if os.path.exists(filename):
+                # Skip if PDF already exists and is non-empty
+                if os.path.exists(filename) and os.path.getsize(filename) > 0:
                     print(f"  [{i}/{len(papers)}] EXISTS: {paper.title[:50]}...")
                     skipped += 1
                     # Update pdf_path even if already exists

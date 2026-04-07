@@ -73,6 +73,11 @@ def test_fr8_dynamic_model_selection(log_evidence):
     phase_2 = "Hypothesis Generation"
     model_2 = Settings.HYPOTHESIS_BUILDER_MODEL
 
+    assert model_1 != model_2, (
+        f"FR8 requires different models for different phases, but both "
+        f"{phase_1} and {phase_2} are set to '{model_1}'."
+    )
+
     print(f"Testing dynamic model loading with:")
     print(f"  {phase_1} -> {model_1}")
     print(f"  {phase_2} -> {model_2}")
