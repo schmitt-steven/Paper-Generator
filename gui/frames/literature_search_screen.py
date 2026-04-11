@@ -62,12 +62,18 @@ class LiteratureSearchScreen(BaseFrame):
             controller=controller,
             title="Literature Search",
             next_text=next_text,
+            header_file_path=str(PAPERS_FILE),
             info_content=LITERATURE_SEARCH_INFO
         )
 
     def create_content(self):
         self._create_user_papers_section()
         self._create_searched_papers_section()
+
+    def reload_content(self):
+        """Reset load guard so on_show re-reads papers.json from disk."""
+        self._papers_loaded = False
+        super().reload_content()
 
     def on_show(self):
         """Called when screen is shown - load papers from file if not already loaded and update next button."""
