@@ -1,6 +1,7 @@
 from tkinter.ttk import Frame
 import tkinter as tk
 from tkinter import ttk
+from tkinter import messagebox
 import os
 import subprocess
 import platform
@@ -600,6 +601,7 @@ class BaseFrame(ttk.Frame):
         """Open the header file in the default editor."""
         if not self.header_file_path or not os.path.exists(self.header_file_path):
             print(f"File not found: {self.header_file_path}")
+            messagebox.showwarning("File Not Found", f"{self.header_file_path} does not exist yet.")
             return
             
         print(f"Opening {self.header_file_path} in editor...")

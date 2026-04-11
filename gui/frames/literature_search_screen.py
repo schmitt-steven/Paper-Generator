@@ -278,7 +278,7 @@ class LiteratureSearchScreen(BaseFrame):
                     parts.append(year_match.group(1))
         
         if paper.citation_count is not None:
-            parts.append(f"{paper.citation_count:,} citations")
+            parts.append(f"{paper.citation_count:,} {'citation' if paper.citation_count == 1 else 'citations'}")
         
         # Show similarity /relevance score for searched papers
         if not is_user_paper and paper.ranking and paper.ranking.relevance_score is not None:
