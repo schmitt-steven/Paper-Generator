@@ -17,21 +17,20 @@ from utils.file_utils import save_markdown, load_markdown
 class Hypothesis(BaseModel):
     """A testable research hypothesis"""
     id: str
-    description: str
     rationale: str
+    description: str
     success_criteria: str
-    selected_for_experimentation: bool = True  # Always true for single hypothesis flow
 
     def to_markdown(self) -> str:
         """Convert hypothesis to markdown format."""
         return textwrap.dedent(f"""\
             # Research Hypothesis
 
-            ## Description
-            {self.description}
-
             ## Rationale
             {self.rationale}
+
+            ## Description
+            {self.description}
 
             ## Success Criteria
             {self.success_criteria}
@@ -62,7 +61,6 @@ class Hypothesis(BaseModel):
             description=sections.get('description', ''),
             rationale=sections.get('rationale', ''),
             success_criteria=sections.get('success_criteria', ''),
-            selected_for_experimentation=True
         )
 
 
@@ -115,8 +113,8 @@ class HypothesisBuilder(LazyModelMixin):
             
             For the structured hypothesis, provide:
             - id: unique identifier (e.g., "user_hypothesis_01")
-            - description: Clear, testable scientific statement extracted from the user's input (NO meta-commentary)
             - rationale: The scientific justification for this hypothesis (NO meta-commentary about the user or prompt)
+            - description: Clear, testable scientific statement extracted from the user's input (NO meta-commentary)
             - success_criteria: Concrete, testable criteria using one or more patterns: relative comparison against a baseline,
               statistical significance, ablation (component necessity), or existence/capability (binary pass/fail).
               Do NOT invent numeric thresholds — but if the paper specification provides specific numbers, use them.
@@ -151,7 +149,6 @@ class HypothesisBuilder(LazyModelMixin):
                 description=response_data.get("description", user_hypothesis_text),
                 rationale=response_data.get("rationale", "User provided hypothesis"),
                 success_criteria=response_data.get("success_criteria", "As specified by user"),
-                selected_for_experimentation=True
             )
 
             # Save it
@@ -167,7 +164,6 @@ class HypothesisBuilder(LazyModelMixin):
                 description=user_hypothesis_text,
                 rationale="User provided hypothesis (Error in processing)",
                 success_criteria="Unknown",
-                selected_for_experimentation=True
             )
             HypothesisBuilder.save_hypothesis(hyp, "output/hypothesis.md")
             return hyp
@@ -180,7 +176,6 @@ class HypothesisBuilder(LazyModelMixin):
                 description=user_hypothesis_text,
                 rationale="User provided hypothesis (Error in processing)",
                 success_criteria="Unknown",
-                selected_for_experimentation=True
             )]
 
     @staticmethod
