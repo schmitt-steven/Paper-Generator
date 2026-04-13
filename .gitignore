@@ -61,11 +61,6 @@ settings.py
 *.h5
 *.ckpt
 
-# Data files
-*.csv
-*.tsv
-*.parquet
-
 # OS files
 .DS_Store
 Thumbs.db

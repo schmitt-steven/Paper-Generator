@@ -18,7 +18,7 @@ The entire process consists of 6 phases:
 - **LaTeX** (MacTeX or TeX Live, MikTeX, etc.)
 - **LM Studio** running in background with at least 3 downloaded models:
   - One LLM capable of tool use
-  - One VLM or multimodal model
+  - One vision-language model
   - One embedding model
 
 ## Installation
