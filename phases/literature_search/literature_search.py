@@ -487,7 +487,10 @@ class LiteratureSearch(LazyModelMixin):
         
         # Filter out papers already in user papers to avoid processing duplicates
         user_paper_ids = {p.id for p in user_papers}
-        searched_papers = [p for p in papers if p.id not in user_paper_ids]
+        searched_papers = [
+            p for p in papers
+            if p.id not in user_paper_ids and not any(self._is_duplicate(p, up) for up in user_papers)
+        ]
         
         if not searched_papers:
             return []
@@ -527,6 +530,10 @@ class LiteratureSearch(LazyModelMixin):
             update_status(f"Searching for {len(suggestions)} suggested foundational papers")
             existing_ids = {p.id for p in filtered_papers} | {p.id for p in user_papers}
             foundational_papers = gap_finder.search_suggested_papers(suggestions, existing_ids)
+            foundational_papers = [
+                p for p in foundational_papers
+                if not any(self._is_duplicate(p, up) for up in user_papers)
+            ]
             
             if foundational_papers:
                 update_status("Ranking foundational papers")
