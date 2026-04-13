@@ -5,12 +5,12 @@ This app builds complete research papers locally and privately. Zero API costs. 
 ## Generation Process
 
 The entire process consists of 6 phases:
-1. **[Context Analysis](phases/context_analysis/)** - Analyzes user's specification and code to define the context of the research
-2. **[Literature Search](phases/literature_search/)** - Automated literature search: searches (via [Semantic Scholar](https://www.semanticscholar.org/), [arXiv](https://arxiv.org/), [Unpaywall](https://unpaywall.org/)), ranks, filters, and downloads relevant papers
-3. **[Hypothesis Generation](phases/hypothesis_generation/)** - Generates testable research hypotheses
-4. **[Experimentation](phases/experimentation/)** - Automated experimentation: generates, executes, debugs, and validates experiments
-5. **[Section Writing](phases/paper_writing/)** - Drafts, critiques, searches for evidence, and improves each section
-6. **[Document Compilation](phases/document_generation/)** - Converts the draft to LaTeX and compiles it to a PDF
+1. **Context Analysis** - Analyzes user's specification and code to define the context of the research
+2. **Literature Search** - Automated literature search: searches (via [Semantic Scholar](https://www.semanticscholar.org/), [arXiv](https://arxiv.org/), [Unpaywall](https://unpaywall.org/)), ranks, filters, and downloads relevant papers
+3. **Hypothesis Generation** - Generates testable research hypotheses
+4. **Experimentation** - Automated experimentation: generates, executes, debugs, and validates experiments
+5. **Section Writing** - Drafts, critiques, searches for evidence, and improves each section
+6. **Document Compilation** - Converts the draft to LaTeX and compiles it to a PDF
 
 ## Requirements
 
