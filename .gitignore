@@ -40,6 +40,13 @@ old_code/
 TODO.md
 settings.py
 
+# Output artifacts
+output/literature/
+output/paper_embeddings.json
+literature/
+tests/demonstration/*/output/literature/
+tests/demonstration/*/output/paper_embeddings.json
+
 # Logs
 *.log
 
