@@ -1,6 +1,11 @@
 ![Banner](images/repo_banner.jpeg)
 
-This system builds complete research papers locally and privately. Zero API costs. A GUI app uses local language and embedding models via LM Studio to search literature, formulate hypotheses, execute code for live experiments, draft text sections and compile the final LaTeX document. It uses a Human-in-the-Loop approach to always keep you in control of the research process.
+This system builds complete research papers locally and privately. Zero API costs. A GUI app uses local language and embedding models via LM Studio to search literature, formulate hypotheses, run live experiments, draft text sections, and compile the final LaTeX document.
+
+In a demo run, it produced a full paper from start to finish in ~40 minutes on consumer hardware.
+The system pauses after each phase for review. When tested fully autonomously, the LLM made errors the system could detect but not fix on its own, which is the gap the human reviewer closes. The weaker/smaller the model, the more important the review step becomes.
+
+The accompanying thesis can be viewed [here](docs/thesis.pdf).
 
 ## Generation Process
 
